@@ -1,0 +1,129 @@
+export interface UsersTable {
+  id: string;
+  email: string;
+  full_name: string;
+  user_type: 'shopper' | 'traveler' | 'both';
+  kyc_status: 'pending' | 'approved' | 'rejected';
+  risk_status: 'clear' | 'flagged' | 'restricted';
+  password_hash?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface TripsTable {
+  id: string;
+  traveler_id: string;
+  departure_country: string;
+  arrival_country: string;
+  departure_date: Date;
+  return_date: Date;
+  status: 'published' | 'in_progress' | 'completed' | 'cancelled';
+  max_weight_kg: number;
+  max_items: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface RequestsTable {
+  id: string;
+  shopper_id: string;
+  item_description: string;
+  source_country: string;
+  category: string;
+  estimated_weight_kg: number;
+  budget: string; // Decimal as string
+  status: 'open' | 'accepted' | 'completed' | 'cancelled';
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface OffersTable {
+  id: string;
+  traveler_id: string;
+  request_id: string;
+  quoted_price: string; // Decimal as string
+  delivery_date: Date;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface OrdersTable {
+  id: string;
+  shopper_id: string;
+  traveler_id: string;
+  trip_id?: string;
+  request_id?: string;
+  offer_id?: string;
+  item_description: string;
+  quantity: number;
+  unit_price: string; // Decimal as string
+  total_price: string; // Decimal as string
+  fees: string; // Decimal as string
+  status: 'pending_payment' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled';
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface LedgerEntriesTable {
+  id: string;
+  user_id: string;
+  order_id: string;
+  entry_type: 'credit' | 'debit' | 'fee' | 'refund';
+  amount: string; // Decimal as string
+  balance_after: string; // Decimal as string
+  description: string;
+  created_at: Date;
+}
+
+export interface FeesTable {
+  id: string;
+  order_id: string;
+  fee_type: 'platform' | 'payment_processing' | 'currency_conversion';
+  amount: string; // Decimal as string
+  percentage?: number;
+  created_at: Date;
+}
+
+export interface EvidenceTable {
+  id: string;
+  order_id: string;
+  evidence_type: 'photo' | 'receipt' | 'document';
+  url: string;
+  created_at: Date;
+}
+
+export interface DisputesTable {
+  id: string;
+  order_id: string;
+  initiator_id: string;
+  reason: string;
+  status: 'open' | 'in_review' | 'resolved' | 'closed';
+  resolution?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface NotificationsTable {
+  id: string;
+  user_id: string;
+  type: 'email' | 'sms' | 'push';
+  subject: string;
+  body: string;
+  sent_at?: Date;
+  read_at?: Date;
+  created_at: Date;
+}
+
+export interface Database {
+  users: UsersTable;
+  trips: TripsTable;
+  requests: RequestsTable;
+  offers: OffersTable;
+  orders: OrdersTable;
+  ledger_entries: LedgerEntriesTable;
+  fees: FeesTable;
+  evidence: EvidenceTable;
+  disputes: DisputesTable;
+  notifications: NotificationsTable;
+}

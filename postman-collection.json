@@ -1,0 +1,146 @@
+{
+  "info": {
+    "name": "Hiww API Demo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Register Shopper",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"shopper-demo@example.com\",\n  \"full_name\": \"Shopper Demo\",\n  \"user_type\": \"shopper\",\n  \"password\": \"SecurePass123!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Register Traveler",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"traveler-demo@example.com\",\n  \"full_name\": \"Traveler Demo\",\n  \"user_type\": \"traveler\",\n  \"password\": \"SecurePass123!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Create Trip",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{traveler_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"departure_country\": \"US\",\n  \"arrival_country\": \"NG\",\n  \"departure_date\": \"2026-10-10T08:00:00.000Z\",\n  \"return_date\": \"2026-10-18T08:00:00.000Z\",\n  \"max_weight_kg\": 20,\n  \"max_items\": 3\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/trips",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "trips"]
+        }
+      }
+    },
+    {
+      "name": "Create Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"item_description\": \"iPhone 15\",\n  \"source_country\": \"US\",\n  \"category\": \"electronics\",\n  \"estimated_weight_kg\": 1.5,\n  \"budget\": \"1200.00\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/requests",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "requests"]
+        }
+      }
+    },
+    {
+      "name": "List Trips",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/trips?page=1&limit=10",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "trips"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Admin Review Queue",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/admin/reviews",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "admin", "reviews"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "shopper_token", "value": "" },
+    { "key": "traveler_token", "value": "" }
+  ]
+}
