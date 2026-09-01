@@ -73,4 +73,12 @@ export const config = {
    * and double-entry ledger are wired up.
    */
   manualMoneyPilot: process.env.MANUAL_MONEY_PILOT !== 'false',
+  /**
+   * Shown to shoppers on the "pay" screen during the manual-money pilot. Put
+   * your bank / Wise / PromptPay details here (via the PILOT_PAYMENT_INSTRUCTIONS
+   * env var — keep account numbers out of source control).
+   */
+  paymentInstructions:
+    process.env.PILOT_PAYMENT_INSTRUCTIONS ||
+    'Payment instructions have not been configured yet. Contact the Hiww team to arrange payment.',
 };

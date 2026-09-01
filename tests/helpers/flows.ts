@@ -66,6 +66,7 @@ export async function createAcceptedOrder(ctx: TestContext): Promise<Marketplace
     headers: authHeader(traveler),
     payload: {
       request_id: requestId,
+      trip_id: tripId,
       quoted_price: '120.00',
       delivery_date: '2026-11-18T10:00:00.000Z',
     },
@@ -77,12 +78,7 @@ export async function createAcceptedOrder(ctx: TestContext): Promise<Marketplace
     method: 'POST',
     url: `/api/offers/${offerId}/accept`,
     headers: authHeader(shopper),
-    payload: {
-      trip_id: tripId,
-      item_description: 'Luxury skincare set for gifting',
-      quantity: 1,
-      unit_price: '120.00',
-    },
+    payload: {},
   });
   if (acceptRes.statusCode !== 200) throw new Error(`acceptOffer failed (${acceptRes.statusCode}): ${acceptRes.body}`);
   const orderId = acceptRes.json().data.order_id as string;

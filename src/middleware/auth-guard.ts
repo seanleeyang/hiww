@@ -71,18 +71,17 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
       throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
     }
 
-    if (ADMIN_ROUTES.has(routeUrl)) {
-      const actor = await req.db
-        .selectFrom('users')
-        .select(['id', 'role'])
-        .where('id', '=', req.userId)
-        .executeTakeFirst();
+    // Resolve the caller's role once so downstream handlers can make ownership
+    // vs admin decisions without another lookup.
+    const actor = await req.db
+      .selectFrom('users')
+      .select(['id', 'role'])
+      .where('id', '=', req.userId)
+      .executeTakeFirst();
+    req.userRole = actor?.role ?? undefined;
 
-      if (!actor || actor.role !== 'admin') {
-        throw new AppError('ADMIN_REQUIRED', 403, 'Administrator access required');
-      }
-
-      req.userRole = 'admin';
+    if (ADMIN_ROUTES.has(routeUrl) && req.userRole !== 'admin') {
+      throw new AppError('ADMIN_REQUIRED', 403, 'Administrator access required');
     }
   });
 }

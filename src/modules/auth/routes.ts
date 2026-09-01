@@ -94,4 +94,30 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       code: 'USER_LOGGED_IN',
     });
   });
+
+  // The signed-in user's own profile — the front-end calls this on load.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.get('/api/me', async (request: any, reply: any) => {
+    const me = await request.db
+      .selectFrom('users')
+      .select(['id', 'email', 'full_name', 'user_type', 'role', 'kyc_status', 'risk_status', 'created_at'])
+      .where('id', '=', request.userId)
+      .executeTakeFirst();
+
+    if (!me) {
+      throw new AppError('NOT_FOUND', 404, 'User not found');
+    }
+
+    reply.send({
+      success: true,
+      data: {
+        ...me,
+        pilot: {
+          manual_money: config.manualMoneyPilot,
+          payment_instructions: config.paymentInstructions,
+        },
+      },
+      code: 'ME',
+    });
+  });
 }

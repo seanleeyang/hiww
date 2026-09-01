@@ -14,33 +14,63 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
       }
 
       const requestId = generateId();
-      const shopperId = request.userId!;
+      await request.db
+        .insertInto('requests')
+        .values({
+          id: requestId,
+          shopper_id: request.userId,
+          item_description: parsed.data.item_description,
+          source_country: parsed.data.source_country,
+          category: parsed.data.category,
+          estimated_weight_kg: parsed.data.estimated_weight_kg,
+          budget: parsed.data.budget,
+          status: 'open',
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .execute();
 
-      try {
-        await request.db
-          .insertInto('requests')
-          .values({
-            id: requestId,
-            shopper_id: shopperId,
-            item_description: parsed.data.item_description,
-            source_country: parsed.data.source_country,
-            category: parsed.data.category,
-            estimated_weight_kg: parsed.data.estimated_weight_kg,
-            budget: parsed.data.budget,
-            status: 'open',
-            created_at: new Date(),
-            updated_at: new Date(),
-          })
-          .execute();
+      reply.status(201).send({ success: true, data: { id: requestId }, code: 'REQUEST_CREATED' });
+    }
+  );
 
-        reply.status(201).send({
-          success: true,
-          data: { id: requestId },
-          code: 'REQUEST_CREATED',
-        });
-      } catch (error) {
-        throw new AppError('DB_ERROR', 500, 'Failed to create request');
+  // The caller's own requests, any status.
+  app.get(
+    '/api/requests/mine',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const items = await request.db
+        .selectFrom('requests')
+        .selectAll()
+        .where('shopper_id', '=', request.userId)
+        .orderBy('created_at', 'desc')
+        .execute();
+      reply.send({ success: true, data: { items }, code: 'REQUESTS_MINE' });
+    }
+  );
+
+  // Marketplace browse: other people's open requests (what a traveler offers on).
+  app.get<{ Querystring: { page?: string; limit?: string } }>(
+    '/api/requests',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const page = Math.max(1, parseInt(request.query.page || '1', 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(request.query.limit || '20', 10) || 20));
+      const offset = (page - 1) * limit;
+
+      let base = request.db.selectFrom('requests').where('status', '=', 'open');
+      if (request.userRole !== 'admin') {
+        base = base.where('shopper_id', '!=', request.userId);
       }
+
+      const items = await base
+        .selectAll()
+        .orderBy('created_at', 'desc')
+        .limit(limit)
+        .offset(offset)
+        .execute();
+
+      reply.send({ success: true, data: { items, page, limit }, code: 'REQUESTS_LISTED' });
     }
   );
 
@@ -59,43 +89,6 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
       }
 
       reply.send({ success: true, data: itemRequest, code: 'REQUEST_FOUND' });
-    }
-  );
-
-  app.get<{ Querystring: { page?: string; limit?: string } }>(
-    '/api/requests',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
-      const page = parseInt((request.query as { page?: string }).page || '1');
-      const limit = parseInt((request.query as { limit?: string }).limit || '10');
-      const offset = (page - 1) * limit;
-
-      const requests = await request.db
-        .selectFrom('requests')
-        .selectAll()
-        .limit(limit)
-        .offset(offset)
-        .execute();
-
-      const countResult = await request.db
-        .selectFrom('requests')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .select((db: any) => [db.fn.count('id').as('count')])
-        .executeTakeFirst();
-
-      const total = countResult?.count || 0;
-
-      reply.send({
-        success: true,
-        data: {
-          items: requests,
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
-        code: 'REQUESTS_LISTED',
-      });
     }
   );
 }

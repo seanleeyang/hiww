@@ -44,6 +44,7 @@ export interface OffersTable {
   id: string;
   traveler_id: string;
   request_id: string;
+  trip_id?: string | null;
   quoted_price: string; // Decimal as string
   delivery_date: Date;
   status: 'pending' | 'accepted' | 'rejected' | 'expired';
@@ -64,6 +65,8 @@ export interface OrdersTable {
   total_price: string; // Decimal as string
   fees: string; // Decimal as string
   status: 'pending_payment' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled';
+  /** Set when the shopper says they have sent payment (manual-money pilot signal). */
+  payment_claimed_at?: Date | null;
   created_at: Date;
   updated_at: Date;
 }

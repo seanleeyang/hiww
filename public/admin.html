@@ -293,11 +293,16 @@
           if (o.status === 'in_transit') actions.appendChild(btn('Confirm receipt', 'test-receive', { oid: o.id }, 'small secondary'));
           if (o.status !== 'cancelled') actions.appendChild(btn('Open dispute', 'test-dispute', { oid: o.id }, 'small ghost'));
         }
+        var statusCell = el('td', {}, [ badge(o.status) ]);
+        if (o.payment_claimed_at && o.status === 'pending_payment') {
+          statusCell.appendChild(document.createTextNode(' '));
+          statusCell.appendChild(el('span', { class: 'badge b-blue', text: 'shopper says paid' }));
+        }
         t.appendChild(el('tr', {}, [
           el('td', { class: 'mono', text: shortId(o.id) }),
           el('td', { text: o.item_description }),
           el('td', { class: 'mono', text: o.total_price + ' (+' + o.fees + ' fee)' }),
-          el('td', {}, [ badge(o.status) ]),
+          statusCell,
           el('td', { class: 'muted', text: name(o.shopper_id) }),
           el('td', { class: 'muted', text: name(o.traveler_id) }),
           el('td', {}, [ actions ])
