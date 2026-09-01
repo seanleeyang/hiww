@@ -62,6 +62,10 @@ export const config = {
   paymentProvider: process.env.PAYMENT_PROVIDER || 'mock',
   identityProvider: process.env.IDENTITY_PROVIDER || 'mock',
   logLevel: process.env.LOG_LEVEL || 'info',
+  // Abuse protection. Counts are per client IP per window.
+  rateLimitMax: Number(process.env.RATE_LIMIT_MAX || '200'),
+  rateLimitWindow: process.env.RATE_LIMIT_WINDOW || '1 minute',
+  authRateLimitMax: Number(process.env.AUTH_RATE_LIMIT_MAX || '20'),
   /**
    * During the manual-money pilot the platform does not move funds automatically.
    * Payment capture and payout are recorded by an admin after they settle money

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
 
 describe('auth and protected route flow', () => {
@@ -12,11 +13,12 @@ describe('auth and protected route flow', () => {
   });
 
   it('registers a user and allows a bearer token to create a trip', async () => {
+    const email = `alice-auth-${randomUUID()}@example.com`;
     const registerResponse = await ctx.app.inject({
       method: 'POST',
       url: '/api/auth/register',
       payload: {
-        email: 'alice-auth@example.com',
+        email,
         full_name: 'Alice Traveler',
         user_type: 'traveler',
         password: 'SecurePass123!',
@@ -49,7 +51,7 @@ describe('auth and protected route flow', () => {
     const user = await ctx.db
       .selectFrom('users')
       .selectAll()
-      .where('email', '=', 'alice-auth@example.com')
+      .where('email', '=', email)
       .executeTakeFirst();
 
     expect(user?.full_name).toBe('Alice Traveler');

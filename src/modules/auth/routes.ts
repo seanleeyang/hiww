@@ -2,6 +2,12 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError, generateId } from '@/utils/helpers';
 import { hashPassword, signToken, verifyPassword } from '@/utils/auth';
+import { config } from '@/config/env';
+
+// Tighter abuse protection on the credential endpoints than the global default.
+const authRouteConfig = {
+  rateLimit: { max: config.authRateLimitMax, timeWindow: config.rateLimitWindow },
+};
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -11,7 +17,7 @@ const registerSchema = z.object({
 });
 
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
-  app.post<{ Body: unknown }>('/api/auth/register', async (request: any, reply: any) => {
+  app.post<{ Body: unknown }>('/api/auth/register', { config: authRouteConfig }, async (request: any, reply: any) => {
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'Invalid registration data');
@@ -55,7 +61,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     });
   });
 
-  app.post<{ Body: unknown }>('/api/auth/login', async (request: any, reply: any) => {
+  app.post<{ Body: unknown }>('/api/auth/login', { config: authRouteConfig }, async (request: any, reply: any) => {
     const loginSchema = z.object({
       email: z.string().email(),
       password: z.string().min(8),

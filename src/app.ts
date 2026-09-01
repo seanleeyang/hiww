@@ -1,6 +1,7 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import type { Kysely } from 'kysely';
 import { config } from '@/config/env';
 import { createDatabase } from '@/db/connection';
@@ -47,6 +48,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   await app.register(cors, { origin: true });
   await app.register(helmet);
+  await app.register(rateLimit, {
+    global: true,
+    max: config.rateLimitMax,
+    timeWindow: config.rateLimitWindow,
+  });
 
   // Make the database available to every handler, then run the auth guard.
   // Order matters: the guard reads `request.db` when checking admin rights.
