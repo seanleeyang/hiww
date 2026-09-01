@@ -8,6 +8,31 @@ There are three workstreams. Do them in parallel.
 
 ---
 
+## Your situation: Thailand company, mostly intra-Asia (buy in JP/KR → deliver to TH/SEA)
+
+**Legal (Workstream A):** the regulator is the **Bank of Thailand (BOT)** under
+the Payment Systems Act B.E. 2560. Holding shopper funds and paying travelers
+most likely needs a BOT licence (e-Money / money-transfer / payment-account
+issuing) **or** operating under a licensed partner's licence. Thai firms that do
+this work: Tilleke & Gibbins, Baker McKenzie (Bangkok), Chandler MHM, or a
+fintech boutique. Book one consult and ask the question in Workstream A.
+
+**First payment calls, in order:**
+1. **Opn (Omise)** — Thailand-HQ, best local collection (PromptPay, Thai cards,
+   bank transfer), also has Japan. You already reference it in the code.
+2. **2C2P** — Bangkok-HQ, SE-Asia-wide, does disbursements.
+3. **Rapyd** — "collect + hold in a wallet + disburse" model fits this exactly;
+   good payout coverage to Japan/Korea/SEA.
+4. (Backup) **Airwallex** or **Wise Platform** for the cross-border payout leg to
+   travelers in JP/KR, paired with a Thai collection method.
+
+**KYC:**
+- **NDID** for verifying **Thai shoppers** — bank-backed, very strong, Thailand only.
+- **Sumsub** for **travelers** in Japan/Korea/elsewhere (good Asia coverage), or
+  let the payment provider KYC the travelers if they offer it.
+
+---
+
 ## Workstream A — the legal question (do this first, ~1 week, costs a bit)
 
 Hiww takes a buyer's money, holds it, and later pays a third party (the
