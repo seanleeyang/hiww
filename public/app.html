@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hiww</title>
+<style>
+  :root {
+    --bg:#f4f6f8; --panel:#fff; --ink:#1c2733; --muted:#667585; --line:#e3e8ee;
+    --brand:#0d7d7d; --amber:#b7791f; --amber-bg:#fdf3e3; --blue:#2b6cb0; --blue-bg:#e8f0fb;
+    --purple:#6b46c1; --purple-bg:#efe9fb; --green:#2f855a; --green-bg:#e6f4ec;
+    --grey:#667585; --grey-bg:#edf0f3; --danger:#c53030; --danger-bg:#fdeaea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{background:var(--brand);color:#fff;padding:12px 18px;display:flex;
+    align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;font-weight:600}
+  header .who{font-size:13px;opacity:.95}
+  main{max-width:760px;margin:0 auto;padding:18px}
+  nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  nav a{padding:7px 12px;border-radius:7px;text-decoration:none;font-size:14px;
+    color:var(--muted);background:#fff;border:1px solid var(--line)}
+  nav a.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:14px}
+  h2{font-size:17px;margin:0 0 12px}
+  h3{font-size:13px;margin:16px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+  input,textarea,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+  textarea{min-height:70px;resize:vertical}
+  button,.btn{display:inline-block;padding:9px 16px;border:1px solid var(--brand);background:var(--brand);
+    color:#fff;border-radius:8px;font:inherit;font-weight:500;cursor:pointer;text-decoration:none;text-align:center}
+  button.secondary{background:#fff;color:var(--brand)}
+  button.ghost{background:#fff;color:var(--muted);border-color:var(--line)}
+  button:disabled{opacity:.5;cursor:default}
+  button.small{padding:6px 11px;font-size:13px}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .b-amber{background:var(--amber-bg);color:var(--amber)} .b-blue{background:var(--blue-bg);color:var(--blue)}
+  .b-purple{background:var(--purple-bg);color:var(--purple)} .b-green{background:var(--green-bg);color:var(--green)}
+  .b-grey{background:var(--grey-bg);color:var(--grey)} .b-danger{background:var(--danger-bg);color:var(--danger)}
+  .muted{color:var(--muted)} .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .list-item{padding:12px 0;border-bottom:1px solid var(--line)}
+  .list-item:last-child{border-bottom:none}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .spread{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .toast{position:fixed;right:14px;bottom:14px;max-width:360px;padding:12px 14px;border-radius:8px;
+    color:#fff;background:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:9}
+  .toast.err{background:var(--danger)} .toast.ok{background:var(--green)}
+  .empty{color:var(--muted);padding:14px 0}
+  .note{background:var(--blue-bg);color:var(--blue);border-radius:8px;padding:12px;font-size:14px;margin:10px 0}
+  .pay-box{background:var(--amber-bg);border:1px solid #f0dcae;border-radius:8px;padding:14px;white-space:pre-wrap}
+  a{color:var(--brand)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Hiww</h1>
+  <div>
+    <span class="who" id="who"></span>
+    <button class="ghost small" id="logoutBtn" hidden>Log out</button>
+  </div>
+</header>
+<main id="root"></main>
+<script>
+(function () {
+  var API = '';
+  function tok(){ return localStorage.getItem('hiww_u_token') || ''; }
+  var me = null;
+
+  function h(tag, props, kids){
+    var n = document.createElement(tag);
+    props = props || {};
+    Object.keys(props).forEach(function(k){
+      if(k==='class') n.className=props[k];
+      else if(k==='html') n.innerHTML=props[k];
+      else if(k==='text') n.textContent=props[k];
+      else if(k==='onclick') n.addEventListener('click',props[k]);
+      else n.setAttribute(k,props[k]);
+    });
+    (kids||[]).forEach(function(c){ if(c==null) return;
+      n.appendChild(typeof c==='string'?document.createTextNode(c):c); });
+    return n;
+  }
+  var root = document.getElementById('root');
+  function view(){ root.innerHTML=''; for(var i=0;i<arguments.length;i++) root.appendChild(arguments[i]); }
+
+  function toast(msg,kind){
+    var t=h('div',{class:'toast '+(kind||''),text:msg});
+    document.body.appendChild(t); setTimeout(function(){t.remove();}, kind==='err'?6000:3000);
+  }
+
+  async function api(method,path,body){
+    var headers={};
+    if(tok()) headers.Authorization='Bearer '+tok();
+    var opts={method:method,headers:headers};
+    if(body!==undefined && body!==null){ headers['Content-Type']='application/json'; opts.body=JSON.stringify(body); }
+    var res=await fetch(API+path,opts);
+    var text=await res.text(), json;
+    try{ json=JSON.parse(text); }catch(e){ json={raw:text}; }
+    if(!res.ok){ var e=new Error((json&&(json.error||json.message))||res.statusText); e.status=res.status; throw e; }
+    return json;
+  }
+
+  function badge(s){
+    var m={pending_payment:'b-amber',confirmed:'b-blue',in_transit:'b-purple',delivered:'b-green',
+      cancelled:'b-grey',open:'b-amber',accepted:'b-green',rejected:'b-danger',pending:'b-amber',
+      approved:'b-green',clear:'b-grey',flagged:'b-danger',restricted:'b-danger'};
+    var label={pending_payment:'awaiting payment',in_transit:'shipped'};
+    return h('span',{class:'badge '+(m[s]||'b-grey'),text:label[s]||s});
+  }
+  function money(v){ return '฿' + v; }
+  function go(hash){ location.hash = hash; }
+
+  // ---------- auth ----------
+  function loginView(){
+    var email=h('input',{type:'email',placeholder:'you@example.com'});
+    var pass=h('input',{type:'password',placeholder:'password'});
+    var card=h('div',{class:'card'},[
+      h('h2',{text:'Log in to Hiww'}),
+      h('label',{text:'Email'}), email,
+      h('label',{text:'Password'}), pass,
+      h('div',{class:'row',style:'margin-top:14px'},[
+        h('button',{text:'Log in',onclick:function(){
+          api('POST','/api/auth/login',{email:email.value.trim(),password:pass.value}).then(function(r){
+            localStorage.setItem('hiww_u_token', r.data.token); boot();
+          }).catch(function(e){ toast('Login failed: '+e.message,'err'); });
+        }}),
+        h('a',{class:'btn secondary',href:'#/register',text:'Create an account'})
+      ])
+    ]);
+    pass.addEventListener('keydown',function(e){ if(e.key==='Enter') card.querySelector('button').click(); });
+    view(card);
+  }
+
+  function registerView(){
+    var name=h('input',{placeholder:'Your full name'});
+    var email=h('input',{type:'email',placeholder:'you@example.com'});
+    var pass=h('input',{type:'password',placeholder:'at least 8 characters'});
+    var type=h('select',{},[
+      h('option',{value:'shopper',text:'Shopper — I want items bought abroad'}),
+      h('option',{value:'traveler',text:'Traveler — I carry items on my trips'}),
+      h('option',{value:'both',text:'Both'})
+    ]);
+    view(h('div',{class:'card'},[
+      h('h2',{text:'Create your account'}),
+      h('label',{text:'Full name'}), name,
+      h('label',{text:'Email'}), email,
+      h('label',{text:'Password'}), pass,
+      h('label',{text:'I am a…'}), type,
+      h('div',{class:'row',style:'margin-top:14px'},[
+        h('button',{text:'Create account',onclick:function(){
+          api('POST','/api/auth/register',{full_name:name.value.trim(),email:email.value.trim(),
+            password:pass.value,user_type:type.value}).then(function(r){
+            localStorage.setItem('hiww_u_token', r.data.token); boot();
+          }).catch(function(e){ toast('Could not register: '+e.message,'err'); });
+        }}),
+        h('a',{class:'btn secondary',href:'#/login',text:'I already have an account'})
+      ])
+    ]));
+  }
+
+  // ---------- shell ----------
+  function navFor(){
+    var links=[];
+    var isShopper = me.user_type==='shopper'||me.user_type==='both';
+    var isTraveler = me.user_type==='traveler'||me.user_type==='both';
+    links.push(['#/home','Home']);
+    if(isShopper){ links.push(['#/new-request','New request']); links.push(['#/requests','My requests']); }
+    if(isTraveler){ links.push(['#/browse','Browse requests']); links.push(['#/new-trip','New trip']); links.push(['#/offers','My offers']); }
+    links.push(['#/orders','My orders']);
+    links.push(['#/kyc','ID check']);
+    var cur=location.hash||'#/home';
+    return h('nav',{}, links.map(function(l){
+      return h('a',{href:l[0],class:(cur===l[0]?'active':''),text:l[1]});
+    }));
+  }
+  function page(title, body){
+    view(navFor(), h('div',{class:'card'},[ h('h2',{text:title}) ].concat(body||[])));
+  }
+
+  // ---------- shopper ----------
+  function newRequestView(){
+    var desc=h('textarea',{placeholder:'What do you want bought? Brand, model, size, colour, quantity, links…'});
+    var country=h('input',{placeholder:'Country to buy in (e.g. JP)'});
+    var cat=h('input',{placeholder:'Category (e.g. beauty, electronics)'});
+    var weight=h('input',{type:'number',step:'0.1',placeholder:'Approx weight in kg'});
+    var budget=h('input',{placeholder:'Your budget, e.g. 1500.00'});
+    page('New request',[
+      h('label',{text:'Item description (min 10 characters)'}), desc,
+      h('label',{text:'Source country'}), country,
+      h('label',{text:'Category'}), cat,
+      h('label',{text:'Estimated weight (kg)'}), weight,
+      h('label',{text:'Budget'}), budget,
+      h('div',{style:'margin-top:14px'},[ h('button',{text:'Post request',onclick:function(){
+        api('POST','/api/requests',{item_description:desc.value.trim(),source_country:country.value.trim(),
+          category:cat.value.trim(),estimated_weight_kg:Number(weight.value),budget:budget.value.trim()})
+          .then(function(){ toast('Request posted','ok'); go('#/requests'); })
+          .catch(function(e){ toast(e.message,'err'); });
+      }}) ])
+    ]);
+  }
+
+  async function myRequestsView(){
+    var r=await api('GET','/api/requests/mine');
+    var items=r.data.items;
+    page('My requests', items.length?items.map(function(rq){
+      return h('div',{class:'list-item'},[
+        h('div',{class:'spread'},[ h('b',{text:rq.item_description.slice(0,80)}), badge(rq.status) ]),
+        h('div',{class:'muted',text:rq.source_country+' · budget '+money(rq.budget)}),
+        h('div',{style:'margin-top:6px'},[ h('a',{class:'btn small secondary',href:'#/request/'+rq.id,text:'View offers'}) ])
+      ]);
+    }):[ h('div',{class:'empty',text:'No requests yet.'}), h('a',{class:'btn',href:'#/new-request',text:'Post your first request'}) ]);
+  }
+
+  async function requestDetailView(id){
+    var rq=(await api('GET','/api/requests/'+id)).data;
+    var offers=(await api('GET','/api/requests/'+id+'/offers')).data.items;
+    var mine = rq.shopper_id===me.id;
+    var body=[
+      h('div',{class:'spread'},[ h('div',{text:rq.item_description}), badge(rq.status) ]),
+      h('div',{class:'muted',text:rq.source_country+' · budget '+money(rq.budget)}),
+      h('h3',{text:'Offers'})
+    ];
+    if(!offers.length) body.push(h('div',{class:'empty',text:'No offers yet.'}));
+    offers.forEach(function(o){
+      var row=[ h('div',{class:'spread'},[
+        h('b',{text:money(o.quoted_price)+(o.traveler_name?(' · '+o.traveler_name):'')}), badge(o.status) ]),
+        h('div',{class:'muted',text:'Delivery by '+new Date(o.delivery_date).toLocaleDateString()}) ];
+      if(mine && rq.status==='open' && o.status==='pending'){
+        row.push(h('div',{style:'margin-top:6px'},[ h('button',{class:'small',text:'Accept this offer',onclick:function(){
+          if(!confirm('Accept this offer for '+money(o.quoted_price)+'? You will then be asked to pay.')) return;
+          api('POST','/api/offers/'+o.id+'/accept').then(function(res){
+            toast('Offer accepted','ok'); go('#/order/'+res.data.order_id);
+          }).catch(function(e){ toast(e.message,'err'); });
+        }}) ]));
+      }
+      body.push(h('div',{class:'list-item'},row));
+    });
+    page('Request', body);
+  }
+
+  // ---------- traveler ----------
+  function newTripView(){
+    var dep=h('input',{placeholder:'Departure country (e.g. JP)'});
+    var arr=h('input',{placeholder:'Arrival country (e.g. TH)'});
+    var dd=h('input',{type:'date'});
+    var rd=h('input',{type:'date'});
+    var wt=h('input',{type:'number',step:'0.1',placeholder:'Spare capacity in kg'});
+    var mi=h('input',{type:'number',placeholder:'Max items'});
+    page('New trip',[
+      h('label',{text:'From'}), dep, h('label',{text:'To'}), arr,
+      h('label',{text:'Departure date'}), dd, h('label',{text:'Return date'}), rd,
+      h('label',{text:'Spare weight (kg)'}), wt, h('label',{text:'Max items'}), mi,
+      h('div',{style:'margin-top:14px'},[ h('button',{text:'Post trip',onclick:function(){
+        api('POST','/api/trips',{departure_country:dep.value.trim(),arrival_country:arr.value.trim(),
+          departure_date:new Date(dd.value).toISOString(),return_date:new Date(rd.value).toISOString(),
+          max_weight_kg:Number(wt.value),max_items:Number(mi.value)})
+          .then(function(){ toast('Trip posted','ok'); go('#/browse'); })
+          .catch(function(e){ toast(e.message,'err'); });
+      }}) ])
+    ]);
+  }
+
+  async function browseView(){
+    var reqs=(await api('GET','/api/requests')).data.items;
+    page('Open requests', reqs.length?reqs.map(function(rq){
+      return h('div',{class:'list-item'},[
+        h('div',{text:rq.item_description.slice(0,90)}),
+        h('div',{class:'muted',text:'Buy in '+rq.source_country+' · budget '+money(rq.budget)}),
+        h('div',{style:'margin-top:6px'},[ h('a',{class:'btn small secondary',href:'#/make-offer/'+rq.id,text:'Make an offer'}) ])
+      ]);
+    }):[ h('div',{class:'empty',text:'No open requests right now.'}) ]);
+  }
+
+  async function makeOfferView(reqId){
+    var rq=(await api('GET','/api/requests/'+reqId)).data;
+    var trips=(await api('GET','/api/trips/mine')).data.items.filter(function(t){ return t.status==='published'; });
+    if(!trips.length){ page('Make an offer',[ h('div',{class:'note',text:'You need a trip first.'}),
+      h('a',{class:'btn',href:'#/new-trip',text:'Post a trip'}) ]); return; }
+    var price=h('input',{placeholder:'Your total price, e.g. 1500.00'});
+    var dd=h('input',{type:'date'});
+    var trip=h('select',{}, trips.map(function(t){
+      return h('option',{value:t.id,text:t.departure_country+' → '+t.arrival_country+' ('+new Date(t.departure_date).toLocaleDateString()+')'});
+    }));
+    page('Make an offer',[
+      h('div',{class:'muted',text:rq.item_description}),
+      h('label',{text:'Which trip'}), trip,
+      h('label',{text:'Your price (what the shopper pays for the goods)'}), price,
+      h('label',{text:'Deliver by'}), dd,
+      h('div',{style:'margin-top:14px'},[ h('button',{text:'Send offer',onclick:function(){
+        api('POST','/api/offers',{request_id:reqId,trip_id:trip.value,quoted_price:price.value.trim(),
+          delivery_date:new Date(dd.value).toISOString()})
+          .then(function(){ toast('Offer sent','ok'); go('#/offers'); })
+          .catch(function(e){ toast(e.message,'err'); });
+      }}) ])
+    ]);
+  }
+
+  async function myOffersView(){
+    var items=(await api('GET','/api/offers/mine')).data.items;
+    page('My offers', items.length?items.map(function(o){
+      return h('div',{class:'list-item'},[
+        h('div',{class:'spread'},[ h('b',{text:money(o.quoted_price)}), badge(o.status) ]),
+        h('div',{class:'muted',text:o.request_item.slice(0,80)})
+      ]);
+    }):[ h('div',{class:'empty',text:'No offers yet — browse requests to make one.'}) ]);
+  }
+
+  // ---------- orders (shared) ----------
+  async function myOrdersView(){
+    var items=(await api('GET','/api/orders')).data.items;
+    page('My orders', items.length?items.map(function(o){
+      return h('div',{class:'list-item'},[
+        h('div',{class:'spread'},[ h('b',{text:o.item_description.slice(0,70)}), badge(o.status) ]),
+        h('div',{class:'muted',text:'Total '+money(o.total_price)}),
+        h('div',{style:'margin-top:6px'},[ h('a',{class:'btn small secondary',href:'#/order/'+o.id,text:'Open'}) ])
+      ]);
+    }):[ h('div',{class:'empty',text:'No orders yet.'}) ]);
+  }
+
+  async function orderDetailView(id){
+    var o=(await api('GET','/api/orders/'+id)).data;
+    var amWShopper=o.shopper_id===me.id, amTraveler=o.traveler_id===me.id;
+    var body=[
+      h('div',{class:'spread'},[ h('div',{text:o.item_description}), badge(o.status) ]),
+      h('div',{class:'muted',text:'Goods '+money(o.total_price)+' · platform fee '+money(o.fees)})
+    ];
+
+    if(o.status==='pending_payment' && amWShopper){
+      body.push(h('h3',{text:'Payment'}));
+      body.push(h('div',{class:'pay-box',text:(me.pilot&&me.pilot.payment_instructions)||'Contact the Hiww team to pay.'}));
+      body.push(h('div',{class:'note',text:'Amount: '+money(o.total_price)+'  ·  Reference: '+o.id}));
+      if(o.payment_claimed_at){
+        body.push(h('div',{class:'note',text:'You told us you have paid. We will confirm once the money arrives.'}));
+      } else {
+        body.push(h('button',{text:"I've sent the payment",onclick:function(){
+          api('POST','/api/orders/'+id+'/claim-payment').then(function(){ toast('Thanks — we will confirm shortly','ok'); render(); })
+            .catch(function(e){ toast(e.message,'err'); });
+        }}));
+      }
+    }
+    if(o.status==='pending_payment' && amTraveler)
+      body.push(h('div',{class:'note',text:'Waiting for the shopper to pay.'}));
+    if(o.status==='confirmed' && amTraveler){
+      body.push(h('div',{class:'note',text:'Payment received. Buy the item and ship it, then mark it shipped below.'}));
+      body.push(h('button',{text:'Mark as shipped',onclick:function(){
+        api('POST','/api/orders/'+id+'/deliver',{note:'Shipped'}).then(function(){ toast('Marked shipped','ok'); render(); })
+          .catch(function(e){ toast(e.message,'err'); });
+      }}));
+    }
+    if(o.status==='confirmed' && amWShopper)
+      body.push(h('div',{class:'note',text:'Payment received. Waiting for the traveler to buy and ship your item.'}));
+    if(o.status==='in_transit' && amWShopper){
+      body.push(h('div',{class:'note',text:'Your item is on the way. Confirm once you have received it.'}));
+      body.push(h('button',{text:'Confirm I received it',onclick:function(){
+        if(!confirm('Confirm you have received the item in good condition?')) return;
+        api('POST','/api/orders/'+id+'/release',{note:'Received'}).then(function(){ toast('Thank you!','ok'); render(); })
+          .catch(function(e){ toast(e.message,'err'); });
+      }}));
+    }
+    if(o.status==='in_transit' && amTraveler)
+      body.push(h('div',{class:'note',text:'Shipped. Waiting for the shopper to confirm receipt.'}));
+    if(o.status==='delivered')
+      body.push(h('div',{class:'note',text:'Completed. '+(amTraveler?'You will be paid out per the pilot process.':'')}));
+
+    // evidence + dispute
+    body.push(h('h3',{text:'Photos / receipts'}));
+    var ev=(await api('GET','/api/orders/'+id+'/evidence')).data;
+    (ev||[]).forEach(function(e){ body.push(h('div',{class:'list-item'},[ h('a',{href:e.url,target:'_blank',text:e.evidence_type+': '+e.url}) ])); });
+    var evUrl=h('input',{placeholder:'Paste a link to a photo (Google Drive, Imgur, …)'});
+    body.push(evUrl);
+    body.push(h('div',{style:'margin-top:8px'},[ h('button',{class:'small secondary',text:'Add link',onclick:function(){
+      api('POST','/api/orders/'+id+'/evidence',{evidence_type:'photo',url:evUrl.value.trim()})
+        .then(function(){ toast('Added','ok'); render(); }).catch(function(e){ toast(e.message,'err'); });
+    }}) ]));
+
+    if(o.status!=='delivered' && o.status!=='cancelled'){
+      body.push(h('h3',{text:'Problem with this order?'}));
+      var dr=h('textarea',{placeholder:'Describe what went wrong (min 10 characters)'});
+      body.push(dr);
+      body.push(h('div',{style:'margin-top:8px'},[ h('button',{class:'small ghost',text:'Open a dispute',onclick:function(){
+        api('POST','/api/disputes',{order_id:id,reason:dr.value.trim()})
+          .then(function(){ toast('Dispute opened — the Hiww team will look into it','ok'); render(); })
+          .catch(function(e){ toast(e.message,'err'); });
+      }}) ]));
+    }
+    page('Order', body);
+  }
+
+  // ---------- KYC / home ----------
+  function kycView(){
+    var dt=h('select',{},[h('option',{value:'passport',text:'Passport'}),
+      h('option',{value:'id_card',text:'National ID card'}),h('option',{value:'drivers_license',text:"Driver's licence"})]);
+    var did=h('input',{placeholder:'Document number'});
+    page('ID check (KYC)',[
+      h('div',{class:'spread'},[ h('span',{text:'Current status:'}), badge(me.kyc_status) ]),
+      h('div',{class:'note',text:'Submit your ID details. The Hiww team reviews them manually during the pilot.'}),
+      h('label',{text:'Document type'}), dt,
+      h('label',{text:'Document number'}), did,
+      h('div',{style:'margin-top:14px'},[ h('button',{text:'Submit for review',onclick:function(){
+        api('POST','/api/compliance/kyc/submit',{document_type:dt.value,document_id:did.value.trim()})
+          .then(function(){ toast('Submitted for review','ok'); boot(); })
+          .catch(function(e){ toast(e.message,'err'); });
+      }}) ])
+    ]);
+  }
+
+  function homeView(){
+    page('Welcome, '+me.full_name.split(' ')[0],[
+      h('div',{class:'spread'},[ h('span',{text:'ID check:'}), badge(me.kyc_status) ]),
+      h('p',{class:'muted',text:'Use the menu above. '+
+        (me.user_type==='traveler'?'Browse requests and make offers, then ship accepted orders.':
+         me.user_type==='shopper'?'Post a request, wait for offers, accept one and pay.':
+         'You can both post requests and carry items.')}),
+      me.kyc_status!=='approved'? h('a',{class:'btn',href:'#/kyc',text:'Complete your ID check'}) : null
+    ]);
+  }
+
+  // ---------- router ----------
+  function render(){
+    if(!tok()){ (location.hash==='#/register'?registerView:loginView)(); return; }
+    if(!me){ boot(); return; }
+    var hash=location.hash||'#/home';
+    var m;
+    try {
+      if(hash==='#/home') return homeView();
+      if(hash==='#/new-request') return newRequestView();
+      if(hash==='#/requests') return void myRequestsView();
+      if((m=hash.match(/^#\/request\/(.+)$/))) return void requestDetailView(m[1]);
+      if(hash==='#/new-trip') return newTripView();
+      if(hash==='#/browse') return void browseView();
+      if((m=hash.match(/^#\/make-offer\/(.+)$/))) return void makeOfferView(m[1]);
+      if(hash==='#/offers') return void myOffersView();
+      if(hash==='#/orders') return void myOrdersView();
+      if((m=hash.match(/^#\/order\/(.+)$/))) return void orderDetailView(m[1]);
+      if(hash==='#/kyc') return kycView();
+      go('#/home');
+    } catch(e){ toast(e.message,'err'); }
+  }
+
+  function boot(){
+    if(!tok()){ me=null; document.getElementById('logoutBtn').hidden=true; document.getElementById('who').textContent=''; render(); return; }
+    api('GET','/api/me').then(function(r){
+      me=r.data;
+      document.getElementById('who').textContent=me.email;
+      document.getElementById('logoutBtn').hidden=false;
+      if(!location.hash) location.hash='#/home';
+      render();
+    }).catch(function(e){
+      if(e.status===401){ localStorage.removeItem('hiww_u_token'); me=null; render(); }
+      else toast('Could not load your account: '+e.message,'err');
+    });
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click',function(){
+    localStorage.removeItem('hiww_u_token'); me=null; location.hash='#/login'; boot();
+  });
+  window.addEventListener('hashchange',render);
+  boot();
+})();
+</script>
+</body>
+</html>

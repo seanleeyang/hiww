@@ -287,7 +287,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{traveler_token}}" }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"request_id\": \"{{request_id}}\",\n  \"quoted_price\": \"85.00\",\n  \"delivery_date\": \"2026-10-08T10:00:00.000Z\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"request_id\": \"{{request_id}}\",\n  \"trip_id\": \"{{trip_id}}\",\n  \"quoted_price\": \"85.00\",\n  \"delivery_date\": \"2026-10-08T10:00:00.000Z\"\n}" },
             "url": { "raw": "{{base_url}}/api/offers", "host": ["{{base_url}}"], "path": ["api", "offers"] }
           }
         },
@@ -312,8 +312,9 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"trip_id\": \"{{trip_id}}\",\n  \"item_description\": \"Vitamin C serum, two boxes\",\n  \"quantity\": 2,\n  \"unit_price\": \"42.50\"\n}" },
-            "url": { "raw": "{{base_url}}/api/offers/{{offer_id}}/accept", "host": ["{{base_url}}"], "path": ["api", "offers", "{{offer_id}}", "accept"] }
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/api/offers/{{offer_id}}/accept", "host": ["{{base_url}}"], "path": ["api", "offers", "{{offer_id}}", "accept"] },
+            "description": "No body needed — the order is built from the request and the offer."
           }
         },
         {

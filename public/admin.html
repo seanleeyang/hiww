@@ -175,10 +175,12 @@
   }
 
   async function api(method, path, body, tokenOverride) {
-    var headers = { 'Content-Type': 'application/json' };
+    var headers = {};
     var tok = tokenOverride !== undefined ? tokenOverride : TOKEN();
     if (tok) headers.Authorization = 'Bearer ' + tok;
-    var res = await fetch(path, { method: method, headers: headers, body: body ? JSON.stringify(body) : undefined });
+    var opts = { method: method, headers: headers };
+    if (body !== undefined && body !== null) { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    var res = await fetch(path, opts);
     var text = await res.text(); var json;
     try { json = JSON.parse(text); } catch (e) { json = { raw: text }; }
     if (!res.ok) {
@@ -434,9 +436,9 @@
       log('Traveler posts a trip…');
       var tripId = (await api('POST', '/api/trips', { departure_country: 'JP', arrival_country: 'TH', departure_date: '2026-10-01T08:00:00.000Z', return_date: '2026-10-10T08:00:00.000Z', max_weight_kg: 20, max_items: 5 }, traveler.token)).data.id;
       log('Traveler makes an offer…');
-      var offerId = (await api('POST', '/api/offers', { request_id: reqId, quoted_price: '85.00', delivery_date: '2026-10-08T10:00:00.000Z' }, traveler.token)).data.id;
+      var offerId = (await api('POST', '/api/offers', { request_id: reqId, trip_id: tripId, quoted_price: '85.00', delivery_date: '2026-10-08T10:00:00.000Z' }, traveler.token)).data.id;
       log('Shopper accepts the offer…');
-      var orderId = (await api('POST', '/api/offers/' + offerId + '/accept', { trip_id: tripId, item_description: 'Test item for the pilot console', quantity: 2, unit_price: '42.50' }, shopper.token)).data.order_id;
+      var orderId = (await api('POST', '/api/offers/' + offerId + '/accept', {}, shopper.token)).data.order_id;
       personas[orderId] = { shopper: shopper.token, traveler: traveler.token };
       savePersonas();
       log('OK  test order ' + orderId.slice(0, 8) + ' created — status: pending_payment');

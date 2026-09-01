@@ -27,16 +27,17 @@ import { registerAdminActionRoutes } from '@/modules/admin/actions';
 import { registerMoneyRoutes } from '@/modules/money/routes';
 import { registerExternalRoutes } from '@/modules/external/routes';
 
-function loadConsoleHtml(): string {
+function loadStatic(file: string): string {
   // Resolved from the process working directory, which is the project root for
   // `npm run dev`, `node dist/main.js`, and the test runner alike.
   try {
-    return readFileSync(join(process.cwd(), 'public', 'admin.html'), 'utf8');
+    return readFileSync(join(process.cwd(), 'public', file), 'utf8');
   } catch {
-    return '<!doctype html><meta charset="utf-8"><title>Hiww</title><p>Console file not found (public/admin.html). The API is still running.</p>';
+    return `<!doctype html><meta charset="utf-8"><title>Hiww</title><p>${file} not found. The API is still running.</p>`;
   }
 }
-const CONSOLE_HTML = loadConsoleHtml();
+const CONSOLE_HTML = loadStatic('admin.html');
+const APP_HTML = loadStatic('app.html');
 
 export interface BuildAppOptions {
   /**
@@ -87,12 +88,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     });
   });
 
-  // The pilot operator console — a single static page that talks to this API.
-  const serveConsole = async (_request: unknown, reply: FastifyReply): Promise<void> => {
-    void reply.type('text/html; charset=utf-8').send(CONSOLE_HTML);
+  // Static pages that talk to this API: the operator console and the user app.
+  const html = (body: string) => async (_request: unknown, reply: FastifyReply): Promise<void> => {
+    void reply.type('text/html; charset=utf-8').send(body);
   };
-  app.get('/', serveConsole);
-  app.get('/admin', serveConsole);
+  app.get('/', html(APP_HTML));
+  app.get('/app', html(APP_HTML));
+  app.get('/admin', html(CONSOLE_HTML));
 
   await registerAuthRoutes(app);
   await registerTripsRoutes(app);

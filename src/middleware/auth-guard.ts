@@ -12,8 +12,8 @@ const PUBLIC_ROUTES = new Set<string>([
   '/api/auth/register',
   '/api/auth/login',
   '/',
+  '/app',
   '/admin',
-  '/console.js',
 ]);
 
 /**

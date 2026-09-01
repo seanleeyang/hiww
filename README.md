@@ -9,8 +9,9 @@ Hiww is a peer-to-peer cross-border shopping marketplace backend built with Type
 > changed and what is still required before taking real payments automatically.
 > The "What is working" list below predates that review and is optimistic.
 >
-> **Run the pilot by clicking:** double-click `start-hiww.bat` → console opens at
-> `http://localhost:3000/admin`. Guide: [docs/CONSOLE.md](docs/CONSOLE.md).
+> **Run the pilot by clicking:** double-click `start-hiww.bat`.
+> Operator console → `http://localhost:3000/admin` ([docs/CONSOLE.md](docs/CONSOLE.md)).
+> Shopper/traveler app → `http://localhost:3000/` ([docs/USER-APP.md](docs/USER-APP.md)).
 > **Money handling:** [docs/MONEY-TRACKER.md](docs/MONEY-TRACKER.md) ·
 > **Providers:** [docs/PROVIDER-OUTREACH.md](docs/PROVIDER-OUTREACH.md) ·
 > **Raw API:** [docs/POSTMAN.md](docs/POSTMAN.md)

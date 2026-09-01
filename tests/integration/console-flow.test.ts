@@ -11,13 +11,17 @@ describe('operator console', () => {
     await closeTestApp(ctx);
   });
 
-  it('serves the console page at / and /admin without auth', async () => {
-    for (const url of ['/', '/admin']) {
+  it('serves the user app at / and /app, and the console at /admin, without auth', async () => {
+    for (const url of ['/', '/app', '/admin']) {
       const res = await ctx.app.inject({ method: 'GET', url });
       expect(res.statusCode).toBe(200);
       expect(res.headers['content-type']).toContain('text/html');
       expect(res.body).toContain('Hiww');
     }
+    const console = await ctx.app.inject({ method: 'GET', url: '/admin' });
+    expect(console.body).toContain('Pilot Console');
+    const app = await ctx.app.inject({ method: 'GET', url: '/app' });
+    expect(app.body).toContain('Browse requests');
   });
 
   it('GET /api/admin/users lists users for an admin and is blocked otherwise', async () => {
