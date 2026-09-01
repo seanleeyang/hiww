@@ -2,6 +2,13 @@
 
 Hiww is a peer-to-peer cross-border shopping marketplace backend built with TypeScript, Fastify, PostgreSQL, and Kysely.
 
+> **Status (Sept 2026): manual-money pilot only.** The automatic payment engine
+> is switched off on purpose. Real money is moved by an admin by hand while the
+> software tracks order state. See **[docs/PILOT-RUNBOOK.md](docs/PILOT-RUNBOOK.md)**
+> to operate it and **[docs/CHANGES-2026-09.md](docs/CHANGES-2026-09.md)** for what
+> changed and what is still required before taking real payments automatically.
+> The "What is working" list below predates that review and is optimistic.
+
 ## What is working
 
 The backend includes the core marketplace flow and operating layers:
