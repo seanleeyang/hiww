@@ -8,6 +8,10 @@ Hiww is a peer-to-peer cross-border shopping marketplace backend built with Type
 > to operate it and **[docs/CHANGES-2026-09.md](docs/CHANGES-2026-09.md)** for what
 > changed and what is still required before taking real payments automatically.
 > The "What is working" list below predates that review and is optimistic.
+>
+> **Click through the API:** [docs/POSTMAN.md](docs/POSTMAN.md) (no frontend yet).
+> **Money handling:** [docs/MONEY-TRACKER.md](docs/MONEY-TRACKER.md) ·
+> **Providers:** [docs/PROVIDER-OUTREACH.md](docs/PROVIDER-OUTREACH.md)
 
 ## What is working
 

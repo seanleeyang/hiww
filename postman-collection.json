@@ -1,146 +1,569 @@
 {
   "info": {
-    "name": "Hiww API Demo",
+    "name": "Hiww API — Pilot",
+    "description": "Click-through collection for the Hiww manual-money pilot.\n\nHOW TO USE\n1. Start the API:  npm run dev\n2. Import this file into Postman (free).\n3. Run the folder **A. First-time setup** top to bottom. It creates an admin, a shopper and a traveler and stores their tokens automatically.\n4. After 'Register admin', run this in a terminal once:  npm run make-admin admin@pilot.local   (admin rights cannot be granted over the API by design.)\n5. Then run **B. Happy path** top to bottom to push one order through every stage.\n6. **C. Admin tools** and **D. Browse / read** can be run any time.\n\nTokens and IDs (order_id, dispute_id, ...) are captured into collection variables by test scripts — you should not need to copy/paste anything.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "admin_email", "value": "admin@pilot.local" },
+    { "key": "shopper_email", "value": "shopper@pilot.local" },
+    { "key": "traveler_email", "value": "traveler@pilot.local" },
+    { "key": "password", "value": "SecurePass123!" },
+    { "key": "admin_token", "value": "" },
+    { "key": "shopper_token", "value": "" },
+    { "key": "traveler_token", "value": "" },
+    { "key": "admin_user_id", "value": "" },
+    { "key": "shopper_user_id", "value": "" },
+    { "key": "traveler_user_id", "value": "" },
+    { "key": "request_id", "value": "" },
+    { "key": "trip_id", "value": "" },
+    { "key": "offer_id", "value": "" },
+    { "key": "order_id", "value": "" },
+    { "key": "dispute_id", "value": "" }
+  ],
   "item": [
     {
-      "name": "Health",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3000/health",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["health"]
-        }
-      }
-    },
-    {
-      "name": "Register Shopper",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+      "name": "A. First-time setup",
+      "description": "Run these in order once. Creates the three accounts and stores their tokens. Remember to run `npm run make-admin admin@pilot.local` after registering the admin.",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
           }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"shopper-demo@example.com\",\n  \"full_name\": \"Shopper Demo\",\n  \"user_type\": \"shopper\",\n  \"password\": \"SecurePass123!\"\n}"
         },
-        "url": {
-          "raw": "http://localhost:3000/api/auth/register",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "auth", "register"]
-        }
-      }
-    },
-    {
-      "name": "Register Traveler",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+        {
+          "name": "Register admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.token) {",
+                  "  pm.collectionVariables.set('admin_token', j.data.token);",
+                  "  pm.collectionVariables.set('admin_user_id', j.data.userId);",
+                  "}",
+                  "pm.test('registered (201) or already exists (409)', () => pm.expect([201,409]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"full_name\": \"Pilot Admin\",\n  \"user_type\": \"both\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] },
+            "description": "After this runs, promote the account in a terminal:\n\n    npm run make-admin admin@pilot.local\n\nThen run 'Login admin' below so the token reflects admin rights (any token works — admin is checked in the DB — but re-login is a good habit)."
           }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"traveler-demo@example.com\",\n  \"full_name\": \"Traveler Demo\",\n  \"user_type\": \"traveler\",\n  \"password\": \"SecurePass123!\"\n}"
         },
-        "url": {
-          "raw": "http://localhost:3000/api/auth/register",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "auth", "register"]
-        }
-      }
-    },
-    {
-      "name": "Create Trip",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{traveler_token}}" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"departure_country\": \"US\",\n  \"arrival_country\": \"NG\",\n  \"departure_date\": \"2026-10-10T08:00:00.000Z\",\n  \"return_date\": \"2026-10-18T08:00:00.000Z\",\n  \"max_weight_kg\": 20,\n  \"max_items\": 3\n}"
+        {
+          "name": "Login admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.token) {",
+                  "  pm.collectionVariables.set('admin_token', j.data.token);",
+                  "  pm.collectionVariables.set('admin_user_id', j.data.userId);",
+                  "}",
+                  "pm.test('logged in', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
         },
-        "url": {
-          "raw": "http://localhost:3000/api/trips",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "trips"]
-        }
-      }
-    },
-    {
-      "name": "Create Request",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"item_description\": \"iPhone 15\",\n  \"source_country\": \"US\",\n  \"category\": \"electronics\",\n  \"estimated_weight_kg\": 1.5,\n  \"budget\": \"1200.00\"\n}"
+        {
+          "name": "Register shopper",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.token) {",
+                  "  pm.collectionVariables.set('shopper_token', j.data.token);",
+                  "  pm.collectionVariables.set('shopper_user_id', j.data.userId);",
+                  "}",
+                  "pm.test('registered (201) or already exists (409)', () => pm.expect([201,409]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{shopper_email}}\",\n  \"full_name\": \"Sam Shopper\",\n  \"user_type\": \"shopper\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
         },
-        "url": {
-          "raw": "http://localhost:3000/api/requests",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "requests"]
+        {
+          "name": "Login shopper",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.token) {",
+                  "  pm.collectionVariables.set('shopper_token', j.data.token);",
+                  "  pm.collectionVariables.set('shopper_user_id', j.data.userId);",
+                  "}",
+                  "pm.test('logged in', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{shopper_email}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Register traveler",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.token) {",
+                  "  pm.collectionVariables.set('traveler_token', j.data.token);",
+                  "  pm.collectionVariables.set('traveler_user_id', j.data.userId);",
+                  "}",
+                  "pm.test('registered (201) or already exists (409)', () => pm.expect([201,409]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{traveler_email}}\",\n  \"full_name\": \"Tia Traveler\",\n  \"user_type\": \"traveler\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Login traveler",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.token) {",
+                  "  pm.collectionVariables.set('traveler_token', j.data.token);",
+                  "  pm.collectionVariables.set('traveler_user_id', j.data.userId);",
+                  "}",
+                  "pm.test('logged in', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{traveler_email}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
         }
-      }
+      ]
     },
     {
-      "name": "List Trips",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3000/api/trips?page=1&limit=10",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "trips"],
-          "query": [
-            { "key": "page", "value": "1" },
-            { "key": "limit", "value": "10" }
-          ]
+      "name": "B. Happy path (run top to bottom)",
+      "description": "One full order: KYC → request → trip → offer → accept → admin confirms payment → shipped → received. Needs folder A run first.",
+      "item": [
+        {
+          "name": "Admin: approve shopper KYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"approved\",\n  \"note\": \"ID checked, matches profile\"\n}" },
+            "url": { "raw": "{{base_url}}/api/admin/users/{{shopper_user_id}}/kyc-review", "host": ["{{base_url}}"], "path": ["api", "admin", "users", "{{shopper_user_id}}", "kyc-review"] }
+          }
+        },
+        {
+          "name": "Admin: approve traveler KYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"approved\",\n  \"note\": \"ID checked, matches profile\"\n}" },
+            "url": { "raw": "{{base_url}}/api/admin/users/{{traveler_user_id}}/kyc-review", "host": ["{{base_url}}"], "path": ["api", "admin", "users", "{{traveler_user_id}}", "kyc-review"] }
+          }
+        },
+        {
+          "name": "Shopper: create request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.id) pm.collectionVariables.set('request_id', j.data.id);",
+                  "pm.test('created', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"item_description\": \"Vitamin C serum, two boxes\",\n  \"source_country\": \"JP\",\n  \"category\": \"beauty\",\n  \"estimated_weight_kg\": 1,\n  \"budget\": \"90.00\"\n}" },
+            "url": { "raw": "{{base_url}}/api/requests", "host": ["{{base_url}}"], "path": ["api", "requests"] }
+          }
+        },
+        {
+          "name": "Traveler: create trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.id) pm.collectionVariables.set('trip_id', j.data.id);",
+                  "pm.test('created', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{traveler_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"departure_country\": \"JP\",\n  \"arrival_country\": \"TH\",\n  \"departure_date\": \"2026-10-01T08:00:00.000Z\",\n  \"return_date\": \"2026-10-10T08:00:00.000Z\",\n  \"max_weight_kg\": 20,\n  \"max_items\": 5\n}" },
+            "url": { "raw": "{{base_url}}/api/trips", "host": ["{{base_url}}"], "path": ["api", "trips"] }
+          }
+        },
+        {
+          "name": "Traveler: make offer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.id) pm.collectionVariables.set('offer_id', j.data.id);",
+                  "pm.test('created', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{traveler_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"request_id\": \"{{request_id}}\",\n  \"quoted_price\": \"85.00\",\n  \"delivery_date\": \"2026-10-08T10:00:00.000Z\"\n}" },
+            "url": { "raw": "{{base_url}}/api/offers", "host": ["{{base_url}}"], "path": ["api", "offers"] }
+          }
+        },
+        {
+          "name": "Shopper: accept offer (creates order)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.order_id) pm.collectionVariables.set('order_id', j.data.order_id);",
+                  "pm.test('accepted', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"trip_id\": \"{{trip_id}}\",\n  \"item_description\": \"Vitamin C serum, two boxes\",\n  \"quantity\": 2,\n  \"unit_price\": \"42.50\"\n}" },
+            "url": { "raw": "{{base_url}}/api/offers/{{offer_id}}/accept", "host": ["{{base_url}}"], "path": ["api", "offers", "{{offer_id}}", "accept"] }
+          }
+        },
+        {
+          "name": "Admin: confirm payment (AFTER money received)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"payment_id\": \"WISE-REF-12345\"\n}" },
+            "url": { "raw": "{{base_url}}/api/payments/confirm", "host": ["{{base_url}}"], "path": ["api", "payments", "confirm"] },
+            "description": "Only run this once the shopper's money is actually in your account. Safe to run twice (idempotent). Record it in the money spreadsheet."
+          }
+        },
+        {
+          "name": "Traveler: mark shipped",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{traveler_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"note\": \"Shipped via EMS, tracking EE123456789JP\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/deliver", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}", "deliver"] }
+          }
+        },
+        {
+          "name": "Shopper: confirm receipt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"note\": \"Arrived, both boxes present\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/release", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}", "release"] },
+            "description": "Order becomes 'delivered'. Now you may pay the traveler out-of-band and record it."
+          }
+        },
+        {
+          "name": "Get order (check status)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}"] }
+          }
         }
-      }
+      ]
     },
     {
-      "name": "Admin Review Queue",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3000/api/admin/reviews",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "admin", "reviews"]
+      "name": "C. Admin tools",
+      "item": [
+        {
+          "name": "Review queue (disputes + pending KYC)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/admin/reviews", "host": ["{{base_url}}"], "path": ["api", "admin", "reviews"] }
+          }
+        },
+        {
+          "name": "Ops overview (metrics)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/ops/overview", "host": ["{{base_url}}"], "path": ["api", "ops", "overview"] }
+          }
+        },
+        {
+          "name": "Shopper: open a dispute",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.id) pm.collectionVariables.set('dispute_id', j.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"reason\": \"One of the two boxes was missing from the parcel\"\n}" },
+            "url": { "raw": "{{base_url}}/api/disputes", "host": ["{{base_url}}"], "path": ["api", "disputes"] }
+          }
+        },
+        {
+          "name": "Admin: resolve dispute",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"resolved\",\n  \"resolution\": \"Refunded shopper 42.50 (one box) via Wise ref RF-88 on 2026-09-05. Traveler keeps 42.50. Both parties notified.\"\n}" },
+            "url": { "raw": "{{base_url}}/api/admin/disputes/{{dispute_id}}/resolve", "host": ["{{base_url}}"], "path": ["api", "admin", "disputes", "{{dispute_id}}", "resolve"] },
+            "description": "The software only records the decision text. Carry out the actual refund/payout by hand and write exactly what you did here and in the spreadsheet."
+          }
+        },
+        {
+          "name": "Admin: flag a user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"risk_status\": \"flagged\",\n  \"reason\": \"Repeated refund requests\"\n}" },
+            "url": { "raw": "{{base_url}}/api/admin/users/{{shopper_user_id}}/flag", "host": ["{{base_url}}"], "path": ["api", "admin", "users", "{{shopper_user_id}}", "flag"] }
+          }
+        },
+        {
+          "name": "Admin: KYC review (approve/reject)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"approved\",\n  \"note\": \"Passport verified\"\n}" },
+            "url": { "raw": "{{base_url}}/api/admin/users/{{traveler_user_id}}/kyc-review", "host": ["{{base_url}}"], "path": ["api", "admin", "users", "{{traveler_user_id}}", "kyc-review"] }
+          }
+        },
+        {
+          "name": "Admin: view a user's ledger",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/ledger/{{traveler_user_id}}", "host": ["{{base_url}}"], "path": ["api", "ledger", "{{traveler_user_id}}"] },
+            "description": "Empty during the manual-money pilot — balances are tracked in your spreadsheet, not here."
+          }
+        },
+        {
+          "name": "Admin: initiate a provider payment session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"order_id\": \"{{order_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/payments/initiate", "host": ["{{base_url}}"], "path": ["api", "payments", "initiate"] },
+            "description": "Returns a mock payment session. Only useful once a real provider is wired in."
+          }
         }
-      }
+      ]
+    },
+    {
+      "name": "D. Browse / read (any logged-in user)",
+      "item": [
+        {
+          "name": "List trips",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{shopper_token}}" }],
+            "url": { "raw": "{{base_url}}/api/trips?page=1&limit=10", "host": ["{{base_url}}"], "path": ["api", "trips"], "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "10" } ] }
+          }
+        },
+        {
+          "name": "List requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{traveler_token}}" }],
+            "url": { "raw": "{{base_url}}/api/requests?page=1&limit=10", "host": ["{{base_url}}"], "path": ["api", "requests"], "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "10" } ] }
+          }
+        },
+        {
+          "name": "List orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/orders?page=1&limit=20", "host": ["{{base_url}}"], "path": ["api", "orders"], "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "20" } ] }
+          }
+        },
+        {
+          "name": "Get request by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{shopper_token}}" }],
+            "url": { "raw": "{{base_url}}/api/requests/{{request_id}}", "host": ["{{base_url}}"], "path": ["api", "requests", "{{request_id}}"] }
+          }
+        },
+        {
+          "name": "Get trip by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{traveler_token}}" }],
+            "url": { "raw": "{{base_url}}/api/trips/{{trip_id}}", "host": ["{{base_url}}"], "path": ["api", "trips", "{{trip_id}}"] }
+          }
+        },
+        {
+          "name": "Shopper: submit KYC document",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"document_type\": \"passport\",\n  \"document_id\": \"AA1234567\"\n}" },
+            "url": { "raw": "{{base_url}}/api/compliance/kyc/submit", "host": ["{{base_url}}"], "path": ["api", "compliance", "kyc", "submit"] }
+          }
+        },
+        {
+          "name": "Traveler: upload evidence for an order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{traveler_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"evidence_type\": \"photo\",\n  \"url\": \"https://example.com/parcel-photo.jpg\"\n}" },
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/evidence", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}", "evidence"] }
+          }
+        },
+        {
+          "name": "List evidence for an order",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{shopper_token}}" }],
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/evidence", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}", "evidence"] }
+          }
+        },
+        {
+          "name": "Create a notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{shopper_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"email\",\n  \"subject\": \"Order update\",\n  \"body\": \"Your order has shipped.\"\n}" },
+            "url": { "raw": "{{base_url}}/api/notifications", "host": ["{{base_url}}"], "path": ["api", "notifications"] }
+          }
+        },
+        {
+          "name": "List a user's notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{shopper_token}}" }],
+            "url": { "raw": "{{base_url}}/api/notifications/{{shopper_user_id}}", "host": ["{{base_url}}"], "path": ["api", "notifications", "{{shopper_user_id}}"] }
+          }
+        }
+      ]
     }
-  ],
-  "variable": [
-    { "key": "shopper_token", "value": "" },
-    { "key": "traveler_token", "value": "" }
   ]
 }
