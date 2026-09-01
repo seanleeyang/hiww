@@ -16,7 +16,8 @@
     "db:reset": "tsx reset-db.ts",
     "db:migrate": "tsx migrations/run.ts",
     "db:setup": "tsx reset-db.ts && tsx migrations/run.ts",
-    "make-admin": "tsx scripts/make-admin.ts"
+    "make-admin": "tsx scripts/make-admin.ts",
+    "create-admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
     "@fastify/cors": "^8.4.2",

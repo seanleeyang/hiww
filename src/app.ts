@@ -1,4 +1,6 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import Fastify, { FastifyInstance, FastifyReply } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
@@ -25,6 +27,17 @@ import { registerAdminActionRoutes } from '@/modules/admin/actions';
 import { registerMoneyRoutes } from '@/modules/money/routes';
 import { registerExternalRoutes } from '@/modules/external/routes';
 
+function loadConsoleHtml(): string {
+  // Resolved from the process working directory, which is the project root for
+  // `npm run dev`, `node dist/main.js`, and the test runner alike.
+  try {
+    return readFileSync(join(process.cwd(), 'public', 'admin.html'), 'utf8');
+  } catch {
+    return '<!doctype html><meta charset="utf-8"><title>Hiww</title><p>Console file not found (public/admin.html). The API is still running.</p>';
+  }
+}
+const CONSOLE_HTML = loadConsoleHtml();
+
 export interface BuildAppOptions {
   /**
    * Inject an existing database connection (used by tests so they can own the
@@ -47,7 +60,9 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const ownsDb = options.db === undefined;
 
   await app.register(cors, { origin: true });
-  await app.register(helmet);
+  // CSP is disabled so the single-file local console (public/admin.html) works.
+  // The API serves only JSON; revisit this when there is a real hosted frontend.
+  await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(rateLimit, {
     global: true,
     max: config.rateLimitMax,
@@ -71,6 +86,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       env: getHealthSummary(),
     });
   });
+
+  // The pilot operator console — a single static page that talks to this API.
+  const serveConsole = async (_request: unknown, reply: FastifyReply): Promise<void> => {
+    void reply.type('text/html; charset=utf-8').send(CONSOLE_HTML);
+  };
+  app.get('/', serveConsole);
+  app.get('/admin', serveConsole);
 
   await registerAuthRoutes(app);
   await registerTripsRoutes(app);

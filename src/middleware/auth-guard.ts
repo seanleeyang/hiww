@@ -7,7 +7,14 @@ import { verifyToken } from '@/utils/auth';
  * default — a request with no valid bearer token is rejected before it reaches
  * the handler.
  */
-const PUBLIC_ROUTES = new Set<string>(['/health', '/api/auth/register', '/api/auth/login']);
+const PUBLIC_ROUTES = new Set<string>([
+  '/health',
+  '/api/auth/register',
+  '/api/auth/login',
+  '/',
+  '/admin',
+  '/console.js',
+]);
 
 /**
  * Routes that require `users.role = 'admin'`. These are the staff-only controls:
@@ -16,6 +23,7 @@ const PUBLIC_ROUTES = new Set<string>(['/health', '/api/auth/register', '/api/au
  */
 const ADMIN_ROUTES = new Set<string>([
   '/api/admin/reviews',
+  '/api/admin/users',
   '/api/admin/disputes/:id/resolve',
   '/api/admin/users/:userId/kyc-review',
   '/api/admin/users/:userId/flag',

@@ -53,4 +53,16 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       throw new AppError('DB_ERROR', 500, 'Failed to load admin review queue');
     }
   });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.get('/api/admin/users', async (request: any, reply: any) => {
+    const users = await request.db
+      .selectFrom('users')
+      .select(['id', 'email', 'full_name', 'user_type', 'role', 'kyc_status', 'risk_status', 'created_at'])
+      .orderBy('created_at', 'desc')
+      .limit(200)
+      .execute();
+
+    reply.send({ success: true, data: { users }, code: 'ADMIN_USERS' });
+  });
 }

@@ -19,6 +19,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 # Compiled app to run, plus source/migrations so `npm run db:migrate` (tsx) works.
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/src ./src
+COPY --from=build /app/public ./public
 COPY --from=build /app/migrations ./migrations
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/reset-db.ts ./reset-db.ts
