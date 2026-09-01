@@ -1,10 +1,13 @@
+import type { Generated } from 'kysely';
+
 export interface UsersTable {
   id: string;
   email: string;
   full_name: string;
   user_type: 'shopper' | 'traveler' | 'both';
-  kyc_status: 'pending' | 'approved' | 'rejected';
-  risk_status: 'clear' | 'flagged' | 'restricted';
+  kyc_status: Generated<'pending' | 'approved' | 'rejected'>;
+  risk_status: Generated<'clear' | 'flagged' | 'restricted'>;
+  role: Generated<'user' | 'admin'>;
   password_hash?: string;
   created_at: Date;
   updated_at: Date;

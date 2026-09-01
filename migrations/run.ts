@@ -3,19 +3,26 @@ import { createDatabase } from '@/db/connection';
 import * as migration001 from './001_init';
 import * as migration002 from './002_add_auth_fields';
 import * as migration003 from './003_add_risk_status';
+import * as migration004 from './004_add_user_role';
 
 async function runMigrations(): Promise<void> {
   const db = createDatabase();
 
   console.log('🚀 Running migrations...');
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
+    { name: '001_init', up: migration001.up },
+    { name: '002_add_auth_fields', up: migration002.up },
+    { name: '003_add_risk_status', up: migration003.up },
+    { name: '004_add_user_role', up: migration004.up },
+  ];
+
   try {
-    await migration001.up(db);
-    console.log('✅ Migration 001_init completed');
-    await migration002.up(db);
-    console.log('✅ Migration 002_add_auth_fields completed');
-    await migration003.up(db);
-    console.log('✅ Migration 003_add_risk_status completed');
+    for (const migration of migrations) {
+      await migration.up(db);
+      console.log(`✅ Migration ${migration.name} completed`);
+    }
     await db.destroy();
     console.log('✅ All migrations completed successfully');
   } catch (error) {

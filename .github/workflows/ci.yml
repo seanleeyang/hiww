@@ -27,7 +27,8 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hiww
-      JWT_SECRET: test-secret
+      JWT_SECRET: ci-only-secret-ci-only-secret-0123456789
+      MANUAL_MONEY_PILOT: 'true'
       PAYMENT_PROVIDER: mock
       IDENTITY_PROVIDER: mock
 
@@ -44,8 +45,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
       - name: Run migrations
-        run: npx tsx reset-db.ts ; npx tsx migrations/run.ts
+        run: npx tsx reset-db.ts && npx tsx migrations/run.ts
 
       - name: Run tests
         run: npm test -- --runInBand

@@ -1,91 +1,56 @@
-import 'dotenv/config';
-import fastify, { FastifyInstance } from 'fastify';
-import { Kysely } from 'kysely';
-import { createDatabase } from '@/db/connection';
-import { registerAuthRoutes } from '@/modules/auth/routes';
-import { registerComplianceRoutes } from '@/modules/compliance/routes';
-import type { Database } from '@/types/database';
+import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
 
-describe('compliance flow', () => {
-  let app: ReturnType<typeof fastify>;
-  let db: Kysely<Database>;
+describe('compliance / KYC flow', () => {
+  let ctx: TestContext;
 
   beforeEach(async () => {
-    db = createDatabase();
-    app = fastify();
-
-    app.addHook('preHandler', async (request: any) => {
-      request.db = db;
-      const authHeader = request.headers.authorization;
-      if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-        const { verifyToken } = await import('@/utils/auth');
-        request.userId = verifyToken(authHeader.slice(7)).userId;
-      } else {
-        request.userId = request.headers['x-user-id'] as string;
-      }
-    });
-
-    await app.register(async (instance: FastifyInstance) => {
-      registerAuthRoutes(instance);
-      registerComplianceRoutes(instance);
-    });
-
-    await app.ready();
-
-    const register = await app.inject({
-      method: 'POST',
-      url: '/api/auth/register',
-      payload: {
-        email: 'kyc-user@example.com',
-        full_name: 'KYC User',
-        user_type: 'traveler',
-        password: 'SecurePass123!',
-      },
-    });
-
-    const token = register.json().data.token;
-
-    await app.inject({
-      method: 'POST',
-      url: '/api/compliance/kyc/submit',
-      headers: { authorization: `Bearer ${token}` },
-      payload: {
-        document_type: 'passport',
-        document_id: 'ABC12345',
-      },
-    });
+    ctx = await makeTestApp();
   });
 
   afterEach(async () => {
-    await app.close();
-    await db.destroy();
+    await closeTestApp(ctx);
   });
 
-  it('reviews and approves a user KYC record', async () => {
-    const user = await db
-      .selectFrom('users')
-      .selectAll()
-      .where('email', '=', 'kyc-user@example.com')
-      .executeTakeFirst();
+  it('a user submits KYC and an admin approves it', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
 
-    const approveResponse = await app.inject({
+    const submit = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/submit',
+      headers: authHeader(user),
+      payload: { document_type: 'passport', document_id: 'ABC12345' },
+    });
+    expect(submit.statusCode).toBe(201);
+
+    const approve = await ctx.app.inject({
       method: 'POST',
       url: '/api/compliance/kyc/approve',
-      payload: {
-        user_id: user!.id,
-        status: 'approved',
-      },
+      headers: authHeader(admin),
+      payload: { user_id: user.userId, status: 'approved' },
     });
 
-    expect(approveResponse.statusCode).toBe(200);
-    expect(approveResponse.json().success).toBe(true);
+    expect(approve.statusCode).toBe(200);
+    expect(approve.json().success).toBe(true);
 
-    const updatedUser = await db
+    const updated = await ctx.db
       .selectFrom('users')
       .selectAll()
-      .where('id', '=', user!.id)
+      .where('id', '=', user.userId)
       .executeTakeFirst();
+    expect(updated?.kyc_status).toBe('approved');
+  });
 
-    expect(updatedUser?.kyc_status).toBe('approved');
+  it('a non-admin cannot approve KYC (no self-approval)', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+
+    const approve = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/approve',
+      headers: authHeader(user),
+      payload: { user_id: user.userId, status: 'approved' },
+    });
+
+    expect(approve.statusCode).toBe(403);
   });
 });

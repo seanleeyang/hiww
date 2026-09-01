@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError, generateId } from '@/utils/helpers';
-import { hashPassword, signToken } from '@/utils/auth';
+import { hashPassword, signToken, verifyPassword } from '@/utils/auth';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -72,7 +72,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       .where('email', '=', parsed.data.email)
       .executeTakeFirst();
 
-    if (!user || user.password_hash !== hashPassword(parsed.data.password)) {
+    if (!user || !verifyPassword(parsed.data.password, user.password_hash)) {
       throw new AppError('AUTH_ERROR', 401, 'Invalid email or password');
     }
 

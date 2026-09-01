@@ -1,121 +1,89 @@
-import 'dotenv/config';
-import { randomUUID } from 'crypto';
-import fastify, { FastifyInstance } from 'fastify';
-import { Kysely } from 'kysely';
-import { createDatabase } from '@/db/connection';
-import { registerMoneyRoutes } from '@/modules/money/routes';
-import type { Database } from '@/types/database';
+import { makeTestApp, closeTestApp, authHeader, createUser, type TestContext } from '../helpers/test-app';
+import { createAcceptedOrder } from '../helpers/flows';
 
-describe('payment confirmation flow', () => {
-  let app: ReturnType<typeof fastify>;
-  let db: Kysely<Database>;
-  let travelerId: string;
-  let shopperId: string;
-  let orderId: string;
+describe('payment confirmation (manual-money pilot)', () => {
+  let ctx: TestContext;
 
   beforeEach(async () => {
-    travelerId = randomUUID();
-    shopperId = randomUUID();
-    orderId = randomUUID();
-
-    db = createDatabase();
-    app = fastify();
-
-    app.addHook('preHandler', async (request: any) => {
-      request.db = db;
-      request.userId = 'user-123';
-    });
-
-    await app.register(async (instance: FastifyInstance) => {
-      registerMoneyRoutes(instance);
-    });
-
-    await app.ready();
-
-    await db
-      .insertInto('users')
-      .values({
-        id: travelerId,
-        email: `${randomUUID()}@example.com`,
-        full_name: 'Traveler One',
-        user_type: 'traveler',
-        kyc_status: 'approved',
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-      .execute();
-
-    await db
-      .insertInto('users')
-      .values({
-        id: shopperId,
-        email: `${randomUUID()}@example.com`,
-        full_name: 'Shopper One',
-        user_type: 'shopper',
-        kyc_status: 'approved',
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-      .execute();
-
-    await db
-      .insertInto('orders')
-      .values({
-        id: orderId,
-        shopper_id: shopperId,
-        traveler_id: travelerId,
-        item_description: 'Test item',
-        quantity: 2,
-        unit_price: '75.00',
-        total_price: '162.00',
-        fees: '12.00',
-        status: 'pending_payment',
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-      .execute();
+    ctx = await makeTestApp();
   });
 
   afterEach(async () => {
-    await app.close();
-    await db.destroy();
+    await closeTestApp(ctx);
   });
 
-  it('updates the order and creates ledger entries when payment is confirmed', async () => {
-    const response = await app.inject({
+  it('an admin records payment, moving the order to confirmed with no ledger entries', async () => {
+    const order = await createAcceptedOrder(ctx);
+    const admin = await createUser(ctx, { admin: true });
+
+    const response = await ctx.app.inject({
       method: 'POST',
       url: '/api/payments/confirm',
-      payload: {
-        payment_id: `payment_${orderId}`,
-        order_id: orderId,
-      },
+      headers: authHeader(admin),
+      payload: { order_id: order.orderId, payment_id: 'manual-bank-transfer-ref' },
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({
-      success: true,
-      data: {
-        status: 'confirmed',
-        order_id: orderId,
-      },
-    });
+    expect(response.json()).toMatchObject({ success: true, data: { status: 'confirmed', order_id: order.orderId } });
 
-    const order = await db
+    const row = await ctx.db
       .selectFrom('orders')
       .selectAll()
-      .where('id', '=', orderId)
+      .where('id', '=', order.orderId)
       .executeTakeFirst();
+    expect(row?.status).toBe('confirmed');
 
-    expect(order?.status).toBe('confirmed');
-
-    const ledgerEntries = await db
+    const ledger = await ctx.db
       .selectFrom('ledger_entries')
       .selectAll()
-      .where('order_id', '=', orderId)
-      .orderBy('created_at', 'asc')
+      .where('order_id', '=', order.orderId)
       .execute();
+    expect(ledger).toHaveLength(0);
+  });
 
-    expect(ledgerEntries).toHaveLength(2);
-    expect(ledgerEntries.map((entry) => entry.user_id).sort()).toEqual([travelerId, shopperId].sort());
+  it('is idempotent: confirming twice does not error or double-process', async () => {
+    const order = await createAcceptedOrder(ctx);
+    const admin = await createUser(ctx, { admin: true });
+
+    const first = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/confirm',
+      headers: authHeader(admin),
+      payload: { order_id: order.orderId },
+    });
+    const second = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/confirm',
+      headers: authHeader(admin),
+      payload: { order_id: order.orderId },
+    });
+
+    expect(first.statusCode).toBe(200);
+    expect(second.statusCode).toBe(200);
+  });
+
+  it('rejects payment confirmation from a non-admin', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const response = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/confirm',
+      headers: authHeader(order.shopper),
+      payload: { order_id: order.orderId },
+    });
+
+    expect(response.statusCode).toBe(403);
+  });
+
+  it('rejects payment confirmation with no token', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const response = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/confirm',
+      payload: { order_id: order.orderId },
+    });
+
+    expect(response.statusCode).toBe(401);
   });
 });

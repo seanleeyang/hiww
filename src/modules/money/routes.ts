@@ -1,8 +1,18 @@
 import { FastifyInstance } from 'fastify';
-import Decimal from 'decimal.js';
-import { AppError, generateId } from '@/utils/helpers';
+import { AppError } from '@/utils/helpers';
 import { getPaymentProvider } from '@/services/providers';
+import { config } from '@/config/env';
 
+/**
+ * Money endpoints.
+ *
+ * During the manual-money pilot (`config.manualMoneyPilot`) the platform never
+ * moves funds on its own. An admin settles money out-of-band and then records
+ * the state change here. All of these routes are admin-only (enforced by the
+ * auth guard) and none of them write ledger entries — balances are not a
+ * meaningful concept until a real payment provider and a double-entry ledger
+ * are in place.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { userId: string } }>(
@@ -16,21 +26,11 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         .orderBy('created_at', 'desc')
         .execute();
 
-      if (entries.length === 0) {
-        reply.send({ success: true, data: { entries: [], balance: '0' }, code: 'LEDGER_FOUND' });
-        return;
-      }
-
-      const lastEntry = entries[0];
-      const balance = lastEntry.balance_after;
+      const balance = entries.length > 0 ? entries[0].balance_after : '0';
 
       reply.send({
         success: true,
-        data: {
-          entries,
-          balance,
-          user_id: request.params.userId,
-        },
+        data: { entries, balance, user_id: request.params.userId },
         code: 'LEDGER_FOUND',
       });
     }
@@ -40,15 +40,14 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
     '/api/payments/initiate',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
-      const body = request.body as { order_id: string };
+      const body = request.body as { order_id?: string };
       if (!body.order_id) {
         throw new AppError('VALIDATION_ERROR', 400, 'order_id is required');
       }
 
-      // Verify order exists
       const order = await request.db
         .selectFrom('orders')
-        .select('id')
+        .selectAll()
         .where('id', '=', body.order_id)
         .executeTakeFirst();
 
@@ -65,11 +64,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         item_description: order.item_description,
       });
 
-      reply.status(202).send({
-        success: true,
-        data: session,
-        code: 'PAYMENT_INITIATED',
-      });
+      reply.status(202).send({ success: true, data: session, code: 'PAYMENT_INITIATED' });
     }
   );
 
@@ -77,9 +72,9 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
     '/api/payments/confirm',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
-      const body = request.body as { payment_id: string; order_id: string };
-      if (!body.payment_id || !body.order_id) {
-        throw new AppError('VALIDATION_ERROR', 400, 'payment_id and order_id required');
+      const body = request.body as { order_id?: string; payment_id?: string };
+      if (!body.order_id) {
+        throw new AppError('VALIDATION_ERROR', 400, 'order_id is required');
       }
 
       const order = await request.db
@@ -92,73 +87,32 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('NOT_FOUND', 404, 'Order not found');
       }
 
-      const total = new Decimal(order.total_price);
-      const now = new Date();
+      // Idempotent: only the first confirm transitions the order. Repeats are a
+      // no-op that report the current state rather than moving money twice.
+      if (order.status !== 'pending_payment') {
+        reply.send({
+          success: true,
+          data: { status: order.status, order_id: order.id, already_confirmed: order.status !== 'pending_payment' },
+          code: 'PAYMENT_ALREADY_RECORDED',
+        });
+        return;
+      }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await request.db.transaction().execute(async (trx: any) => {
-        await trx
-          .updateTable('orders')
-          .set({ status: 'confirmed', updated_at: now })
-          .where('id', '=', order.id)
-          .execute();
+      if (!config.manualMoneyPilot) {
+        // Placeholder for the future automated path: verify with the provider,
+        // hold funds in escrow, write double-entry ledger rows.
+        throw new AppError('NOT_IMPLEMENTED', 501, 'Automated payment capture is not implemented yet');
+      }
 
-        const shopperBalanceEntry = await trx
-          .selectFrom('ledger_entries')
-          .select('balance_after')
-          .where('user_id', '=', order.shopper_id)
-          .orderBy('created_at', 'desc')
-          .limit(1)
-          .executeTakeFirst();
-
-        const shopperBalance = shopperBalanceEntry
-          ? new Decimal(shopperBalanceEntry.balance_after)
-          : new Decimal(0);
-
-        const travelerBalanceEntry = await trx
-          .selectFrom('ledger_entries')
-          .select('balance_after')
-          .where('user_id', '=', order.traveler_id)
-          .orderBy('created_at', 'desc')
-          .limit(1)
-          .executeTakeFirst();
-
-        const travelerBalance = travelerBalanceEntry
-          ? new Decimal(travelerBalanceEntry.balance_after)
-          : new Decimal(0);
-
-        await trx
-          .insertInto('ledger_entries')
-          .values({
-            id: generateId(),
-            user_id: order.shopper_id,
-            order_id: order.id,
-            entry_type: 'debit',
-            amount: total.neg().toString(),
-            balance_after: shopperBalance.minus(total).toString(),
-            description: `Payment confirmed for order ${order.id}`,
-            created_at: now,
-          })
-          .execute();
-
-        await trx
-          .insertInto('ledger_entries')
-          .values({
-            id: generateId(),
-            user_id: order.traveler_id,
-            order_id: order.id,
-            entry_type: 'credit',
-            amount: total.toString(),
-            balance_after: travelerBalance.plus(total).toString(),
-            description: `Funds released for order ${order.id}`,
-            created_at: now,
-          })
-          .execute();
-      });
+      await request.db
+        .updateTable('orders')
+        .set({ status: 'confirmed', updated_at: new Date() })
+        .where('id', '=', order.id)
+        .execute();
 
       reply.send({
         success: true,
-        data: { status: 'confirmed', order_id: body.order_id },
+        data: { status: 'confirmed', order_id: order.id, recorded_by: request.userId },
         code: 'PAYMENT_CONFIRMED',
       });
     }

@@ -1,134 +1,44 @@
-import 'dotenv/config';
-import fastify, { FastifyInstance } from 'fastify';
-import { Kysely } from 'kysely';
-import { createDatabase } from '@/db/connection';
-import { registerAuthRoutes } from '@/modules/auth/routes';
-import { registerOffersRoutes } from '@/modules/offers/routes';
-import { registerRequestsRoutes } from '@/modules/requests/routes';
-import { registerTripsRoutes } from '@/modules/trips/routes';
-import type { Database } from '@/types/database';
+import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
+import { createRequest, createTrip } from '../helpers/flows';
 
 describe('offer flow', () => {
-  let app: ReturnType<typeof fastify>;
-  let db: Kysely<Database>;
-  let travelerToken: string;
-  let shopperToken: string;
+  let ctx: TestContext;
 
   beforeEach(async () => {
-    db = createDatabase();
-    app = fastify();
-
-    app.addHook('preHandler', async (request: any) => {
-      request.db = db;
-      const authHeader = request.headers.authorization;
-      if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-        const { verifyToken } = await import('@/utils/auth');
-        const payload = verifyToken(authHeader.slice(7));
-        request.userId = payload.userId;
-      } else {
-        request.userId = request.headers['x-user-id'] as string;
-      }
-    });
-
-    await app.register(async (instance: FastifyInstance) => {
-      registerAuthRoutes(instance);
-      registerRequestsRoutes(instance);
-      registerTripsRoutes(instance);
-      registerOffersRoutes(instance);
-    });
-
-    await app.ready();
-
-    const travelerRegister = await app.inject({
-      method: 'POST',
-      url: '/api/auth/register',
-      payload: {
-        email: 'traveler-offer@example.com',
-        full_name: 'Traveler Offer',
-        user_type: 'traveler',
-        password: 'SecurePass123!',
-      },
-    });
-
-    const shopperRegister = await app.inject({
-      method: 'POST',
-      url: '/api/auth/register',
-      payload: {
-        email: 'shopper-offer@example.com',
-        full_name: 'Shopper Offer',
-        user_type: 'shopper',
-        password: 'SecurePass123!',
-      },
-    });
-
-    travelerToken = travelerRegister.json().data.token;
-    shopperToken = shopperRegister.json().data.token;
-
-    await app.inject({
-      method: 'POST',
-      url: '/api/requests',
-      headers: { authorization: `Bearer ${shopperToken}` },
-      payload: {
-        item_description: 'Luxury skincare set for gifting',
-        source_country: 'US',
-        category: 'beauty',
-        estimated_weight_kg: 2,
-        budget: '150.00',
-      },
-    });
-
-    const requestId = (await db.selectFrom('requests').select('id').limit(1).executeTakeFirst())?.id;
-
-    await app.inject({
-      method: 'POST',
-      url: '/api/trips',
-      headers: { authorization: `Bearer ${travelerToken}` },
-      payload: {
-        departure_country: 'US',
-        arrival_country: 'FR',
-        departure_date: '2026-11-15T08:00:00.000Z',
-        return_date: '2026-11-22T08:00:00.000Z',
-        max_weight_kg: 25,
-        max_items: 3,
-      },
-    });
-
-    const tripId = (await db.selectFrom('trips').select('id').limit(1).executeTakeFirst())?.id;
-
-    await db.updateTable('requests').set({ status: 'open' }).where('id', '=', requestId!).execute();
-    await db.updateTable('trips').set({ status: 'published' }).where('id', '=', tripId!).execute();
+    ctx = await makeTestApp();
   });
 
   afterEach(async () => {
-    await app.close();
-    await db.destroy();
+    await closeTestApp(ctx);
   });
 
   it('creates an offer and accepts it into an order', async () => {
-    const requestRow = await db.selectFrom('requests').selectAll().limit(1).executeTakeFirst();
-    const tripRow = await db.selectFrom('trips').selectAll().limit(1).executeTakeFirst();
+    const shopper = await createUser(ctx, { user_type: 'shopper' });
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
 
-    const offerResponse = await app.inject({
+    const requestId = await createRequest(ctx, shopper);
+    const tripId = await createTrip(ctx, traveler);
+
+    const offerResponse = await ctx.app.inject({
       method: 'POST',
       url: '/api/offers',
-      headers: { authorization: `Bearer ${travelerToken}` },
+      headers: authHeader(traveler),
       payload: {
-        request_id: requestRow!.id,
+        request_id: requestId,
         quoted_price: '120.00',
         delivery_date: '2026-11-18T10:00:00.000Z',
       },
     });
 
     expect(offerResponse.statusCode).toBe(201);
-
     const offerId = offerResponse.json().data.id;
 
-    const acceptedOfferResponse = await app.inject({
+    const acceptedOfferResponse = await ctx.app.inject({
       method: 'POST',
       url: `/api/offers/${offerId}/accept`,
-      headers: { authorization: `Bearer ${shopperToken}` },
+      headers: authHeader(shopper),
       payload: {
-        trip_id: tripRow!.id,
+        trip_id: tripId,
         item_description: 'Luxury skincare set for gifting',
         quantity: 1,
         unit_price: '120.00',
@@ -138,22 +48,56 @@ describe('offer flow', () => {
     expect(acceptedOfferResponse.statusCode).toBe(200);
     expect(acceptedOfferResponse.json().success).toBe(true);
 
-    const acceptedOffer = await db
+    const acceptedOffer = await ctx.db
       .selectFrom('offers')
       .selectAll()
       .where('id', '=', offerId)
       .executeTakeFirst();
-
     expect(acceptedOffer?.status).toBe('accepted');
 
-    const order = await db
+    const order = await ctx.db
       .selectFrom('orders')
       .selectAll()
-      .where('request_id', '=', requestRow!.id)
+      .where('request_id', '=', requestId)
       .executeTakeFirst();
 
     expect(order).toBeTruthy();
-    expect(order?.trip_id).toBe(tripRow!.id);
+    expect(order?.trip_id).toBe(tripId);
     expect(order?.status).toBe('pending_payment');
+  });
+
+  it('does not let a different shopper accept an offer', async () => {
+    const shopper = await createUser(ctx, { user_type: 'shopper' });
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const outsider = await createUser(ctx, { user_type: 'shopper' });
+
+    const requestId = await createRequest(ctx, shopper);
+    const tripId = await createTrip(ctx, traveler);
+
+    const offerResponse = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/offers',
+      headers: authHeader(traveler),
+      payload: {
+        request_id: requestId,
+        quoted_price: '120.00',
+        delivery_date: '2026-11-18T10:00:00.000Z',
+      },
+    });
+    const offerId = offerResponse.json().data.id;
+
+    const acceptResponse = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/offers/${offerId}/accept`,
+      headers: authHeader(outsider),
+      payload: {
+        trip_id: tripId,
+        item_description: 'Luxury skincare set for gifting',
+        quantity: 1,
+        unit_price: '120.00',
+      },
+    });
+
+    expect(acceptResponse.statusCode).toBe(403);
   });
 });
