@@ -53,9 +53,11 @@ Keep the admin list to people you trust. To remove admin: `npm run make-admin so
 actually in your account. Never pay a traveler until the order is `delivered`
 (or a dispute says so).
 
-### Money spreadsheet (minimum columns)
+### Money spreadsheet
 
-`order_id | shopper | traveler | item price | your fee | shopper paid (date/ref) | traveler paid (date/ref) | status | notes`
+Set this up before onboarding anyone: import `docs/money-tracker-template.csv`
+into Google Sheets or Excel. Full instructions and the two rules that keep you
+solvent are in **[MONEY-TRACKER.md](MONEY-TRACKER.md)**.
 
 ---
 
