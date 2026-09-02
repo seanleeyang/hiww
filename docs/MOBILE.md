@@ -69,7 +69,10 @@ reference mockup:
   sheet, chat/report buttons, per-stage action), Confirm & Review screen
   (`/release` + `/review` in one step; review-only mode after delivery), Report a
   problem → dispute. Accepted wants/offers link to their order. 37 Flutter tests.
-- **D5** — Inbox + chat (`/api/orders/:id/messages`, `/api/inbox`) with polling.
+- **D5 (done)** — Inbox tab (avatar, last message, unread `Badge`) and per-order
+  chat (bubble thread, composer, auto mark-read) polling `/api/orders/:id/messages`
+  every 5 s and `/api/inbox` every 15 s; nav badge shows total unread.
+  39 Flutter tests.
 - **D6** — empty/loading/error polish, transitions, a11y, screenshot pass.
 - **Later** — real photo upload, push notifications, offline cache, i18n.
 

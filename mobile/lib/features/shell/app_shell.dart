@@ -6,6 +6,7 @@ import '../../ui/brand_mark.dart';
 import '../../ui/initials_avatar.dart';
 import '../auth/application/auth_controller.dart';
 import '../auth/domain/auth_user.dart';
+import '../chat/data/chat_repository.dart';
 
 enum ShellTab {
   browse('/browse', 'Browse', Icons.travel_explore_outlined, Icons.travel_explore),
@@ -46,6 +47,15 @@ class AppShell extends ConsumerWidget {
 
     void go(int i) => context.go(tabs[i].path);
 
+    final unread = ref.watch(unreadTotalProvider);
+    Widget tabIcon(ShellTab t, {required bool selected}) {
+      final icon = Icon(selected ? t.activeIcon : t.icon);
+      if (t == ShellTab.inbox && unread > 0) {
+        return Badge(label: Text('$unread'), child: icon);
+      }
+      return icon;
+    }
+
     final wide = MediaQuery.sizeOf(context).width >= 760;
 
     final appBar = AppBar(
@@ -79,8 +89,8 @@ class AppShell extends ConsumerWidget {
               destinations: [
                 for (final t in tabs)
                   NavigationRailDestination(
-                    icon: Icon(t.icon),
-                    selectedIcon: Icon(t.activeIcon),
+                    icon: tabIcon(t, selected: false),
+                    selectedIcon: tabIcon(t, selected: true),
                     label: Text(t.label),
                   ),
               ],
@@ -101,8 +111,8 @@ class AppShell extends ConsumerWidget {
         destinations: [
           for (final t in tabs)
             NavigationDestination(
-              icon: Icon(t.icon),
-              selectedIcon: Icon(t.activeIcon),
+              icon: tabIcon(t, selected: false),
+              selectedIcon: tabIcon(t, selected: true),
               label: t.label,
             ),
         ],
