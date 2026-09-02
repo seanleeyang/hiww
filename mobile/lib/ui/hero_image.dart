@@ -10,12 +10,14 @@ class HeroImage extends StatelessWidget {
     required this.fallbackAsset,
     this.height = 168,
     this.borderRadius = 16,
+    this.heroTag,
   });
 
   final String? url;
   final String fallbackAsset;
   final double height;
   final double borderRadius;
+  final Object? heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class HeroImage extends StatelessWidget {
     final placeholder = Container(color: Theme.of(context).colorScheme.surfaceContainerHigh);
     final hasUrl = url != null && url!.startsWith('http');
 
-    return ClipRRect(
+    Widget image = ClipRRect(
       borderRadius: radius,
       child: SizedBox(
         height: height,
@@ -39,5 +41,10 @@ class HeroImage extends StatelessWidget {
             : Image.asset(fallbackAsset, fit: BoxFit.cover),
       ),
     );
+
+    if (heroTag != null) {
+      image = Hero(tag: heroTag!, child: image);
+    }
+    return image;
   }
 }

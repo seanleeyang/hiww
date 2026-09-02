@@ -44,6 +44,7 @@ class WantDetailScreen extends ConsumerWidget {
                 url: want.imageUrl,
                 fallbackAsset: stockForCategory(want.category),
                 height: 200,
+                heroTag: 'want-${want.id}',
               ),
               const SizedBox(height: 16),
               Row(

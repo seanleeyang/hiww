@@ -12,19 +12,22 @@ class AsyncValueView<T> extends StatelessWidget {
     required this.value,
     required this.data,
     this.onRetry,
+    this.loading,
   });
 
   final AsyncValue<T> value;
   final Widget Function(T value) data;
   final VoidCallback? onRetry;
+  final WidgetBuilder? loading;
 
   @override
   Widget build(BuildContext context) {
     return value.when(
-      skipLoadingOnRefresh: false,
-      skipLoadingOnReload: false,
+      skipLoadingOnRefresh: true,
+      skipLoadingOnReload: true,
       data: data,
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () =>
+          loading?.call(context) ?? const Center(child: CircularProgressIndicator()),
       error: (err, _) => EmptyState(
         icon: Icons.cloud_off_outlined,
         title: 'Something went wrong',

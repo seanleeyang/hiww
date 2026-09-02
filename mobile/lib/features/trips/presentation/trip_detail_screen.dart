@@ -36,6 +36,7 @@ class TripDetailScreen extends ConsumerWidget {
                 url: trip.coverImageUrl,
                 fallbackAsset: stockForCountry(trip.arrivalCountry),
                 height: 190,
+                heroTag: 'trip-${trip.id}',
               ),
               const SizedBox(height: 16),
               Text(

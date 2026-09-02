@@ -65,8 +65,9 @@ class StarRatingInput extends StatelessWidget {
           IconButton(
             onPressed: () => onChanged(i),
             iconSize: size,
+            tooltip: '$i star${i == 1 ? '' : 's'}',
             padding: const EdgeInsets.symmetric(horizontal: 2),
-            constraints: const BoxConstraints(),
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             icon: Icon(
               i <= value ? Icons.star_rounded : Icons.star_outline_rounded,
               color: i <= value ? star : idle,

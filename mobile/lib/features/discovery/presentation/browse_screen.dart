@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/empty_state.dart';
+import '../../../ui/skeleton.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../wants/presentation/post_want_sheet.dart';
 import '../data/discovery_repository.dart';
@@ -49,6 +50,7 @@ class BrowseScreen extends ConsumerWidget {
               child: AsyncValueView(
                 value: feed,
                 onRetry: () => ref.invalidate(feedProvider(query)),
+                loading: (_) => const FeedSkeleton(),
                 data: (items) {
                   if (items.isEmpty) {
                     return ListView(

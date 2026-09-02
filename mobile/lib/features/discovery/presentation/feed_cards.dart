@@ -40,6 +40,7 @@ class TripFeedCard extends StatelessWidget {
                 fallbackAsset: stockForCountry(trip.arrivalCountry),
                 height: 150,
                 borderRadius: 20,
+                heroTag: 'trip-${trip.id}',
               ),
               if (earnEstimate != null)
                 Positioned(
@@ -125,6 +126,7 @@ class WantFeedCard extends StatelessWidget {
                     fallbackAsset: stockForCategory(want.category),
                     height: 88,
                     borderRadius: 12,
+                    heroTag: 'want-${want.id}',
                   ),
                 ),
               ),

@@ -211,6 +211,7 @@ class _Composer extends StatelessWidget {
             const SizedBox(width: 8),
             IconButton.filled(
               onPressed: sending ? null : onSend,
+              tooltip: 'Send',
               icon: sending
                   ? const SizedBox(
                       height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))

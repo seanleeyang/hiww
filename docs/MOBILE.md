@@ -73,7 +73,9 @@ reference mockup:
   chat (bubble thread, composer, auto mark-read) polling `/api/orders/:id/messages`
   every 5 s and `/api/inbox` every 15 s; nav badge shows total unread.
   39 Flutter tests.
-- **D6** — empty/loading/error polish, transitions, a11y, screenshot pass.
+- **D6 (done)** — skeleton loaders (Browse), no-flash refresh, mouse-drag scroll
+  on web, 720 px content cap on wide screens, Hero image transitions, a11y
+  tooltips/semantics, Edit-profile sheet (`PATCH /api/me`).
 - **Later** — real photo upload, push notifications, offline cache, i18n.
 
 ## Before a production release

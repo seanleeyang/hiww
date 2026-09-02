@@ -10,7 +10,19 @@ import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
 import '../../../ui/status_pill.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../auth/domain/auth_user.dart';
 import '../data/account_repository.dart';
+
+void _showEditProfile(BuildContext context, WidgetRef ref, AuthUser user) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: _EditProfileSheet(user: user),
+    ),
+  );
+}
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -23,6 +35,13 @@ class AccountScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Account'),
         leading: BackButton(onPressed: () => context.go('/browse')),
+        actions: [
+          if (user != null)
+            TextButton(
+              onPressed: () => _showEditProfile(context, ref, user),
+              child: const Text('Edit'),
+            ),
+        ],
       ),
       body: user == null
           ? const Center(child: CircularProgressIndicator())
@@ -45,7 +64,9 @@ class AccountScreen extends ConsumerWidget {
                               style: Theme.of(context).textTheme.titleLarge),
                           const SizedBox(height: 2),
                           Text(
-                            user.email,
+                            user.homeCity == null
+                                ? user.email
+                                : '${user.homeCity} · ${user.email}',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
@@ -77,6 +98,107 @@ class AccountScreen extends ConsumerWidget {
                 ),
               ],
             ),
+    );
+  }
+}
+
+class _EditProfileSheet extends ConsumerStatefulWidget {
+  const _EditProfileSheet({required this.user});
+  final AuthUser user;
+
+  @override
+  ConsumerState<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
+  late final _name = TextEditingController(text: widget.user.fullName);
+  late final _city = TextEditingController(text: widget.user.homeCity ?? '');
+  late final _avatar = TextEditingController(text: widget.user.avatarUrl ?? '');
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _city.dispose();
+    _avatar.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_name.text.trim().length < 2) {
+      setState(() => _error = 'Enter your name');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(accountRepositoryProvider).updateProfile(
+            fullName: _name.text.trim(),
+            homeCity: _city.text.trim(),
+            avatarUrl: _avatar.text.trim(),
+          );
+      await ref.read(authControllerProvider.notifier).refreshMe();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Edit profile', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _name,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(labelText: 'Full name'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _city,
+              decoration: const InputDecoration(
+                  labelText: 'Home city (optional)', hintText: 'Bangkok'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _avatar,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                  labelText: 'Photo link (optional)', hintText: 'https://…'),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: _busy ? null : _save,
+              child: _busy
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Save'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

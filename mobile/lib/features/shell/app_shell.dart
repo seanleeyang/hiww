@@ -64,13 +64,20 @@ class AppShell extends ConsumerWidget {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 12),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(999),
-            onTap: () => context.go('/account'),
-            child: InitialsAvatar(
-              name: user?.fullName ?? 'Hiww',
-              url: user?.avatarUrl,
-              radius: 17,
+          child: Tooltip(
+            message: 'Account',
+            child: InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTap: () => context.go('/account'),
+              child: Semantics(
+                button: true,
+                label: 'Account',
+                child: InitialsAvatar(
+                  name: user?.fullName ?? 'Hiww',
+                  url: user?.avatarUrl,
+                  radius: 17,
+                ),
+              ),
             ),
           ),
         ),
@@ -96,7 +103,14 @@ class AppShell extends ConsumerWidget {
               ],
             ),
             const VerticalDivider(width: 1),
-            Expanded(child: child),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: child,
+                ),
+              ),
+            ),
           ],
         ),
       );

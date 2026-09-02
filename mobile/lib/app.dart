@@ -1,8 +1,20 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'routing/app_router.dart';
 import 'theme/app_theme.dart';
+
+/// Lets the mouse drag-scroll on web/desktop (off by default in Flutter).
+class _AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
+}
 
 /// Root widget. Owns the [MaterialApp.router] and wires in the go_router
 /// instance that reacts to authentication state.
@@ -17,6 +29,7 @@ class HiwwApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: hiwwTheme(Brightness.light),
       darkTheme: hiwwTheme(Brightness.dark),
+      scrollBehavior: _AppScrollBehavior(),
       routerConfig: router,
     );
   }
