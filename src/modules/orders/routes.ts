@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { AppError } from '@/utils/helpers';
+import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
 
 /**
  * Orders are created by accepting an offer (see offers/routes.ts). This module
@@ -54,12 +55,41 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         throw new AppError('NOT_FOUND', 404, 'Order not found');
       }
 
-      const isParticipant = order.shopper_id === request.userId || order.traveler_id === request.userId;
-      if (!isParticipant && request.userRole !== 'admin') {
+      const isShopper = order.shopper_id === request.userId;
+      const isTraveler = order.traveler_id === request.userId;
+      if (!isShopper && !isTraveler && request.userRole !== 'admin') {
         throw new AppError('FORBIDDEN', 403, 'You are not part of this order');
       }
 
-      reply.send({ success: true, data: order, code: 'ORDER_FOUND' });
+      // The other party, for the order tracker header.
+      const counterpartyId = isTraveler ? order.shopper_id : order.traveler_id;
+      const counterparty = await request.db
+        .selectFrom('users')
+        .select([...USER_SUMMARY_COLUMNS])
+        .where('id', '=', counterpartyId)
+        .executeTakeFirst();
+
+      // Review state for the current viewer.
+      let myReview = null;
+      if (isShopper || isTraveler) {
+        myReview = await request.db
+          .selectFrom('reviews')
+          .select(['id', 'rating', 'comment', 'created_at'])
+          .where('order_id', '=', order.id)
+          .where('reviewer_id', '=', request.userId)
+          .executeTakeFirst();
+      }
+
+      reply.send({
+        success: true,
+        data: {
+          ...order,
+          counterparty: counterparty ? toUserSummary(counterparty) : null,
+          my_review: myReview ?? null,
+          can_review: (isShopper || isTraveler) && order.status === 'delivered' && !myReview,
+        },
+        code: 'ORDER_FOUND',
+      });
     }
   );
 

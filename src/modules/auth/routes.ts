@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { AppError, generateId } from '@/utils/helpers';
 import { hashPassword, signToken, verifyPassword } from '@/utils/auth';
 import { config } from '@/config/env';
+import { profileUpdateSchema } from '@/types/schemas';
+import { toUserSummary } from '@/utils/user-summary';
 
 // Tighter abuse protection on the credential endpoints than the global default.
 const authRouteConfig = {
@@ -95,12 +97,41 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     });
   });
 
+  const meColumns = [
+    'id',
+    'email',
+    'full_name',
+    'user_type',
+    'role',
+    'kyc_status',
+    'risk_status',
+    'avatar_url',
+    'home_city',
+    'rating_sum',
+    'rating_count',
+    'delivered_count',
+    'created_at',
+  ] as const;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const meResponse = (me: any): Record<string, unknown> => {
+    const summary = toUserSummary(me);
+    return {
+      ...me,
+      rating_avg: summary.rating_avg,
+      pilot: {
+        manual_money: config.manualMoneyPilot,
+        payment_instructions: config.paymentInstructions,
+      },
+    };
+  };
+
   // The signed-in user's own profile — the front-end calls this on load.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.get('/api/me', async (request: any, reply: any) => {
     const me = await request.db
       .selectFrom('users')
-      .select(['id', 'email', 'full_name', 'user_type', 'role', 'kyc_status', 'risk_status', 'created_at'])
+      .select([...meColumns])
       .where('id', '=', request.userId)
       .executeTakeFirst();
 
@@ -108,16 +139,31 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       throw new AppError('NOT_FOUND', 404, 'User not found');
     }
 
-    reply.send({
-      success: true,
-      data: {
-        ...me,
-        pilot: {
-          manual_money: config.manualMoneyPilot,
-          payment_instructions: config.paymentInstructions,
-        },
-      },
-      code: 'ME',
-    });
+    reply.send({ success: true, data: meResponse(me), code: 'ME' });
+  });
+
+  // Edit your own profile (name, home city, avatar URL).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.patch('/api/me', async (request: any, reply: any) => {
+    const parsed = profileUpdateSchema.safeParse(request.body);
+    if (!parsed.success) {
+      throw new AppError('VALIDATION_ERROR', 400, 'Invalid profile update');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const patch: Record<string, any> = { updated_at: new Date() };
+    if (parsed.data.full_name !== undefined) patch.full_name = parsed.data.full_name;
+    if (parsed.data.home_city !== undefined) patch.home_city = parsed.data.home_city;
+    if (parsed.data.avatar_url !== undefined) patch.avatar_url = parsed.data.avatar_url;
+
+    await request.db.updateTable('users').set(patch).where('id', '=', request.userId).execute();
+
+    const me = await request.db
+      .selectFrom('users')
+      .select([...meColumns])
+      .where('id', '=', request.userId)
+      .executeTakeFirst();
+
+    reply.send({ success: true, data: meResponse(me), code: 'ME_UPDATED' });
   });
 }

@@ -145,9 +145,14 @@ Marketplace flows supported:
 - `src/modules/admin/routes.ts` and `src/modules/admin/actions.ts` — review queue and actions
 - `src/modules/money/routes.ts` — ledger and payment initiation
 - `src/modules/external/routes.ts` — external provider hooks
+- `src/modules/discovery/routes.ts` — Browse feed + route matching (mobile app)
+- `src/modules/reviews/routes.ts` — post-delivery ratings/reviews
+- `src/modules/messages/routes.ts` — order-scoped chat + inbox
+- `src/utils/user-summary.ts` — public profile/reputation slice shared by the above
 - `src/services/providers/` — abstraction layer for payment and identity providers
-- `migrations/` — database schema history
+- `migrations/` — database schema history (007–009 add profiles, reviews, messages)
 - `tests/integration/` — backend integration tests
+- `mobile/` — Flutter app (iOS/Android/web); see `docs/MOBILE.md`
 
 ## External provider abstraction
 

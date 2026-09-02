@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { sql } from 'kysely';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
 
@@ -49,9 +50,10 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         throw new AppError('INVALID_STATUS', 409, 'Order must be confirmed before delivery');
       }
 
+      const now = new Date();
       await request.db
         .updateTable('orders')
-        .set({ status: 'in_transit', updated_at: new Date() })
+        .set({ status: 'in_transit', shipped_at: now, updated_at: now })
         .where('id', '=', order.id)
         .execute();
 
@@ -95,11 +97,20 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         throw new AppError('INVALID_STATUS', 409, 'Order must be in transit before release');
       }
 
-      await request.db
-        .updateTable('orders')
-        .set({ status: 'delivered', updated_at: new Date() })
-        .where('id', '=', order.id)
-        .execute();
+      const now = new Date();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await request.db.transaction().execute(async (trx: any) => {
+        await trx
+          .updateTable('orders')
+          .set({ status: 'delivered', delivered_at: now, updated_at: now })
+          .where('id', '=', order.id)
+          .execute();
+        await trx
+          .updateTable('users')
+          .set({ delivered_count: sql`delivered_count + 1`, updated_at: now })
+          .where('id', '=', order.traveler_id)
+          .execute();
+      });
 
       reply.send({
         success: true,

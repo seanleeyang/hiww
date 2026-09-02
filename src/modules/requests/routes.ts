@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { createRequestSchema } from '@/types/schemas';
 import { AppError, generateId } from '@/utils/helpers';
+import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registerRequestsRoutes(app: FastifyInstance): Promise<void> {
@@ -24,6 +25,10 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
           category: parsed.data.category,
           estimated_weight_kg: parsed.data.estimated_weight_kg,
           budget: parsed.data.budget,
+          title: parsed.data.title ?? null,
+          source_city: parsed.data.source_city ?? null,
+          need_by: parsed.data.need_by ? new Date(parsed.data.need_by) : null,
+          image_url: parsed.data.image_url ?? null,
           status: 'open',
           created_at: new Date(),
           updated_at: new Date(),
@@ -88,7 +93,17 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         throw new AppError('NOT_FOUND', 404, 'Request not found');
       }
 
-      reply.send({ success: true, data: itemRequest, code: 'REQUEST_FOUND' });
+      const shopper = await request.db
+        .selectFrom('users')
+        .select([...USER_SUMMARY_COLUMNS])
+        .where('id', '=', itemRequest.shopper_id)
+        .executeTakeFirst();
+
+      reply.send({
+        success: true,
+        data: { ...itemRequest, shopper: shopper ? toUserSummary(shopper) : null },
+        code: 'REQUEST_FOUND',
+      });
     }
   );
 }

@@ -95,3 +95,34 @@ export async function forceOrderStatus(ctx: TestContext, orderId: string, status
     .where('id', '=', orderId)
     .execute();
 }
+
+/**
+ * Drive an accepted order all the way to `delivered` through the real routes:
+ * confirm payment (admin), traveler ships, shopper confirms receipt.
+ */
+export async function completeOrder(ctx: TestContext, order: MarketplaceOrder): Promise<void> {
+  const admin = await createUser(ctx, { admin: true });
+  const confirm = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/payments/confirm',
+    headers: authHeader(admin),
+    payload: { order_id: order.orderId },
+  });
+  if (confirm.statusCode !== 200) throw new Error(`confirm failed (${confirm.statusCode}): ${confirm.body}`);
+
+  const ship = await ctx.app.inject({
+    method: 'POST',
+    url: `/api/orders/${order.orderId}/deliver`,
+    headers: authHeader(order.traveler),
+    payload: {},
+  });
+  if (ship.statusCode !== 200) throw new Error(`deliver failed (${ship.statusCode}): ${ship.body}`);
+
+  const release = await ctx.app.inject({
+    method: 'POST',
+    url: `/api/orders/${order.orderId}/release`,
+    headers: authHeader(order.shopper),
+    payload: {},
+  });
+  if (release.statusCode !== 200) throw new Error(`release failed (${release.statusCode}): ${release.body}`);
+}

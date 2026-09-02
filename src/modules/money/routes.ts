@@ -104,9 +104,10 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('NOT_IMPLEMENTED', 501, 'Automated payment capture is not implemented yet');
       }
 
+      const now = new Date();
       await request.db
         .updateTable('orders')
-        .set({ status: 'confirmed', updated_at: new Date() })
+        .set({ status: 'confirmed', confirmed_at: now, updated_at: now })
         .where('id', '=', order.id)
         .execute();
 

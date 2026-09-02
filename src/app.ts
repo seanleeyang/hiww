@@ -26,6 +26,9 @@ import { registerAdminRoutes } from '@/modules/admin/routes';
 import { registerAdminActionRoutes } from '@/modules/admin/actions';
 import { registerMoneyRoutes } from '@/modules/money/routes';
 import { registerExternalRoutes } from '@/modules/external/routes';
+import { registerDiscoveryRoutes } from '@/modules/discovery/routes';
+import { registerReviewsRoutes } from '@/modules/reviews/routes';
+import { registerMessagesRoutes } from '@/modules/messages/routes';
 
 function loadStatic(file: string): string {
   // Resolved from the process working directory, which is the project root for
@@ -111,6 +114,9 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await registerAdminActionRoutes(app);
   await registerMoneyRoutes(app);
   await registerExternalRoutes(app);
+  await registerDiscoveryRoutes(app);
+  await registerReviewsRoutes(app);
+  await registerMessagesRoutes(app);
 
   if (ownsDb) {
     app.addHook('onClose', async () => {

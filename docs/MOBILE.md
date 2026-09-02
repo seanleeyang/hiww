@@ -18,6 +18,12 @@ while reusing the same backend contract.
 | Session bootstrap | `GET /api/me` → id, email, full_name, user_type, role, kyc_status, risk_status, `pilot.{manual_money, payment_instructions}` |
 | Auth transport | `Authorization: Bearer <token>` on every non-public route; 401 ⇒ app clears the token and returns to login |
 | Response shape | every success is `{ success, data, code }`; the client unwraps to `data`. Errors are `{ error, code }` + HTTP status |
+| Profile | `GET /api/me` also returns `avatar_url, home_city, rating_avg, rating_count, delivered_count`; `PATCH /api/me` edits name/city/avatar_url |
+| Discovery | `GET /api/discover/feed?type=all\|trips\|wants&category=` → interleaved trip + want cards with owner summary, `match_count`, `earn_estimate`; `GET /api/discover/route-match?source_country=` → `{count, sample}` |
+| Trips / wants | `POST /api/trips` and `/api/requests` accept optional `title`, cities, `note`/`image_url`, `need_by`; `GET …/:id` embeds the owner summary |
+| Orders | `GET /api/orders/:id` embeds `counterparty`, stage timestamps (`confirmed_at`/`shipped_at`/`delivered_at`), `can_review`, `my_review` |
+| Reviews | `POST /api/orders/:id/review {rating,comment}` (delivered orders, once per reviewer); `GET /api/users/:id/reviews` |
+| Messages | `GET/POST /api/orders/:id/messages`, `POST …/messages/read`, `GET /api/inbox` (per-order last message + unread count) |
 
 CORS on the backend is `origin: true` (`src/app.ts`), so the web build calls the
 API directly with no proxy.
@@ -49,9 +55,11 @@ reference mockup:
   **Browse / My Trips / My Wants / Inbox** nav, Account screen with a working KYC
   submit (`POST /api/compliance/kyc/submit`), branded web loader + app icon +
   native splash. Browse/Trips/Wants/Inbox are styled placeholders.
-- **D2** — backend extensions (additive): migrations `007_profiles_and_discovery`,
-  `008_reviews`, `009_messages`; new `discovery` / `reviews` / `messages` route
-  modules; `/api/me` + `PATCH /api/me` profile fields; order stage timestamps.
+- **D2 (done)** — backend extensions (additive, no rewrites): migrations
+  `007_profiles_and_discovery`, `008_reviews`, `009_messages`; new `discovery` /
+  `reviews` / `messages` route modules; `/api/me` + `PATCH /api/me`; richer
+  trips/requests; order stage timestamps + `delivered_count`. Full suite now
+  **19 suites / 56 tests**.
 - **D3** — Browse feed, Post Want (item + photo URL + category + budget +
   need-by), want/trip detail, My Wants, My Trips, Make Offer, route-match nudges.
 - **D4** — Order Tracker (dated stepper, trust panel), Confirm & Review
