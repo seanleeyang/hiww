@@ -13,6 +13,7 @@ import '../../../ui/soft_card.dart';
 import '../../../ui/status_pill.dart';
 import '../../../ui/stock_images.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../orders/data/orders_repository.dart';
 import '../../shared/presentation/reviews_preview.dart';
 import '../data/wants_repository.dart';
 import '../domain/offer.dart';
@@ -172,6 +173,8 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
     setState(() => _busy = true);
     try {
       final orderId = await ref.read(wantsRepositoryProvider).acceptOffer(o.id);
+      ref.invalidate(myWantsProvider);
+      ref.invalidate(myOrdersProvider);
       if (!mounted) return;
       context.go('/orders/$orderId');
     } on ApiException catch (e) {

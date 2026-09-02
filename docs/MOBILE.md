@@ -21,7 +21,7 @@ while reusing the same backend contract.
 | Profile | `GET /api/me` also returns `avatar_url, home_city, rating_avg, rating_count, delivered_count`; `PATCH /api/me` edits name/city/avatar_url |
 | Discovery | `GET /api/discover/feed?type=all\|trips\|wants&category=` → interleaved trip + want cards with owner summary, `match_count`, `earn_estimate`; `GET /api/discover/route-match?source_country=` → `{count, sample}` |
 | Trips / wants | `POST /api/trips` and `/api/requests` accept optional `title`, cities, `note`/`image_url`, `need_by`; `GET …/:id` embeds the owner summary |
-| Orders | `GET /api/orders/:id` embeds `counterparty`, stage timestamps (`confirmed_at`/`shipped_at`/`delivered_at`), `can_review`, `my_review` |
+| Orders | `GET /api/orders/:id` embeds `counterparty`, stage timestamps (`confirmed_at`/`shipped_at`/`delivered_at`), `request_image_url`, `request_category`, `can_review`, `my_review`; `GET /api/orders` lists the caller's orders |
 | Reviews | `POST /api/orders/:id/review {rating,comment}` (delivered orders, once per reviewer); `GET /api/users/:id/reviews` |
 | Messages | `GET/POST /api/orders/:id/messages`, `POST …/messages/read`, `GET /api/inbox` (per-order last message + unread count) |
 
@@ -65,8 +65,10 @@ reference mockup:
   offers + accept, Make Offer, My Wants, My Trips (Trips/Offers tabs), New Trip,
   Trip detail with reviews. Minimal Order screen (pay / ship / receive) until D4.
   34 Flutter tests.
-- **D4** — Order Tracker (dated stepper, trust panel), Confirm & Review
-  (`POST /api/orders/:id/release` + `/review`), ratings shown across cards.
+- **D4 (done)** — Order Tracker (dated `OrderStepper`, `TrustPanel` + how-it-works
+  sheet, chat/report buttons, per-stage action), Confirm & Review screen
+  (`/release` + `/review` in one step; review-only mode after delivery), Report a
+  problem → dispute. Accepted wants/offers link to their order. 37 Flutter tests.
 - **D5** — Inbox + chat (`/api/orders/:id/messages`, `/api/inbox`) with polling.
 - **D6** — empty/loading/error polish, transitions, a11y, screenshot pass.
 - **Later** — real photo upload, push notifications, offline cache, i18n.

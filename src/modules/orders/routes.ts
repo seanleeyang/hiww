@@ -80,11 +80,22 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
           .executeTakeFirst();
       }
 
+      // The original request's photo/category, for the tracker's product image.
+      const sourceRequest = order.request_id
+        ? await request.db
+            .selectFrom('requests')
+            .select(['image_url', 'category'])
+            .where('id', '=', order.request_id)
+            .executeTakeFirst()
+        : undefined;
+
       reply.send({
         success: true,
         data: {
           ...order,
           counterparty: counterparty ? toUserSummary(counterparty) : null,
+          request_image_url: sourceRequest?.image_url ?? null,
+          request_category: sourceRequest?.category ?? null,
           my_review: myReview ?? null,
           can_review: (isShopper || isTraveler) && order.status === 'delivered' && !myReview,
         },

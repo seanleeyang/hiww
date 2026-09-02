@@ -83,6 +83,8 @@ describe('reviews flow', () => {
     });
     expect(before.json().data.can_review).toBe(true);
     expect(before.json().data.counterparty.id).toBe(order.shopper.userId);
+    // The tracker's product image comes from the originating request.
+    expect(before.json().data.request_category).toBe('beauty');
 
     await ctx.app.inject({
       method: 'POST',

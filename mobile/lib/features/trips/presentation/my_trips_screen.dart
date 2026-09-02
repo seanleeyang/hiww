@@ -7,6 +7,7 @@ import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/status_pill.dart';
+import '../../orders/data/orders_repository.dart';
 import '../../wants/data/offers_repository.dart';
 import '../data/trips_repository.dart';
 
@@ -125,10 +126,15 @@ class _OffersTab extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, i) {
               final o = list[i];
+              final orderId = ref.watch(orderIdByRequestProvider).maybeWhen(
+                  data: (m) => o.requestId == null ? null : m[o.requestId],
+                  orElse: () => null);
               return SoftCard(
-                onTap: o.requestId == null
-                    ? null
-                    : () => context.push('/wants/${o.requestId}'),
+                onTap: orderId != null
+                    ? () => context.push('/orders/$orderId')
+                    : o.requestId == null
+                        ? null
+                        : () => context.push('/wants/${o.requestId}'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

@@ -21,7 +21,11 @@ class Order {
     required this.totalPrice,
     required this.fees,
     required this.status,
+    this.requestId,
     this.counterparty,
+    this.requestImageUrl,
+    this.requestCategory,
+    this.createdAt,
     this.paymentClaimedAt,
     this.confirmedAt,
     this.shippedAt,
@@ -37,7 +41,11 @@ class Order {
   final String totalPrice;
   final String fees;
   final String status;
+  final String? requestId;
   final UserSummary? counterparty;
+  final String? requestImageUrl;
+  final String? requestCategory;
+  final DateTime? createdAt;
   final DateTime? paymentClaimedAt;
   final DateTime? confirmedAt;
   final DateTime? shippedAt;
@@ -56,7 +64,13 @@ class Order {
         totalPrice: (j['total_price'] ?? '0').toString(),
         fees: (j['fees'] ?? '0').toString(),
         status: (j['status'] ?? 'pending_payment').toString(),
+        requestId: j['request_id']?.toString(),
         counterparty: UserSummary.fromJson(j['counterparty']),
+        requestImageUrl: (j['request_image_url'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : j['request_image_url'] as String,
+        requestCategory: j['request_category']?.toString(),
+        createdAt: parseDate(j['created_at']),
         paymentClaimedAt: parseDate(j['payment_claimed_at']),
         confirmedAt: parseDate(j['confirmed_at']),
         shippedAt: parseDate(j['shipped_at']),

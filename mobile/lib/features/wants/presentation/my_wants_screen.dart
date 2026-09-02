@@ -8,6 +8,7 @@ import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/status_pill.dart';
+import '../../orders/data/orders_repository.dart';
 import '../data/wants_repository.dart';
 import 'post_want_sheet.dart';
 
@@ -50,8 +51,13 @@ class MyWantsScreen extends ConsumerWidget {
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, i) {
                 final w = list[i];
+                final orderId = ref
+                    .watch(orderIdByRequestProvider)
+                    .maybeWhen(data: (m) => m[w.id], orElse: () => null);
                 return SoftCard(
-                  onTap: () => context.push('/wants/${w.id}'),
+                  onTap: orderId != null
+                      ? () => context.push('/orders/$orderId')
+                      : () => context.push('/wants/${w.id}'),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -75,6 +81,17 @@ class MyWantsScreen extends ConsumerWidget {
                         if (w.needByLabel != null)
                           IconLine(Icons.event_outlined, w.needByLabel!),
                       ]),
+                      if (orderId != null) ...[
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('View order →',
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13)),
+                        ),
+                      ],
                     ],
                   ),
                 );

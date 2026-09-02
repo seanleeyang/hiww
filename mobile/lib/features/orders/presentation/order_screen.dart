@@ -3,17 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
-import '../../../theme/app_colors.dart';
 import '../../../ui/async_value_view.dart';
+import '../../../ui/hero_image.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
+import '../../../ui/star_rating.dart';
 import '../../../ui/status_pill.dart';
+import '../../../ui/stock_images.dart';
 import '../../auth/application/auth_controller.dart';
 import '../data/orders_repository.dart';
 import '../domain/order.dart';
+import 'order_stepper.dart';
+import 'report_problem_sheet.dart';
+import 'trust_panel.dart';
 
-/// D3 order view — status + the manual-money action for the current stage.
-/// D4 replaces this with the full dated tracker + review flow.
 class OrderScreen extends ConsumerWidget {
   const OrderScreen({super.key, required this.orderId});
   final String orderId;
@@ -25,55 +28,102 @@ class OrderScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order'),
-        leading: BackButton(onPressed: () => context.canPop() ? context.pop() : context.go('/my-wants')),
+        title: Text('Order #${orderId.substring(0, 8).toUpperCase()}'),
+        leading: BackButton(
+          onPressed: () => context.canPop() ? context.pop() : context.go('/my-wants'),
+        ),
       ),
       body: AsyncValueView(
         value: order,
         onRetry: () => ref.invalidate(orderProvider(orderId)),
         data: (o) {
           final isShopper = me?.id == o.shopperId;
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(o.itemDescription,
-                        style: Theme.of(context).textTheme.titleMedium),
-                  ),
-                  StatusPill(o.status),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (o.counterparty != null)
-                AvatarRating(user: o.counterparty!, radius: 18),
-              const SizedBox(height: 16),
-              SoftCard(
-                color: context.hiww.infoSurface,
-                child: Column(
+          final active = o.status != 'delivered' && o.status != 'cancelled';
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(orderProvider(orderId)),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(children: [
-                      const Icon(Icons.lock_outline, size: 18),
-                      const SizedBox(width: 8),
-                      Text('Hiww is holding ${o.totalLabel} + ${o.feesLabel} fee',
-                          style: Theme.of(context).textTheme.titleSmall),
-                    ]),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Released to the traveler when you confirm delivery. During '
-                      'the pilot, payments are settled by the Hiww team.',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox(
+                        width: 76,
+                        height: 76,
+                        child: HeroImage(
+                          url: o.requestImageUrl,
+                          fallbackAsset: stockForCategory(o.requestCategory),
+                          height: 76,
+                          borderRadius: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(o.itemDescription,
+                              style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 6),
+                          Row(children: [
+                            StatusPill(o.status),
+                            const SizedBox(width: 8),
+                            Text('${o.totalLabel} · ${o.feesLabel} fee',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          ]),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              _ActionBlock(order: o, isShopper: isShopper),
-            ],
+                const SizedBox(height: 14),
+                if (o.counterparty != null)
+                  SoftCard(
+                    child: Row(
+                      children: [
+                        Expanded(child: AvatarRating(user: o.counterparty!)),
+                        Text(isShopper ? 'Carrier' : 'Shopper',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 18),
+                SoftCard(child: OrderStepper(order: o)),
+                const SizedBox(height: 14),
+                TrustPanel(order: o),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.push('/orders/$orderId/chat'),
+                        icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                        label: const Text('Open chat'),
+                      ),
+                    ),
+                    if (active) ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => showReportProblemSheet(context, orderId),
+                          icon: const Icon(Icons.flag_outlined, size: 18),
+                          label: const Text('Report'),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 18),
+                _ActionBlock(order: o, isShopper: isShopper),
+              ],
+            ),
           );
         },
       ),
@@ -98,6 +148,7 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
     try {
       await action();
       ref.invalidate(orderProvider(widget.order.id));
+      ref.invalidate(myOrdersProvider);
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -115,9 +166,9 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
     final me = ref.read(currentUserProvider);
     final muted = TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant);
 
-    Widget note(String text) => Text(text, style: muted);
-    Widget button(String label, Future<void> Function() action) => FilledButton(
-          onPressed: _busy ? null : () => _run(action),
+    Widget note(String t) => Text(t, style: muted);
+    Widget primary(String label, VoidCallback? onTap) => FilledButton(
+          onPressed: _busy ? null : onTap,
           child: _busy
               ? const SizedBox(
                   height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
@@ -127,47 +178,56 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
     switch (o.status) {
       case 'pending_payment':
         if (!widget.isShopper) return note('Waiting for the shopper to pay.');
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SoftCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('How to pay', style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 6),
-                  Text(me?.pilot?.paymentInstructions ??
-                      'Contact the Hiww team to arrange payment.'),
-                  const SizedBox(height: 6),
-                  Text('Amount ${o.totalLabel} · reference ${o.id}',
-                      style: muted),
-                ],
-              ),
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          SoftCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('How to pay', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 6),
+                Text(me?.pilot?.paymentInstructions ??
+                    'Contact the Hiww team to arrange payment.'),
+                const SizedBox(height: 6),
+                Text('Amount ${o.totalLabel}  ·  reference ${o.id}', style: muted),
+              ],
             ),
-            const SizedBox(height: 12),
-            if (o.paymentClaimedAt != null)
-              note("You've told us you paid. We'll confirm once it lands.")
-            else
-              button("I've sent the payment", () => repo.claimPayment(o.id)),
-          ],
-        );
+          ),
+          const SizedBox(height: 12),
+          if (o.paymentClaimedAt != null)
+            note("You've told us you paid. We'll confirm once it lands.")
+          else
+            primary("I've sent the payment", () => _run(() => repo.claimPayment(o.id))),
+        ]);
       case 'confirmed':
         if (widget.isShopper) {
-          return note('Payment received. Waiting for the traveler to buy and ship.');
+          return note('Payment confirmed. Waiting for the traveler to buy and ship.');
         }
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          note('Payment received. Buy the item, ship it, then mark it shipped.'),
+          note('Payment confirmed. Buy the item, ship it, then mark it shipped.'),
           const SizedBox(height: 12),
-          button('Mark as shipped', () => repo.markShipped(o.id)),
+          primary('Mark as shipped', () => _run(() => repo.markShipped(o.id))),
         ]);
       case 'in_transit':
-        if (!widget.isShopper) return note('Shipped. Waiting for the shopper to confirm receipt.');
+        if (!widget.isShopper) {
+          return note('Shipped. Waiting for the shopper to confirm receipt.');
+        }
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           note('On the way. Confirm once you have it in hand.'),
           const SizedBox(height: 12),
-          button('Confirm I received it', () => repo.confirmReceived(o.id)),
+          primary('Confirm & release ${o.totalLabel}',
+              () => context.push('/orders/${o.id}/confirm')),
         ]);
       case 'delivered':
+        if (o.myReview != null) {
+          return Row(children: [
+            Text('You rated ', style: muted),
+            StarRatingDisplay(rating: o.myReview!.rating.toDouble(), size: 13),
+          ]);
+        }
+        if (o.canReview) {
+          return primary('Rate ${o.counterparty?.fullName ?? 'the other party'}',
+              () => context.push('/orders/${o.id}/confirm?review=1'));
+        }
         return note('Completed. Thanks for using Hiww!');
       default:
         return note('This order is ${o.status.replaceAll('_', ' ')}.');

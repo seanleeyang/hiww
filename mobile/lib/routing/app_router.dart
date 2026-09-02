@@ -7,6 +7,8 @@ import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/discovery/presentation/browse_screen.dart';
+import '../features/orders/presentation/confirm_review_screen.dart';
+import '../features/orders/presentation/order_chat_placeholder.dart';
 import '../features/orders/presentation/order_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/placeholder_tab.dart';
@@ -66,6 +68,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wants/:id',
         builder: (_, s) => WantDetailScreen(wantId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/orders/:id/confirm',
+        builder: (_, s) => ConfirmReviewScreen(
+          orderId: s.pathParameters['id']!,
+          reviewOnly: s.uri.queryParameters['review'] == '1',
+        ),
+      ),
+      GoRoute(
+        path: '/orders/:id/chat',
+        builder: (_, _) => const OrderChatPlaceholder(),
       ),
       GoRoute(
         path: '/orders/:id',
