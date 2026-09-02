@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/account/presentation/account_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
-import '../features/account/presentation/account_screen.dart';
+import '../features/discovery/presentation/browse_screen.dart';
+import '../features/orders/presentation/order_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/placeholder_tab.dart';
 import '../features/shell/splash_screen.dart';
+import '../features/trips/presentation/my_trips_screen.dart';
+import '../features/trips/presentation/new_trip_screen.dart';
+import '../features/trips/presentation/trip_detail_screen.dart';
+import '../features/wants/presentation/make_offer_screen.dart';
+import '../features/wants/presentation/my_wants_screen.dart';
+import '../features/wants/presentation/want_detail_screen.dart';
 
 /// Bridges Riverpod changes into a [Listenable] that go_router can refresh on.
 class _AuthRefresh extends ChangeNotifier {
@@ -42,42 +50,40 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
       GoRoute(
-        path: '/account',
-        builder: (_, _) => const AccountScreen(),
+        path: '/trips/new',
+        builder: (_, _) => const NewTripScreen(),
+      ),
+      GoRoute(
+        path: '/trips/:id',
+        builder: (_, s) => TripDetailScreen(tripId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/wants/:id/offer',
+        builder: (_, s) => MakeOfferScreen(wantId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/wants/:id',
+        builder: (_, s) => WantDetailScreen(wantId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/orders/:id',
+        builder: (_, s) => OrderScreen(orderId: s.pathParameters['id']!),
       ),
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(location: state.matchedLocation, child: child),
         routes: [
-          GoRoute(
-            path: '/browse',
-            builder: (_, _) => const PlaceholderTab(
-              tab: ShellTab.browse,
-              blurb:
-                  'A feed of travelers and the things people want bought abroad. '
-                  'Arriving in the next update.',
-            ),
-          ),
-          GoRoute(
-            path: '/my-trips',
-            builder: (_, _) => const PlaceholderTab(
-              tab: ShellTab.trips,
-              blurb: 'Post a trip and see what shoppers want on your route.',
-            ),
-          ),
-          GoRoute(
-            path: '/my-wants',
-            builder: (_, _) => const PlaceholderTab(
-              tab: ShellTab.wants,
-              blurb: 'Post what you want bought and review traveler offers.',
-            ),
-          ),
+          GoRoute(path: '/browse', builder: (_, _) => const BrowseScreen()),
+          GoRoute(path: '/my-trips', builder: (_, _) => const MyTripsScreen()),
+          GoRoute(path: '/my-wants', builder: (_, _) => const MyWantsScreen()),
           GoRoute(
             path: '/inbox',
             builder: (_, _) => const PlaceholderTab(
               tab: ShellTab.inbox,
-              blurb: 'Messages with travelers and shoppers about your orders.',
+              blurb: 'Messages with travelers and shoppers about your orders. '
+                  'Arriving in the next update.',
             ),
           ),
         ],

@@ -60,8 +60,11 @@ reference mockup:
   `reviews` / `messages` route modules; `/api/me` + `PATCH /api/me`; richer
   trips/requests; order stage timestamps + `delivered_count`. Full suite now
   **19 suites / 56 tests**.
-- **D3** — Browse feed, Post Want (item + photo URL + category + budget +
-  need-by), want/trip detail, My Wants, My Trips, Make Offer, route-match nudges.
+- **D3 (done)** — Browse feed (interleaved trip/want cards, category filter,
+  pull-to-refresh, FAB), Post Want sheet with route-match nudge, want detail +
+  offers + accept, Make Offer, My Wants, My Trips (Trips/Offers tabs), New Trip,
+  Trip detail with reviews. Minimal Order screen (pay / ship / receive) until D4.
+  34 Flutter tests.
 - **D4** — Order Tracker (dated stepper, trust panel), Confirm & Review
   (`POST /api/orders/:id/release` + `/review`), ratings shown across cards.
 - **D5** — Inbox + chat (`/api/orders/:id/messages`, `/api/inbox`) with polling.

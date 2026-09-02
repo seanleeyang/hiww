@@ -1,0 +1,270 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/api/api_exception.dart';
+import '../../../core/countries.dart';
+import '../../../core/format.dart';
+import '../../../ui/budget_stepper.dart';
+import '../../../ui/category_chips.dart';
+import '../../discovery/data/discovery_repository.dart';
+import '../data/wants_repository.dart';
+
+Future<void> showPostWantSheet(
+  BuildContext context, {
+  String? sourceCountry,
+  String? sourceCity,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: _PostWantSheet(sourceCountry: sourceCountry, sourceCity: sourceCity),
+    ),
+  );
+}
+
+class _PostWantSheet extends ConsumerStatefulWidget {
+  const _PostWantSheet({this.sourceCountry, this.sourceCity});
+  final String? sourceCountry;
+  final String? sourceCity;
+
+  @override
+  ConsumerState<_PostWantSheet> createState() => _PostWantSheetState();
+}
+
+class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
+  final _title = TextEditingController();
+  final _details = TextEditingController();
+  final _imageUrl = TextEditingController();
+  final _city = TextEditingController();
+  String _category = 'sneakers';
+  late String _country;
+  int _budget = 3000;
+  DateTime? _needBy;
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _country = widget.sourceCountry ?? 'JP';
+    _city.text = widget.sourceCity ?? '';
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _details.dispose();
+    _imageUrl.dispose();
+    _city.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final title = _title.text.trim();
+    final details = _details.text.trim();
+    if (title.length < 3) {
+      setState(() => _error = 'Give your want a short name');
+      return;
+    }
+    if (details.length < 10) {
+      setState(() => _error = 'Add a few details (at least 10 characters)');
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      final id = await ref.read(wantsRepositoryProvider).create(
+            title: title,
+            itemDescription: details,
+            sourceCountry: _country,
+            sourceCity: _city.text.trim(),
+            category: _category,
+            estimatedWeightKg: 1,
+            budget: '${_budget.toStringAsFixed(0)}.00',
+            needBy: _needBy,
+            imageUrl: _imageUrl.text.trim(),
+          );
+      ref.invalidate(myWantsProvider);
+      ref.invalidate(feedProvider);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      context.push('/wants/$id');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final routeMatch = ref.watch(routeMatchProvider(_country));
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Post a want', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _title,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Item',
+                hintText: 'e.g. Nike Dunk Panda',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _details,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Details',
+                hintText: 'Brand, model, size, colour, links',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _imageUrl,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: 'Photo or product link (optional)',
+                hintText: 'https://…',
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text('Category', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            CategoryChips(
+              includeAll: false,
+              selected: _category,
+              onSelected: (c) => setState(() => _category = c ?? 'other'),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Budget', style: Theme.of(context).textTheme.labelLarge),
+                      const SizedBox(height: 8),
+                      BudgetStepper(
+                        value: _budget,
+                        onChanged: (v) => setState(() => _budget = v),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Need by', style: Theme.of(context).textTheme.labelLarge),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _pickDate,
+                        icon: const Icon(Icons.event_outlined, size: 18),
+                        label: Text(
+                          _needBy == null ? 'Any time' : shortDate(_needBy),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _country,
+                    decoration: const InputDecoration(labelText: 'Buy in'),
+                    items: [
+                      for (final c in kCountries)
+                        DropdownMenuItem(value: c.code, child: Text(c.name)),
+                    ],
+                    onChanged: (v) => setState(() => _country = v ?? 'JP'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _city,
+                    decoration: const InputDecoration(
+                      labelText: 'City (optional)',
+                      hintText: 'Tokyo',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            routeMatch.maybeWhen(
+              data: (m) => m.count == 0
+                  ? const SizedBox.shrink()
+                  : Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.flight_takeoff, size: 18),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '${pluralize(m.count, 'traveler')} heading to '
+                              '${countryName(_country)} soon',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+              orElse: () => const SizedBox.shrink(),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: _submitting ? null : _submit,
+              child: _submitting
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Post my want'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      initialDate: _needBy ?? now.add(const Duration(days: 14)),
+    );
+    if (picked != null) setState(() => _needBy = picked);
+  }
+}
