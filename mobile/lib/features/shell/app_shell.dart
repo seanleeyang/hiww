@@ -1,0 +1,112 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../ui/brand_mark.dart';
+import '../../ui/initials_avatar.dart';
+import '../auth/application/auth_controller.dart';
+import '../auth/domain/auth_user.dart';
+
+enum ShellTab {
+  browse('/browse', 'Browse', Icons.travel_explore_outlined, Icons.travel_explore),
+  trips('/my-trips', 'My Trips', Icons.flight_outlined, Icons.flight),
+  wants('/my-wants', 'My Wants', Icons.favorite_outline, Icons.favorite),
+  inbox('/inbox', 'Inbox', Icons.forum_outlined, Icons.forum);
+
+  const ShellTab(this.path, this.label, this.icon, this.activeIcon);
+
+  final String path;
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+
+  bool visibleTo(UserType type) => switch (this) {
+        ShellTab.trips => type.isTraveler,
+        ShellTab.wants => type.isShopper,
+        _ => true,
+      };
+}
+
+/// App chrome for the signed-in tabs: a branded app bar with the account
+/// avatar, and a responsive nav rail / bottom bar.
+class AppShell extends ConsumerWidget {
+  const AppShell({super.key, required this.location, required this.child});
+
+  final String location;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+    final type = user?.userType ?? UserType.both;
+    final tabs = ShellTab.values.where((t) => t.visibleTo(type)).toList();
+
+    var index = tabs.indexWhere((t) => location.startsWith(t.path));
+    if (index < 0) index = 0;
+
+    void go(int i) => context.go(tabs[i].path);
+
+    final wide = MediaQuery.sizeOf(context).width >= 760;
+
+    final appBar = AppBar(
+      title: const BrandMark(),
+      titleSpacing: 16,
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () => context.go('/account'),
+            child: InitialsAvatar(
+              name: user?.fullName ?? 'Hiww',
+              url: user?.avatarUrl,
+              radius: 17,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (wide) {
+      return Scaffold(
+        appBar: appBar,
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: index,
+              onDestinationSelected: go,
+              labelType: NavigationRailLabelType.all,
+              destinations: [
+                for (final t in tabs)
+                  NavigationRailDestination(
+                    icon: Icon(t.icon),
+                    selectedIcon: Icon(t.activeIcon),
+                    label: Text(t.label),
+                  ),
+              ],
+            ),
+            const VerticalDivider(width: 1),
+            Expanded(child: child),
+          ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: appBar,
+      body: child,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: index,
+        onDestinationSelected: go,
+        destinations: [
+          for (final t in tabs)
+            NavigationDestination(
+              icon: Icon(t.icon),
+              selectedIcon: Icon(t.activeIcon),
+              label: t.label,
+            ),
+        ],
+      ),
+    );
+  }
+}
