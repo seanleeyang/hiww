@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import Decimal from 'decimal.js';
 import { AppError, generateId } from '@/utils/helpers';
+import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const PLATFORM_FEE_RATE = 0.08;
@@ -139,6 +140,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
   // Shopper accepts an offer on their request -> an order is created.
   app.post<{ Params: { id: string } }>(
     '/api/offers/:id/accept',
+    { config: { rateLimit: { max: config.moneyRateLimitMax, timeWindow: config.rateLimitWindow } } },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
       const offer = await request.db

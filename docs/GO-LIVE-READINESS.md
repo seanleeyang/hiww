@@ -80,8 +80,16 @@ Status: **7/7 green.**
       **paid out** (recent payouts). New "Money" tab in the operator console
       shows all three and has the Record-payout button.
       `tests/integration/payout-flow.test.ts`.
-- [ ] Rate limits on `/api/payments/*`, `/api/offers/*/accept`, `/api/uploads`,
-      `/api/auth/*`; request-id on every log line; structured logs in prod.
+- [x] **Rate limits + request-id.** `/api/payments/*` and `/api/offers/*/accept`
+      capped at `MONEY_RATE_LIMIT_MAX` (30/min), `/api/uploads` at
+      `UPLOAD_RATE_LIMIT_MAX` (20/min), `/api/auth/*` already at 20/min — all
+      well under the global 200/min. Every response carries `x-request-id`
+      (an inbound one from a proxy is honoured, else minted); Fastify logs it on
+      every line in production. `tests/integration/rate-limit-flow.test.ts`.
+- [ ] Structured logs in prod are on (`logger` when `NODE_ENV=production`) but
+      unverified against a real log sink — revisit in Stage 3.
+
+## Stage 2 status: complete.
 
 ## Stage 3 — deploy and re-verify
 

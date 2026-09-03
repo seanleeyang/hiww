@@ -33,7 +33,10 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
 
   // Accept a single image and return its public URL. Auth is enforced by the
   // global guard; anyone signed in may upload.
-  app.post('/api/uploads', async (request, reply) => {
+  app.post(
+    '/api/uploads',
+    { config: { rateLimit: { max: config.uploadRateLimitMax, timeWindow: config.rateLimitWindow } } },
+    async (request, reply) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(request as any).isMultipart()) {
       throw new AppError('VALIDATION_ERROR', 400, 'Send the image as multipart/form-data');
@@ -83,5 +86,6 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
 
     const url = `${originFor(request)}/uploads/${name}`;
     reply.status(201).send({ success: true, data: { url }, code: 'UPLOAD_CREATED' });
-  });
+    }
+  );
 }

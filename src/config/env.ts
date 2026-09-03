@@ -66,6 +66,10 @@ export const config = {
   rateLimitMax: Number(process.env.RATE_LIMIT_MAX || '200'),
   rateLimitWindow: process.env.RATE_LIMIT_WINDOW || '1 minute',
   authRateLimitMax: Number(process.env.AUTH_RATE_LIMIT_MAX || '20'),
+  // Tighter per-IP ceilings on the sensitive routes: money movement, order
+  // creation, and file uploads.
+  moneyRateLimitMax: Number(process.env.MONEY_RATE_LIMIT_MAX || '30'),
+  uploadRateLimitMax: Number(process.env.UPLOAD_RATE_LIMIT_MAX || '20'),
   /**
    * During the manual-money pilot the platform does not move funds automatically.
    * Payment capture and payout are recorded by an admin after they settle money

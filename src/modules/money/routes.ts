@@ -5,6 +5,11 @@ import { getPaymentProvider } from '@/services/providers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 
+// Tight per-IP ceiling on money movement (defaults to 30/min).
+const moneyRoute = {
+  config: { rateLimit: { max: config.moneyRateLimitMax, timeWindow: config.rateLimitWindow } },
+};
+
 const payoutSchema = z.object({
   order_id: z.string().uuid(),
   amount: z.string().regex(/^\d+(\.\d{2})?$/),
@@ -48,6 +53,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
 
   app.post<{ Body: unknown }>(
     '/api/payments/initiate',
+    moneyRoute,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
       const body = request.body as { order_id?: string };
@@ -80,6 +86,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
 
   app.post<{ Body: unknown }>(
     '/api/payments/confirm',
+    moneyRoute,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
       const body = request.body as { order_id?: string; payment_id?: string };
@@ -148,6 +155,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
   // Only a `delivered` order can be paid out, and only once.
   app.post<{ Body: unknown }>(
     '/api/payments/payout',
+    moneyRoute,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
       const parsed = payoutSchema.safeParse(request.body);

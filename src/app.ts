@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import Fastify, { FastifyInstance, FastifyReply } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -60,6 +61,15 @@ export interface BuildAppOptions {
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: config.nodeEnv === 'production',
+    // Correlate every log line and error with one id. Honour an upstream
+    // `x-request-id` (from a proxy) when present, otherwise mint one.
+    requestIdHeader: 'x-request-id',
+    genReqId: () => randomUUID(),
+  });
+
+  // Echo the request id back so clients and proxies can line up their logs.
+  app.addHook('onSend', async (request, reply) => {
+    void reply.header('x-request-id', request.id);
   });
 
   const db = options.db ?? createDatabase();
