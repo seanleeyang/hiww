@@ -198,6 +198,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _country,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Buy in'),
                     items: [
                       for (final c in kCountries)

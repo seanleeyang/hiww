@@ -50,6 +50,20 @@ flutter test
 flutter build web        # sanity-check the release build
 ```
 
+### End-to-end test (needs the real backend)
+
+```bash
+# terminal 1 — from the repo root
+npm run db:setup && npm run dev
+# terminal 2 — here
+flutter test -d flutter-tester integration_test/app_flow_test.dart
+```
+
+Drives the real app (go_router + Dio over sockets) through register → Browse →
+post a want. Runs on the flutter-tester VM — no device or chromedriver. It is
+not part of plain `flutter test`; it fails fast with instructions if the API on
+`localhost:3000` is unreachable.
+
 ## Regenerating brand assets
 
 ```bash

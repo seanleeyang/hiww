@@ -194,6 +194,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
         Expanded(
           child: DropdownButtonFormField<String>(
             initialValue: code,
+            isExpanded: true,
             decoration: InputDecoration(labelText: label),
             items: [
               for (final c in kCountries)

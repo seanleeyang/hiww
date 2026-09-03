@@ -84,6 +84,13 @@ reference mockup:
   client-side downscale to 1600 px) replaces the paste-a-URL inputs on Post-a-want,
   New-trip and Edit-profile. Pull-to-refresh also added to Trip/Want detail. 42
   Flutter tests; backend 20 suites / 60 tests.
+- **D8 (done)** — `integration_test/app_flow_test.dart`: drives the real app
+  (real go_router + Dio) against a running backend — register → see a seeded
+  trip on Browse → post a want → assert it lands in `/api/requests/mine`. Runs
+  on the flutter-tester VM, no device/chromedriver:
+  `flutter test -d flutter-tester integration_test/app_flow_test.dart` with the
+  API up (`npm run db:setup && npm run dev`). Shakeout fixed a 0.4 px dropdown
+  overflow on the Post-want / New-trip country pickers (`isExpanded: true`).
 - **Later** — push notifications, offline cache, i18n. Move uploads to object
   storage (S3/GCS) before production; the local disk store is pilot-only.
 
