@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../theme/app_colors.dart';
+import '../../../ui/image_picker_field.dart';
 import '../../../ui/initials_avatar.dart';
 import '../../../ui/section_header.dart';
 import '../../../ui/soft_card.dart';
@@ -60,15 +61,20 @@ class AccountScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user.fullName,
-                              style: Theme.of(context).textTheme.titleLarge),
+                          Text(
+                            user.fullName,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             user.homeCity == null
                                 ? user.email
                                 : '${user.homeCity} · ${user.email}',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
                           ),
                           const SizedBox(height: 6),
@@ -113,7 +119,7 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late final _name = TextEditingController(text: widget.user.fullName);
   late final _city = TextEditingController(text: widget.user.homeCity ?? '');
-  late final _avatar = TextEditingController(text: widget.user.avatarUrl ?? '');
+  late String? _avatarUrl = widget.user.avatarUrl;
   bool _busy = false;
   String? _error;
 
@@ -121,7 +127,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void dispose() {
     _name.dispose();
     _city.dispose();
-    _avatar.dispose();
     super.dispose();
   }
 
@@ -135,10 +140,12 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       _error = null;
     });
     try {
-      await ref.read(accountRepositoryProvider).updateProfile(
+      await ref
+          .read(accountRepositoryProvider)
+          .updateProfile(
             fullName: _name.text.trim(),
             homeCity: _city.text.trim(),
-            avatarUrl: _avatar.text.trim(),
+            avatarUrl: _avatarUrl ?? '',
           );
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
@@ -163,6 +170,13 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           children: [
             Text('Edit profile', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
+            ImagePickerField(
+              value: _avatarUrl,
+              onChanged: (url) => setState(() => _avatarUrl = url),
+              label: 'Profile photo',
+              circle: true,
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: _name,
               textCapitalization: TextCapitalization.words,
@@ -172,19 +186,16 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             TextField(
               controller: _city,
               decoration: const InputDecoration(
-                  labelText: 'Home city (optional)', hintText: 'Bangkok'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _avatar,
-              keyboardType: TextInputType.url,
-              decoration: const InputDecoration(
-                  labelText: 'Photo link (optional)', hintText: 'https://…'),
+                labelText: 'Home city (optional)',
+                hintText: 'Bangkok',
+              ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ],
             const SizedBox(height: 18),
             FilledButton(
@@ -193,7 +204,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('Save'),
             ),
           ],
@@ -218,8 +230,10 @@ class _PilotCard extends StatelessWidget {
             children: [
               const Icon(Icons.info_outline, size: 18),
               const SizedBox(width: 8),
-              Text('Manual-money pilot',
-                  style: Theme.of(context).textTheme.titleSmall),
+              Text(
+                'Manual-money pilot',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -229,8 +243,10 @@ class _PilotCard extends StatelessWidget {
           ),
           if (instructions.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(instructions,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
+            Text(
+              instructions,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+            ),
           ],
         ],
       ),
@@ -268,10 +284,9 @@ class _KycCardState extends ConsumerState<_KycCard> {
       _error = null;
     });
     try {
-      await ref.read(accountRepositoryProvider).submitKyc(
-            documentType: _docType,
-            documentId: _docId.text.trim(),
-          );
+      await ref
+          .read(accountRepositoryProvider)
+          .submitKyc(documentType: _docType, documentId: _docId.text.trim());
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
       setState(() {
@@ -279,9 +294,8 @@ class _KycCardState extends ConsumerState<_KycCard> {
         _expanded = false;
         _docId.clear();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Submitted for review')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Submitted for review')));
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -301,9 +315,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
         children: [
           Row(
             children: [
-              Expanded(
-                child: SectionHeader('ID check'),
-              ),
+              Expanded(child: SectionHeader('ID check')),
               StatusPill(user.kycStatus),
             ],
           ),
@@ -311,19 +323,21 @@ class _KycCardState extends ConsumerState<_KycCard> {
             user.isKycApproved
                 ? 'Your identity has been verified.'
                 : 'Verify your identity before completing an order. The Hiww '
-                    'team reviews submissions manually during the pilot.',
+                      'team reviews submissions manually during the pilot.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           if (!user.isKycApproved) ...[
             const SizedBox(height: 12),
             if (!_expanded)
               FilledButton.tonal(
                 onPressed: () => setState(() => _expanded = true),
-                child: Text(user.kycStatus == 'pending'
-                    ? 'Update ID details'
-                    : 'Submit ID details'),
+                child: Text(
+                  user.kycStatus == 'pending'
+                      ? 'Update ID details'
+                      : 'Submit ID details',
+                ),
               )
             else ...[
               DropdownButtonFormField<String>(
@@ -331,9 +345,14 @@ class _KycCardState extends ConsumerState<_KycCard> {
                 decoration: const InputDecoration(labelText: 'Document type'),
                 items: const [
                   DropdownMenuItem(value: 'passport', child: Text('Passport')),
-                  DropdownMenuItem(value: 'id_card', child: Text('National ID card')),
                   DropdownMenuItem(
-                      value: 'drivers_license', child: Text("Driver's licence")),
+                    value: 'id_card',
+                    child: Text('National ID card'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'drivers_license',
+                    child: Text("Driver's licence"),
+                  ),
                 ],
                 onChanged: (v) => setState(() => _docType = v ?? 'passport'),
               ),
@@ -344,8 +363,10 @@ class _KycCardState extends ConsumerState<_KycCard> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 8),
-                Text(_error!,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ],
               const SizedBox(height: 12),
               FilledButton(
@@ -354,7 +375,8 @@ class _KycCardState extends ConsumerState<_KycCard> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Text('Submit for review'),
               ),
             ],

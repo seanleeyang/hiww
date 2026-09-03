@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
+import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
 
@@ -23,6 +24,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
   final _items = TextEditingController(text: '5');
   String _from = 'TH';
   String _to = 'JP';
+  String? _coverUrl;
   DateTime? _depart;
   DateTime? _ret;
   bool _submitting = false;
@@ -58,7 +60,9 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
       _error = null;
     });
     try {
-      final id = await ref.read(tripsRepositoryProvider).create(
+      final id = await ref
+          .read(tripsRepositoryProvider)
+          .create(
             departureCountry: _from,
             arrivalCountry: _to,
             departureCity: _fromCity.text.trim(),
@@ -68,6 +72,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
             maxWeightKg: weight,
             maxItems: items,
             note: _note.text.trim(),
+            coverImageUrl: _coverUrl,
           );
       ref.invalidate(myTripsProvider);
       ref.invalidate(feedProvider);
@@ -90,33 +95,56 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _countryRow('From', _from, _fromCity, (v) => setState(() => _from = v)),
+          _countryRow(
+            'From',
+            _from,
+            _fromCity,
+            (v) => setState(() => _from = v),
+          ),
           const SizedBox(height: 14),
           _countryRow('To', _to, _toCity, (v) => setState(() => _to = v)),
           const SizedBox(height: 14),
-          Row(children: [
-            Expanded(child: _dateField('Departure', _depart, (d) => setState(() => _depart = d))),
-            const SizedBox(width: 12),
-            Expanded(child: _dateField('Return', _ret, (d) => setState(() => _ret = d))),
-          ]),
+          Row(
+            children: [
+              Expanded(
+                child: _dateField(
+                  'Departure',
+                  _depart,
+                  (d) => setState(() => _depart = d),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _dateField(
+                  'Return',
+                  _ret,
+                  (d) => setState(() => _ret = d),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 14),
-          Row(children: [
-            Expanded(
-              child: TextField(
-                controller: _weight,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Spare weight (kg)'),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _weight,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Spare weight (kg)',
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _items,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Max items'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _items,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Max items'),
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
           const SizedBox(height: 14),
           TextField(
             controller: _note,
@@ -126,16 +154,28 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
               hintText: 'What you can carry, preferences…',
             ),
           ),
+          const SizedBox(height: 14),
+          ImagePickerField(
+            value: _coverUrl,
+            onChanged: (url) => setState(() => _coverUrl = url),
+            label: 'Add a cover photo (optional)',
+          ),
           if (_error != null) ...[
             const SizedBox(height: 14),
-            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ],
           const SizedBox(height: 22),
           FilledButton(
             onPressed: _submitting ? null : _submit,
             child: _submitting
                 ? const SizedBox(
-                    height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Text('Post trip'),
           ),
         ],
@@ -143,8 +183,12 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     );
   }
 
-  Widget _countryRow(String label, String code, TextEditingController city,
-      ValueChanged<String> onCountry) {
+  Widget _countryRow(
+    String label,
+    String code,
+    TextEditingController city,
+    ValueChanged<String> onCountry,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -169,7 +213,11 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     );
   }
 
-  Widget _dateField(String label, DateTime? value, ValueChanged<DateTime> onPick) {
+  Widget _dateField(
+    String label,
+    DateTime? value,
+    ValueChanged<DateTime> onPick,
+  ) {
     return OutlinedButton(
       onPressed: () async {
         final now = DateTime.now();

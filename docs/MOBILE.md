@@ -21,6 +21,7 @@ while reusing the same backend contract.
 | Profile | `GET /api/me` also returns `avatar_url, home_city, rating_avg, rating_count, delivered_count`; `PATCH /api/me` edits name/city/avatar_url |
 | Discovery | `GET /api/discover/feed?type=all\|trips\|wants&category=` → interleaved trip + want cards with owner summary, `match_count`, `earn_estimate`; `GET /api/discover/route-match?source_country=` → `{count, sample}` |
 | Trips / wants | `POST /api/trips` and `/api/requests` accept optional `title`, cities, `note`/`image_url`, `need_by`; `GET …/:id` embeds the owner summary |
+| Image upload | `POST /api/uploads` (multipart `file`, JPEG/PNG/WebP ≤5 MB) → `data.url`; files served at `/uploads/*` |
 | Orders | `GET /api/orders/:id` embeds `counterparty`, stage timestamps (`confirmed_at`/`shipped_at`/`delivered_at`), `request_image_url`, `request_category`, `can_review`, `my_review`; `GET /api/orders` lists the caller's orders |
 | Reviews | `POST /api/orders/:id/review {rating,comment}` (delivered orders, once per reviewer); `GET /api/users/:id/reviews` |
 | Messages | `GET/POST /api/orders/:id/messages`, `POST …/messages/read`, `GET /api/inbox` (per-order last message + unread count) |
@@ -76,7 +77,15 @@ reference mockup:
 - **D6 (done)** — skeleton loaders (Browse), no-flash refresh, mouse-drag scroll
   on web, 720 px content cap on wide screens, Hero image transitions, a11y
   tooltips/semantics, Edit-profile sheet (`PATCH /api/me`).
-- **Later** — real photo upload, push notifications, offline cache, i18n.
+- **D7 (done)** — real photo upload. `POST /api/uploads` (multipart, JPEG/PNG/WebP
+  ≤5 MB) stores the image on the API's local `uploads/` disk and serves it back
+  at `/uploads/*`; the returned absolute URL goes into the same `image_url` /
+  `cover_image_url` / `avatar_url` fields. `ImagePickerField` (camera + gallery,
+  client-side downscale to 1600 px) replaces the paste-a-URL inputs on Post-a-want,
+  New-trip and Edit-profile. Pull-to-refresh also added to Trip/Want detail. 42
+  Flutter tests; backend 20 suites / 60 tests.
+- **Later** — push notifications, offline cache, i18n. Move uploads to object
+  storage (S3/GCS) before production; the local disk store is pilot-only.
 
 ## Before a production release
 

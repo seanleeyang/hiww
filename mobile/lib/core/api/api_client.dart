@@ -12,15 +12,15 @@ import 'api_exception.dart';
 ///  - turns every failure into an [ApiException]
 class ApiClient {
   ApiClient({required String baseUrl, required TokenStorage tokenStorage})
-      : _tokens = tokenStorage,
-        _dio = Dio(
-          BaseOptions(
-            baseUrl: baseUrl,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 20),
-            headers: {'Content-Type': 'application/json'},
-          ),
-        ) {
+    : _tokens = tokenStorage,
+      _dio = Dio(
+        BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 20),
+          headers: {'Content-Type': 'application/json'},
+        ),
+      ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -49,6 +49,30 @@ class ApiClient {
 
   Future<Object?> patch(String path, {Object? body}) =>
       _send(() => _dio.patch(path, data: body));
+
+  /// Multipart upload of raw [bytes] as the `file` field. Works on web too
+  /// because the payload is bytes, not a file path.
+  Future<Object?> upload(
+    String path, {
+    required List<int> bytes,
+    required String filename,
+    required String contentType,
+  }) {
+    final form = FormData.fromMap({
+      'file': MultipartFile.fromBytes(
+        bytes,
+        filename: filename,
+        contentType: DioMediaType.parse(contentType),
+      ),
+    });
+    return _send(
+      () => _dio.post(
+        path,
+        data: form,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      ),
+    );
+  }
 
   Future<Object?> _send(Future<Response<dynamic>> Function() run) async {
     try {
@@ -80,9 +104,10 @@ class ApiClient {
           'Could not reach the Hiww server. Check the connection and API URL.',
         DioExceptionType.badResponse when status == 429 =>
           'Too many attempts. Wait a minute and try again.',
-        _ => status != null
-            ? 'Request failed ($status).'
-            : 'Something went wrong. Please try again.',
+        _ =>
+          status != null
+              ? 'Request failed ($status).'
+              : 'Something went wrong. Please try again.',
       };
     }
     return ApiException(message, statusCode: status, code: code);

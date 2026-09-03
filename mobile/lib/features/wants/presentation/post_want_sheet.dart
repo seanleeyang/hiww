@@ -7,6 +7,7 @@ import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../ui/budget_stepper.dart';
 import '../../../ui/category_chips.dart';
+import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/wants_repository.dart';
 
@@ -20,7 +21,10 @@ Future<void> showPostWantSheet(
     isScrollControlled: true,
     builder: (_) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: _PostWantSheet(sourceCountry: sourceCountry, sourceCity: sourceCity),
+      child: _PostWantSheet(
+        sourceCountry: sourceCountry,
+        sourceCity: sourceCity,
+      ),
     ),
   );
 }
@@ -37,8 +41,8 @@ class _PostWantSheet extends ConsumerStatefulWidget {
 class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
   final _title = TextEditingController();
   final _details = TextEditingController();
-  final _imageUrl = TextEditingController();
   final _city = TextEditingController();
+  String? _photoUrl;
   String _category = 'sneakers';
   late String _country;
   int _budget = 3000;
@@ -57,7 +61,6 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
   void dispose() {
     _title.dispose();
     _details.dispose();
-    _imageUrl.dispose();
     _city.dispose();
     super.dispose();
   }
@@ -78,7 +81,9 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
       _error = null;
     });
     try {
-      final id = await ref.read(wantsRepositoryProvider).create(
+      final id = await ref
+          .read(wantsRepositoryProvider)
+          .create(
             title: title,
             itemDescription: details,
             sourceCountry: _country,
@@ -87,7 +92,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
             estimatedWeightKg: 1,
             budget: '${_budget.toStringAsFixed(0)}.00',
             needBy: _needBy,
-            imageUrl: _imageUrl.text.trim(),
+            imageUrl: _photoUrl ?? '',
           );
       ref.invalidate(myWantsProvider);
       ref.invalidate(feedProvider);
@@ -133,13 +138,10 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _imageUrl,
-              keyboardType: TextInputType.url,
-              decoration: const InputDecoration(
-                labelText: 'Photo or product link (optional)',
-                hintText: 'https://…',
-              ),
+            ImagePickerField(
+              value: _photoUrl,
+              onChanged: (url) => setState(() => _photoUrl = url),
+              label: 'Add a photo (optional)',
             ),
             const SizedBox(height: 18),
             Text('Category', style: Theme.of(context).textTheme.labelLarge),
@@ -156,7 +158,10 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Budget', style: Theme.of(context).textTheme.labelLarge),
+                      Text(
+                        'Budget',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
                       const SizedBox(height: 8),
                       BudgetStepper(
                         value: _budget,
@@ -170,7 +175,10 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Need by', style: Theme.of(context).textTheme.labelLarge),
+                      Text(
+                        'Need by',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
                         onPressed: _pickDate,
@@ -238,8 +246,10 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ],
             const SizedBox(height: 18),
             FilledButton(
@@ -248,7 +258,8 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('Post my want'),
             ),
           ],
