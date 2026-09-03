@@ -1,0 +1,28 @@
+// The single ordered list of migrations. `run.ts` and the Jest test bootstrap
+// both consume this so there is never a second copy to forget to update.
+import * as m001 from './001_init';
+import * as m002 from './002_add_auth_fields';
+import * as m003 from './003_add_risk_status';
+import * as m004 from './004_add_user_role';
+import * as m005 from './005_add_order_payment_claim';
+import * as m006 from './006_add_offer_trip';
+import * as m007 from './007_profiles_and_discovery';
+import * as m008 from './008_reviews';
+import * as m009 from './009_messages';
+import * as m010 from './010_audit_log';
+import * as m011 from './011_payouts';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
+  { name: '001_init', up: m001.up },
+  { name: '002_add_auth_fields', up: m002.up },
+  { name: '003_add_risk_status', up: m003.up },
+  { name: '004_add_user_role', up: m004.up },
+  { name: '005_add_order_payment_claim', up: m005.up },
+  { name: '006_add_offer_trip', up: m006.up },
+  { name: '007_profiles_and_discovery', up: m007.up },
+  { name: '008_reviews', up: m008.up },
+  { name: '009_messages', up: m009.up },
+  { name: '010_audit_log', up: m010.up },
+  { name: '011_payouts', up: m011.up },
+];

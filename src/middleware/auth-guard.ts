@@ -35,7 +35,9 @@ const ADMIN_ROUTES = new Set<string>([
   '/api/ledger/:userId',
   '/api/payments/initiate',
   '/api/payments/confirm',
+  '/api/payments/payout',
   '/api/ops/overview',
+  '/api/ops/reconciliation',
 ]);
 
 function matchedRoute(request: FastifyRequest): string | undefined {

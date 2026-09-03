@@ -12,6 +12,7 @@ export type AuditAction =
   | 'payment.confirm'
   | 'order.ship'
   | 'order.release'
+  | 'order.payout'
   | 'dispute.open'
   | 'dispute.resolve'
   | 'kyc.review'

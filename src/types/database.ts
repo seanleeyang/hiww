@@ -174,6 +174,17 @@ export interface AuditLogTable {
   created_at: Generated<Date>;
 }
 
+export interface PayoutsTable {
+  id: string;
+  order_id: string;
+  recorded_by?: string | null;
+  amount: string; // Decimal as string
+  method: string;
+  reference: string;
+  note?: string | null;
+  created_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   trips: TripsTable;
@@ -188,4 +199,5 @@ export interface Database {
   reviews: ReviewsTable;
   messages: MessagesTable;
   audit_log: AuditLogTable;
+  payouts: PayoutsTable;
 }

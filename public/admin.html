@@ -99,6 +99,7 @@
     <nav>
       <button data-tab="queue" class="active">Review queue</button>
       <button data-tab="orders">Orders</button>
+      <button data-tab="money">Money</button>
       <button data-tab="users">Users</button>
       <button data-tab="audit">Audit</button>
       <button data-tab="testlab">Test lab</button>
@@ -125,6 +126,14 @@
       <div class="card">
         <h2>Users <button class="ghost small" data-act="refresh-users" style="float:right">Refresh</button></h2>
         <div id="usersTable"></div>
+      </div>
+    </div>
+
+    <div id="tab-money" class="tab" hidden>
+      <div class="card">
+        <h2>Money reconciliation <button class="ghost small" data-act="refresh-money" style="float:right">Refresh</button></h2>
+        <p class="muted" style="margin-top:-4px">Manual-money pilot. "Awaiting payment" is owed <b>in</b> by shoppers (goods + fee); "awaiting payout" is owed <b>out</b> to travellers (goods only). Record a payout after you've actually sent the money.</p>
+        <div id="moneyView"></div>
       </div>
     </div>
 
@@ -238,6 +247,7 @@
     document.querySelectorAll('.tab').forEach(function (t) { t.hidden = t.id !== 'tab-' + tab; });
     if (tab === 'queue') renderQueue();
     if (tab === 'orders') renderOrders();
+    if (tab === 'money') renderMoney();
     if (tab === 'users') renderUsers();
     if (tab === 'audit') renderAudit();
     if (tab === 'testlab') renderTestOrders();
@@ -350,6 +360,81 @@
     } catch (e) { host.innerHTML = ''; host.appendChild(errBox(e)); }
   }
 
+  function recordPayout(orderId, suggestedAmount) {
+    var amount = prompt('Amount paid to the traveller (goods price):', suggestedAmount || '');
+    if (!amount) return;
+    var method = prompt('Method (wise / bank / promptpay):', 'wise');
+    if (!method) return;
+    var reference = prompt('Transfer reference for your records:', '');
+    if (!reference) return;
+    return api('POST', '/api/payments/payout', {
+      order_id: orderId, amount: amount.trim(), method: method.trim(), reference: reference.trim(),
+    });
+  }
+
+  async function renderMoney() {
+    var host = $('#moneyView'); host.textContent = 'Loading…';
+    try {
+      await loadUsers();
+      var r = (await api('GET', '/api/ops/reconciliation')).data;
+      host.innerHTML = '';
+
+      var stat = function (label, count, total, extra) {
+        return el('div', { class: 'stack', style: 'display:inline-block;min-width:200px;margin-right:24px;vertical-align:top' }, [
+          el('h3', { text: label, style: 'margin:0' }),
+          el('div', { style: 'font-size:22px;font-weight:700' }, [ '฿' + total ]),
+          el('div', { class: 'muted', text: count + ' order' + (count === 1 ? '' : 's') + (extra || '') }),
+        ]);
+      };
+      host.appendChild(el('div', { style: 'margin-bottom:8px' }, [
+        stat('Owed in (awaiting payment)', r.awaiting_payment.count, r.awaiting_payment.total,
+          ' · ' + r.awaiting_payment.claimed + ' say they paid'),
+        stat('Owed out (awaiting payout)', r.awaiting_payout.count, r.awaiting_payout.total),
+        stat('Paid out', r.paid_out.count, r.paid_out.total),
+      ]));
+
+      host.appendChild(el('h3', { text: 'Awaiting payout — record once you have sent the money' }));
+      if (!r.awaiting_payout.orders.length) {
+        host.appendChild(el('div', { class: 'empty', text: 'Nothing owed to travellers right now.' }));
+      } else {
+        var t = el('table');
+        t.appendChild(el('tr', {}, ['Order', 'Item', 'Traveller', 'Amount', ''].map(function (h) { return el('th', { text: h }); })));
+        r.awaiting_payout.orders.forEach(function (o) {
+          var b = el('button', { class: 'small', text: 'Record payout' });
+          b.addEventListener('click', function () {
+            var p = recordPayout(o.id, o.total_price);
+            if (p) run(b, p, 'Payout recorded', renderMoney);
+          });
+          t.appendChild(el('tr', {}, [
+            el('td', { class: 'mono', text: shortId(o.id) }),
+            el('td', { text: o.item_description }),
+            el('td', { class: 'muted', text: name(o.traveler_id) }),
+            el('td', { class: 'mono', text: '฿' + o.total_price }),
+            el('td', {}, [ b ]),
+          ]));
+        });
+        host.appendChild(t);
+      }
+
+      if (r.paid_out.payouts.length) {
+        host.appendChild(el('h3', { text: 'Recent payouts' }));
+        var pt = el('table');
+        pt.appendChild(el('tr', {}, ['When', 'Order', 'Item', 'Amount', 'Method', 'Reference'].map(function (h) { return el('th', { text: h }); })));
+        r.paid_out.payouts.forEach(function (p) {
+          pt.appendChild(el('tr', {}, [
+            el('td', { class: 'mono', text: new Date(p.created_at).toLocaleDateString() }),
+            el('td', { class: 'mono', text: shortId(p.order_id) }),
+            el('td', { text: p.item_description }),
+            el('td', { class: 'mono', text: '฿' + p.amount }),
+            el('td', { text: p.method }),
+            el('td', { class: 'mono', text: p.reference }),
+          ]));
+        });
+        host.appendChild(pt);
+      }
+    } catch (e) { host.innerHTML = ''; host.appendChild(errBox(e)); }
+  }
+
   async function renderAudit() {
     var host = $('#auditTable'); host.textContent = 'Loading…';
     try {
@@ -435,6 +520,7 @@
     if (act === 'refresh-orders') return renderOrders();
     if (act === 'refresh-users') return renderUsers();
     if (act === 'refresh-audit') return renderAudit();
+    if (act === 'refresh-money') return renderMoney();
     if (act === 'approve-kyc') return run(b, api('POST', '/api/admin/users/' + uid + '/kyc-review', { status: 'approved', note: 'Approved in console' }), 'KYC approved', refreshCurrent);
     if (act === 'reject-kyc') return run(b, api('POST', '/api/admin/users/' + uid + '/kyc-review', { status: 'rejected', note: 'Rejected in console' }), 'KYC rejected', refreshCurrent);
     if (act === 'flag') return run(b, api('POST', '/api/admin/users/' + uid + '/flag', { risk_status: 'flagged', reason: 'Flagged in console' }), 'User flagged', refreshCurrent);

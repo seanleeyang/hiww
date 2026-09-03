@@ -1,34 +1,11 @@
 import 'dotenv/config';
 import { createDatabase } from '@/db/connection';
-import * as migration001 from './001_init';
-import * as migration002 from './002_add_auth_fields';
-import * as migration003 from './003_add_risk_status';
-import * as migration004 from './004_add_user_role';
-import * as migration005 from './005_add_order_payment_claim';
-import * as migration006 from './006_add_offer_trip';
-import * as migration007 from './007_profiles_and_discovery';
-import * as migration008 from './008_reviews';
-import * as migration009 from './009_messages';
-import * as migration010 from './010_audit_log';
+import { migrations } from './list';
 
 async function runMigrations(): Promise<void> {
   const db = createDatabase();
 
   console.log('🚀 Running migrations...');
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
-    { name: '001_init', up: migration001.up },
-    { name: '002_add_auth_fields', up: migration002.up },
-    { name: '003_add_risk_status', up: migration003.up },
-    { name: '004_add_user_role', up: migration004.up },
-    { name: '005_add_order_payment_claim', up: migration005.up },
-    { name: '006_add_offer_trip', up: migration006.up },
-    { name: '007_profiles_and_discovery', up: migration007.up },
-    { name: '008_reviews', up: migration008.up },
-    { name: '009_messages', up: migration009.up },
-    { name: '010_audit_log', up: migration010.up },
-  ];
 
   try {
     for (const migration of migrations) {

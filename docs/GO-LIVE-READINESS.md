@@ -71,11 +71,15 @@ Status: **7/7 green.**
       before/after metadata. `GET /api/admin/audit` (admin-only, filter by
       `action` / `target_id` / `actor_id`, paginate with `before`). Shown in the
       operator console's **Audit** tab. `tests/integration/audit-flow.test.ts`.
-- [ ] **Reconciliation view** for the officer — orders awaiting payment confirm,
-      orders awaiting payout (delivered but not yet paid out), running totals.
-      Note: there is still **no endpoint to record a payout** — during the pilot
-      the officer pays the traveller out of band with nothing tracking it. That
-      gap needs closing here (an `order.payout` audit action is reserved for it).
+- [x] **Payouts + reconciliation** (`payouts` table, migration 011).
+      `POST /api/payments/payout` (admin-only) records a traveller payout —
+      amount / method / reference — for a `delivered` order, once, with an
+      `order.payout` audit entry. `GET /api/ops/reconciliation` (admin-only)
+      returns three buckets with running totals: **owed in** (pending_payment,
+      goods + fee), **owed out** (delivered with no payout, goods only),
+      **paid out** (recent payouts). New "Money" tab in the operator console
+      shows all three and has the Record-payout button.
+      `tests/integration/payout-flow.test.ts`.
 - [ ] Rate limits on `/api/payments/*`, `/api/offers/*/accept`, `/api/uploads`,
       `/api/auth/*`; request-id on every log line; structured logs in prod.
 
