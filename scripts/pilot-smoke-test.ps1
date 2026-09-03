@@ -56,8 +56,9 @@ api POST "/api/admin/users/$travelerId/kyc-review" @{ status = 'approved'; note 
 Write-Host "  KYC approved"
 $req   = api POST /api/requests @{ item_description = 'Smoke test item x2'; source_country = 'US'; category = 'general'; estimated_weight_kg = 1; budget = '90.00' } $shopper
 $trip  = api POST /api/trips @{ departure_country = 'US'; arrival_country = 'TH'; departure_date = '2026-10-01T08:00:00.000Z'; return_date = '2026-10-10T08:00:00.000Z'; max_weight_kg = 20; max_items = 5 } $traveler
-$offer = api POST /api/offers @{ request_id = $req.data.id; quoted_price = '85.00'; delivery_date = '2026-10-08T10:00:00.000Z' } $traveler
-$order = api POST "/api/offers/$($offer.data.id)/accept" @{ trip_id = $trip.data.id; item_description = 'Smoke test item x2'; quantity = 2; unit_price = '42.50' } $shopper
+$offer = api POST /api/offers @{ request_id = $req.data.id; trip_id = $trip.data.id; quoted_price = '85.00'; delivery_date = '2026-10-08T10:00:00.000Z' } $traveler
+# The offer already carries the trip and price; accepting takes no body.
+$order = api POST "/api/offers/$($offer.data.id)/accept" @{ accepted = $true } $shopper
 $orderId = $order.data.order_id
 Write-Host "  order $orderId created (pending_payment)"
 
