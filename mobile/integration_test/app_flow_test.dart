@@ -53,6 +53,37 @@ Future<Map<String, dynamic>> _register(String kind, int stamp,
   });
 }
 
+const _adminEmail = 'it-admin@example.com';
+const _adminPass = 'AdminPass123';
+
+/// Returns an admin bearer token. Logs in if the account exists, otherwise runs
+/// the repo's idempotent `create-admin` script (needs the API's working tree).
+Future<String> _adminToken() async {
+  try {
+    final r = await _api('POST', '/api/auth/login',
+        body: {'email': _adminEmail, 'password': _adminPass});
+    return r['token'] as String;
+  } catch (_) {
+    final res = await Process.run(
+      'npx',
+      ['tsx', 'scripts/create-admin.ts', _adminEmail, _adminPass],
+      workingDirectory: Directory.current.parent.path,
+      runInShell: true,
+    );
+    if (res.exitCode != 0) {
+      fail('Could not create the test admin. Run once:\n'
+          '  cd ..  &&  npm run create-admin $_adminEmail $_adminPass\n'
+          '${res.stdout}\n${res.stderr}');
+    }
+    final r = await _api('POST', '/api/auth/login',
+        body: {'email': _adminEmail, 'password': _adminPass});
+    return r['token'] as String;
+  }
+}
+
+String _isoDays(int n) =>
+    DateTime.now().toUtc().add(Duration(days: n)).toIso8601String();
+
 /// Bare HTTP helper for seeding data and the health probe.
 Future<Map<String, dynamic>> _api(
   String method,
@@ -104,6 +135,12 @@ Future<void> _pumpUntil(
   throw TestFailure(
       'Timed out after $timeout waiting for: $finder\nVisible text: $visible');
 }
+
+/// A [FilledButton] whose label contains [text] (labels carry a trailing price).
+Finder _button(String text) => find.ancestor(
+      of: find.textContaining(text),
+      matching: find.byType(FilledButton),
+    );
 
 Future<void> _tap(WidgetTester tester, Finder finder) async {
   try {
@@ -291,5 +328,96 @@ void main() {
     final order = (orders['items'] as List).first as Map;
     expect(order['status'], 'pending_payment');
     expect(order['payment_claimed_at'], isNotNull);
+  });
+
+  testWidgets('shopper confirms receipt and reviews an in-transit order',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+
+    // --- Seed an order all the way to in_transit (needs an admin to confirm
+    //     the payment during the manual-money pilot). ---
+    final shopper = await _register('shopper', stamp, type: 'shopper');
+    final traveler = await _register('traveler', stamp, type: 'traveler');
+    final shopperToken = shopper['token'] as String;
+    final travelerToken = traveler['token'] as String;
+
+    final want = await _api('POST', '/api/requests', token: shopperToken, body: {
+      'title': 'IT Headphones $stamp',
+      'item_description': 'Over-ear, noise cancelling, boxed.',
+      'source_country': 'JP',
+      'category': 'other',
+      'estimated_weight_kg': 1.0,
+      'budget': '9000.00',
+    });
+    final trip = await _api('POST', '/api/trips', token: travelerToken, body: {
+      'departure_country': 'TH',
+      'arrival_country': 'JP',
+      'departure_date': _isoDays(4),
+      'return_date': _isoDays(14),
+      'max_weight_kg': 6,
+      'max_items': 3,
+    });
+    final offer = await _api('POST', '/api/offers', token: travelerToken, body: {
+      'request_id': want['id'],
+      'trip_id': trip['id'],
+      'quoted_price': '8500.00',
+      'delivery_date': _isoDays(11),
+    });
+    final accept = await _api('POST', '/api/offers/${offer['id']}/accept',
+        token: shopperToken);
+    final orderId = accept['order_id'] as String;
+    await _api('POST', '/api/orders/$orderId/claim-payment', token: shopperToken);
+    await _api('POST', '/api/payments/confirm',
+        token: await _adminToken(), body: {'order_id': orderId});
+    await _api('POST', '/api/orders/$orderId/deliver',
+        token: travelerToken, body: {'note': 'Handed to courier'});
+
+    // --- Shopper opens the order and confirms receipt through the UI. ---
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _appOverrides(shopperToken),
+        child: const HiwwApp(),
+      ),
+    );
+
+    await _pumpUntil(tester, find.text('My Wants'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.text('My Wants'));
+    await _pumpUntil(tester, find.textContaining('View order'),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, find.textContaining('View order'));
+
+    // Order screen, in transit → the confirm-&-release action.
+    await _pumpUntil(tester, _button('Confirm & release'),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, _button('Confirm & release'));
+
+    // Confirm & review screen — default 5 stars, add a comment, submit.
+    await _pumpUntil(tester, find.text('Confirm & review'),
+        timeout: const Duration(seconds: 20));
+    await tester.enterText(
+        find.byType(TextField).last, 'Smooth handover, thanks!');
+    await _tap(tester, _button('Confirm & release'));
+
+    // Back on the order, now delivered + rated.
+    await _pumpUntil(tester, find.textContaining('You rated'),
+        timeout: const Duration(seconds: 30));
+
+    // Backend: order delivered, review stored, traveler's delivered_count up.
+    final order = await _api('GET', '/api/orders/$orderId', token: shopperToken);
+    expect(order['status'], 'delivered');
+    expect(order['my_review'], isNotNull);
+
+    final reviews = await _api(
+        'GET', '/api/users/${traveler['userId']}/reviews',
+        token: shopperToken);
+    expect((reviews['items'] as List), isNotEmpty);
+
+    final me = await _api('GET', '/api/me', token: travelerToken);
+    expect(me['delivered_count'], 1);
   });
 }
