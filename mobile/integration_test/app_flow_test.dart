@@ -19,6 +19,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:hiww_mobile/app.dart';
 import 'package:hiww_mobile/core/api/api_client.dart';
 import 'package:hiww_mobile/core/storage/token_storage.dart';
+import 'package:hiww_mobile/ui/soft_card.dart';
 
 const _baseUrl = 'http://localhost:3000';
 
@@ -419,5 +420,235 @@ void main() {
 
     final me = await _api('GET', '/api/me', token: travelerToken);
     expect(me['delivered_count'], 1);
+  });
+
+  testWidgets('traveler opens a want and sends an offer', (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+
+    final traveler = await _register('traveler', stamp, type: 'traveler');
+    final shopper = await _register('shopper', stamp, type: 'shopper');
+    final travelerToken = traveler['token'] as String;
+
+    // Traveler already has a published trip; shopper posts a want.
+    await _api('POST', '/api/trips', token: travelerToken, body: {
+      'departure_country': 'TH', 'arrival_country': 'JP',
+      'departure_city': 'Bangkok', 'arrival_city': 'Tokyo',
+      'departure_date': _isoDays(4), 'return_date': _isoDays(16),
+      'max_weight_kg': 7, 'max_items': 4, 'title': 'Bangkok → Tokyo',
+    });
+    final wantTitle = 'IT Watch $stamp';
+    await _api('POST', '/api/requests',
+        token: shopper['token'] as String,
+        body: {
+          'title': wantTitle,
+          'item_description': 'Casio A168, silver. Any Tokyo store is fine.',
+          'source_country': 'JP', 'category': 'other',
+          'estimated_weight_kg': 1.0, 'budget': '3000.00',
+        });
+
+    await tester.pumpWidget(
+      ProviderScope(
+          overrides: _appOverrides(travelerToken), child: const HiwwApp()),
+    );
+
+    await _pumpUntil(tester, find.textContaining(wantTitle),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.textContaining(wantTitle));
+
+    await _pumpUntil(tester, _button('Make an offer'),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, _button('Make an offer'));
+
+    // MakeOfferScreen: trip is pre-selected; set a price and a delivery date.
+    await _pumpUntil(tester, find.widgetWithText(TextField, 'Your price for the goods'),
+        timeout: const Duration(seconds: 20));
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Your price for the goods'), '2800');
+    await _tap(tester, find.widgetWithText(OutlinedButton, 'Pick a date'));
+    await _pumpUntil(tester, find.text('OK'));
+    await _tap(tester, find.text('OK'));
+    await _tap(tester, _button('Send offer'));
+
+    // Back on the want; the offer exists.
+    await _pumpUntil(tester, find.textContaining(wantTitle),
+        timeout: const Duration(seconds: 30));
+    final offers = await _api('GET', '/api/offers/mine', token: travelerToken);
+    expect((offers['items'] as List), isNotEmpty);
+  });
+
+  testWidgets('shopper reports a problem, and it reaches the admin queue',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+
+    final shopper = await _register('shopper', stamp, type: 'shopper');
+    final traveler = await _register('traveler', stamp, type: 'traveler');
+    final shopperToken = shopper['token'] as String;
+    final travelerToken = traveler['token'] as String;
+
+    final want = await _api('POST', '/api/requests', token: shopperToken, body: {
+      'title': 'IT Kettle $stamp',
+      'item_description': 'Electric kettle, 1L, from any Tokyo store.',
+      'source_country': 'JP', 'category': 'other',
+      'estimated_weight_kg': 1.5, 'budget': '5000.00',
+    });
+    final trip = await _api('POST', '/api/trips', token: travelerToken, body: {
+      'departure_country': 'TH', 'arrival_country': 'JP',
+      'departure_date': _isoDays(3), 'return_date': _isoDays(13),
+      'max_weight_kg': 6, 'max_items': 3,
+    });
+    final offer = await _api('POST', '/api/offers', token: travelerToken, body: {
+      'request_id': want['id'], 'trip_id': trip['id'],
+      'quoted_price': '4800.00', 'delivery_date': _isoDays(10),
+    });
+    final accept = await _api('POST', '/api/offers/${offer['id']}/accept',
+        token: shopperToken);
+    final orderId = accept['order_id'] as String;
+
+    await tester.pumpWidget(
+      ProviderScope(
+          overrides: _appOverrides(shopperToken), child: const HiwwApp()),
+    );
+
+    await _pumpUntil(tester, find.text('My Wants'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.text('My Wants'));
+    await _pumpUntil(tester, find.textContaining('View order'),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, find.textContaining('View order'));
+
+    await _pumpUntil(tester, find.widgetWithText(OutlinedButton, 'Report'),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, find.widgetWithText(OutlinedButton, 'Report'));
+
+    await _pumpUntil(tester, find.text('Report a problem'));
+    await tester.enterText(find.byType(TextField).last,
+        'Two of the three items were missing from the parcel on arrival.');
+    await _tap(tester, _button('Submit report'));
+
+    await _pumpUntil(tester, find.textContaining('Reported'),
+        timeout: const Duration(seconds: 30));
+
+    final queue =
+        await _api('GET', '/api/admin/reviews', token: await _adminToken());
+    expect(
+      (queue['queue'] as List).any(
+          (e) => e['type'] == 'dispute' && e['order_id'] == orderId),
+      isTrue,
+      reason: 'the dispute should show in the admin review queue',
+    );
+  });
+
+  testWidgets('a new user submits KYC and lands in the admin queue',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final user = await _register('kyc', stamp, type: 'both');
+
+    await tester.pumpWidget(
+      ProviderScope(
+          overrides: _appOverrides(user['token'] as String),
+          child: const HiwwApp()),
+    );
+
+    await _pumpUntil(tester, find.byTooltip('Account'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.byTooltip('Account'));
+
+    await _pumpUntil(tester, find.text('ID check'),
+        timeout: const Duration(seconds: 20));
+    await _tap(
+        tester, find.widgetWithText(FilledButton, 'Update ID details'));
+    await _pumpUntil(
+        tester, find.widgetWithText(TextField, 'Document number'));
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Document number'), 'X1234567');
+    await _tap(tester, _button('Submit for review'));
+
+    await _pumpUntil(tester, find.textContaining('Submitted for review'),
+        timeout: const Duration(seconds: 30));
+
+    final queue =
+        await _api('GET', '/api/admin/reviews', token: await _adminToken());
+    expect(
+      (queue['queue'] as List).any(
+          (e) => e['type'] == 'kyc' && e['user_id'] == user['userId']),
+      isTrue,
+      reason: 'the KYC submission should show in the admin review queue',
+    );
+  });
+
+  testWidgets('traveler marks a confirmed order shipped', (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+
+    final shopper = await _register('shopper', stamp, type: 'shopper');
+    final traveler = await _register('traveler', stamp, type: 'traveler');
+    final shopperToken = shopper['token'] as String;
+    final travelerToken = traveler['token'] as String;
+
+    final want = await _api('POST', '/api/requests', token: shopperToken, body: {
+      'title': 'IT Charger $stamp',
+      'item_description': 'USB-C 65W GaN charger, boxed.',
+      'source_country': 'JP', 'category': 'other',
+      'estimated_weight_kg': 0.5, 'budget': '2500.00',
+    });
+    final trip = await _api('POST', '/api/trips', token: travelerToken, body: {
+      'departure_country': 'TH', 'arrival_country': 'JP',
+      'departure_date': _isoDays(3), 'return_date': _isoDays(13),
+      'max_weight_kg': 6, 'max_items': 3,
+    });
+    final offer = await _api('POST', '/api/offers', token: travelerToken, body: {
+      'request_id': want['id'], 'trip_id': trip['id'],
+      'quoted_price': '2300.00', 'delivery_date': _isoDays(10),
+    });
+    final accept = await _api('POST', '/api/offers/${offer['id']}/accept',
+        token: shopperToken);
+    final orderId = accept['order_id'] as String;
+    await _api('POST', '/api/orders/$orderId/claim-payment', token: shopperToken);
+    await _api('POST', '/api/payments/confirm',
+        token: await _adminToken(), body: {'order_id': orderId});
+
+    await tester.pumpWidget(
+      ProviderScope(
+          overrides: _appOverrides(travelerToken), child: const HiwwApp()),
+    );
+
+    // My Trips → Offers tab → the accepted offer → its order.
+    await _pumpUntil(tester, find.text('My Trips'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.text('My Trips'));
+    await _pumpUntil(tester, find.text('Offers'));
+    await _tap(tester, find.text('Offers'));
+    // Give myOrdersProvider time to resolve so the card links to the order.
+    await _pumpUntil(tester, find.byType(SoftCard),
+        timeout: const Duration(seconds: 20));
+    for (var i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+    await _tap(tester, find.byType(SoftCard).first);
+
+    await _pumpUntil(tester, _button('Mark as shipped'),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, _button('Mark as shipped'));
+
+    await _pumpUntil(tester, find.textContaining('Waiting for the shopper'),
+        timeout: const Duration(seconds: 30));
+
+    final order = await _api('GET', '/api/orders/$orderId', token: travelerToken);
+    expect(order['status'], 'in_transit');
   });
 }
