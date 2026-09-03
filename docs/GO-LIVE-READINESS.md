@@ -93,9 +93,20 @@ Status: **7/7 green.**
 
 ## Stage 3 — deploy and re-verify
 
-- [ ] Dockerfile + host (Fly.io / Render / Cloud Run) with HTTPS.
-- [ ] Prod env separation: `DATABASE_URL`, `JWT_SECRET`, `PUBLIC_BASE_URL`,
-      `PILOT_PAYMENT_INSTRUCTIONS`, `MANUAL_MONEY_PILOT`.
-- [ ] Move `uploads/` off local disk to object storage.
+Host chosen: **Render** (API container, free) + **Neon** (Postgres, free).
+Full steps in `docs/DEPLOY.md`.
+
+- [x] Dockerfile (multi-stage) + `render.yaml` blueprint + idempotent
+      migration-on-boot (`_migrations` tracking table) + HTTPS via Render.
+- [x] Prod config: `NODE_ENV=production` turns on the strong-secret check, JSON
+      logging, `trustProxy`, and managed-Postgres TLS. `render.yaml` wires
+      `DATABASE_URL` / `JWT_SECRET` / `PUBLIC_BASE_URL` /
+      `PILOT_PAYMENT_INSTRUCTIONS` / `MANUAL_MONEY_PILOT`.
+- [ ] **You:** push to GitHub, create the Neon project, apply the Render
+      blueprint, paste the two secrets, create the first admin (`docs/DEPLOY.md`).
+- [ ] Move `uploads/` off local disk to **Cloudflare R2** (10 GB free) — on the
+      free Render plan the disk is ephemeral, so images are lost on redeploy
+      until this lands.
 - [ ] Re-run both persona walk-throughs against the deployed URL.
+- [ ] Uptime pinger on `/health` (free Render service sleeps after 15 min).
 - [ ] Health-check alerting + error/log shipping.

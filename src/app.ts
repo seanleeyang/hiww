@@ -65,6 +65,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     // `x-request-id` (from a proxy) when present, otherwise mint one.
     requestIdHeader: 'x-request-id',
     genReqId: () => randomUUID(),
+    // In production the app runs behind a platform proxy (Render / a load
+    // balancer). Trust it so `request.protocol` reflects `x-forwarded-proto`
+    // (needed to build https upload URLs) and rate limiting keys on the real
+    // client IP from `x-forwarded-for`.
+    trustProxy: config.nodeEnv === 'production',
   });
 
   // Echo the request id back so clients and proxies can line up their logs.

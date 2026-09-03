@@ -1,0 +1,48 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# One web service running the API container. The database is Neon (free), not a
+# Render database, so its URL is pasted in as a secret. Migrations run on every
+# deploy from the container's start command (idempotent).
+services:
+  - type: web
+    name: hiww-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Neon → Dashboard → Connection Details → "Pooled connection" string.
+      # Must include ?sslmode=require (Neon's default string does).
+      - key: DATABASE_URL
+        sync: false
+
+      # Render generates a strong value once and keeps it.
+      - key: JWT_SECRET
+        generateValue: true
+
+      # The public https origin. Set after the first deploy to
+      # https://<your-service>.onrender.com (or a custom domain). If left unset
+      # the app derives it per-request, which also works behind Render's proxy.
+      - key: PUBLIC_BASE_URL
+        sync: false
+
+      - key: MANUAL_MONEY_PILOT
+        value: "true"
+
+      # Shown to shoppers on the pay screen. Put your bank / Wise / PromptPay
+      # details here (keep them out of git).
+      - key: PILOT_PAYMENT_INSTRUCTIONS
+        sync: false
+
+      - key: PAYMENT_PROVIDER
+        value: mock
+      - key: IDENTITY_PROVIDER
+        value: mock
+      - key: LOG_LEVEL
+        value: info

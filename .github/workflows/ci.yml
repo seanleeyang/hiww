@@ -51,8 +51,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Run migrations
-        run: npx tsx reset-db.ts && npx tsx migrations/run.ts
+      - name: Build
+        run: npm run build
 
+      # `npm test` drops + recreates <db>_test and migrates it itself
+      # (tests/global-setup.ts); no manual migration step needed.
       - name: Run tests
-        run: npm test -- --runInBand
+        run: npm test

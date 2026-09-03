@@ -1,12 +1,22 @@
+# Keep the build context small and the image lean.
 node_modules
-npm-debug.log
 dist
+coverage
 .git
 .gitignore
+.gitattributes
+.github
 .env
 .env.*
-coverage
 .vscode
+.idea
 .DS_Store
-README.md
-QUICKSTART.md
+
+# Not needed to build or run the API
+mobile
+docs
+tests
+uploads
+*.md
+postman
+*.postman_collection.json
