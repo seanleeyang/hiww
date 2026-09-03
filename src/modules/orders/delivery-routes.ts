@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const noteSchema = z.object({
   note: z.string().min(1).optional(),
@@ -57,6 +58,14 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         .where('id', '=', order.id)
         .execute();
 
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'order.ship',
+        targetType: 'order',
+        targetId: order.id,
+        summary: `Traveler marked order ${order.id} shipped`,
+        metadata: { from_status: 'confirmed', to_status: 'in_transit', note: parsed.data.note ?? null },
+      });
+
       reply.send({
         success: true,
         data: { order_id: order.id, status: 'in_transit' },
@@ -110,6 +119,20 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
           .set({ delivered_count: sql`delivered_count + 1`, updated_at: now })
           .where('id', '=', order.traveler_id)
           .execute();
+        await recordAudit(trx, actorFromRequest(request), {
+          action: 'order.release',
+          targetType: 'order',
+          targetId: order.id,
+          summary: `Shopper confirmed receipt of order ${order.id} — payout to traveler is now due`,
+          metadata: {
+            from_status: 'in_transit',
+            to_status: 'delivered',
+            total_price: order.total_price,
+            shopper_id: order.shopper_id,
+            traveler_id: order.traveler_id,
+            note: parsed.data.note ?? null,
+          },
+        });
       });
 
       reply.send({

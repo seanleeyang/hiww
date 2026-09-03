@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError, generateId } from '@/utils/helpers';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const disputeSchema = z.object({
   order_id: z.string().uuid(),
@@ -49,6 +50,18 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
       })
       .execute();
 
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'dispute.open',
+      targetType: 'dispute',
+      targetId: disputeId,
+      summary: `Dispute opened on order ${parsed.data.order_id}`,
+      metadata: {
+        order_id: parsed.data.order_id,
+        reason: parsed.data.reason,
+        order_status: order.status,
+      },
+    });
+
     reply.status(201).send({
       success: true,
       data: { id: disputeId },
@@ -85,6 +98,19 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
       })
       .where('id', '=', dispute.id)
       .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'dispute.resolve',
+      targetType: 'dispute',
+      targetId: dispute.id,
+      summary: `Dispute ${dispute.id} on order ${dispute.order_id} marked ${parsed.data.status}`,
+      metadata: {
+        order_id: dispute.order_id,
+        from_status: dispute.status,
+        to_status: parsed.data.status,
+        resolution: parsed.data.resolution,
+      },
+    });
 
     reply.send({
       success: true,

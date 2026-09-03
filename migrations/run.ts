@@ -9,6 +9,7 @@ import * as migration006 from './006_add_offer_trip';
 import * as migration007 from './007_profiles_and_discovery';
 import * as migration008 from './008_reviews';
 import * as migration009 from './009_messages';
+import * as migration010 from './010_audit_log';
 
 async function runMigrations(): Promise<void> {
   const db = createDatabase();
@@ -26,6 +27,7 @@ async function runMigrations(): Promise<void> {
     { name: '007_profiles_and_discovery', up: migration007.up },
     { name: '008_reviews', up: migration008.up },
     { name: '009_messages', up: migration009.up },
+    { name: '010_audit_log', up: migration010.up },
   ];
 
   try {

@@ -100,6 +100,7 @@
       <button data-tab="queue" class="active">Review queue</button>
       <button data-tab="orders">Orders</button>
       <button data-tab="users">Users</button>
+      <button data-tab="audit">Audit</button>
       <button data-tab="testlab">Test lab</button>
     </nav>
 
@@ -124,6 +125,14 @@
       <div class="card">
         <h2>Users <button class="ghost small" data-act="refresh-users" style="float:right">Refresh</button></h2>
         <div id="usersTable"></div>
+      </div>
+    </div>
+
+    <div id="tab-audit" class="tab" hidden>
+      <div class="card">
+        <h2>Audit trail <button class="ghost small" data-act="refresh-audit" style="float:right">Refresh</button></h2>
+        <p class="muted" style="margin-top:-4px">Append-only. Every payment confirmation, fund release, order transition and review-queue action, with who did it.</p>
+        <div id="auditTable"></div>
       </div>
     </div>
 
@@ -230,6 +239,7 @@
     if (tab === 'queue') renderQueue();
     if (tab === 'orders') renderOrders();
     if (tab === 'users') renderUsers();
+    if (tab === 'audit') renderAudit();
     if (tab === 'testlab') renderTestOrders();
   }
 
@@ -340,6 +350,28 @@
     } catch (e) { host.innerHTML = ''; host.appendChild(errBox(e)); }
   }
 
+  async function renderAudit() {
+    var host = $('#auditTable'); host.textContent = 'Loading…';
+    try {
+      await loadUsers();
+      var r = await api('GET', '/api/admin/audit?limit=100');
+      var rows = (r.data && r.data.items) || [];
+      if (!rows.length) { host.innerHTML = ''; host.appendChild(el('div', { class: 'empty', text: 'Nothing logged yet.' })); return; }
+      var t = el('table');
+      t.appendChild(el('tr', {}, ['When', 'Who', 'Action', 'Target', 'Detail'].map(function (h) { return el('th', { text: h }); })));
+      rows.forEach(function (a) {
+        t.appendChild(el('tr', {}, [
+          el('td', { class: 'mono', text: new Date(a.created_at).toLocaleString() }),
+          el('td', { class: 'muted', text: a.actor_id ? name(a.actor_id) : (a.actor_role || 'system') }),
+          el('td', {}, [ el('span', { class: 'badge b-blue', text: a.action }) ]),
+          el('td', { class: 'mono', text: a.target_type + ' ' + shortId(a.target_id) }),
+          el('td', { text: a.summary })
+        ]));
+      });
+      host.innerHTML = ''; host.appendChild(t);
+    } catch (e) { host.innerHTML = ''; host.appendChild(errBox(e)); }
+  }
+
   function renderTestOrders() {
     var host = $('#testOrders'); host.innerHTML = '';
     var ids = Object.keys(personas);
@@ -402,6 +434,7 @@
     if (act === 'refresh-queue') return renderQueue();
     if (act === 'refresh-orders') return renderOrders();
     if (act === 'refresh-users') return renderUsers();
+    if (act === 'refresh-audit') return renderAudit();
     if (act === 'approve-kyc') return run(b, api('POST', '/api/admin/users/' + uid + '/kyc-review', { status: 'approved', note: 'Approved in console' }), 'KYC approved', refreshCurrent);
     if (act === 'reject-kyc') return run(b, api('POST', '/api/admin/users/' + uid + '/kyc-review', { status: 'rejected', note: 'Rejected in console' }), 'KYC rejected', refreshCurrent);
     if (act === 'flag') return run(b, api('POST', '/api/admin/users/' + uid + '/flag', { risk_status: 'flagged', reason: 'Flagged in console' }), 'User flagged', refreshCurrent);

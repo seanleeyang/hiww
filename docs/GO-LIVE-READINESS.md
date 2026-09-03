@@ -57,17 +57,25 @@ Status: **7/7 green.**
 ### Still open in Stage 1
 
 - [ ] Chat / messaging flow has no integration coverage.
-- [ ] Tests share the dev database — they need a dedicated throwaway DB before
-      this can run in CI.
+- [x] ~~Tests share the dev database~~ — `npm test` now drops + recreates
+      `<db>_test` and migrates it (jest `globalSetup` + `setupFiles`); the dev /
+      demo database is never touched.
 - [ ] Console verification is a manual headless drive, not a committed script.
 
 ## Stage 2 — operational safety for a money pilot
 
-- [ ] **Audit log** — who confirmed which payment / recorded which payout /
-      reviewed which KYC / resolved which dispute, with timestamp and actor.
-      Non-negotiable when a human moves real money.
+- [x] **Audit log** (`audit_log`, migration 010) — every payment confirm, fund
+      release, order transition (`order.create` / `payment_claim` / `ship` /
+      `release`) and review-queue action (`kyc.review`, `user.flag`,
+      `dispute.open` / `resolve`) is recorded with actor id + role, a summary and
+      before/after metadata. `GET /api/admin/audit` (admin-only, filter by
+      `action` / `target_id` / `actor_id`, paginate with `before`). Shown in the
+      operator console's **Audit** tab. `tests/integration/audit-flow.test.ts`.
 - [ ] **Reconciliation view** for the officer — orders awaiting payment confirm,
-      orders awaiting payout, running totals — so nothing falls through.
+      orders awaiting payout (delivered but not yet paid out), running totals.
+      Note: there is still **no endpoint to record a payout** — during the pilot
+      the officer pays the traveller out of band with nothing tracking it. That
+      gap needs closing here (an `order.payout` audit action is reserved for it).
 - [ ] Rate limits on `/api/payments/*`, `/api/offers/*/accept`, `/api/uploads`,
       `/api/auth/*`; request-id on every log line; structured logs in prod.
 

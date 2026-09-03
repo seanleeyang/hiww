@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import Decimal from 'decimal.js';
 import { AppError, generateId } from '@/utils/helpers';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const PLATFORM_FEE_RATE = 0.08;
 
@@ -202,6 +203,20 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             updated_at: now,
           })
           .execute();
+        await recordAudit(trx, actorFromRequest(request), {
+          action: 'order.create',
+          targetType: 'order',
+          targetId: orderId,
+          summary: `Shopper accepted an offer — order ${orderId} created (${total.toString()})`,
+          metadata: {
+            offer_id: offer.id,
+            request_id: requestRow.id,
+            total_price: total.toString(),
+            fees,
+            shopper_id: requestRow.shopper_id,
+            traveler_id: offer.traveler_id,
+          },
+        });
       });
 
       reply.send({ success: true, data: { order_id: orderId, offer_id: offer.id }, code: 'OFFER_ACCEPTED' });

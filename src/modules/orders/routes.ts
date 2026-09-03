@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { AppError } from '@/utils/helpers';
 import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 /**
  * Orders are created by accepting an offer (see offers/routes.ts). This module
@@ -129,6 +130,14 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         .set({ payment_claimed_at: new Date(), updated_at: new Date() })
         .where('id', '=', order.id)
         .execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'order.payment_claim',
+        targetType: 'order',
+        targetId: order.id,
+        summary: `Shopper reported paying for order ${order.id} (${order.total_price}) — awaiting confirmation`,
+        metadata: { total_price: order.total_price, shopper_id: order.shopper_id },
+      });
 
       reply.send({
         success: true,

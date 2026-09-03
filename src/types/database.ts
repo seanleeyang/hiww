@@ -161,6 +161,19 @@ export interface MessagesTable {
   read_at?: Date | null;
 }
 
+export interface AuditLogTable {
+  id: string;
+  actor_id?: string | null;
+  actor_role?: string | null;
+  action: string;
+  target_type: string;
+  target_id: string;
+  summary: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata: Generated<Record<string, any>>;
+  created_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   trips: TripsTable;
@@ -174,4 +187,5 @@ export interface Database {
   notifications: NotificationsTable;
   reviews: ReviewsTable;
   messages: MessagesTable;
+  audit_log: AuditLogTable;
 }

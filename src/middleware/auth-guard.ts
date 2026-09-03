@@ -26,6 +26,7 @@ const PUBLIC_ROUTES = new Set<string>([
 const ADMIN_ROUTES = new Set<string>([
   '/api/admin/reviews',
   '/api/admin/users',
+  '/api/admin/audit',
   '/api/admin/disputes/:id/resolve',
   '/api/admin/users/:userId/kyc-review',
   '/api/admin/users/:userId/flag',

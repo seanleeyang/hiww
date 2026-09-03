@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const resolveDisputeSchema = z.object({
   status: z.enum(['resolved', 'closed']),
@@ -44,6 +45,19 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       .where('id', '=', dispute.id)
       .execute();
 
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'dispute.resolve',
+      targetType: 'dispute',
+      targetId: dispute.id,
+      summary: `Dispute ${dispute.id} on order ${dispute.order_id} marked ${parsed.data.status}`,
+      metadata: {
+        order_id: dispute.order_id,
+        from_status: dispute.status,
+        to_status: parsed.data.status,
+        resolution: parsed.data.resolution,
+      },
+    });
+
     reply.send({
       success: true,
       data: { id: dispute.id, status: parsed.data.status },
@@ -76,6 +90,18 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       .where('id', '=', user.id)
       .execute();
 
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'kyc.review',
+      targetType: 'user',
+      targetId: user.id,
+      summary: `KYC for ${user.email} set to ${parsed.data.status}`,
+      metadata: {
+        from_status: user.kyc_status,
+        to_status: parsed.data.status,
+        note: parsed.data.note,
+      },
+    });
+
     reply.send({
       success: true,
       data: { user_id: user.id, kyc_status: parsed.data.status, note: parsed.data.note },
@@ -107,6 +133,18 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       })
       .where('id', '=', user.id)
       .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'user.flag',
+      targetType: 'user',
+      targetId: user.id,
+      summary: `Risk status for ${user.email} set to ${parsed.data.risk_status}`,
+      metadata: {
+        from_status: user.risk_status,
+        to_status: parsed.data.risk_status,
+        reason: parsed.data.reason,
+      },
+    });
 
     reply.send({
       success: true,

@@ -65,4 +65,35 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
 
     reply.send({ success: true, data: { users }, code: 'ADMIN_USERS' });
   });
+
+  // Append-only audit trail. Filter by ?action=, ?target_type=, ?target_id=,
+  // ?actor_id=; page with ?limit= (max 200) and ?before= (an ISO timestamp).
+  app.get<{
+    Querystring: {
+      action?: string;
+      target_type?: string;
+      target_id?: string;
+      actor_id?: string;
+      limit?: string;
+      before?: string;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }>('/api/admin/audit', async (request: any, reply: any) => {
+    const q = request.query;
+    const limit = Math.min(200, Math.max(1, parseInt(q.limit || '50', 10) || 50));
+
+    let query = request.db.selectFrom('audit_log').selectAll();
+    if (q.action) query = query.where('action', '=', q.action);
+    if (q.target_type) query = query.where('target_type', '=', q.target_type);
+    if (q.target_id) query = query.where('target_id', '=', q.target_id);
+    if (q.actor_id) query = query.where('actor_id', '=', q.actor_id);
+    if (q.before) {
+      const ts = new Date(q.before);
+      if (!Number.isNaN(ts.getTime())) query = query.where('created_at', '<', ts);
+    }
+
+    const items = await query.orderBy('created_at', 'desc').limit(limit).execute();
+
+    reply.send({ success: true, data: { items, limit }, code: 'ADMIN_AUDIT' });
+  });
 }

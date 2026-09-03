@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { AppError } from '@/utils/helpers';
 import { getPaymentProvider } from '@/services/providers';
 import { config } from '@/config/env';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 /**
  * Money endpoints.
@@ -110,6 +111,21 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         .set({ status: 'confirmed', confirmed_at: now, updated_at: now })
         .where('id', '=', order.id)
         .execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'payment.confirm',
+        targetType: 'order',
+        targetId: order.id,
+        summary: `Payment confirmed for order ${order.id} (${order.total_price})`,
+        metadata: {
+          from_status: 'pending_payment',
+          to_status: 'confirmed',
+          total_price: order.total_price,
+          payment_id: body.payment_id ?? null,
+          shopper_id: order.shopper_id,
+          traveler_id: order.traveler_id,
+        },
+      });
 
       reply.send({
         success: true,
