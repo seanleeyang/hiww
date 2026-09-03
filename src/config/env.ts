@@ -81,4 +81,17 @@ export const config = {
   paymentInstructions:
     process.env.PILOT_PAYMENT_INSTRUCTIONS ||
     'Payment instructions have not been configured yet. Contact the Hiww team to arrange payment.',
+  /**
+   * User-uploaded images (want photos, trip covers, avatars). Local disk during
+   * the pilot; swap for object storage (S3/GCS) before production. `uploadDir`
+   * is resolved from the process working directory (the project root).
+   */
+  uploadDir: process.env.UPLOAD_DIR || 'uploads',
+  maxUploadBytes: Number(process.env.MAX_UPLOAD_BYTES || String(5 * 1024 * 1024)),
+  /**
+   * Absolute origin used to build URLs for uploaded files. Leave empty to derive
+   * it from each request (works for localhost, a LAN IP and a dev tunnel alike);
+   * set it once there is a stable public hostname behind a proxy.
+   */
+  publicBaseUrl: (process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, ''),
 };

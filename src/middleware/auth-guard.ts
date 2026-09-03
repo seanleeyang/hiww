@@ -14,6 +14,8 @@ const PUBLIC_ROUTES = new Set<string>([
   '/',
   '/app',
   '/admin',
+  // Static serving of user-uploaded images (@fastify/static wildcard route).
+  '/uploads/*',
 ]);
 
 /**

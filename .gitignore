@@ -9,6 +9,8 @@ dist/
 .vscode/settings.json
 coverage/
 .nyc_output/
+# Local upload store (the project-root directory only, not src/modules/uploads).
+/uploads/
 *.swp
 *.swo
 *~
