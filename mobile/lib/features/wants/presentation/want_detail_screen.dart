@@ -37,62 +37,83 @@ class WantDetailScreen extends ConsumerWidget {
           final mine = me?.id == want.shopperId;
           final iAmTraveler = me?.userType.isTraveler ?? false;
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-            children: [
-              HeroImage(
-                url: want.imageUrl,
-                fallbackAsset: stockForCategory(want.category),
-                height: 200,
-                heroTag: 'want-${want.id}',
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(want.displayTitle,
-                        style: Theme.of(context).textTheme.headlineSmall),
-                  ),
-                  StatusPill(want.status),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(want.itemDescription),
-              const SizedBox(height: 14),
-              SoftCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          return RefreshIndicator(
+            onRefresh: () => ref.pullToRefreshAll([
+              wantDetailProvider(wantId).future,
+              if (mine) wantOffersProvider(wantId).future,
+            ]),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              children: [
+                HeroImage(
+                  url: want.imageUrl,
+                  fallbackAsset: stockForCategory(want.category),
+                  height: 200,
+                  heroTag: 'want-${want.id}',
+                ),
+                const SizedBox(height: 16),
+                Row(
                   children: [
-                    IconLine(Icons.sell_outlined, 'Budget ${want.budgetLabel}'),
-                    const SizedBox(height: 6),
-                    IconLine(Icons.public,
-                        'Buy in ${want.sourceCity ?? countryName(want.sourceCountry)}'),
-                    if (want.needByLabel != null) ...[
-                      const SizedBox(height: 6),
-                      IconLine(Icons.event_outlined, want.needByLabel!),
-                    ],
+                    Expanded(
+                      child: Text(
+                        want.displayTitle,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ),
+                    StatusPill(want.status),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              if (d.shopper != null) ...[
-                AvatarRating(user: d.shopper!, radius: 20),
+                const SizedBox(height: 6),
+                Text(want.itemDescription),
+                const SizedBox(height: 14),
+                SoftCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IconLine(
+                        Icons.sell_outlined,
+                        'Budget ${want.budgetLabel}',
+                      ),
+                      const SizedBox(height: 6),
+                      IconLine(
+                        Icons.public,
+                        'Buy in ${want.sourceCity ?? countryName(want.sourceCountry)}',
+                      ),
+                      if (want.needByLabel != null) ...[
+                        const SizedBox(height: 6),
+                        IconLine(Icons.event_outlined, want.needByLabel!),
+                      ],
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 16),
-                ReviewsPreview(userId: want.shopperId, max: 2),
+                if (d.shopper != null) ...[
+                  AvatarRating(user: d.shopper!, radius: 20),
+                  const SizedBox(height: 16),
+                  ReviewsPreview(userId: want.shopperId, max: 2),
+                ],
+                const SizedBox(height: 8),
+                if (mine)
+                  _OffersSection(
+                    wantId: wantId,
+                    requestOpen: want.status == 'open',
+                  )
+                else if (iAmTraveler && want.status == 'open')
+                  FilledButton.icon(
+                    onPressed: () => context.push('/wants/$wantId/offer'),
+                    icon: const Icon(Icons.local_offer_outlined),
+                    label: const Text('Make an offer'),
+                  )
+                else if (want.status != 'open')
+                  Text(
+                    'This want is no longer taking offers.',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
               ],
-              const SizedBox(height: 8),
-              if (mine)
-                _OffersSection(wantId: wantId, requestOpen: want.status == 'open')
-              else if (iAmTraveler && want.status == 'open')
-                FilledButton.icon(
-                  onPressed: () => context.push('/wants/$wantId/offer'),
-                  icon: const Icon(Icons.local_offer_outlined),
-                  label: const Text('Make an offer'),
-                )
-              else if (want.status != 'open')
-                Text('This want is no longer taking offers.',
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            ],
+            ),
           );
         },
       ),
@@ -117,8 +138,12 @@ class _OffersSection extends ConsumerWidget {
           onRetry: () => ref.invalidate(wantOffersProvider(wantId)),
           data: (list) {
             if (list.isEmpty) {
-              return Text('No offers yet — travelers on this route will see it.',
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant));
+              return Text(
+                'No offers yet — travelers on this route will see it.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              );
             }
             return Column(
               children: [
@@ -126,6 +151,7 @@ class _OffersSection extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: _OfferCard(
+                      wantId: wantId,
                       offer: o,
                       canAccept: requestOpen && o.status == 'pending',
                     ),
@@ -140,7 +166,12 @@ class _OffersSection extends ConsumerWidget {
 }
 
 class _OfferCard extends ConsumerStatefulWidget {
-  const _OfferCard({required this.offer, required this.canAccept});
+  const _OfferCard({
+    required this.wantId,
+    required this.offer,
+    required this.canAccept,
+  });
+  final String wantId;
   final Offer offer;
   final bool canAccept;
 
@@ -158,15 +189,18 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
       builder: (_) => AlertDialog(
         title: const Text('Accept this offer?'),
         content: Text(
-            'You will pay ${o.priceLabel} for the goods. An order is created and '
-            "you'll be asked to pay."),
+          'You will pay ${o.priceLabel} for the goods. An order is created and '
+          "you'll be asked to pay.",
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Accept')),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Accept'),
+          ),
         ],
       ),
     );
@@ -176,6 +210,8 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
       final orderId = await ref.read(wantsRepositoryProvider).acceptOffer(o.id);
       ref.invalidate(myWantsProvider);
       ref.invalidate(myOrdersProvider);
+      ref.invalidate(wantDetailProvider(widget.wantId));
+      ref.invalidate(wantOffersProvider(widget.wantId));
       if (!mounted) return;
       context.go('/orders/$orderId');
     } on ApiException catch (e) {
@@ -198,8 +234,10 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
               InitialsAvatar(name: o.travelerName ?? 'Traveler', radius: 16),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(o.travelerName ?? 'Traveler',
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                child: Text(
+                  o.travelerName ?? 'Traveler',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
               StatusPill(o.status),
             ],
@@ -207,14 +245,22 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
           const SizedBox(height: 10),
           Row(
             children: [
-              Text(o.priceLabel,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+              Text(
+                o.priceLabel,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
               if (o.deliveryLabel != null) ...[
                 const SizedBox(width: 12),
-                Text(o.deliveryLabel!,
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 13)),
+                Text(
+                  o.deliveryLabel!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
               ],
             ],
           ),
@@ -226,7 +272,8 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('Accept offer'),
             ),
           ],
