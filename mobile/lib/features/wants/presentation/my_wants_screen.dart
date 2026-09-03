@@ -26,7 +26,7 @@ class MyWantsScreen extends ConsumerWidget {
         label: const Text('Post a want'),
       ),
       body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(myWantsProvider),
+        onRefresh: () => ref.pullToRefresh(myWantsProvider.future),
         child: AsyncValueView(
           value: wants,
           onRetry: () => ref.invalidate(myWantsProvider),

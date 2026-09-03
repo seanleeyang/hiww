@@ -46,7 +46,7 @@ class BrowseScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () async => ref.invalidate(feedProvider(query)),
+              onRefresh: () => ref.pullToRefresh(feedProvider(query).future),
               child: AsyncValueView(
                 value: feed,
                 onRetry: () => ref.invalidate(feedProvider(query)),

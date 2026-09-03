@@ -40,7 +40,7 @@ class OrderScreen extends ConsumerWidget {
           final isShopper = me?.id == o.shopperId;
           final active = o.status != 'delivered' && o.status != 'cancelled';
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(orderProvider(orderId)),
+            onRefresh: () => ref.pullToRefresh(orderProvider(orderId).future),
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [

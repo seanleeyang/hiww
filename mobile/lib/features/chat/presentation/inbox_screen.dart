@@ -17,7 +17,7 @@ class InboxScreen extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(inboxProvider),
+      onRefresh: () => ref.pullToRefresh(inboxProvider.future),
       child: AsyncValueView(
         value: inbox,
         onRetry: () => ref.invalidate(inboxProvider),

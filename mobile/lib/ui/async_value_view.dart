@@ -39,3 +39,15 @@ class AsyncValueView<T> extends StatelessWidget {
     );
   }
 }
+
+extension PullToRefresh on WidgetRef {
+  /// A [RefreshIndicator.onRefresh] handler that keeps the spinner up until the
+  /// provider has actually re-fetched. A failure is swallowed here because the
+  /// rebuilt [AsyncValueView] surfaces it as an inline error + Retry.
+  Future<void> pullToRefresh(Refreshable<Future<Object?>> provider) async {
+    final done = refresh(provider);
+    try {
+      await done;
+    } catch (_) {/* surfaced by AsyncValueView */}
+  }
+}

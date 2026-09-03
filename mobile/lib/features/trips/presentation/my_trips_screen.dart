@@ -47,7 +47,7 @@ class _TripsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final trips = ref.watch(myTripsProvider);
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(myTripsProvider),
+      onRefresh: () => ref.pullToRefresh(myTripsProvider.future),
       child: AsyncValueView(
         value: trips,
         onRetry: () => ref.invalidate(myTripsProvider),
@@ -105,7 +105,7 @@ class _OffersTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final offers = ref.watch(myOffersProvider);
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(myOffersProvider),
+      onRefresh: () => ref.pullToRefresh(myOffersProvider.future),
       child: AsyncValueView(
         value: offers,
         onRetry: () => ref.invalidate(myOffersProvider),
