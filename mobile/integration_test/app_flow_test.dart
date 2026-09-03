@@ -23,7 +23,7 @@ import 'package:hiww_mobile/core/storage/token_storage.dart';
 const _baseUrl = 'http://localhost:3000';
 
 class _MemoryTokenStorage extends TokenStorage {
-  _MemoryTokenStorage() : super(const FlutterSecureStorage());
+  _MemoryTokenStorage([this._token]) : super(const FlutterSecureStorage());
   String? _token;
   @override
   Future<String?> read() async => _token;
@@ -31,6 +31,26 @@ class _MemoryTokenStorage extends TokenStorage {
   Future<void> write(String token) async => _token = token;
   @override
   Future<void> clear() async => _token = null;
+}
+
+List<Override> _appOverrides([String? token]) => [
+      tokenStorageProvider.overrideWithValue(_MemoryTokenStorage(token)),
+      apiClientProvider.overrideWith(
+        (ref) => ApiClient(
+          baseUrl: _baseUrl,
+          tokenStorage: ref.watch(tokenStorageProvider),
+        ),
+      ),
+    ];
+
+Future<Map<String, dynamic>> _register(String kind, int stamp,
+    {required String type}) {
+  return _api('POST', '/api/auth/register', body: {
+    'email': 'it-$kind-$stamp@example.com',
+    'full_name': '${kind[0].toUpperCase()}${kind.substring(1)} Tester',
+    'user_type': type,
+    'password': 'SecurePass123!',
+  });
 }
 
 /// Bare HTTP helper for seeding data and the health probe.
@@ -86,10 +106,17 @@ Future<void> _pumpUntil(
 }
 
 Future<void> _tap(WidgetTester tester, Finder finder) async {
-  await tester.ensureVisible(finder);
+  try {
+    await tester.ensureVisible(finder);
+  } catch (_) {
+    // Not inside a Scrollable (e.g. a dialog button) — fine.
+  }
   await tester.pump();
-  await tester.tap(finder);
-  await tester.pump();
+  await tester.tap(finder.first, warnIfMissed: false);
+  // Let any resulting navigation / network settle a little.
+  for (var i = 0; i < 5; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -115,12 +142,7 @@ void main() {
     final stamp = DateTime.now().millisecondsSinceEpoch;
 
     // --- Seed: a traveler with a published Bangkok → Tokyo trip. ---
-    final traveler = await _api('POST', '/api/auth/register', body: {
-      'email': 'it-traveler-$stamp@example.com',
-      'full_name': 'Ida Traveler',
-      'user_type': 'traveler',
-      'password': 'SecurePass123!',
-    });
+    final traveler = await _register('traveler', stamp, type: 'traveler');
     await _api('POST', '/api/trips', token: traveler['token'] as String, body: {
       'departure_country': 'TH',
       'arrival_country': 'JP',
@@ -136,18 +158,7 @@ void main() {
 
     // --- Boot the real app with a fresh (empty) session. ---
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          tokenStorageProvider.overrideWithValue(_MemoryTokenStorage()),
-          apiClientProvider.overrideWith(
-            (ref) => ApiClient(
-              baseUrl: _baseUrl,
-              tokenStorage: ref.watch(tokenStorageProvider),
-            ),
-          ),
-        ],
-        child: const HiwwApp(),
-      ),
+      ProviderScope(overrides: _appOverrides(), child: const HiwwApp()),
     );
 
     // Cold start, no token → login screen.
@@ -186,15 +197,99 @@ void main() {
         timeout: const Duration(seconds: 40));
 
     // And it is now the caller's want.
-    final mine = await _api('GET', '/api/requests/mine',
-        token: (await _api('POST', '/api/auth/login', body: {
-          'email': 'it-shopper-$stamp@example.com',
-          'password': 'SecurePass123!',
-        }))['token'] as String);
+    final shopperToken = (await _api('POST', '/api/auth/login', body: {
+      'email': 'it-shopper-$stamp@example.com',
+      'password': 'SecurePass123!',
+    }))['token'] as String;
+    final mine = await _api('GET', '/api/requests/mine', token: shopperToken);
     expect(
       (mine['items'] as List).any((w) => (w as Map)['title'] == wantTitle),
       isTrue,
       reason: 'the new want should appear in /api/requests/mine',
     );
+  });
+
+  testWidgets('shopper opens a want, accepts an offer, reports payment',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+
+    // --- Seed a want with one pending offer on it. ---
+    final shopper = await _register('shopper', stamp, type: 'shopper');
+    final traveler = await _register('traveler', stamp, type: 'traveler');
+    final shopperToken = shopper['token'] as String;
+    final travelerToken = traveler['token'] as String;
+
+    final wantTitle = 'IT Camera $stamp';
+    final want = await _api('POST', '/api/requests',
+        token: shopperToken,
+        body: {
+          'title': wantTitle,
+          'item_description': 'Mirrorless body, boxed, from any Tokyo store.',
+          'source_country': 'JP',
+          'category': 'other',
+          'estimated_weight_kg': 1.0,
+          'budget': '25000.00',
+        });
+    final trip = await _api('POST', '/api/trips', token: travelerToken, body: {
+      'departure_country': 'TH',
+      'arrival_country': 'JP',
+      'departure_date':
+          DateTime.now().toUtc().add(const Duration(days: 5)).toIso8601String(),
+      'return_date':
+          DateTime.now().toUtc().add(const Duration(days: 15)).toIso8601String(),
+      'max_weight_kg': 6,
+      'max_items': 3,
+    });
+    await _api('POST', '/api/offers', token: travelerToken, body: {
+      'request_id': want['id'],
+      'trip_id': trip['id'],
+      'quoted_price': '24000.00',
+      'delivery_date':
+          DateTime.now().toUtc().add(const Duration(days: 12)).toIso8601String(),
+    });
+
+    // --- Boot straight into the signed-in shopper session. ---
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _appOverrides(shopperToken),
+        child: const HiwwApp(),
+      ),
+    );
+
+    // My Wants tab → the want → its offers.
+    await _pumpUntil(tester, find.text('My Wants'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.text('My Wants'));
+    await _pumpUntil(tester, find.textContaining(wantTitle));
+    await _tap(tester, find.textContaining(wantTitle));
+
+    await _pumpUntil(tester, find.widgetWithText(FilledButton, 'Accept offer'),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, find.widgetWithText(FilledButton, 'Accept offer'));
+
+    // Confirmation dialog.
+    await _pumpUntil(tester, find.text('Accept this offer?'));
+    await _tap(tester, find.widgetWithText(FilledButton, 'Accept'));
+
+    // Lands on the order screen, awaiting payment.
+    await _pumpUntil(
+        tester, find.widgetWithText(FilledButton, "I've sent the payment"),
+        timeout: const Duration(seconds: 40));
+    await _tap(
+        tester, find.widgetWithText(FilledButton, "I've sent the payment"));
+
+    // The order now shows the claimed-payment state.
+    await _pumpUntil(tester, find.textContaining('told us you paid'),
+        timeout: const Duration(seconds: 30));
+
+    // Backend agrees: an order exists, awaiting payment, claim recorded.
+    final orders = await _api('GET', '/api/orders', token: shopperToken);
+    final order = (orders['items'] as List).first as Map;
+    expect(order['status'], 'pending_payment');
+    expect(order['payment_claimed_at'], isNotNull);
   });
 }

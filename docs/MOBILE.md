@@ -85,12 +85,22 @@ reference mockup:
   New-trip and Edit-profile. Pull-to-refresh also added to Trip/Want detail. 42
   Flutter tests; backend 20 suites / 60 tests.
 - **D8 (done)** — `integration_test/app_flow_test.dart`: drives the real app
-  (real go_router + Dio) against a running backend — register → see a seeded
-  trip on Browse → post a want → assert it lands in `/api/requests/mine`. Runs
-  on the flutter-tester VM, no device/chromedriver:
+  (real go_router + Dio) against a running backend. Runs on the flutter-tester
+  VM, no device/chromedriver:
   `flutter test -d flutter-tester integration_test/app_flow_test.dart` with the
-  API up (`npm run db:setup && npm run dev`). Shakeout fixed a 0.4 px dropdown
-  overflow on the Post-want / New-trip country pickers (`isExpanded: true`).
+  API up (`npm run db:setup && npm run dev`). Two flows:
+  1. register → see a seeded trip on Browse → post a want → in `/api/requests/mine`
+  2. open a want → accept an offer → land on the order → "I've sent the payment"
+     → `/api/orders` shows `pending_payment` + `payment_claimed_at`
+
+  Bugs this shakeout caught and fixed:
+  - **bodyless POSTs were 400ing against a real server.** `ApiClient` always
+    sends `Content-Type: application/json`, and Fastify rejects an empty body
+    with that header — so **accept-offer, claim-payment and chat mark-read had
+    been broken since D3–D5** (mocked repo tests and `inject`-based backend
+    tests both missed it). `ApiClient.post/patch` now send `{}` when body-less.
+  - 0.4 px dropdown overflow on the Post-want / New-trip country pickers
+    (`isExpanded: true`).
 - **Later** — push notifications, offline cache, i18n. Move uploads to object
   storage (S3/GCS) before production; the local disk store is pilot-only.
 

@@ -101,6 +101,19 @@ void main() {
     expect(adapter.lastRequest!.headers['Authorization'], 'Bearer tok-123');
   });
 
+  test('a bodyless POST still sends a JSON body (Fastify rejects empty)', () async {
+    final adapter = _FakeAdapter(
+      (_) => _json({'success': true, 'data': {'order_id': 'o1'}, 'code': 'OK'}, 200),
+    );
+    final client = clientWith(adapter);
+
+    await client.post('/api/offers/abc/accept');
+
+    final sent = adapter.lastRequest!.data;
+    expect(sent, isNotNull);
+    expect(sent, isEmpty); // `{}` — not null, not an empty string
+  });
+
   test('gives a friendly message when the server is unreachable', () async {
     final client = clientWith(_FakeAdapter((options) {
       throw DioException.connectionError(

@@ -44,11 +44,15 @@ class ApiClient {
   Future<Object?> get(String path, {Map<String, dynamic>? query}) =>
       _send(() => _dio.get(path, queryParameters: query));
 
+  // Every request carries `Content-Type: application/json` (see BaseOptions), so
+  // a bodyless POST/PATCH must still send `{}` — Fastify rejects an empty body
+  // when the content type says JSON. Several endpoints are action-only
+  // (`/offers/:id/accept`, `/orders/:id/claim-payment`, …).
   Future<Object?> post(String path, {Object? body}) =>
-      _send(() => _dio.post(path, data: body));
+      _send(() => _dio.post(path, data: body ?? const <String, dynamic>{}));
 
   Future<Object?> patch(String path, {Object? body}) =>
-      _send(() => _dio.patch(path, data: body));
+      _send(() => _dio.patch(path, data: body ?? const <String, dynamic>{}));
 
   /// Multipart upload of raw [bytes] as the `file` field. Works on web too
   /// because the payload is bytes, not a file path.
