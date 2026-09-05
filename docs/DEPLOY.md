@@ -59,10 +59,27 @@ tidier.)
 
 ### 6. Point the app at it
 
+The Flutter web client is hosted on **Cloudflare Pages** (project `hiww`,
+live at <https://hiww.pages.dev>). The backend's CORS is `origin: true`, so the
+cross-origin `pages.dev` → `onrender.com` calls work with no proxy.
+
+To ship an app update — build locally, then upload the folder (Cloudflare
+never builds Flutter itself):
+
 ```bash
 cd mobile
-flutter build web --dart-define=HIWW_API_BASE_URL=https://hiww-api.onrender.com
-# Android:
+flutter build web --release --dart-define=HIWW_API_BASE_URL=https://hiww-api.onrender.com
+cd ..
+CLOUDFLARE_API_TOKEN=<token> CLOUDFLARE_ACCOUNT_ID=22ec2a7a75e1a68186d52c98bd8ec101 \
+  npx wrangler pages deploy mobile/build/web --project-name=hiww --branch=main --commit-dirty=true
+```
+
+`flutter build web` fails with a "could not write file" shader error if a local
+static server (`npx serve`) is still holding `mobile/build/web` open — stop it first.
+
+Android build (unchanged):
+
+```bash
 flutter build apk --release --dart-define=HIWW_API_BASE_URL=https://hiww-api.onrender.com
 ```
 
