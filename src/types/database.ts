@@ -131,15 +131,23 @@ export interface DisputesTable {
   updated_at: Date;
 }
 
+/**
+ * In-app activity feed. `type` is the event kind (`offer_accepted`,
+ * `payment_confirmed`, `shipped`, `delivered`, `payout_sent`, `dispute_opened`,
+ * `dispute_resolved`, `payment_claimed`); `link` points at the screen to open
+ * (e.g. `/orders/<id>`). See `src/services/notify.ts`.
+ */
 export interface NotificationsTable {
   id: string;
   user_id: string;
-  type: 'email' | 'sms' | 'push';
+  type: string;
   subject: string;
   body: string;
-  sent_at?: Date;
-  read_at?: Date;
-  created_at: Date;
+  order_id?: string | null;
+  link?: string | null;
+  sent_at?: Date | null;
+  read_at?: Date | null;
+  created_at: Generated<Date>;
 }
 
 export interface ReviewsTable {

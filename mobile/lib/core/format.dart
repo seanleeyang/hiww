@@ -51,3 +51,14 @@ String initials(String name) {
 
 String pluralize(int n, String singular, [String? plural]) =>
     n == 1 ? '1 $singular' : '$n ${plural ?? '${singular}s'}';
+
+/// `just now` / `5m` / `3h` / `2d` / `Nov 14` — compact relative time for feeds.
+String timeAgo(DateTime? d, {DateTime? now}) {
+  if (d == null) return '';
+  final delta = (now ?? DateTime.now()).difference(d);
+  if (delta.inSeconds < 45) return 'just now';
+  if (delta.inMinutes < 60) return '${delta.inMinutes}m';
+  if (delta.inHours < 24) return '${delta.inHours}h';
+  if (delta.inDays < 7) return '${delta.inDays}d';
+  return _dayMonth.format(d);
+}

@@ -108,8 +108,20 @@ reference mockup:
   orders sort above finished ones; tapping opens the existing order tracker.
   Added after pilot walk-through feedback that per-step status was hard to find.
   48 Flutter tests.
-- **Later** — push notifications, offline cache, i18n. Move uploads to object
-  storage (S3/GCS) before production; the local disk store is pilot-only.
+- **D10 (done)** — **Notifications.** Every order state change writes an in-app
+  notification for each affected party (`src/services/notify.ts`
+  `recordNotification`, wired at the same call sites as `recordAudit`): offer
+  accepted → traveler; payment claimed → traveler; payment confirmed → both;
+  shipped → shopper; delivered → both; payout → traveler; dispute opened →
+  counterparty; dispute resolved → both. `migration 012_notifications` adds
+  `order_id` + `link` to the existing table. New routes `GET /api/notifications`
+  (`{items, unread_count}`) and `POST /api/notifications/read` (`{id?}` — one or
+  all). App: `notifications` feature polls every 20 s, a bell + `Badge` in the
+  `AppShell` app bar opens `NotificationsScreen` (`/notifications`), each row
+  deep-links to `/orders/:id`. Backend 22 suites / 75 tests; ~53 Flutter tests.
+- **Later** — push notifications (APNs/FCM transport for the above), offline
+  cache, i18n. Move uploads to object storage (S3/GCS) before production; the
+  local disk store is pilot-only.
 
 ## Before a production release
 

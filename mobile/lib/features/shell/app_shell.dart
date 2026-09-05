@@ -7,6 +7,7 @@ import '../../ui/initials_avatar.dart';
 import '../auth/application/auth_controller.dart';
 import '../auth/domain/auth_user.dart';
 import '../chat/data/chat_repository.dart';
+import '../notifications/data/notifications_repository.dart';
 
 enum ShellTab {
   browse('/browse', 'Browse', Icons.travel_explore_outlined, Icons.travel_explore),
@@ -59,10 +60,24 @@ class AppShell extends ConsumerWidget {
 
     final wide = MediaQuery.sizeOf(context).width >= 760;
 
+    final notifUnread = ref.watch(notificationUnreadProvider);
+
     final appBar = AppBar(
       title: const BrandMark(),
       titleSpacing: 16,
       actions: [
+        Tooltip(
+          message: 'Notifications',
+          child: IconButton(
+            onPressed: () => context.push('/notifications'),
+            icon: notifUnread > 0
+                ? Badge(
+                    label: Text('$notifUnread'),
+                    child: const Icon(Icons.notifications_none),
+                  )
+                : const Icon(Icons.notifications_none),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: Tooltip(

@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError, generateId } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
+import { recordNotification, recordNotifications } from '@/services/notify';
 
 const disputeSchema = z.object({
   order_id: z.string().uuid(),
@@ -62,6 +63,16 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
       },
     });
 
+    const otherParty =
+      order.shopper_id === initiatorId ? order.traveler_id : order.shopper_id;
+    await recordNotification(request.db, {
+      userId: otherParty,
+      type: 'dispute_opened',
+      subject: 'A dispute was opened on your order',
+      body: `The other party opened a dispute on "${order.item_description}". Hiww will review it and be in touch.`,
+      orderId: order.id,
+    });
+
     reply.status(201).send({
       success: true,
       data: { id: disputeId },
@@ -111,6 +122,24 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
         resolution: parsed.data.resolution,
       },
     });
+
+    const disputedOrder = await request.db
+      .selectFrom('orders')
+      .select(['id', 'shopper_id', 'traveler_id', 'item_description'])
+      .where('id', '=', dispute.order_id)
+      .executeTakeFirst();
+    if (disputedOrder) {
+      await recordNotifications(
+        request.db,
+        [disputedOrder.shopper_id, disputedOrder.traveler_id].map((userId: string) => ({
+          userId,
+          type: 'dispute_resolved' as const,
+          subject: `Dispute ${parsed.data.status}`,
+          body: `Hiww ${parsed.data.status} the dispute on "${disputedOrder.item_description}": ${parsed.data.resolution}`,
+          orderId: disputedOrder.id,
+        }))
+      );
+    }
 
     reply.send({
       success: true,

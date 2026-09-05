@@ -11,6 +11,7 @@ import * as m008 from './008_reviews';
 import * as m009 from './009_messages';
 import * as m010 from './010_audit_log';
 import * as m011 from './011_payouts';
+import * as m012 from './012_notifications';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -25,4 +26,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '009_messages', up: m009.up },
   { name: '010_audit_log', up: m010.up },
   { name: '011_payouts', up: m011.up },
+  { name: '012_notifications', up: m012.up },
 ];

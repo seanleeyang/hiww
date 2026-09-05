@@ -4,6 +4,7 @@ import { AppError, generateId } from '@/utils/helpers';
 import { getPaymentProvider } from '@/services/providers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
+import { recordNotification, recordNotifications } from '@/services/notify';
 
 // Tight per-IP ceiling on money movement (defaults to 30/min).
 const moneyRoute = {
@@ -143,6 +144,23 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         },
       });
 
+      await recordNotifications(request.db, [
+        {
+          userId: order.shopper_id,
+          type: 'payment_confirmed',
+          subject: 'Payment confirmed',
+          body: `Your payment for "${order.item_description}" is confirmed. The traveler can buy and ship it now.`,
+          orderId: order.id,
+        },
+        {
+          userId: order.traveler_id,
+          type: 'payment_confirmed',
+          subject: 'Payment received — you can ship',
+          body: `Hiww confirmed the shopper's payment for "${order.item_description}". Go ahead and buy the item, then mark it shipped.`,
+          orderId: order.id,
+        },
+      ]);
+
       reply.send({
         success: true,
         data: { status: 'confirmed', order_id: order.id, recorded_by: request.userId },
@@ -212,6 +230,14 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
           order_total_price: order.total_price,
           traveler_id: order.traveler_id,
         },
+      });
+
+      await recordNotification(request.db, {
+        userId: order.traveler_id,
+        type: 'payout_sent',
+        subject: 'You’ve been paid',
+        body: `Hiww sent your payout of ${parsed.data.amount} for "${order.item_description}" via ${parsed.data.method} (ref ${parsed.data.reference}).`,
+        orderId: order.id,
       });
 
       reply.status(201).send({

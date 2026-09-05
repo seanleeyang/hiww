@@ -3,6 +3,7 @@ import { sql } from 'kysely';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
+import { recordNotification, recordNotifications } from '@/services/notify';
 
 const noteSchema = z.object({
   note: z.string().min(1).optional(),
@@ -64,6 +65,14 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         targetId: order.id,
         summary: `Traveler marked order ${order.id} shipped`,
         metadata: { from_status: 'confirmed', to_status: 'in_transit', note: parsed.data.note ?? null },
+      });
+
+      await recordNotification(request.db, {
+        userId: order.shopper_id,
+        type: 'shipped',
+        subject: 'Your item is on the way',
+        body: `The traveler marked "${order.item_description}" as shipped. Confirm receipt in the app once it arrives.`,
+        orderId: order.id,
       });
 
       reply.send({
@@ -133,6 +142,22 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
             note: parsed.data.note ?? null,
           },
         });
+        await recordNotifications(trx, [
+          {
+            userId: order.traveler_id,
+            type: 'delivered',
+            subject: 'Order complete — payout on the way',
+            body: `The shopper confirmed they received "${order.item_description}". Hiww will send your payout shortly.`,
+            orderId: order.id,
+          },
+          {
+            userId: order.shopper_id,
+            type: 'delivered',
+            subject: 'Order complete',
+            body: `You confirmed receipt of "${order.item_description}". Tap to leave the traveler a review.`,
+            orderId: order.id,
+          },
+        ]);
       });
 
       reply.send({

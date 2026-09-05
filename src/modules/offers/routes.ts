@@ -4,6 +4,7 @@ import Decimal from 'decimal.js';
 import { AppError, generateId } from '@/utils/helpers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
+import { recordNotification } from '@/services/notify';
 
 const PLATFORM_FEE_RATE = 0.08;
 
@@ -218,6 +219,13 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             shopper_id: requestRow.shopper_id,
             traveler_id: offer.traveler_id,
           },
+        });
+        await recordNotification(trx, {
+          userId: offer.traveler_id,
+          type: 'offer_accepted',
+          subject: 'Your offer was accepted',
+          body: `The shopper accepted your offer on "${requestRow.item_description}". They'll pay next — you'll get a heads-up when it's confirmed.`,
+          orderId,
         });
       });
 

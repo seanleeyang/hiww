@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { AppError } from '@/utils/helpers';
 import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
 import { recordAudit, actorFromRequest } from '@/services/audit';
+import { recordNotification } from '@/services/notify';
 
 /**
  * Orders are created by accepting an offer (see offers/routes.ts). This module
@@ -137,6 +138,14 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         targetId: order.id,
         summary: `Shopper reported paying for order ${order.id} (${order.total_price}) — awaiting confirmation`,
         metadata: { total_price: order.total_price, shopper_id: order.shopper_id },
+      });
+
+      await recordNotification(request.db, {
+        userId: order.traveler_id,
+        type: 'payment_claimed',
+        subject: 'Shopper says the payment is sent',
+        body: `The shopper marked payment as sent for "${order.item_description}". Wait for Hiww to confirm it before you buy anything.`,
+        orderId: order.id,
       });
 
       reply.send({
