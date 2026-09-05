@@ -1,17 +1,16 @@
-import { mkdir, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { mkdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { config } from '@/config/env';
 import { AppError, generateId } from '@/utils/helpers';
+import { getFileStore } from '@/services/storage';
 
 const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
 };
-
-const uploadRoot = resolve(process.cwd(), config.uploadDir);
 
 /** Absolute origin for building file URLs — configured value, or the request's. */
 function originFor(request: FastifyRequest): string {
@@ -21,12 +20,15 @@ function originFor(request: FastifyRequest): string {
 }
 
 export async function registerUploadRoutes(app: FastifyInstance): Promise<void> {
-  await mkdir(uploadRoot, { recursive: true });
+  const store = getFileStore();
 
+  // Always serve `/uploads/*` from local disk — with the R2 backend nothing new
+  // is written there, but any pre-existing local files keep working.
+  const uploadRoot = resolve(process.cwd(), config.uploadDir);
+  await mkdir(uploadRoot, { recursive: true });
   await app.register(fastifyStatic, {
     root: uploadRoot,
     prefix: '/uploads/',
-    // Uploaded files are content-addressed by a random id and never change.
     maxAge: '365d',
     immutable: true,
   });
@@ -37,55 +39,61 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
     '/api/uploads',
     { config: { rateLimit: { max: config.uploadRateLimitMax, timeWindow: config.rateLimitWindow } } },
     async (request, reply) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!(request as any).isMultipart()) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Send the image as multipart/form-data');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let file: any;
-    try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      file = await (request as any).file({
-        limits: { files: 1, fileSize: config.maxUploadBytes },
-      });
-    } catch {
-      file = undefined;
-    }
+      if (!(request as any).isMultipart()) {
+        throw new AppError('VALIDATION_ERROR', 400, 'Send the image as multipart/form-data');
+      }
 
-    if (!file) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Attach an image file in the "file" field');
-    }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let file: any;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        file = await (request as any).file({
+          limits: { files: 1, fileSize: config.maxUploadBytes },
+        });
+      } catch {
+        file = undefined;
+      }
 
-    const ext = EXT_BY_MIME[file.mimetype];
-    if (!ext) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Only JPEG, PNG or WebP images are allowed');
-    }
+      if (!file) {
+        throw new AppError('VALIDATION_ERROR', 400, 'Attach an image file in the "file" field');
+      }
 
-    let buffer: Buffer;
-    try {
-      buffer = await file.toBuffer();
-    } catch {
-      // @fastify/multipart throws once the stream passes fileSize.
-      throw new AppError(
-        'VALIDATION_ERROR',
-        400,
-        `Image is larger than ${Math.round(config.maxUploadBytes / (1024 * 1024))} MB`
-      );
-    }
-    if (file.file.truncated) {
-      throw new AppError(
-        'VALIDATION_ERROR',
-        400,
-        `Image is larger than ${Math.round(config.maxUploadBytes / (1024 * 1024))} MB`
-      );
-    }
+      const ext = EXT_BY_MIME[file.mimetype];
+      if (!ext) {
+        throw new AppError('VALIDATION_ERROR', 400, 'Only JPEG, PNG or WebP images are allowed');
+      }
 
-    const name = `${generateId()}.${ext}`;
-    await writeFile(join(uploadRoot, name), buffer);
+      let buffer: Buffer;
+      try {
+        buffer = await file.toBuffer();
+      } catch {
+        // @fastify/multipart throws once the stream passes fileSize.
+        throw new AppError(
+          'VALIDATION_ERROR',
+          400,
+          `Image is larger than ${Math.round(config.maxUploadBytes / (1024 * 1024))} MB`
+        );
+      }
+      if (file.file.truncated) {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          400,
+          `Image is larger than ${Math.round(config.maxUploadBytes / (1024 * 1024))} MB`
+        );
+      }
 
-    const url = `${originFor(request)}/uploads/${name}`;
-    reply.status(201).send({ success: true, data: { url }, code: 'UPLOAD_CREATED' });
+      const name = `${generateId()}.${ext}`;
+      try {
+        await store.put(name, buffer, file.mimetype);
+      } catch (err) {
+        request.log.error({ err }, 'upload store failed');
+        throw new AppError('UPLOAD_FAILED', 502, 'Could not store the image. Try again.');
+      }
+
+      const stored = store.url(name);
+      const url = store.urlIsRelative ? `${originFor(request)}${stored}` : stored;
+      reply.status(201).send({ success: true, data: { url }, code: 'UPLOAD_CREATED' });
     }
   );
 }

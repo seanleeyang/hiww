@@ -1,4 +1,5 @@
 import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
+import { __setFileStore, type FileStore } from '@/services/storage';
 
 // A 1x1 transparent PNG.
 const PNG_1PX = Buffer.from(
@@ -111,5 +112,41 @@ describe('uploads flow', () => {
     });
 
     expect(res.statusCode).toBe(400);
+  });
+
+  it('with a remote store, returns the store\'s absolute URL as-is', async () => {
+    const puts: Array<{ key: string; contentType: string; size: number }> = [];
+    const remote: FileStore = {
+      urlIsRelative: false,
+      async put(key, body, contentType) {
+        puts.push({ key, contentType, size: body.length });
+      },
+      url: (key) => `https://cdn.hiww.test/${key}`,
+    };
+
+    await closeTestApp(ctx);
+    __setFileStore(remote);
+    ctx = await makeTestApp();
+    try {
+      const user = await createUser(ctx);
+      const { body, contentType } = multipart([
+        { name: 'file', filename: 'photo.png', contentType: 'image/png', data: PNG_1PX },
+      ]);
+      const res = await ctx.app.inject({
+        method: 'POST',
+        url: '/api/uploads',
+        headers: { ...authHeader(user), 'content-type': contentType },
+        payload: body,
+      });
+
+      expect(res.statusCode).toBe(201);
+      const url = res.json().data.url as string;
+      expect(url).toMatch(/^https:\/\/cdn\.hiww\.test\/[0-9a-f-]+\.png$/);
+      expect(puts).toHaveLength(1);
+      expect(puts[0].contentType).toBe('image/png');
+      expect(puts[0].size).toBe(PNG_1PX.length);
+    } finally {
+      __setFileStore(undefined);
+    }
   });
 });

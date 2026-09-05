@@ -55,3 +55,19 @@ services:
         value: claude-opus-5
       - key: ANTHROPIC_API_KEY
         sync: false
+
+      # Uploaded images -> Cloudflare R2 (Render's free disk is ephemeral).
+      # Until all five R2_* values are set the app logs a warning and falls
+      # back to local disk. See docs/DEPLOY.md.
+      - key: UPLOADS_BACKEND
+        value: r2
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_PUBLIC_BASE_URL
+        sync: false

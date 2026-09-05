@@ -151,6 +151,7 @@ Marketplace flows supported:
 - `src/utils/user-summary.ts` — public profile/reputation slice shared by the above
 - `src/services/providers/` — abstraction layer for payment and identity providers
 - `src/services/ai/` — AI receipt check (Claude vision); mock + Claude implementations behind one interface
+- `src/services/storage/` — uploaded-image store; local disk + Cloudflare R2 implementations behind one interface
 - `src/services/notify.ts` — in-app notification feed writer (`recordNotification`)
 - `migrations/` — database schema history (007–009 add profiles, reviews, messages)
 - `tests/integration/` — backend integration tests

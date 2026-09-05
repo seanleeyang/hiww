@@ -99,6 +99,21 @@ export const config = {
    */
   publicBaseUrl: (process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, ''),
   /**
+   * Where uploaded images live. `local` writes to `uploadDir` on disk and serves
+   * them from `/uploads/*` (fine for dev; the disk is ephemeral on Render's free
+   * tier, so images vanish on every redeploy). `r2` stores them in a Cloudflare
+   * R2 bucket over the S3 API and serves them from `r2PublicBaseUrl` — use this
+   * in production. Needs the four R2_* values below.
+   */
+  uploadsBackend: process.env.UPLOADS_BACKEND || 'local',
+  r2AccountId: process.env.R2_ACCOUNT_ID || '',
+  r2AccessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+  r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  r2Bucket: process.env.R2_BUCKET || '',
+  // Public origin the bucket is served from — the r2.dev dev URL or a custom
+  // domain, no trailing slash.
+  r2PublicBaseUrl: (process.env.R2_PUBLIC_BASE_URL || '').replace(/\/+$/, ''),
+  /**
    * AI receipt check. When the traveller uploads a shop receipt, an analyzer
    * extracts the merchant/date/total and flags anything suspicious for the
    * operator. `mock` (default) is a deterministic stand-in used by tests and

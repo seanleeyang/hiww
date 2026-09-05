@@ -98,8 +98,36 @@ flutter build apk --release --dart-define=HIWW_API_BASE_URL=https://hiww-api.onr
 | Limit | Effect | Fix |
 |---|---|---|
 | Render free service **sleeps after 15 min idle** | First request after a quiet spell takes ~40 s | A free uptime pinger (e.g. UptimeRobot) hitting `/health` every 10 min; or upgrade to the $7/mo Starter plan |
-| Render disk is **ephemeral** | Uploaded photos are lost on every redeploy | Next step: move uploads to **Cloudflare R2** (S3-compatible, 10 GB free) — see the go-live doc |
+| Render disk is **ephemeral** | Uploaded photos are lost on every redeploy | Point uploads at **Cloudflare R2** — see "Uploads on R2" below |
 | Neon free tier: 0.5 GB, scales to zero | Wakes in <1 s; fine for a pilot | Upgrade when data grows |
+
+## Uploads on R2
+
+Render's free disk is wiped on every deploy, so want photos, trip covers,
+avatars and purchase receipts must live in object storage. Cloudflare R2 is
+S3-compatible with a 10 GB free tier.
+
+1. **Cloudflare dashboard → R2 → Create bucket.** Name it `hiww-uploads`
+   (region: automatic).
+2. **Bucket → Settings → Public access → "R2.dev subdomain" → Allow.**
+   You get a URL like `https://pub-<hash>.r2.dev` — this is `R2_PUBLIC_BASE_URL`.
+   (For a real launch, connect a custom domain instead.)
+3. **R2 → Manage API Tokens → Create API Token.** Permission **Object Read &
+   Write**, scoped to this bucket. It gives you an **Access Key ID** and a
+   **Secret Access Key**. Your **Account ID** is on the R2 overview page.
+4. **Render → `hiww-api` → Environment**, set:
+   - `R2_ACCOUNT_ID` — the account id
+   - `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` — from the token
+   - `R2_BUCKET` — `hiww-uploads`
+   - `R2_PUBLIC_BASE_URL` — the `https://pub-<hash>.r2.dev` URL
+   (`UPLOADS_BACKEND=r2` is already set by the blueprint.)
+5. Save — Render redeploys. New uploads now go to R2 and survive deploys.
+   Until all five values are set the app logs a warning and keeps using the
+   (ephemeral) local disk, so a half-done config never breaks the deploy.
+
+Existing local-disk files keep being served from `/uploads/*`; only new
+uploads go to R2. Anything uploaded before the switch is already gone after
+the next redeploy — re-upload if needed.
 
 ## Rolling back
 
@@ -120,3 +148,5 @@ Migrations are forward-only; a rollback that needs a schema change is a manual j
 | `PAYMENT_PROVIDER` / `IDENTITY_PROVIDER` | blueprint | `mock` until a real vendor is wired |
 | `AI_RECEIPT_ANALYZER` / `AI_MODEL` | blueprint | `claude` / `claude-opus-5` — the AI receipt check |
 | `ANTHROPIC_API_KEY` | you | from console.anthropic.com; without it the receipt check falls back to the mock |
+| `UPLOADS_BACKEND` | blueprint | `r2` — see "Uploads on R2" |
+| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_PUBLIC_BASE_URL` | you | all five required; any missing → falls back to local disk |
