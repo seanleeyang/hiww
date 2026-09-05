@@ -16,6 +16,7 @@ class WantsRepository {
     required String category,
     required double estimatedWeightKg,
     required String budget,
+    int quantity = 1,
     DateTime? needBy,
     String? imageUrl,
   }) async {
@@ -25,6 +26,7 @@ class WantsRepository {
       'category': category,
       'estimated_weight_kg': estimatedWeightKg,
       'budget': budget,
+      'quantity': quantity,
       'title': title,
     };
     if (sourceCity != null && sourceCity.isNotEmpty) body['source_city'] = sourceCity;

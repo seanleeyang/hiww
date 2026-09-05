@@ -67,6 +67,14 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         })
         .execute();
 
+      await recordNotification(request.db, {
+        userId: requestRow.shopper_id,
+        type: 'offer_received',
+        subject: 'New offer on your want',
+        body: `A traveler offered to bring "${requestRow.item_description}" for ${parsed.data.quoted_price}. Open it to review and accept.`,
+        link: `/wants/${requestRow.id}`,
+      });
+
       reply.status(201).send({ success: true, data: { id: offerId }, code: 'OFFER_CREATED' });
     }
   );
@@ -173,6 +181,9 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
 
       const total = new Decimal(offer.quoted_price);
       const fees = total.mul(PLATFORM_FEE_RATE).toDecimalPlaces(2).toString();
+      const quantity = Math.max(1, Number(requestRow.quantity ?? 1));
+      // The traveler quotes one all-in price; split it back out per unit for the receipt.
+      const unitPrice = total.div(quantity).toDecimalPlaces(2).toString();
       const orderId = generateId();
       const now = new Date();
 
@@ -197,8 +208,8 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             request_id: requestRow.id,
             offer_id: offer.id,
             item_description: requestRow.item_description,
-            quantity: 1,
-            unit_price: total.toString(),
+            quantity,
+            unit_price: unitPrice,
             total_price: total.toString(),
             fees,
             status: 'pending_payment',

@@ -46,6 +46,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
   String _category = 'sneakers';
   late String _country;
   int _budget = 3000;
+  int _qty = 1;
   DateTime? _needBy;
   bool _submitting = false;
   String? _error;
@@ -91,6 +92,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
             category: _category,
             estimatedWeightKg: 1,
             budget: '${_budget.toStringAsFixed(0)}.00',
+            quantity: _qty,
             needBy: _needBy,
             imageUrl: _photoUrl ?? '',
           );
@@ -152,20 +154,30 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
               onSelected: (c) => setState(() => _category = c ?? 'other'),
             ),
             const SizedBox(height: 18),
+            Text('Budget', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            BudgetStepper(
+              value: _budget,
+              onChanged: (v) => setState(() => _budget = v),
+            ),
+            const SizedBox(height: 4),
+            Text('Total you expect to pay, for all ${pluralize(_qty, 'item')}.',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 18),
             Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Budget',
-                        style: Theme.of(context).textTheme.labelLarge,
-                      ),
+                      Text('Quantity',
+                          style: Theme.of(context).textTheme.labelLarge),
                       const SizedBox(height: 8),
-                      BudgetStepper(
-                        value: _budget,
-                        onChanged: (v) => setState(() => _budget = v),
+                      _QtyStepper(
+                        value: _qty,
+                        onChanged: (v) => setState(() => _qty = v),
                       ),
                     ],
                   ),
@@ -278,5 +290,40 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
       initialDate: _needBy ?? now.add(const Duration(days: 14)),
     );
     if (picked != null) setState(() => _needBy = picked);
+  }
+}
+
+/// "− 2 +" whole-number stepper, clamped to 1–99.
+class _QtyStepper extends StatelessWidget {
+  const _QtyStepper({required this.value, required this.onChanged});
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outline),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: value > 1 ? () => onChanged(value - 1) : null,
+            icon: const Icon(Icons.remove),
+          ),
+          Expanded(
+            child: Text('$value',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          ),
+          IconButton(
+            onPressed: value < 99 ? () => onChanged(value + 1) : null,
+            icon: const Icon(Icons.add),
+          ),
+        ],
+      ),
+    );
   }
 }

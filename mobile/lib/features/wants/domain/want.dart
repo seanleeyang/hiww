@@ -9,6 +9,7 @@ class Want {
     required this.sourceCountry,
     required this.category,
     required this.budget,
+    this.quantity = 1,
     this.title,
     this.sourceCity,
     this.imageUrl,
@@ -23,6 +24,7 @@ class Want {
   final String sourceCountry;
   final String category;
   final String budget;
+  final int quantity;
   final String? title;
   final String? sourceCity;
   final String? imageUrl;
@@ -43,6 +45,7 @@ class Want {
         sourceCountry: (j['source_country'] ?? '').toString(),
         category: (j['category'] ?? '').toString(),
         budget: (j['budget'] ?? '0').toString(),
+        quantity: (j['quantity'] as num?)?.toInt() ?? 1,
         title: _s(j['title']),
         sourceCity: _s(j['source_city']),
         imageUrl: _s(j['image_url']),

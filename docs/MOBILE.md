@@ -119,6 +119,23 @@ reference mockup:
   all). App: `notifications` feature polls every 20 s, a bell + `Badge` in the
   `AppShell` app bar opens `NotificationsScreen` (`/notifications`), each row
   deep-links to `/orders/:id`. Backend 22 suites / 75 tests; ~53 Flutter tests.
+- **D11 (done)** — pilot-feedback batch. `migration 013`:
+  - **Want quantity.** `requests.quantity` (1–99); Post-a-want has a stepper;
+    flows through to `orders.quantity` on accept, with `unit_price` split from
+    the traveler's single all-in quote.
+  - **Offer-received notification.** A traveler making an offer now notifies the
+    shopper (`offer_received`, links to the want).
+  - **"Bought" step + purchase receipt.** New order status `purchased` between
+    `confirmed` and `in_transit`. `POST /api/orders/:id/purchase-proof` (traveler,
+    image URL) moves `confirmed → purchased` and is *required* before
+    `/deliver` will ship. `orders.purchase_proof_url` + `purchased_at`. The
+    receipt shows on the order screen for both parties + a `receipt` link in the
+    operator console Orders table; shopper gets a `purchase_proof` notification.
+    OrderStepper is now 5 stages (Accepted · Paid · Bought · In transit ·
+    Delivered).
+  - **Completed = all green.** Once `delivered`, every stepper dot (incl.
+    "Delivered") renders as a done tick, not the orange current-step dot.
+  Backend 22 suites / 78 tests; Flutter ~53 tests.
 - **Later** — push notifications (APNs/FCM transport for the above), offline
   cache, i18n. Move uploads to object storage (S3/GCS) before production; the
   local disk store is pilot-only.

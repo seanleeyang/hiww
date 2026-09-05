@@ -10,6 +10,7 @@ export type AuditAction =
   | 'order.create'
   | 'order.payment_claim'
   | 'payment.confirm'
+  | 'order.purchase_proof'
   | 'order.ship'
   | 'order.release'
   | 'order.payout'

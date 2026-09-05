@@ -111,9 +111,11 @@ class NotificationsScreen extends ConsumerWidget {
   }
 
   static IconData _iconFor(String type) => switch (type) {
+        'offer_received' => Icons.local_offer_outlined,
         'offer_accepted' => Icons.handshake_outlined,
         'payment_claimed' => Icons.hourglass_top,
         'payment_confirmed' => Icons.payments_outlined,
+        'purchase_proof' => Icons.receipt_long_outlined,
         'shipped' => Icons.local_shipping_outlined,
         'delivered' => Icons.check_circle_outline,
         'payout_sent' => Icons.account_balance_wallet_outlined,

@@ -98,7 +98,8 @@ export async function forceOrderStatus(ctx: TestContext, orderId: string, status
 
 /**
  * Drive an accepted order all the way to `delivered` through the real routes:
- * confirm payment (admin), traveler ships, shopper confirms receipt.
+ * confirm payment (admin), traveler uploads a purchase receipt, traveler ships,
+ * shopper confirms receipt.
  */
 export async function completeOrder(ctx: TestContext, order: MarketplaceOrder): Promise<void> {
   const admin = await createUser(ctx, { admin: true });
@@ -109,6 +110,14 @@ export async function completeOrder(ctx: TestContext, order: MarketplaceOrder): 
     payload: { order_id: order.orderId },
   });
   if (confirm.statusCode !== 200) throw new Error(`confirm failed (${confirm.statusCode}): ${confirm.body}`);
+
+  const proof = await ctx.app.inject({
+    method: 'POST',
+    url: `/api/orders/${order.orderId}/purchase-proof`,
+    headers: authHeader(order.traveler),
+    payload: { image_url: 'https://example.com/receipt.jpg' },
+  });
+  if (proof.statusCode !== 200) throw new Error(`purchase-proof failed (${proof.statusCode}): ${proof.body}`);
 
   const ship = await ctx.app.inject({
     method: 'POST',

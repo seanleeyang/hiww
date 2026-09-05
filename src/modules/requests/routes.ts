@@ -25,6 +25,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
           category: parsed.data.category,
           estimated_weight_kg: parsed.data.estimated_weight_kg,
           budget: parsed.data.budget,
+          quantity: parsed.data.quantity ?? 1,
           title: parsed.data.title ?? null,
           source_city: parsed.data.source_city ?? null,
           need_by: parsed.data.need_by ? new Date(parsed.data.need_by) : null,

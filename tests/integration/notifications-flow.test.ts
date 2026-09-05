@@ -38,6 +38,15 @@ describe('notifications feed', () => {
     expect(res.statusCode).toBe(401);
   });
 
+  it('notifies the shopper when a traveler makes an offer', async () => {
+    const order = await createAcceptedOrder(ctx); // makes then accepts an offer
+
+    const shopper = await feed(order.shopper);
+    const received = shopper.items.find((n) => n.type === 'offer_received');
+    expect(received).toBeDefined();
+    expect(received!.link).toBe(`/wants/${order.requestId}`);
+  });
+
   it('notifies the traveler when their offer is accepted, linking to the order', async () => {
     const order = await createAcceptedOrder(ctx);
 
@@ -51,6 +60,17 @@ describe('notifications feed', () => {
     // The shopper who did the accepting doesn't get that one.
     const shopper = await feed(order.shopper);
     expect(shopper.items.some((n) => n.type === 'offer_accepted')).toBe(false);
+  });
+
+  it('notifies the shopper when the traveler uploads a purchase receipt', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await completeOrder(ctx, order); // includes the purchase-proof step
+
+    const shopper = await feed(order.shopper);
+    expect(shopper.items.some((n) => n.type === 'purchase_proof')).toBe(true);
+    // the traveler doesn't get notified about their own upload
+    const traveler = await feed(order.traveler);
+    expect(traveler.items.some((n) => n.type === 'purchase_proof')).toBe(false);
   });
 
   it('notifies both parties through the full happy path', async () => {

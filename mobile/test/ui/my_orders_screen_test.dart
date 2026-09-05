@@ -69,7 +69,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Delivering for Nuch S'), findsOneWidget);
-    expect(find.text('Buy the item, ship it, then mark it shipped'), findsOneWidget);
+    expect(find.text('Buy the item, then upload the receipt'), findsOneWidget);
+  });
+
+  testWidgets('purchased stage tells the traveler to ship', (tester) async {
+    await tester.pumpWidget(_wrap([_order(status: 'purchased', iAmShopper: false)]));
+    await tester.pumpAndSettle();
+    expect(find.text('Post the item, then mark it shipped'), findsOneWidget);
   });
 
   testWidgets('finished orders sink below active ones', (tester) async {

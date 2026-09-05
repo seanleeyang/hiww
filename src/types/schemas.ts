@@ -27,6 +27,7 @@ export const createRequestSchema = z.object({
   category: z.string().min(1),
   estimated_weight_kg: z.number().positive(),
   budget: z.string().regex(/^\d+(\.\d{2})?$/),
+  quantity: z.number().int().min(1).max(99).optional(),
   // Presentation fields (optional; migration 007).
   title: optionalText(120),
   source_city: optionalText(120),
@@ -35,6 +36,11 @@ export const createRequestSchema = z.object({
 });
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;
+
+export const purchaseProofSchema = z.object({
+  image_url: z.string().trim().url().max(2048),
+  note: z.string().trim().max(500).optional(),
+});
 
 export const createOrderSchema = z.object({
   trip_id: z.string().uuid().optional(),

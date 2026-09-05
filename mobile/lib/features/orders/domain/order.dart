@@ -28,6 +28,8 @@ class Order {
     this.createdAt,
     this.paymentClaimedAt,
     this.confirmedAt,
+    this.purchaseProofUrl,
+    this.purchasedAt,
     this.shippedAt,
     this.deliveredAt,
     this.canReview = false,
@@ -48,6 +50,8 @@ class Order {
   final DateTime? createdAt;
   final DateTime? paymentClaimedAt;
   final DateTime? confirmedAt;
+  final String? purchaseProofUrl;
+  final DateTime? purchasedAt;
   final DateTime? shippedAt;
   final DateTime? deliveredAt;
   final bool canReview;
@@ -73,6 +77,10 @@ class Order {
         createdAt: parseDate(j['created_at']),
         paymentClaimedAt: parseDate(j['payment_claimed_at']),
         confirmedAt: parseDate(j['confirmed_at']),
+        purchaseProofUrl: (j['purchase_proof_url'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : j['purchase_proof_url'] as String,
+        purchasedAt: parseDate(j['purchased_at']),
         shippedAt: parseDate(j['shipped_at']),
         deliveredAt: parseDate(j['delivered_at']),
         canReview: j['can_review'] == true,

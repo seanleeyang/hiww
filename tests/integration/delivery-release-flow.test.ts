@@ -14,7 +14,7 @@ describe('delivery and release flow', () => {
 
   it('marks delivery and confirms receipt without minting ledger entries', async () => {
     const order = await createAcceptedOrder(ctx);
-    await forceOrderStatus(ctx, order.orderId, 'confirmed');
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
 
     const deliverResponse = await ctx.app.inject({
       method: 'POST',
@@ -57,7 +57,7 @@ describe('delivery and release flow', () => {
 
   it('is idempotent: releasing an already-delivered order stays delivered', async () => {
     const order = await createAcceptedOrder(ctx);
-    await forceOrderStatus(ctx, order.orderId, 'confirmed');
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
 
     await ctx.app.inject({
       method: 'POST',
@@ -88,9 +88,67 @@ describe('delivery and release flow', () => {
     expect(finalOrder?.status).toBe('delivered');
   });
 
-  it('only the traveler can mark delivered, only the shopper can confirm receipt', async () => {
+  it('requires a purchase receipt before shipping', async () => {
     const order = await createAcceptedOrder(ctx);
     await forceOrderStatus(ctx, order.orderId, 'confirmed');
+
+    // Can't ship straight from confirmed any more.
+    const early = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+    expect(early.statusCode).toBe(409);
+
+    // Only the traveler can upload it.
+    const wrongUploader = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/purchase-proof`,
+      headers: authHeader(order.shopper),
+      payload: { image_url: 'https://example.com/r.jpg' },
+    });
+    expect(wrongUploader.statusCode).toBe(403);
+
+    // A URL is required.
+    const noUrl = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/purchase-proof`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+    expect(noUrl.statusCode).toBe(400);
+
+    const proof = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/purchase-proof`,
+      headers: authHeader(order.traveler),
+      payload: { image_url: 'https://example.com/receipt.jpg', note: 'bought at Bic Camera' },
+    });
+    expect(proof.statusCode).toBe(200);
+
+    const afterProof = await ctx.db
+      .selectFrom('orders')
+      .selectAll()
+      .where('id', '=', order.orderId)
+      .executeTakeFirst();
+    expect(afterProof?.status).toBe('purchased');
+    expect(afterProof?.purchase_proof_url).toBe('https://example.com/receipt.jpg');
+    expect(afterProof?.purchased_at).not.toBeNull();
+
+    // Now shipping works.
+    const ship = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+    expect(ship.statusCode).toBe(200);
+  });
+
+  it('only the traveler can mark delivered, only the shopper can confirm receipt', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
 
     const wrongDeliver = await ctx.app.inject({
       method: 'POST',

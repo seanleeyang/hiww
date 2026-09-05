@@ -4,7 +4,9 @@ import 'package:hiww_mobile/features/orders/domain/order.dart';
 import 'package:hiww_mobile/features/orders/presentation/order_stepper.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
 
-Order _order(String status, {DateTime? confirmed, DateTime? shipped, DateTime? delivered}) => Order(
+Order _order(String status,
+        {DateTime? confirmed, DateTime? purchased, DateTime? shipped, DateTime? delivered}) =>
+    Order(
       id: 'o1',
       shopperId: 's',
       travelerId: 't',
@@ -14,6 +16,7 @@ Order _order(String status, {DateTime? confirmed, DateTime? shipped, DateTime? d
       status: status,
       createdAt: DateTime(2026, 11, 2),
       confirmedAt: confirmed,
+      purchasedAt: purchased,
       shippedAt: shipped,
       deliveredAt: delivered,
     );
@@ -24,10 +27,11 @@ Widget _wrap(Widget child) => MaterialApp(
     );
 
 void main() {
-  testWidgets('renders all four stages', (tester) async {
+  testWidgets('renders all five stages', (tester) async {
     await tester.pumpWidget(_wrap(OrderStepper(order: _order('pending_payment'))));
     expect(find.text('Accepted'), findsOneWidget);
     expect(find.text('Paid'), findsOneWidget);
+    expect(find.text('Bought'), findsOneWidget);
     expect(find.text('In transit'), findsOneWidget);
     expect(find.text('Delivered'), findsOneWidget);
   });
@@ -42,14 +46,24 @@ void main() {
     expect(find.text('Confirm to release payment'), findsOneWidget); // Delivered hint
   });
 
-  testWidgets('check marks appear for reached stages', (tester) async {
+  testWidgets('a delivered order shows every stage complete', (tester) async {
     await tester.pumpWidget(_wrap(OrderStepper(
       order: _order('delivered',
           confirmed: DateTime(2026, 11, 14),
-          shipped: DateTime(2026, 11, 15),
+          purchased: DateTime(2026, 11, 15),
+          shipped: DateTime(2026, 11, 16),
           delivered: DateTime(2026, 11, 20)),
     )));
-    // pending<confirmed<transit<delivered -> 3 stages "done" before the final
-    expect(find.byIcon(Icons.check), findsNWidgets(3));
+    // Once delivered, all five dots read as done — including "Delivered".
+    expect(find.byIcon(Icons.check), findsNWidgets(5));
+  });
+
+  testWidgets('mid-flight, the Bought stage is current, not yet checked', (tester) async {
+    await tester.pumpWidget(_wrap(OrderStepper(
+      order: _order('purchased',
+          confirmed: DateTime(2026, 11, 14), purchased: DateTime(2026, 11, 15)),
+    )));
+    // Accepted + Paid done; Bought is the current step.
+    expect(find.byIcon(Icons.check), findsNWidgets(2));
   });
 }

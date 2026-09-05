@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
+import { purchaseProofSchema } from '@/types/schemas';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
 
@@ -20,6 +21,79 @@ const noteSchema = z.object({
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void> {
+  // The traveler has bought the item and uploads a photo of the shop receipt.
+  // `confirmed` → `purchased`. This is what unlocks "mark shipped" — the
+  // traveler still has to carry the item home and post it, which takes time.
+  app.post<{ Params: { id: string }; Body: unknown }>(
+    '/api/orders/:id/purchase-proof',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const parsed = purchaseProofSchema.safeParse(request.body || {});
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'A receipt photo URL is required');
+      }
+
+      const order = await request.db
+        .selectFrom('orders')
+        .selectAll()
+        .where('id', '=', request.params.id)
+        .executeTakeFirst();
+
+      if (!order) {
+        throw new AppError('NOT_FOUND', 404, 'Order not found');
+      }
+      if (order.traveler_id !== request.userId) {
+        throw new AppError('FORBIDDEN', 403, 'Only the traveler can upload a purchase receipt');
+      }
+      if (order.status === 'purchased') {
+        reply.send({ success: true, data: { order_id: order.id, status: 'purchased' }, code: 'PURCHASE_RECORDED' });
+        return;
+      }
+      if (order.status !== 'confirmed') {
+        throw new AppError('INVALID_STATUS', 409, 'Payment must be confirmed before recording a purchase');
+      }
+
+      const now = new Date();
+      await request.db
+        .updateTable('orders')
+        .set({
+          status: 'purchased',
+          purchase_proof_url: parsed.data.image_url,
+          purchased_at: now,
+          updated_at: now,
+        })
+        .where('id', '=', order.id)
+        .execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'order.purchase_proof',
+        targetType: 'order',
+        targetId: order.id,
+        summary: `Traveler uploaded a purchase receipt for order ${order.id}`,
+        metadata: {
+          from_status: 'confirmed',
+          to_status: 'purchased',
+          receipt_url: parsed.data.image_url,
+          note: parsed.data.note ?? null,
+        },
+      });
+
+      await recordNotification(request.db, {
+        userId: order.shopper_id,
+        type: 'purchase_proof',
+        subject: 'The traveler bought your item',
+        body: `The traveler bought "${order.item_description}" and attached the shop receipt. They'll ship it once they're back.`,
+        orderId: order.id,
+      });
+
+      reply.send({
+        success: true,
+        data: { order_id: order.id, status: 'purchased' },
+        code: 'PURCHASE_RECORDED',
+      });
+    }
+  );
+
   app.post<{ Params: { id: string }; Body: unknown }>(
     '/api/orders/:id/deliver',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,8 +122,12 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         return;
       }
 
-      if (order.status !== 'confirmed') {
-        throw new AppError('INVALID_STATUS', 409, 'Order must be confirmed before delivery');
+      if (order.status !== 'purchased') {
+        throw new AppError(
+          'INVALID_STATUS',
+          409,
+          'Upload the purchase receipt before marking the order shipped'
+        );
       }
 
       const now = new Date();
@@ -64,7 +142,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         targetType: 'order',
         targetId: order.id,
         summary: `Traveler marked order ${order.id} shipped`,
-        metadata: { from_status: 'confirmed', to_status: 'in_transit', note: parsed.data.note ?? null },
+        metadata: { from_status: 'purchased', to_status: 'in_transit', note: parsed.data.note ?? null },
       });
 
       await recordNotification(request.db, {

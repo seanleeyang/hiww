@@ -153,8 +153,11 @@ class _OrderCard extends StatelessWidget {
             ? 'Pay to get things moving'
             : 'Waiting for the shopper to pay',
         'confirmed' => isShopper
-            ? 'Traveler is buying and shipping your item'
-            : 'Buy the item, ship it, then mark it shipped',
+            ? 'Traveler is buying your item'
+            : 'Buy the item, then upload the receipt',
+        'purchased' => isShopper
+            ? 'Bought — traveler will ship once they’re back'
+            : 'Post the item, then mark it shipped',
         'in_transit' => isShopper
             ? 'On its way — confirm when it arrives'
             : 'Shipped — waiting for the shopper to confirm receipt',

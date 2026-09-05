@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/format.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
+import '../../../ui/image_picker_field.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
@@ -96,6 +98,10 @@ class OrderScreen extends ConsumerWidget {
                   ),
                 const SizedBox(height: 18),
                 SoftCard(child: OrderStepper(order: o)),
+                if (o.purchaseProofUrl != null) ...[
+                  const SizedBox(height: 14),
+                  _ReceiptCard(url: o.purchaseProofUrl!, at: o.purchasedAt),
+                ],
                 const SizedBox(height: 14),
                 TrustPanel(order: o),
                 const SizedBox(height: 14),
@@ -200,10 +206,28 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
         ]);
       case 'confirmed':
         if (widget.isShopper) {
-          return note('Payment confirmed. Waiting for the traveler to buy and ship.');
+          return note('Payment confirmed. Waiting for the traveler to buy the item.');
         }
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          note('Payment confirmed. Buy the item, ship it, then mark it shipped.'),
+          note('Payment confirmed. Buy the item, then upload a photo of the shop '
+              'receipt — clear date and the item in frame. That unlocks the '
+              'shipping step.'),
+          const SizedBox(height: 12),
+          ImagePickerField(
+            value: null,
+            label: _busy ? 'Uploading…' : 'Upload purchase receipt',
+            onChanged: (url) {
+              if (url != null) _run(() => repo.submitPurchaseProof(o.id, url));
+            },
+          ),
+        ]);
+      case 'purchased':
+        if (widget.isShopper) {
+          return note('The traveler bought your item. They’ll ship it once '
+              'they’re back in the origin country.');
+        }
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          note('Receipt uploaded. Post the item when you’re home, then mark it shipped.'),
           const SizedBox(height: 12),
           primary('Mark as shipped', () => _run(() => repo.markShipped(o.id))),
         ]);
@@ -232,5 +256,58 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
       default:
         return note('This order is ${o.status.replaceAll('_', ' ')}.');
     }
+  }
+}
+
+/// Shop receipt the traveler uploaded as proof of purchase. Visible to both
+/// parties and the operator; tap to view full-screen.
+class _ReceiptCard extends StatelessWidget {
+  const _ReceiptCard({required this.url, this.at});
+  final String url;
+  final DateTime? at;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.receipt_long_outlined, size: 18, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Text('Purchase receipt', style: Theme.of(context).textTheme.titleSmall),
+            const Spacer(),
+            if (at != null)
+              Text(shortDate(at),
+                  style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+          ]),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () => showDialog<void>(
+              context: context,
+              builder: (_) => Dialog(
+                backgroundColor: Colors.black,
+                insetPadding: const EdgeInsets.all(12),
+                child: InteractiveViewer(
+                  child: HeroImage(
+                    url: url,
+                    fallbackAsset: 'assets/images/electronics.jpg',
+                    height: 480,
+                    borderRadius: 0,
+                  ),
+                ),
+              ),
+            ),
+            child: HeroImage(
+              url: url,
+              fallbackAsset: 'assets/images/electronics.jpg',
+              height: 150,
+              borderRadius: 12,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

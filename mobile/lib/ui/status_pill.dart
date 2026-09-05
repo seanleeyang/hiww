@@ -19,7 +19,7 @@ class StatusPill extends StatelessWidget {
     final tone = switch (status) {
       'approved' || 'confirmed' || 'delivered' || 'accepted' || 'clear' =>
         _Tone.positive,
-      'pending' || 'pending_payment' || 'open' || 'in_transit' || 'in_review' =>
+      'pending' || 'pending_payment' || 'open' || 'purchased' || 'in_transit' || 'in_review' =>
         _Tone.warning,
       'rejected' || 'flagged' || 'restricted' || 'cancelled' || 'closed' =>
         _Tone.danger,
@@ -35,6 +35,7 @@ class StatusPill extends StatelessWidget {
 
     final label = switch (status) {
       'pending_payment' => 'awaiting payment',
+      'purchased' => 'bought',
       'in_transit' => 'shipped',
       _ => status.replaceAll('_', ' '),
     };

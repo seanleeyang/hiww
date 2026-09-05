@@ -47,6 +47,7 @@ void main() {
         'source_city': 'Tokyo',
         'category': 'sneakers',
         'budget': '6500.00',
+        'quantity': 3,
         'title': 'Nike Dunk Panda',
         'need_by': '2026-12-01T00:00:00.000Z',
         'status': 'open',
@@ -58,6 +59,7 @@ void main() {
     expect(item.isTrip, false);
     expect(item.want!.displayTitle, 'Nike Dunk Panda');
     expect(item.want!.budgetLabel, '฿6,500');
+    expect(item.want!.quantity, 3);
     expect(item.want!.needByLabel, 'Need by Dec 1');
     expect(item.want!.sourceLabel, 'Tokyo');
   });
@@ -93,13 +95,17 @@ void main() {
       'fees': '1200',
       'status': 'in_transit',
       'confirmed_at': '2026-11-14T00:00:00.000Z',
-      'shipped_at': '2026-11-15T00:00:00.000Z',
+      'purchased_at': '2026-11-15T00:00:00.000Z',
+      'purchase_proof_url': 'https://cdn.hiww.test/receipt.jpg',
+      'shipped_at': '2026-11-16T00:00:00.000Z',
       'delivered_at': null,
       'can_review': false,
       'counterparty': {'id': 't', 'full_name': 'Nuch S'},
     });
     expect(o.totalLabel, '฿18,000');
     expect(o.feesLabel, '฿1,200');
+    expect(o.purchasedAt, isNotNull);
+    expect(o.purchaseProofUrl, 'https://cdn.hiww.test/receipt.jpg');
     expect(o.shippedAt, isNotNull);
     expect(o.deliveredAt, isNull);
     expect(o.counterparty!.fullName, 'Nuch S');

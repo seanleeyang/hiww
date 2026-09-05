@@ -47,6 +47,8 @@ export interface RequestsTable {
   category: string;
   estimated_weight_kg: number;
   budget: string; // Decimal as string
+  /** How many of the item the shopper wants (migration 013). */
+  quantity: Generated<number>;
   status: 'open' | 'accepted' | 'completed' | 'cancelled';
   /** Presentation fields (migration 007). */
   title?: string | null;
@@ -81,11 +83,20 @@ export interface OrdersTable {
   unit_price: string; // Decimal as string
   total_price: string; // Decimal as string
   fees: string; // Decimal as string
-  status: 'pending_payment' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled';
+  status:
+    | 'pending_payment'
+    | 'confirmed'
+    | 'purchased'
+    | 'in_transit'
+    | 'delivered'
+    | 'cancelled';
   /** Set when the shopper says they have sent payment (manual-money pilot signal). */
   payment_claimed_at?: Date | null;
   /** Per-stage timestamps for the order tracker (migration 007). */
   confirmed_at?: Date | null;
+  /** Traveler's shop-receipt photo + when they marked the item bought (migration 013). */
+  purchase_proof_url?: string | null;
+  purchased_at?: Date | null;
   shipped_at?: Date | null;
   delivered_at?: Date | null;
   created_at: Date;

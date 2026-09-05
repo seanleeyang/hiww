@@ -17,11 +17,15 @@ class OrderStepper extends StatelessWidget {
 
   final Order order;
 
+  // Index of the stage the order is currently *at*. `delivered` returns one
+  // past the last stage so every dot — including "Delivered" — renders as a
+  // completed green tick once the order is done.
   int get _reached => switch (order.status) {
         'pending_payment' => 0,
         'confirmed' => 1,
-        'in_transit' => 2,
-        'delivered' => 3,
+        'purchased' => 2,
+        'in_transit' => 3,
+        'delivered' => 5,
         _ => 0,
       };
 
@@ -33,6 +37,7 @@ class OrderStepper extends StatelessWidget {
     final stages = <_Stage>[
       _Stage('Accepted', 'Offer accepted', order.createdAt),
       _Stage('Paid', 'Payment confirmed', order.confirmedAt),
+      _Stage('Bought', 'Traveler bought the item', order.purchasedAt),
       _Stage('In transit', 'On the way to you', order.shippedAt),
       _Stage('Delivered', 'Confirm to release payment', order.deliveredAt),
     ];

@@ -7,9 +7,11 @@ import { generateId } from '@/utils/helpers';
  * row icon; keep them stable.
  */
 export type NotificationType =
+  | 'offer_received'
   | 'offer_accepted'
   | 'payment_claimed'
   | 'payment_confirmed'
+  | 'purchase_proof'
   | 'shipped'
   | 'delivered'
   | 'payout_sent'

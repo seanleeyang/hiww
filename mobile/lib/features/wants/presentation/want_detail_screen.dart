@@ -75,6 +75,10 @@ class WantDetailScreen extends ConsumerWidget {
                         Icons.sell_outlined,
                         'Budget ${want.budgetLabel}',
                       ),
+                      if (want.quantity > 1) ...[
+                        const SizedBox(height: 6),
+                        IconLine(Icons.numbers, 'Quantity ${want.quantity}'),
+                      ],
                       const SizedBox(height: 6),
                       IconLine(
                         Icons.public,

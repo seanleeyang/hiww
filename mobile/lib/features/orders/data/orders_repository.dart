@@ -19,6 +19,8 @@ class OrdersRepository {
   }
 
   Future<void> claimPayment(String id) => _api.post('/api/orders/$id/claim-payment');
+  Future<void> submitPurchaseProof(String id, String imageUrl) =>
+      _api.post('/api/orders/$id/purchase-proof', body: {'image_url': imageUrl});
   Future<void> markShipped(String id) =>
       _api.post('/api/orders/$id/deliver', body: {'note': 'Shipped'});
   Future<void> confirmReceived(String id) =>

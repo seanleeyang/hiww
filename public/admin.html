@@ -209,7 +209,7 @@
   }
 
   function badge(status) {
-    var map = { pending_payment: 'b-amber', confirmed: 'b-blue', in_transit: 'b-purple',
+    var map = { pending_payment: 'b-amber', confirmed: 'b-blue', purchased: 'b-blue', in_transit: 'b-purple',
       delivered: 'b-green', cancelled: 'b-grey', open: 'b-amber', resolved: 'b-green',
       closed: 'b-grey', approved: 'b-green', rejected: 'b-danger', pending: 'b-amber',
       flagged: 'b-danger', restricted: 'b-danger', clear: 'b-grey' };
@@ -311,7 +311,8 @@
         var actions = el('div', { class: 'row-actions' });
         if (o.status === 'pending_payment') actions.appendChild(btn('Confirm payment', 'confirm-payment', { oid: o.id }, 'small'));
         if (personas[o.id]) {
-          if (o.status === 'confirmed') actions.appendChild(btn('Mark shipped', 'test-ship', { oid: o.id }, 'small secondary'));
+          if (o.status === 'confirmed') actions.appendChild(btn('Attach receipt (bought)', 'test-proof', { oid: o.id }, 'small secondary'));
+          if (o.status === 'purchased') actions.appendChild(btn('Mark shipped', 'test-ship', { oid: o.id }, 'small secondary'));
           if (o.status === 'in_transit') actions.appendChild(btn('Confirm receipt', 'test-receive', { oid: o.id }, 'small secondary'));
           if (o.status !== 'cancelled') actions.appendChild(btn('Open dispute', 'test-dispute', { oid: o.id }, 'small ghost'));
         }
@@ -319,6 +320,12 @@
         if (o.payment_claimed_at && o.status === 'pending_payment') {
           statusCell.appendChild(document.createTextNode(' '));
           statusCell.appendChild(el('span', { class: 'badge b-blue', text: 'shopper says paid' }));
+        }
+        if (o.purchase_proof_url) {
+          statusCell.appendChild(document.createTextNode(' '));
+          var rl = el('a', { text: 'receipt', href: o.purchase_proof_url, target: '_blank' });
+          rl.rel = 'noopener';
+          statusCell.appendChild(rl);
         }
         t.appendChild(el('tr', {}, [
           el('td', { class: 'mono', text: shortId(o.id) }),
@@ -531,6 +538,7 @@
       return run(b, api('POST', '/api/payments/confirm', { order_id: oid, payment_id: ref || 'recorded-in-console' }), 'Payment confirmed', renderOrders);
     }
     if (act === 'test-create') return createTestOrder(b);
+    if (act === 'test-proof') return run(b, api('POST', '/api/orders/' + oid + '/purchase-proof', { image_url: 'https://placehold.co/600x800?text=Receipt', note: 'Console test receipt' }, personas[oid] && personas[oid].traveler), 'Receipt attached', refreshAfterTest);
     if (act === 'test-ship') return run(b, api('POST', '/api/orders/' + oid + '/deliver', { note: 'Shipped (console test)' }, personas[oid] && personas[oid].traveler), 'Marked shipped', refreshAfterTest);
     if (act === 'test-receive') return run(b, api('POST', '/api/orders/' + oid + '/release', { note: 'Received (console test)' }, personas[oid] && personas[oid].shopper), 'Receipt confirmed', refreshAfterTest);
     if (act === 'test-dispute') return run(b, api('POST', '/api/disputes', { order_id: oid, reason: 'Console test: one item was missing from the parcel' }, personas[oid] && personas[oid].shopper), 'Dispute opened', refreshAfterTest);

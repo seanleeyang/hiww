@@ -45,7 +45,14 @@ describe('audit log', () => {
 
     const byAction = Object.fromEntries(entries.map((e) => [e.action, e]));
     expect(Object.keys(byAction).sort()).toEqual(
-      ['order.create', 'order.payment_claim', 'order.release', 'order.ship', 'payment.confirm'].sort(),
+      [
+        'order.create',
+        'order.payment_claim',
+        'order.purchase_proof',
+        'order.release',
+        'order.ship',
+        'payment.confirm',
+      ].sort(),
     );
 
     // The shopper accepted the offer…
@@ -53,6 +60,8 @@ describe('audit log', () => {
     // …an admin confirmed the payment…
     expect(byAction['payment.confirm'].actor_role).toBe('admin');
     expect(byAction['payment.confirm'].metadata.total_price).toBeDefined();
+    // …the traveler uploaded a receipt…
+    expect(byAction['order.purchase_proof'].actor_id).toBe(order.traveler.userId);
     // …the traveler shipped…
     expect(byAction['order.ship'].actor_id).toBe(order.traveler.userId);
     // …and the shopper released.
