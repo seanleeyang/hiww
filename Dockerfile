@@ -16,9 +16,12 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
-# Compiled app, plus the source + migrations so the tsx-based migration runner
-# works at boot.
-COPY --from=build /app/dist ./dist
+# The server itself runs via tsx (see "start" in package.json) so that the
+# `@/*` path aliases used throughout src/ resolve at runtime the same way
+# they do in dev and in the migration runner below — a plain compiled
+# `node dist/main.js` can't resolve them (tsc only type-checks path aliases,
+# it doesn't rewrite them into real relative imports). The build stage above
+# still runs `tsc` as a type-check gate; dist/ itself isn't needed here.
 COPY --from=build /app/src ./src
 COPY --from=build /app/public ./public
 COPY --from=build /app/migrations ./migrations
@@ -34,4 +37,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=25s --retries=3 \
 
 # Apply any pending migrations, then start. `db:migrate` is idempotent — it
 # tracks what has run in a `_migrations` table.
-CMD ["sh", "-c", "npm run db:migrate && node dist/main.js"]
+CMD ["sh", "-c", "npm run db:migrate && npm start"]
