@@ -10,6 +10,7 @@ import '../features/chat/presentation/inbox_screen.dart';
 import '../features/chat/presentation/order_chat_screen.dart';
 import '../features/discovery/presentation/browse_screen.dart';
 import '../features/orders/presentation/confirm_review_screen.dart';
+import '../features/orders/presentation/my_orders_screen.dart';
 import '../features/orders/presentation/order_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/splash_screen.dart';
@@ -91,6 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/browse', builder: (_, _) => const BrowseScreen()),
           GoRoute(path: '/my-trips', builder: (_, _) => const MyTripsScreen()),
           GoRoute(path: '/my-wants', builder: (_, _) => const MyWantsScreen()),
+          GoRoute(path: '/my-orders', builder: (_, _) => const MyOrdersScreen()),
           GoRoute(path: '/inbox', builder: (_, _) => const InboxScreen()),
         ],
       ),

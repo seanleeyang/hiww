@@ -12,6 +12,7 @@ enum ShellTab {
   browse('/browse', 'Browse', Icons.travel_explore_outlined, Icons.travel_explore),
   trips('/my-trips', 'My Trips', Icons.flight_outlined, Icons.flight),
   wants('/my-wants', 'My Wants', Icons.favorite_outline, Icons.favorite),
+  orders('/my-orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long),
   inbox('/inbox', 'Inbox', Icons.forum_outlined, Icons.forum);
 
   const ShellTab(this.path, this.label, this.icon, this.activeIcon);

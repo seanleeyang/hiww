@@ -101,6 +101,13 @@ reference mockup:
     tests both missed it). `ApiClient.post/patch` now send `{}` when body-less.
   - 0.4 px dropdown overflow on the Post-want / New-trip country pickers
     (`isExpanded: true`).
+- **D9 (done)** — **Orders tab.** A top-level nav destination (`/my-orders`,
+  visible to every user type) listing every order you're in — as shopper or
+  traveler — with a status pill and a plain-language "what happens next" line
+  written from your side of the deal (`MyOrdersScreen`, `_nextStep`). Active
+  orders sort above finished ones; tapping opens the existing order tracker.
+  Added after pilot walk-through feedback that per-step status was hard to find.
+  48 Flutter tests.
 - **Later** — push notifications, offline cache, i18n. Move uploads to object
   storage (S3/GCS) before production; the local disk store is pilot-only.
 
