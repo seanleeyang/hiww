@@ -46,3 +46,12 @@ services:
         value: mock
       - key: LOG_LEVEL
         value: info
+
+      # AI receipt check. Set the key to switch it on; without a key it silently
+      # falls back to the mock analyzer.
+      - key: AI_RECEIPT_ANALYZER
+        value: claude
+      - key: AI_MODEL
+        value: claude-opus-5
+      - key: ANTHROPIC_API_KEY
+        sync: false

@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { AppError } from '@/utils/helpers';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/admin/reviews', async (request: any, reply: any) => {
@@ -16,6 +17,24 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         .select(['id', 'email', 'full_name', 'kyc_status', 'created_at'])
         .where('kyc_status', 'in', ['pending', 'rejected'])
         .orderBy('created_at', 'desc')
+        .execute();
+
+      // Orders whose receipt the AI check flagged and no operator has cleared yet.
+      const flaggedReceipts = await request.db
+        .selectFrom('orders')
+        .select([
+          'id',
+          'item_description',
+          'total_price',
+          'status',
+          'purchase_proof_url',
+          'receipt_risk',
+          'receipt_analysis',
+          'purchased_at',
+        ])
+        .where('receipt_risk', 'in', ['medium', 'high'])
+        .where('receipt_reviewed_at', 'is', null)
+        .orderBy('purchased_at', 'desc')
         .execute();
 
       const queue = [
@@ -38,6 +57,19 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           full_name: user.full_name,
           created_at: user.created_at,
         })),
+        ...flaggedReceipts.map((order: any) => ({
+          type: 'receipt',
+          id: order.id,
+          order_id: order.id,
+          status: order.status,
+          item_description: order.item_description,
+          total_price: order.total_price,
+          receipt_url: order.purchase_proof_url,
+          risk: order.receipt_risk,
+          flags: order.receipt_analysis?.flags ?? [],
+          summary: order.receipt_analysis?.summary ?? null,
+          created_at: order.purchased_at,
+        })),
       ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       reply.send({
@@ -52,6 +84,35 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       if (error instanceof AppError) throw error;
       throw new AppError('DB_ERROR', 500, 'Failed to load admin review queue');
     }
+  });
+
+  // Operator has looked at a flagged receipt — drop it from the review queue.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post<{ Params: { id: string } }>('/api/admin/orders/:id/clear-receipt-flag', async (request: any, reply: any) => {
+    const order = await request.db
+      .selectFrom('orders')
+      .select(['id', 'receipt_risk'])
+      .where('id', '=', request.params.id)
+      .executeTakeFirst();
+    if (!order) {
+      throw new AppError('NOT_FOUND', 404, 'Order not found');
+    }
+
+    await request.db
+      .updateTable('orders')
+      .set({ receipt_reviewed_at: new Date(), updated_at: new Date() })
+      .where('id', '=', order.id)
+      .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'order.receipt_flag_cleared',
+      targetType: 'order',
+      targetId: order.id,
+      summary: `Operator cleared the receipt flag on order ${order.id}`,
+      metadata: { risk: order.receipt_risk ?? null },
+    });
+
+    reply.send({ success: true, data: { order_id: order.id }, code: 'RECEIPT_FLAG_CLEARED' });
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

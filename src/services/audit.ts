@@ -11,6 +11,8 @@ export type AuditAction =
   | 'order.payment_claim'
   | 'payment.confirm'
   | 'order.purchase_proof'
+  | 'order.receipt_flag'
+  | 'order.receipt_flag_cleared'
   | 'order.ship'
   | 'order.release'
   | 'order.payout'

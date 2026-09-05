@@ -98,4 +98,14 @@ export const config = {
    * set it once there is a stable public hostname behind a proxy.
    */
   publicBaseUrl: (process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, ''),
+  /**
+   * AI receipt check. When the traveller uploads a shop receipt, an analyzer
+   * extracts the merchant/date/total and flags anything suspicious for the
+   * operator. `mock` (default) is a deterministic stand-in used by tests and
+   * local dev; `claude` calls the Anthropic API and needs ANTHROPIC_API_KEY.
+   * It is advisory only — it never blocks the order.
+   */
+  aiReceiptAnalyzer: process.env.AI_RECEIPT_ANALYZER || 'mock',
+  aiModel: process.env.AI_MODEL || 'claude-opus-5',
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
 };

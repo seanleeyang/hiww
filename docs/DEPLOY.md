@@ -118,3 +118,5 @@ Migrations are forward-only; a rollback that needs a schema change is a manual j
 | `PILOT_PAYMENT_INSTRUCTIONS` | you | shown on the pay screen |
 | `MONEY_RATE_LIMIT_MAX` / `UPLOAD_RATE_LIMIT_MAX` | defaults | 30 / 20 per minute per IP |
 | `PAYMENT_PROVIDER` / `IDENTITY_PROVIDER` | blueprint | `mock` until a real vendor is wired |
+| `AI_RECEIPT_ANALYZER` / `AI_MODEL` | blueprint | `claude` / `claude-opus-5` — the AI receipt check |
+| `ANTHROPIC_API_KEY` | you | from console.anthropic.com; without it the receipt check falls back to the mock |

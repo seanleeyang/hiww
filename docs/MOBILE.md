@@ -136,9 +136,21 @@ reference mockup:
   - **Completed = all green.** Once `delivered`, every stepper dot (incl.
     "Delivered") renders as a done tick, not the orange current-step dot.
   Backend 22 suites / 78 tests; Flutter ~53 tests.
+- **D12 (done)** — **AI receipt check** (backend). When the traveller uploads a
+  shop receipt, `src/services/ai/` runs it through Claude (Opus 5) — extracts
+  merchant/date/currency/total and flags anything suspicious (edited image, total
+  off the order, date before the order, wrong items, unreadable). `migration 014`
+  adds `orders.receipt_analysis` / `receipt_risk` / `receipt_reviewed_at`.
+  Advisory only — it never blocks the order. `medium`/`high` lands in the
+  operator review queue (`/api/admin/reviews` type `receipt`) with an audit
+  entry; `POST /api/admin/orders/:id/clear-receipt-flag` dismisses it. The risk
+  assessment is operator-only (participants still see the photo). `mock` analyzer
+  (URL-keyed) is the default for tests + local; prod sets `AI_RECEIPT_ANALYZER=claude`
+  + `ANTHROPIC_API_KEY`. Backend 23 suites / 82 tests.
 - **Later** — push notifications (APNs/FCM transport for the above), offline
   cache, i18n. Move uploads to object storage (S3/GCS) before production; the
-  local disk store is pilot-only.
+  local disk store is pilot-only. More AI: dispute triage (draft resolutions),
+  KYC doc pre-check, item normalization for price recommendations.
 
 ## Before a production release
 

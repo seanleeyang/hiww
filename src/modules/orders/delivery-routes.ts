@@ -2,9 +2,11 @@ import { FastifyInstance } from 'fastify';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
+import { config } from '@/config/env';
 import { purchaseProofSchema } from '@/types/schemas';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
+import { runReceiptCheck } from '@/services/receipt-check';
 
 const noteSchema = z.object({
   note: z.string().min(1).optional(),
@@ -85,6 +87,17 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         body: `The traveler bought "${order.item_description}" and attached the shop receipt. They'll ship it once they're back.`,
         orderId: order.id,
       });
+
+      // AI receipt check. With the mock analyzer (tests, local) it's instant and
+      // deterministic, so await it. With a real model it takes a few seconds —
+      // don't make the traveller's request wait; it runs in the background and
+      // the operator picks up any flag from the review queue.
+      const check = runReceiptCheck(request.db, { ...order, purchase_proof_url: parsed.data.image_url });
+      if (config.aiReceiptAnalyzer === 'claude') {
+        void check.catch(() => undefined);
+      } else {
+        await check;
+      }
 
       reply.send({
         success: true,

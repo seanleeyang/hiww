@@ -150,6 +150,8 @@ Marketplace flows supported:
 - `src/modules/messages/routes.ts` — order-scoped chat + inbox
 - `src/utils/user-summary.ts` — public profile/reputation slice shared by the above
 - `src/services/providers/` — abstraction layer for payment and identity providers
+- `src/services/ai/` — AI receipt check (Claude vision); mock + Claude implementations behind one interface
+- `src/services/notify.ts` — in-app notification feed writer (`recordNotification`)
 - `migrations/` — database schema history (007–009 add profiles, reviews, messages)
 - `tests/integration/` — backend integration tests
 - `mobile/` — Flutter app (iOS/Android/web); see `docs/MOBILE.md`

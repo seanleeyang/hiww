@@ -97,6 +97,11 @@ export interface OrdersTable {
   /** Traveler's shop-receipt photo + when they marked the item bought (migration 013). */
   purchase_proof_url?: string | null;
   purchased_at?: Date | null;
+  /** AI receipt check output (migration 014); see `src/services/ai/`. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  receipt_analysis?: Record<string, any> | null;
+  receipt_risk?: 'low' | 'medium' | 'high' | null;
+  receipt_reviewed_at?: Date | null;
   shipped_at?: Date | null;
   delivered_at?: Date | null;
   created_at: Date;

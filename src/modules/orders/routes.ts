@@ -4,6 +4,14 @@ import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification } from '@/services/notify';
 
+/** Drop the operator-only AI receipt fields before returning an order to a participant. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function stripReceiptCheck(order: any): any {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { receipt_analysis, receipt_risk, receipt_reviewed_at, ...rest } = order;
+  return rest;
+}
+
 /**
  * Orders are created by accepting an offer (see offers/routes.ts). This module
  * only reads orders and records the shopper's "I've paid" signal. Reads are
@@ -28,12 +36,15 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         );
       }
 
-      const items = await base
+      const rows = await base
         .selectAll()
         .orderBy('created_at', 'desc')
         .limit(limit)
         .offset(offset)
         .execute();
+
+      // The AI receipt assessment is operator-only (the photo stays visible).
+      const items = isAdmin ? rows : rows.map(stripReceiptCheck);
 
       reply.send({
         success: true,
@@ -91,10 +102,15 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
             .executeTakeFirst()
         : undefined;
 
+      // The AI receipt check is an operator tool — participants see the receipt
+      // photo itself but not the risk assessment.
+      const isAdmin = request.userRole === 'admin';
+      const orderView = isAdmin ? order : stripReceiptCheck(order);
+
       reply.send({
         success: true,
         data: {
-          ...order,
+          ...orderView,
           counterparty: counterparty ? toUserSummary(counterparty) : null,
           request_image_url: sourceRequest?.image_url ?? null,
           request_category: sourceRequest?.category ?? null,
