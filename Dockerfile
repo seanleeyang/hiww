@@ -29,6 +29,13 @@ COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/reset-db.ts ./reset-db.ts
 COPY --from=build /app/tsconfig.json ./tsconfig.json
 
+# uploads/ is created at boot (registerUploadRoutes) and must be writable by
+# the unprivileged `node` user this container drops to below; everything
+# COPYed above is owned by root, so without this the mkdir fails EACCES.
+# NB Render's free-tier disk is ephemeral — this dir (and anything in it)
+# does not survive a redeploy; see docs/DEPLOY.md for the object-storage TODO.
+RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
+
 USER node
 EXPOSE 3000
 
