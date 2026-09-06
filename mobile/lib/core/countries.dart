@@ -26,10 +26,9 @@ String countryName(String code) {
 }
 
 /// A likely-default city shown when a traveler leaves the city field blank —
-/// skipped for countries too large to have one obvious hub (US, CN, AU), and
-/// for JP, since the bundled Japan photo isn't a Tokyo landmark and this
-/// label must not claim more specificity than the photo backs up.
+/// skipped for countries too large to have one obvious hub (US, CN, AU).
 const _defaultCities = <String, String>{
+  'JP': 'Tokyo',
   'KR': 'Seoul',
   'TH': 'Bangkok',
   'SG': 'Singapore',

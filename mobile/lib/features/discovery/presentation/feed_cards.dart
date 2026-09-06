@@ -37,7 +37,7 @@ class TripFeedCard extends StatelessWidget {
             children: [
               HeroImage(
                 url: trip.coverImageUrl,
-                fallbackAsset: stockForCountry(trip.arrivalCountry),
+                fallbackAsset: stockForTrip(city: trip.arrivalCity, countryCode: trip.arrivalCountry),
                 height: 150,
                 borderRadius: 20,
                 heroTag: 'trip-${trip.id}',
