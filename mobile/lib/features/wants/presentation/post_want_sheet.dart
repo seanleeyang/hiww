@@ -54,7 +54,8 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
   @override
   void initState() {
     super.initState();
-    _country = widget.sourceCountry ?? 'JP';
+    final source = widget.sourceCountry;
+    _country = (source != null && isLiveCountry(source)) ? source : 'JP';
     _city.text = widget.sourceCity ?? '';
   }
 
@@ -213,7 +214,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Buy in'),
                     items: [
-                      for (final c in kCountries)
+                      for (final c in kLiveCountries)
                         DropdownMenuItem(value: c.code, child: Text(c.name)),
                     ],
                     onChanged: (v) => setState(() => _country = v ?? 'JP'),

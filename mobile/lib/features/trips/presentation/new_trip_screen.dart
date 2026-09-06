@@ -197,7 +197,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
             isExpanded: true,
             decoration: InputDecoration(labelText: label),
             items: [
-              for (final c in kCountries)
+              for (final c in kLiveCountries)
                 DropdownMenuItem(value: c.code, child: Text(c.name)),
             ],
             onChanged: (v) => onCountry(v ?? code),
