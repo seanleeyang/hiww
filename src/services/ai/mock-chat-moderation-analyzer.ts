@@ -6,7 +6,8 @@ import type {
 
 /**
  * Deterministic stand-in for the real model. The risk it returns is driven by
- * the message body so tests and the operator console can exercise both paths:
+ * the message body and image URL so tests and the operator console can
+ * exercise both paths:
  *
  *   …contains "suspicious"…  → high
  *   …contains "flagme"…      → medium
@@ -14,8 +15,12 @@ import type {
  */
 export class MockChatModerationAnalyzer implements ChatModerationAnalyzer {
   async analyze(input: ChatModerationInput): Promise<ChatModerationResult> {
-    const body = input.body.toLowerCase();
-    const risk = body.includes('suspicious') ? 'high' : body.includes('flagme') ? 'medium' : 'low';
+    const haystack = `${input.body} ${input.imageUrl ?? ''}`.toLowerCase();
+    const risk = haystack.includes('suspicious')
+      ? 'high'
+      : haystack.includes('flagme')
+        ? 'medium'
+        : 'low';
 
     const reasons =
       risk === 'high'

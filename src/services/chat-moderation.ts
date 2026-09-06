@@ -114,6 +114,8 @@ interface MessageForCheck {
   id: string;
   order_id: string;
   body: string;
+  /** Already past the QR check — never a photo that was rejected outright. */
+  image_url?: string | null;
 }
 
 /**
@@ -134,7 +136,10 @@ export async function runChatModerationCheck(
   if (existingRisk === 'high') return; // already at the top; nothing to escalate
 
   try {
-    const result = await getChatModerationAnalyzer().analyze({ body: message.body });
+    const result = await getChatModerationAnalyzer().analyze({
+      body: message.body,
+      imageUrl: message.image_url,
+    });
     if (result.risk === 'low') return;
     if (existingRisk === 'medium' && result.risk === 'medium') return; // no change
 

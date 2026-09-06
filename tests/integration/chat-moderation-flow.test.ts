@@ -281,4 +281,30 @@ describe('AI chat moderation', () => {
     const queue = await reviewQueue(admin);
     expect(queue.some((q) => q.type === 'message' && q.order_id === order.orderId)).toBe(false);
   });
+
+  it('a non-QR photo the AI vision check calls high-risk is hidden, same as flagged text', async () => {
+    // e.g. a phone number written on paper and photographed — not a QR code,
+    // so the deterministic decoder can't catch it; only the vision pass can.
+    __setQrDetector(async () => ({ found: false }));
+
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, undefined, 'https://example.com/uploads/suspicious-note.jpg');
+    expect(res.statusCode).toBe(201);
+
+    const asSender = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(asSender.json().data.items[0].body).toMatch(/your message was removed/i);
+    expect(asSender.json().data.items[0].image_url).toBeNull();
+
+    const asCounterparty = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+    });
+    expect(asCounterparty.json().data.items[0].image_url).toBeNull();
+  });
 });

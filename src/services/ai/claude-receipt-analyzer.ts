@@ -5,6 +5,7 @@ import type {
   ReceiptAnalysis,
   ReceiptRisk,
 } from './types';
+import { fetchImage } from './fetch-image';
 
 const SYSTEM = `You review photos of shop receipts for a cross-border shopping marketplace.
 A traveller has bought an item for a shopper and uploaded the receipt as proof of purchase.
@@ -82,23 +83,6 @@ export class ClaudeReceiptAnalyzer implements ReceiptAnalyzer {
 
     return parseAnalysis(text, this.model);
   }
-}
-
-// Image media types Claude accepts.
-type ImageMedia = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif';
-
-async function fetchImage(url: string): Promise<{ data: string; mediaType: ImageMedia }> {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Could not fetch receipt image (${res.status})`);
-  }
-  const header = (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
-  const mediaType: ImageMedia =
-    header === 'image/png' || header === 'image/webp' || header === 'image/gif'
-      ? header
-      : 'image/jpeg';
-  const buf = Buffer.from(await res.arrayBuffer());
-  return { data: buf.toString('base64'), mediaType };
 }
 
 function parseAnalysis(text: string, model: string): ReceiptAnalysis {

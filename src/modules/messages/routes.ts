@@ -136,12 +136,13 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       }
 
       // Runs after the response so it never slows down sending. Checks the
-      // already-redacted text — never sends raw contact info to the model.
-      // The mock analyzer is instant and deterministic, so tests await it
-      // directly; the real model takes a moment and runs in the background.
+      // already-redacted text and, if present, the photo (never a QR photo —
+      // those never make it past the check above). The mock analyzer is
+      // instant and deterministic, so tests await it directly; the real
+      // model takes a moment and runs in the background.
       const moderation = runChatModerationCheck(
         request.db,
-        { id, order_id: request.params.id, body: leak.body },
+        { id, order_id: request.params.id, body: leak.body, image_url: imageUrl },
         flagged ? 'medium' : null
       );
       if (config.aiChatModeration === 'claude') {
