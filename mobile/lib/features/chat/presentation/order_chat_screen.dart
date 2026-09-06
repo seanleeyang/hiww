@@ -324,47 +324,68 @@ class _Composer extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (pendingImageBytes != null) ...[
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.memory(
-                      pendingImageBytes!,
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  if (attaching)
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: ColoredBox(
-                          color: Colors.black.withValues(alpha: 0.35),
-                          child: const Center(
-                            child: SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
+              // A clearly-labelled staging banner, not a floating thumbnail —
+              // easy to mistake the bare thumbnail for an already-sent
+              // message otherwise.
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            pendingImageBytes!,
+                            width: 44,
+                            height: 44,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        if (attaching)
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: ColoredBox(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                child: const Center(
+                                  child: SizedBox(
+                                    height: 14,
+                                    width: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
+                      ],
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        attaching ? 'Uploading photo…' : 'Photo attached — not sent yet. Tap send to share it.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer,
                         ),
                       ),
                     ),
-                  Positioned(
-                    top: -8,
-                    right: -8,
-                    child: IconButton(
+                    IconButton(
                       onPressed: onRemoveAttachment,
-                      icon: const Icon(Icons.cancel, size: 20),
-                      color: Theme.of(context).colorScheme.error,
+                      icon: const Icon(Icons.close, size: 18),
+                      tooltip: 'Remove photo',
                       visualDensity: VisualDensity.compact,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
             ],
