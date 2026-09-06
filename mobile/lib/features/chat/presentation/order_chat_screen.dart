@@ -370,7 +370,9 @@ class _Composer extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        attaching ? 'Uploading photo…' : 'Photo attached — not sent yet. Tap send to share it.',
+                        attaching
+                            ? 'Uploading photo…'
+                            : 'Photo attached. Tap send to share it.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
