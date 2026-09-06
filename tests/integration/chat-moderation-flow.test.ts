@@ -72,6 +72,31 @@ describe('AI chat moderation', () => {
     expect(bodies[1]).toContain('[hidden]');
   });
 
+  it('Thai-script leakage attempts are redacted too, embedded in running text with no spaces', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    // "add me on Line, easier" — no spaces around the keyword, the normal
+    // way Thai is actually typed. \b-based patterns would miss this.
+    const lineRes = await send(order, 'แอดไลน์หน่อยครับสะดวกกว่า');
+    expect(lineRes.json().data.warning).toBeTruthy();
+
+    // "my promptpay is 98268203" in Thai — keyword + a number under the
+    // general 9-digit threshold, same contextual-sweep behaviour as English.
+    const payRes = await send(order, 'พร้อมเพย์ของฉันคือ98268203');
+    expect(payRes.json().data.warning).toBeTruthy();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const bodies = list.json().data.items.map((m: { body: string }) => m.body);
+    expect(bodies[0]).not.toContain('ไลน์');
+    expect(bodies[0]).toContain('[hidden]');
+    expect(bodies[1]).not.toContain('98268203');
+    expect(bodies[1]).toContain('[hidden]');
+  });
+
   it('a phone number is redacted in place, not stripped from the whole message', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);

@@ -42,6 +42,25 @@ const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> 
     reason: 'suggests paying outside the app',
     placeholder: '[hidden]',
   },
+  // Thai-script equivalents. No `\b` on any of these — Thai text has no
+  // spaces between words, and `\b`/`\w` in JS regex only recognise ASCII
+  // characters, so a boundary assertion would fail to match a Thai keyword
+  // embedded naturally in a longer sentence with no surrounding whitespace.
+  {
+    re: /ไลน์ไอดี|แอดไลน์|ไลน์|เทเลแกรม|วอทส์?แอพ|วีแชท|ไอจี|อินสตาแกรม/g,
+    reason: 'mentions an outside messaging app (Thai)',
+    placeholder: '[hidden]',
+  },
+  {
+    re: /พร้อมเพย์|บัญชีธนาคาร|เลขบัญชี|เบอร์โทรศัพท์|เบอร์ติดต่อ|เบอร์โทร/g,
+    reason: 'mentions bank/PromptPay/contact number details (Thai)',
+    placeholder: '[hidden]',
+  },
+  {
+    re: /จ่ายตรง|โอนเงินให้|โอนตรง|นอกแอพ/g,
+    reason: 'suggests paying outside the app (Thai)',
+    placeholder: '[hidden]',
+  },
 ];
 
 export interface MessageRedaction {
@@ -66,6 +85,9 @@ const CONTEXTUAL_TRIGGER_REASONS = new Set([
   'mentions bank/PromptPay payment details',
   'mentions an outside messaging app',
   'suggests paying outside the app',
+  'mentions an outside messaging app (Thai)',
+  'mentions bank/PromptPay/contact number details (Thai)',
+  'suggests paying outside the app (Thai)',
 ]);
 
 /** 4+ digits, not 9+ — only ever applied after a payment/app keyword already fired. */
