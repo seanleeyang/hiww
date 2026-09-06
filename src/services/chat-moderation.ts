@@ -8,8 +8,19 @@ const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> 
   { re: /\b\d{9,}\b/g, reason: 'possible phone number', placeholder: '[phone number hidden]' },
   { re: /[\w.+-]+@[\w-]+\.[a-z]{2,}/gi, reason: 'email address', placeholder: '[email hidden]' },
   {
-    re: /\b(whatsapp|line id|telegram|wechat|signal app|@[a-z0-9_]{3,})\b/gi,
+    // Named apps as standalone words — "line" alone is ambiguous English, but
+    // catching it is worth the occasional false positive (a redaction is
+    // cheap; a missed leakage attempt isn't).
+    re: /\b(whatsapp|line|telegram|wechat|kakao(?:talk)?|viber|signal(?:\s*app)?|messenger|discord|snapchat|instagram)\b/gi,
     reason: 'mentions an outside messaging app',
+    placeholder: '[hidden]',
+  },
+  {
+    // `@handle` mentions. No leading `\b` — it can't match right before `@`
+    // when preceded by whitespace (both sides are non-word characters, so
+    // there's no word/non-word transition for `\b` to anchor on).
+    re: /@[\w.]{2,}/g,
+    reason: 'mentions a social/messaging handle',
     placeholder: '[hidden]',
   },
   {

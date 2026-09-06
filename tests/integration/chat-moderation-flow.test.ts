@@ -45,6 +45,27 @@ describe('AI chat moderation', () => {
     expect(queue.some((q) => q.type === 'message')).toBe(false);
   });
 
+  it('a LINE mention and an @handle are both redacted', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const lineRes = await send(order, "add me on Line, it's faster");
+    expect(lineRes.json().data.warning).toBeTruthy();
+
+    const igRes = await send(order, 'find me @john.doe123 on instagram');
+    expect(igRes.json().data.warning).toBeTruthy();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const bodies = list.json().data.items.map((m: { body: string }) => m.body);
+    expect(bodies[0]).not.toMatch(/line/i);
+    expect(bodies[0]).toContain('[hidden]');
+    expect(bodies[1]).not.toContain('@john.doe123');
+    expect(bodies[1]).toContain('[hidden]');
+  });
+
   it('a phone number is redacted in place, not stripped from the whole message', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);
