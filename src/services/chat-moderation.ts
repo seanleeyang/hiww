@@ -4,8 +4,21 @@ import { getChatModerationAnalyzer } from '@/services/ai';
 import { recordAudit } from '@/services/audit';
 
 const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> = [
-  { re: /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, reason: 'possible phone number', placeholder: '[phone number hidden]' },
-  { re: /\b\d{9,}\b/g, reason: 'possible phone number', placeholder: '[phone number hidden]' },
+  {
+    // A run of 9+ digits with any single-character separators (dash, dot,
+    // space) interspersed anywhere — covers phone numbers, PromptPay numbers
+    // (which are just a Thai phone number), and bank account numbers in
+    // whatever grouping someone types them in (e.g. "123-4-56789-0"), not
+    // just the 3-3-4 phone shape.
+    re: /\b\d(?:[-.\s]?\d){8,}\b/g,
+    reason: 'possible phone/account number',
+    placeholder: '[number hidden]',
+  },
+  {
+    re: /\b(prompt\s*pay|promptpay|bank\s*(?:account|transfer|details)|account\s*number|acc(?:ount)?\.?\s*no\.?|swift\s*code|iban)\b/gi,
+    reason: 'mentions bank/PromptPay payment details',
+    placeholder: '[hidden]',
+  },
   { re: /[\w.+-]+@[\w-]+\.[a-z]{2,}/gi, reason: 'email address', placeholder: '[email hidden]' },
   {
     // Named apps as standalone words — "line" alone is ambiguous English, but

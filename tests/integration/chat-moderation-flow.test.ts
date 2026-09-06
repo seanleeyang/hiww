@@ -84,7 +84,7 @@ describe('AI chat moderation', () => {
     expect(list.json().data.items).toHaveLength(1);
     const body = list.json().data.items[0].body as string;
     expect(body).not.toContain('081-234-5678');
-    expect(body).toContain('[phone number hidden]');
+    expect(body).toContain('[number hidden]');
     expect(body).toContain("Call me at");
     expect(body).toContain("it's easier");
 
@@ -94,6 +94,28 @@ describe('AI chat moderation', () => {
     expect(entry.risk).toBe('medium');
     expect(entry.flags.length).toBeGreaterThan(0);
     expect(entry.hidden).toBe(false); // redaction, not hiding — medium stays visible
+  });
+
+  it('bank account numbers and PromptPay mentions are redacted too', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    // An unevenly-grouped bank account number (not the 3-3-4 phone shape).
+    const bankRes = await send(order, 'transfer to my bank account 123-4-56789-0 instead');
+    expect(bankRes.json().data.warning).toBeTruthy();
+
+    // PromptPay mentioned by name, with no digits in the same message.
+    const promptPayRes = await send(order, "I'll send you my PromptPay details separately");
+    expect(promptPayRes.json().data.warning).toBeTruthy();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const bodies = list.json().data.items.map((m: { body: string }) => m.body);
+    expect(bodies[0]).not.toContain('123-4-56789-0');
+    expect(bodies[0]).toContain('[number hidden]');
+    expect(bodies[1]).toContain('[hidden]');
   });
 
   it('a message the AI check calls high-risk is hidden from both participants', async () => {
