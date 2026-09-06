@@ -233,6 +233,20 @@ class _Bubble extends StatelessWidget {
                     width: 180,
                     height: 180,
                     fit: BoxFit.cover,
+                    placeholder: (_, _) => Container(
+                      width: 180,
+                      height: 180,
+                      color: scheme.surfaceContainerHighest,
+                    ),
+                    errorWidget: (_, _, _) => Container(
+                      width: 180,
+                      height: 180,
+                      color: scheme.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -302,6 +316,31 @@ class _Composer extends StatelessWidget {
                       width: 64,
                       height: 64,
                       fit: BoxFit.cover,
+                      placeholder: (context, _) => Container(
+                        width: 64,
+                        height: 64,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        child: const Center(
+                          child: SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, _, _) => Container(
+                        width: 64,
+                        height: 64,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ),
                   Positioned(
