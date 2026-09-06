@@ -47,6 +47,7 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
         .selectFrom('trips')
         .select(['id', 'traveler_id', 'departure_country', 'arrival_country'])
         .where('status', '=', 'published')
+        .where('return_date', '>=', new Date())
         .execute();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,7 +58,8 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
           .selectFrom('trips')
           .selectAll()
           .where('status', '=', 'published')
-          .where('traveler_id', '!=', request.userId);
+          .where('traveler_id', '!=', request.userId)
+          .where('return_date', '>=', new Date());
         if (country) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           tripsQuery = tripsQuery.where((eb: any) =>
@@ -72,12 +74,15 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (r: any) => r.shopper_id !== trip.traveler_id && routeMatches(r.source_country, trip)
           );
-          const earn = matched.reduce(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (acc: Decimal, r: any) => acc.add(new Decimal(r.budget).mul(PLATFORM_FEE_RATE)),
-            new Decimal(0)
+          // Per-item commission range (what carrying any one matched want
+          // would pay), not a sum — a trip can't fulfil every match at once,
+          // so a total overstates what's actually achievable.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const commissions = matched.map((r: any) =>
+            Decimal.min(new Decimal(r.budget).mul(PLATFORM_FEE_RATE), new Decimal(EARN_ESTIMATE_CAP)).toDecimalPlaces(2)
           );
-          const capped = Decimal.min(earn, new Decimal(EARN_ESTIMATE_CAP)).toDecimalPlaces(2);
+          const earnMin = commissions.length ? commissions.reduce((a: Decimal, b: Decimal) => (b.lt(a) ? b : a)) : null;
+          const earnMax = commissions.length ? commissions.reduce((a: Decimal, b: Decimal) => (b.gt(a) ? b : a)) : null;
           items.push({
             kind: 'trip',
             id: trip.id,
@@ -85,7 +90,8 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
             trip,
             traveler: summaries.get(trip.traveler_id) ?? null,
             match_count: matched.length,
-            earn_estimate: capped.gt(0) ? capped.toString() : null,
+            earn_min: earnMin && earnMin.gt(0) ? earnMin.toString() : null,
+            earn_max: earnMax && earnMax.gt(0) ? earnMax.toString() : null,
           });
         }
       }
@@ -153,6 +159,7 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
         ])
         .where('trips.status', '=', 'published')
         .where('trips.traveler_id', '!=', request.userId)
+        .where('trips.return_date', '>=', new Date())
         .where((eb: any) =>
           eb.or([
             eb('trips.arrival_country', '=', country),

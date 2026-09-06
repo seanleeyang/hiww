@@ -23,16 +23,18 @@ void main() {
       },
       'traveler': {'id': 'u1', 'full_name': 'Nuch S', 'rating_avg': 4.9, 'delivered_count': 147},
       'match_count': 3,
-      'earn_estimate': '1200',
+      'earn_min': '520',
+      'earn_max': '1200',
     });
 
     expect(item.isTrip, true);
     expect(item.trip!.toLabel, 'Tokyo');
-    expect(item.trip!.route, 'TH → Tokyo');
+    expect(item.trip!.route, 'Bangkok to Tokyo');
     expect(item.owner!.fullName, 'Nuch S');
     expect(item.owner!.deliveredCount, 147);
     expect(item.matchCount, 3);
-    expect(item.earnEstimate, '1200');
+    expect(item.earnMin, '520');
+    expect(item.earnMax, '1200');
   });
 
   test('FeedItem parses a want card', () {

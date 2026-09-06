@@ -23,6 +23,17 @@ String money(Object? amount) {
   return '฿${f.format(value)}';
 }
 
+/// `Earn ฿80–1,200` (per-item commission range) / `Earn ฿520` when every
+/// matched want pays the same. Never a sum — a trip can't fulfil every
+/// matched want at once, so a total would overstate what's achievable.
+String earnRangeLabel(Object? min, Object? max) {
+  final lo = money(min);
+  final hi = money(max);
+  if (lo == hi) return 'Earn $lo';
+  final hiBare = hi.startsWith('฿') ? hi.substring(1) : hi;
+  return 'Earn $lo–$hiBare';
+}
+
 /// `12 Nov 2026 to 19 Nov 2026` / single date `12 Nov 2026`.
 String dateRange(DateTime? start, DateTime? end) {
   if (start == null && end == null) return '';

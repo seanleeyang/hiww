@@ -9,10 +9,89 @@ import '../../../ui/empty_state.dart';
 import '../../../ui/skeleton.dart';
 import '../../wants/presentation/post_want_sheet.dart';
 import '../data/discovery_repository.dart';
+import '../domain/feed_item.dart';
 import 'feed_cards.dart';
 
 final browseCategoryProvider = StateProvider<String?>((_) => null);
 final browseCountryProvider = StateProvider<String?>((_) => null);
+
+enum TripSort { newest, departingSoon }
+
+enum WantSort { newest, neededSoon }
+
+const _tripSortLabels = {
+  TripSort.newest: 'Newest posted',
+  TripSort.departingSoon: 'Departing soonest',
+};
+
+const _wantSortLabels = {
+  WantSort.newest: 'Newest posted',
+  WantSort.neededSoon: 'Needed soonest',
+};
+
+final tripSortProvider = StateProvider<TripSort>((_) => TripSort.newest);
+final wantSortProvider = StateProvider<WantSort>((_) => WantSort.newest);
+
+List<FeedItem> _sortedTrips(List<FeedItem> items, TripSort sort) {
+  if (sort == TripSort.newest) return items;
+  final sorted = [...items];
+  sorted.sort((a, b) {
+    final ad = a.trip?.departureDate;
+    final bd = b.trip?.departureDate;
+    if (ad == null && bd == null) return 0;
+    if (ad == null) return 1;
+    if (bd == null) return -1;
+    return ad.compareTo(bd);
+  });
+  return sorted;
+}
+
+List<FeedItem> _sortedWants(List<FeedItem> items, WantSort sort) {
+  if (sort == WantSort.newest) return items;
+  final sorted = [...items];
+  sorted.sort((a, b) {
+    final an = a.want?.needBy;
+    final bn = b.want?.needBy;
+    if (an == null && bn == null) return 0;
+    if (an == null) return 1;
+    if (bn == null) return -1;
+    return an.compareTo(bn);
+  });
+  return sorted;
+}
+
+class _SortButton<T> extends StatelessWidget {
+  const _SortButton({required this.value, required this.labels, required this.onChanged});
+  final T value;
+  final Map<T, String> labels;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<T>(
+      initialValue: value,
+      onSelected: onChanged,
+      tooltip: 'Sort',
+      icon: const Icon(Icons.sort),
+      itemBuilder: (context) => [
+        for (final entry in labels.entries)
+          PopupMenuItem(
+            value: entry.key,
+            child: Row(
+              children: [
+                if (entry.key == value)
+                  const Icon(Icons.check, size: 18)
+                else
+                  const SizedBox(width: 18),
+                const SizedBox(width: 8),
+                Text(entry.value),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 /// Trips and wants used to share one combined feed filtered by product
 /// category — but a trip has no category, only a route, so every trip
@@ -86,19 +165,32 @@ class _TripsBrowseTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final country = ref.watch(browseCountryProvider);
+    final sort = ref.watch(tripSortProvider);
     final query = (type: 'trips', category: null, country: country);
     final feed = ref.watch(feedProvider(query));
 
     return Column(
       children: [
         const SizedBox(height: 8),
-        SizedBox(
-          height: 44,
-          child: CountryChips(
-            selected: country,
-            onSelected: (c) =>
-                ref.read(browseCountryProvider.notifier).state = c,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: CountryChips(
+                  selected: country,
+                  onSelected: (c) =>
+                      ref.read(browseCountryProvider.notifier).state = c,
+                ),
+              ),
+            ),
+            _SortButton<TripSort>(
+              value: sort,
+              labels: _tripSortLabels,
+              onChanged: (v) => ref.read(tripSortProvider.notifier).state = v,
+            ),
+            const SizedBox(width: 8),
+          ],
         ),
         const SizedBox(height: 4),
         Expanded(
@@ -108,7 +200,8 @@ class _TripsBrowseTab extends ConsumerWidget {
               value: feed,
               onRetry: () => ref.invalidate(feedProvider(query)),
               loading: (_) => const FeedSkeleton(),
-              data: (items) {
+              data: (rawItems) {
+                final items = _sortedTrips(rawItems, sort);
                 if (items.isEmpty) {
                   return ListView(
                     children: const [
@@ -133,7 +226,8 @@ class _TripsBrowseTab extends ConsumerWidget {
                     return TripFeedCard(
                       trip: item.trip!,
                       traveler: item.owner,
-                      earnEstimate: item.earnEstimate,
+                      earnMin: item.earnMin,
+                      earnMax: item.earnMax,
                       matchCount: item.matchCount,
                       onTap: () => context.push('/trips/${item.trip!.id}'),
                     );
@@ -154,19 +248,32 @@ class _WantsBrowseTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final category = ref.watch(browseCategoryProvider);
+    final sort = ref.watch(wantSortProvider);
     final query = (type: 'wants', category: category, country: null);
     final feed = ref.watch(feedProvider(query));
 
     return Column(
       children: [
         const SizedBox(height: 8),
-        SizedBox(
-          height: 44,
-          child: CategoryChips(
-            selected: category,
-            onSelected: (c) =>
-                ref.read(browseCategoryProvider.notifier).state = c,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: CategoryChips(
+                  selected: category,
+                  onSelected: (c) =>
+                      ref.read(browseCategoryProvider.notifier).state = c,
+                ),
+              ),
+            ),
+            _SortButton<WantSort>(
+              value: sort,
+              labels: _wantSortLabels,
+              onChanged: (v) => ref.read(wantSortProvider.notifier).state = v,
+            ),
+            const SizedBox(width: 8),
+          ],
         ),
         const SizedBox(height: 4),
         Expanded(
@@ -176,7 +283,8 @@ class _WantsBrowseTab extends ConsumerWidget {
               value: feed,
               onRetry: () => ref.invalidate(feedProvider(query)),
               loading: (_) => const FeedSkeleton(),
-              data: (items) {
+              data: (rawItems) {
+                final items = _sortedWants(rawItems, sort);
                 if (items.isEmpty) {
                   return ListView(
                     children: const [

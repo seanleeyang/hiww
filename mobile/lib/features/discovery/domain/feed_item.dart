@@ -11,7 +11,8 @@ class FeedItem {
     this.want,
     this.owner,
     this.matchCount = 0,
-    this.earnEstimate,
+    this.earnMin,
+    this.earnMax,
   });
 
   final String kind; // 'trip' | 'want'
@@ -20,7 +21,12 @@ class FeedItem {
   final Want? want;
   final UserSummary? owner;
   final int matchCount;
-  final String? earnEstimate;
+
+  /// Per-item commission range across this trip's currently matched wants —
+  /// what carrying any one of them would pay, not a sum (a trip can't
+  /// fulfil every match at once, so a total would overstate the upside).
+  final String? earnMin;
+  final String? earnMax;
 
   bool get isTrip => kind == 'trip';
 
@@ -37,9 +43,13 @@ class FeedItem {
           : null,
       owner: UserSummary.fromJson(j['traveler'] ?? j['shopper']),
       matchCount: (j['match_count'] as num?)?.toInt() ?? 0,
-      earnEstimate: (j['earn_estimate'] as String?)?.trim().isEmpty ?? true
-          ? null
-          : j['earn_estimate'] as String,
+      earnMin: _nonEmpty(j['earn_min']),
+      earnMax: _nonEmpty(j['earn_max']),
     );
   }
+}
+
+String? _nonEmpty(Object? v) {
+  final s = (v as String?)?.trim();
+  return (s == null || s.isEmpty) ? null : s;
 }

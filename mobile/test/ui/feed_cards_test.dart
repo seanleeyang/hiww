@@ -25,13 +25,14 @@ void main() {
         maxWeightKg: 8,
       ),
       traveler: const UserSummary(id: 'u1', fullName: 'Nuch S', ratingAvg: 4.9, deliveredCount: 147),
-      earnEstimate: '1200',
+      earnMin: '1200',
+      earnMax: '1200',
       matchCount: 2,
     )));
 
     expect(find.text('Nuch S'), findsOneWidget);
-    expect(find.textContaining('TH → Tokyo'), findsOneWidget);
-    expect(find.text('Earn up to ฿1,200'), findsOneWidget);
+    expect(find.textContaining('Bangkok to Tokyo'), findsOneWidget);
+    expect(find.text('Earn ฿1,200'), findsOneWidget);
     expect(find.textContaining('147 delivered'), findsOneWidget);
   });
 

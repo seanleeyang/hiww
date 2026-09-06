@@ -80,8 +80,10 @@ describe('discovery feed + route match', () => {
       .data.items.find((i: { kind: string; id: string }) => i.kind === 'trip' && i.id === tripId);
     expect(trip.traveler.id).toBe(traveler.userId);
     expect(trip.match_count).toBeGreaterThanOrEqual(1);
-    // earn estimate includes this want: 6500 * 0.08 = 520
-    expect(Number(trip.earn_estimate)).toBeGreaterThanOrEqual(520);
+    // per-item commission range includes this want: 6500 * 0.08 = 520
+    expect(Number(trip.earn_max)).toBeGreaterThanOrEqual(520);
+    expect(Number(trip.earn_min)).toBeGreaterThan(0);
+    expect(Number(trip.earn_min)).toBeLessThanOrEqual(Number(trip.earn_max));
   });
 
   it('does not show the caller their own trips or wants', async () => {
@@ -144,6 +146,31 @@ describe('discovery feed + route match', () => {
     expect(ids).toContain(matchByArrival);
     expect(ids).toContain(matchByDeparture);
     expect(ids).not.toContain(noMatch);
+  });
+
+  it('drops a trip from discovery once its return date has passed', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const viewer = await createUser(ctx, { user_type: 'shopper' });
+    // Unique codes so this isn't polluted by other suites sharing the DB.
+    const upcoming = await postTrip(traveler, {
+      departure_country: 'EX1',
+      arrival_country: 'EX2',
+    });
+    const past = await postTrip(traveler, {
+      departure_country: 'EX1',
+      arrival_country: 'EX2',
+      departure_date: '2020-01-01T00:00:00.000Z',
+      return_date: '2020-01-08T00:00:00.000Z',
+    });
+
+    const res = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/discover/feed?type=trips',
+      headers: authHeader(viewer),
+    });
+    const ids = res.json().data.items.map((i: { id: string }) => i.id);
+    expect(ids).toContain(upcoming);
+    expect(ids).not.toContain(past);
   });
 
   it('route-match counts travelers heading to a country', async () => {

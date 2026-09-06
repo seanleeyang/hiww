@@ -67,6 +67,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .selectFrom('trips')
         .selectAll()
         .where('status', '=', 'published')
+        .where('return_date', '>=', new Date())
         .orderBy('departure_date', 'asc')
         .limit(limit)
         .offset(offset)

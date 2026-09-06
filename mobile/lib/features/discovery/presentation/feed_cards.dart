@@ -14,14 +14,16 @@ class TripFeedCard extends StatelessWidget {
     super.key,
     required this.trip,
     this.traveler,
-    this.earnEstimate,
+    this.earnMin,
+    this.earnMax,
     this.matchCount = 0,
     this.onTap,
   });
 
   final Trip trip;
   final UserSummary? traveler;
-  final String? earnEstimate;
+  final String? earnMin;
+  final String? earnMax;
   final int matchCount;
   final VoidCallback? onTap;
 
@@ -42,11 +44,11 @@ class TripFeedCard extends StatelessWidget {
                 borderRadius: 20,
                 heroTag: 'trip-${trip.id}',
               ),
-              if (earnEstimate != null)
+              if (earnMin != null && earnMax != null)
                 Positioned(
                   right: 12,
                   bottom: 12,
-                  child: EarnBadge(label: 'Earn up to ${money(earnEstimate)}'),
+                  child: EarnBadge(label: earnRangeLabel(earnMin, earnMax)),
                 ),
             ],
           ),
