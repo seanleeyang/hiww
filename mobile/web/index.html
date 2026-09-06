@@ -133,9 +133,22 @@
     </div>
   </div>
   <script>
+    // The whole point of the entrance animation is to be seen — on a fast
+    // connection/cache, Flutter can be ready before it's even finished
+    // playing. Hold the screen for a minimum stretch (long enough for the
+    // letters to land and the dot to settle into its first pulse) and fade
+    // out instead of yanking it away the instant Flutter signals ready.
+    var LOADING_MIN_MS = 1300;
+    var loadStart = Date.now();
     window.addEventListener('flutter-first-frame', function () {
       var el = document.getElementById('loading');
-      if (el) el.remove();
+      if (!el) return;
+      var wait = Math.max(0, LOADING_MIN_MS - (Date.now() - loadStart));
+      setTimeout(function () {
+        el.style.transition = 'opacity .35s ease';
+        el.style.opacity = '0';
+        setTimeout(function () { el.remove(); }, 350);
+      }, wait);
     });
   </script>
   <script src="flutter_bootstrap.js" async></script>
