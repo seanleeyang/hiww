@@ -247,17 +247,17 @@ class _Bubble extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: CachedNetworkImage(
                     imageUrl: message.imageUrl!,
-                    width: 180,
-                    height: 180,
+                    width: double.infinity,
+                    height: 260,
                     fit: BoxFit.cover,
                     placeholder: (_, _) => Container(
-                      width: 180,
-                      height: 180,
+                      width: double.infinity,
+                      height: 260,
                       color: scheme.surfaceContainerHighest,
                     ),
                     errorWidget: (_, _, _) => Container(
-                      width: 180,
-                      height: 180,
+                      width: double.infinity,
+                      height: 260,
                       color: scheme.surfaceContainerHighest,
                       child: Icon(
                         Icons.broken_image_outlined,
