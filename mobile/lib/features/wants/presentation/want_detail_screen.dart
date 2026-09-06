@@ -18,6 +18,7 @@ import '../../orders/data/orders_repository.dart';
 import '../../shared/presentation/reviews_preview.dart';
 import '../data/wants_repository.dart';
 import '../domain/offer.dart';
+import 'post_want_sheet.dart';
 
 class WantDetailScreen extends ConsumerWidget {
   const WantDetailScreen({super.key, required this.wantId});
@@ -101,12 +102,38 @@ class WantDetailScreen extends ConsumerWidget {
                     ReviewsPreview(userId: want.shopperId, max: 2),
                   ],
                   const SizedBox(height: 8),
-                  if (mine)
+                  if (mine) ...[
                     _OffersSection(
                       wantId: wantId,
                       requestOpen: want.status == 'open',
-                    )
-                  else if (iAmTraveler && want.status == 'open')
+                    ),
+                    if (want.status == 'open') ...[
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () =>
+                                  showPostWantSheet(context, existing: want),
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('Edit'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _cancelWant(context, ref, want.id),
+                              icon: Icon(Icons.delete_outline,
+                                  color: Theme.of(context).colorScheme.error),
+                              label: Text('Cancel',
+                                  style: TextStyle(
+                                      color: Theme.of(context).colorScheme.error)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ] else if (iAmTraveler && want.status == 'open')
                     FilledButton.icon(
                       onPressed: () => context.push('/wants/$wantId/offer'),
                       icon: const Icon(Icons.local_offer_outlined),
@@ -126,6 +153,38 @@ class WantDetailScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+Future<void> _cancelWant(BuildContext context, WidgetRef ref, String wantId) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Cancel this want?'),
+      content: const Text(
+        'Travelers will no longer see it or be able to offer on it. This can\'t be undone.',
+      ),
+      actions: [
+        TextButton(onPressed: () => context.pop(false), child: const Text('Keep want')),
+        FilledButton(
+          onPressed: () => context.pop(true),
+          style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+          child: const Text('Cancel want'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+
+  try {
+    await ref.read(wantsRepositoryProvider).cancel(wantId);
+    ref.invalidate(myWantsProvider);
+    ref.invalidate(wantDetailProvider(wantId));
+    if (context.mounted) context.pop();
+  } on ApiException catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 }
 

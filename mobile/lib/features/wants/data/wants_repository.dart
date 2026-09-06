@@ -58,6 +58,33 @@ class WantsRepository {
     final data = await _api.post('/api/offers/$offerId/accept');
     return (data as Map)['order_id'].toString();
   }
+
+  Future<void> update(
+    String id, {
+    String? title,
+    String? itemDescription,
+    String? sourceCity,
+    String? category,
+    double? estimatedWeightKg,
+    String? budget,
+    int? quantity,
+    DateTime? needBy,
+    String? imageUrl,
+  }) async {
+    final body = <String, dynamic>{};
+    if (title != null) body['title'] = title;
+    if (itemDescription != null) body['item_description'] = itemDescription;
+    if (sourceCity != null) body['source_city'] = sourceCity;
+    if (category != null) body['category'] = category;
+    if (estimatedWeightKg != null) body['estimated_weight_kg'] = estimatedWeightKg;
+    if (budget != null) body['budget'] = budget;
+    if (quantity != null) body['quantity'] = quantity;
+    if (needBy != null) body['need_by'] = needBy.toUtc().toIso8601String();
+    if (imageUrl != null) body['image_url'] = imageUrl;
+    await _api.patch('/api/requests/$id', body: body);
+  }
+
+  Future<void> cancel(String id) => _api.post('/api/requests/$id/cancel');
 }
 
 final wantsRepositoryProvider = Provider<WantsRepository>(

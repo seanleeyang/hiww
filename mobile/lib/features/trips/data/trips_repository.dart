@@ -47,6 +47,33 @@ class TripsRepository {
     final data = await _api.get('/api/trips/$id');
     return TripDetail.fromJson(Map<String, dynamic>.from(data as Map));
   }
+
+  Future<void> update(
+    String id, {
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDate,
+    DateTime? returnDate,
+    double? maxWeightKg,
+    int? maxItems,
+    String? title,
+    String? note,
+    String? coverImageUrl,
+  }) async {
+    final body = <String, dynamic>{};
+    if (departureCity != null) body['departure_city'] = departureCity;
+    if (arrivalCity != null) body['arrival_city'] = arrivalCity;
+    if (departureDate != null) body['departure_date'] = departureDate.toUtc().toIso8601String();
+    if (returnDate != null) body['return_date'] = returnDate.toUtc().toIso8601String();
+    if (maxWeightKg != null) body['max_weight_kg'] = maxWeightKg;
+    if (maxItems != null) body['max_items'] = maxItems;
+    if (title != null) body['title'] = title;
+    if (note != null) body['note'] = note;
+    if (coverImageUrl != null) body['cover_image_url'] = coverImageUrl;
+    await _api.patch('/api/trips/$id', body: body);
+  }
+
+  Future<void> cancel(String id) => _api.post('/api/trips/$id/cancel');
 }
 
 final tripsRepositoryProvider = Provider<TripsRepository>(

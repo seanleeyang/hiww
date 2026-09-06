@@ -10,11 +10,14 @@ import '../../../ui/category_chips.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/wants_repository.dart';
+import '../domain/want.dart';
 
+/// Pass [existing] to edit that want in place instead of posting a new one.
 Future<void> showPostWantSheet(
   BuildContext context, {
   String? sourceCountry,
   String? sourceCity,
+  Want? existing,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -24,39 +27,46 @@ Future<void> showPostWantSheet(
       child: _PostWantSheet(
         sourceCountry: sourceCountry,
         sourceCity: sourceCity,
+        existing: existing,
       ),
     ),
   );
 }
 
 class _PostWantSheet extends ConsumerStatefulWidget {
-  const _PostWantSheet({this.sourceCountry, this.sourceCity});
+  const _PostWantSheet({this.sourceCountry, this.sourceCity, this.existing});
   final String? sourceCountry;
   final String? sourceCity;
+  final Want? existing;
 
   @override
   ConsumerState<_PostWantSheet> createState() => _PostWantSheetState();
 }
 
 class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
-  final _title = TextEditingController();
-  final _details = TextEditingController();
-  final _city = TextEditingController();
-  String? _photoUrl;
-  String _category = 'sneakers';
-  late String _country;
-  int _budget = 3000;
-  int _qty = 1;
-  DateTime? _needBy;
+  late final _title = TextEditingController(text: widget.existing?.title ?? '');
+  late final _details = TextEditingController(text: widget.existing?.itemDescription ?? '');
+  late final _city = TextEditingController(
+    text: widget.existing?.sourceCity ?? widget.sourceCity ?? '',
+  );
+  late String? _photoUrl = widget.existing?.imageUrl;
+  late String _category = widget.existing?.category ?? 'sneakers';
+  late String _country = _initialCountry();
+  late int _budget = widget.existing != null
+      ? (double.tryParse(widget.existing!.budget)?.round() ?? 3000)
+      : 3000;
+  late int _qty = widget.existing?.quantity ?? 1;
+  late DateTime? _needBy = widget.existing?.needBy;
   bool _submitting = false;
   String? _error;
 
-  @override
-  void initState() {
-    super.initState();
+  bool get _editing => widget.existing != null;
+
+  String _initialCountry() {
+    final existingCountry = widget.existing?.sourceCountry;
+    if (existingCountry != null && isLiveCountry(existingCountry)) return existingCountry;
     final source = widget.sourceCountry;
-    _country = (source != null && isLiveCountry(source)) ? source : 'JP';
-    _city.text = widget.sourceCity ?? '';
+    return (source != null && isLiveCountry(source)) ? source : 'JP';
   }
 
   @override
@@ -83,25 +93,45 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
       _error = null;
     });
     try {
-      final id = await ref
-          .read(wantsRepositoryProvider)
-          .create(
-            title: title,
-            itemDescription: details,
-            sourceCountry: _country,
-            sourceCity: _city.text.trim(),
-            category: _category,
-            estimatedWeightKg: 1,
-            budget: '${_budget.toStringAsFixed(0)}.00',
-            quantity: _qty,
-            needBy: _needBy,
-            imageUrl: _photoUrl ?? '',
-          );
-      ref.invalidate(myWantsProvider);
-      ref.invalidate(feedProvider);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      context.push('/wants/$id');
+      if (_editing) {
+        final id = widget.existing!.id;
+        await ref.read(wantsRepositoryProvider).update(
+              id,
+              title: title,
+              itemDescription: details,
+              sourceCity: _city.text.trim(),
+              category: _category,
+              budget: '${_budget.toStringAsFixed(0)}.00',
+              quantity: _qty,
+              needBy: _needBy,
+              imageUrl: _photoUrl ?? '',
+            );
+        ref.invalidate(myWantsProvider);
+        ref.invalidate(feedProvider);
+        ref.invalidate(wantDetailProvider(id));
+        if (!mounted) return;
+        Navigator.of(context).pop();
+      } else {
+        final id = await ref
+            .read(wantsRepositoryProvider)
+            .create(
+              title: title,
+              itemDescription: details,
+              sourceCountry: _country,
+              sourceCity: _city.text.trim(),
+              category: _category,
+              estimatedWeightKg: 1,
+              budget: '${_budget.toStringAsFixed(0)}.00',
+              quantity: _qty,
+              needBy: _needBy,
+              imageUrl: _photoUrl ?? '',
+            );
+        ref.invalidate(myWantsProvider);
+        ref.invalidate(feedProvider);
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        context.push('/wants/$id');
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -121,7 +151,8 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Post a want', style: Theme.of(context).textTheme.titleLarge),
+            Text(_editing ? 'Edit want' : 'Post a want',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             TextField(
               controller: _title,
@@ -209,16 +240,22 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _country,
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Buy in'),
-                    items: [
-                      for (final c in kLiveCountries)
-                        DropdownMenuItem(value: c.code, child: Text(c.name)),
-                    ],
-                    onChanged: (v) => setState(() => _country = v ?? 'JP'),
-                  ),
+                  child: _editing
+                      ? TextFormField(
+                          initialValue: countryName(_country),
+                          enabled: false,
+                          decoration: const InputDecoration(labelText: 'Buy in'),
+                        )
+                      : DropdownButtonFormField<String>(
+                          initialValue: _country,
+                          isExpanded: true,
+                          decoration: const InputDecoration(labelText: 'Buy in'),
+                          items: [
+                            for (final c in kLiveCountries)
+                              DropdownMenuItem(value: c.code, child: Text(c.name)),
+                          ],
+                          onChanged: (v) => setState(() => _country = v ?? 'JP'),
+                        ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -274,7 +311,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Post my want'),
+                  : Text(_editing ? 'Save changes' : 'Post my want'),
             ),
           ],
         ),

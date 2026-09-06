@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/countries.dart';
 import '../../../ui/async_value_view.dart';
@@ -90,13 +91,23 @@ class TripDetailScreen extends ConsumerWidget {
                       icon: const Icon(Icons.add_shopping_cart_outlined),
                       label: const Text('Request from this trip'),
                     ),
-                  if (isMine)
+                  if (isMine) ...[
                     Text(
                       'This is your trip. Shoppers can request items along this route.',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
+                    if (trip.status == 'published') ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            context.push('/trips/${trip.id}/edit', extra: trip),
+                        icon: const Icon(Icons.edit_outlined),
+                        label: const Text('Edit trip'),
+                      ),
+                    ],
+                  ],
                 ],
               );
             },

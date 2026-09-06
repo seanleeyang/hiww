@@ -21,6 +21,7 @@ import '../features/shared/data/reviews_repository.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/splash_screen.dart';
 import '../features/trips/data/trips_repository.dart';
+import '../features/trips/domain/trip.dart';
 import '../features/trips/presentation/my_trips_screen.dart';
 import '../features/trips/presentation/new_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
@@ -94,6 +95,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const NotificationsScreen(),
       ),
       GoRoute(path: '/trips/new', builder: (_, _) => const NewTripScreen()),
+      GoRoute(
+        path: '/trips/:id/edit',
+        builder: (_, s) => NewTripScreen(existing: s.extra as Trip),
+      ),
       GoRoute(
         path: '/trips/:id',
         builder: (_, s) => TripDetailScreen(tripId: s.pathParameters['id']!),

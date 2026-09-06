@@ -8,27 +8,38 @@ import '../../../core/format.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
+import '../domain/trip.dart';
 
+/// Doubles as the edit form: pass [existing] to prefill and switch the
+/// submit action from create to update. Route (departure/arrival country)
+/// is never editable — see the schema-side comment for why.
 class NewTripScreen extends ConsumerStatefulWidget {
-  const NewTripScreen({super.key});
+  const NewTripScreen({super.key, this.existing});
+  final Trip? existing;
 
   @override
   ConsumerState<NewTripScreen> createState() => _NewTripScreenState();
 }
 
 class _NewTripScreenState extends ConsumerState<NewTripScreen> {
-  final _fromCity = TextEditingController();
-  final _toCity = TextEditingController();
-  final _note = TextEditingController();
-  final _weight = TextEditingController(text: '8');
-  final _items = TextEditingController(text: '5');
-  String _from = 'TH';
-  String _to = 'JP';
-  String? _coverUrl;
-  DateTime? _depart;
-  DateTime? _ret;
+  late final _fromCity = TextEditingController(text: widget.existing?.departureCity ?? '');
+  late final _toCity = TextEditingController(text: widget.existing?.arrivalCity ?? '');
+  late final _note = TextEditingController(text: widget.existing?.note ?? '');
+  late final _weight = TextEditingController(
+    text: widget.existing == null ? '8' : widget.existing!.maxWeightKg.toString(),
+  );
+  late final _items = TextEditingController(
+    text: widget.existing == null ? '5' : widget.existing!.maxItems.toString(),
+  );
+  late String _from = widget.existing?.departureCountry ?? 'TH';
+  late String _to = widget.existing?.arrivalCountry ?? 'JP';
+  late String? _coverUrl = widget.existing?.coverImageUrl;
+  late DateTime? _depart = widget.existing?.departureDate;
+  late DateTime? _ret = widget.existing?.returnDate;
   bool _submitting = false;
   String? _error;
+
+  bool get _editing => widget.existing != null;
 
   @override
   void dispose() {
@@ -60,25 +71,85 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
       _error = null;
     });
     try {
-      final id = await ref
-          .read(tripsRepositoryProvider)
-          .create(
-            departureCountry: _from,
-            arrivalCountry: _to,
-            departureCity: _fromCity.text.trim(),
-            arrivalCity: _toCity.text.trim(),
-            departureDate: _depart!,
-            returnDate: _ret!,
-            maxWeightKg: weight,
-            maxItems: items,
-            note: _note.text.trim(),
-            coverImageUrl: _coverUrl,
-          );
+      if (_editing) {
+        final id = widget.existing!.id;
+        await ref.read(tripsRepositoryProvider).update(
+              id,
+              departureCity: _fromCity.text.trim(),
+              arrivalCity: _toCity.text.trim(),
+              departureDate: _depart!,
+              returnDate: _ret!,
+              maxWeightKg: weight,
+              maxItems: items,
+              note: _note.text.trim(),
+              coverImageUrl: _coverUrl,
+            );
+        ref.invalidate(myTripsProvider);
+        ref.invalidate(feedProvider);
+        ref.invalidate(tripDetailProvider(id));
+        if (!mounted) return;
+        context.pop();
+      } else {
+        final id = await ref
+            .read(tripsRepositoryProvider)
+            .create(
+              departureCountry: _from,
+              arrivalCountry: _to,
+              departureCity: _fromCity.text.trim(),
+              arrivalCity: _toCity.text.trim(),
+              departureDate: _depart!,
+              returnDate: _ret!,
+              maxWeightKg: weight,
+              maxItems: items,
+              note: _note.text.trim(),
+              coverImageUrl: _coverUrl,
+            );
+        ref.invalidate(myTripsProvider);
+        ref.invalidate(feedProvider);
+        if (!mounted) return;
+        context.pop();
+        context.push('/trips/$id');
+      }
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  Future<void> _cancelTrip() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel this trip?'),
+        content: const Text(
+          'Shoppers will no longer be able to find or offer against this trip. '
+          'This can\'t be undone.',
+        ),
+        actions: [
+          TextButton(onPressed: () => context.pop(false), child: const Text('Keep trip')),
+          FilledButton(
+            onPressed: () => context.pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            child: const Text('Cancel trip'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _submitting = true);
+    try {
+      final id = widget.existing!.id;
+      await ref.read(tripsRepositoryProvider).cancel(id);
       ref.invalidate(myTripsProvider);
       ref.invalidate(feedProvider);
+      ref.invalidate(tripDetailProvider(id));
       if (!mounted) return;
       context.pop();
-      context.push('/trips/$id');
+      context.pop();
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -91,7 +162,17 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Post a trip')),
+      appBar: AppBar(
+        title: Text(_editing ? 'Edit trip' : 'Post a trip'),
+        actions: [
+          if (_editing)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Cancel trip',
+              onPressed: _submitting ? null : _cancelTrip,
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -176,7 +257,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Post trip'),
+                : Text(_editing ? 'Save changes' : 'Post trip'),
           ),
         ],
       ),
@@ -192,16 +273,22 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     return Row(
       children: [
         Expanded(
-          child: DropdownButtonFormField<String>(
-            initialValue: code,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: label),
-            items: [
-              for (final c in kLiveCountries)
-                DropdownMenuItem(value: c.code, child: Text(c.name)),
-            ],
-            onChanged: (v) => onCountry(v ?? code),
-          ),
+          child: _editing
+              ? TextFormField(
+                  initialValue: countryName(code),
+                  enabled: false,
+                  decoration: InputDecoration(labelText: label),
+                )
+              : DropdownButtonFormField<String>(
+                  initialValue: code,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: label),
+                  items: [
+                    for (final c in kLiveCountries)
+                      DropdownMenuItem(value: c.code, child: Text(c.name)),
+                  ],
+                  onChanged: (v) => onCountry(v ?? code),
+                ),
         ),
         const SizedBox(width: 12),
         Expanded(
