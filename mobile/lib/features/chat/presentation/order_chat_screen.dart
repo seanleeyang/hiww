@@ -30,6 +30,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   Uint8List? _pendingImageBytes;
   String? _pendingImageUrl;
   int _lastSeenCount = -1;
+  DateTime? _lastTypingPing;
 
   @override
   void initState() {
@@ -41,6 +42,19 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   void dispose() {
     _input.dispose();
     super.dispose();
+  }
+
+  /// Throttled to at most once every 2 s while actively typing — matches
+  /// the server's typing-heartbeat TTL closely enough without pinging on
+  /// every keystroke.
+  void _onComposerChanged(String _) {
+    final now = DateTime.now();
+    if (_lastTypingPing != null &&
+        now.difference(_lastTypingPing!) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastTypingPing = now;
+    ref.read(chatRepositoryProvider).sendTyping(widget.orderId);
   }
 
   Future<void> _markRead() async {
@@ -128,11 +142,11 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   Widget build(BuildContext context) {
     final me = ref.watch(currentUserProvider);
     final order = ref.watch(orderProvider(widget.orderId));
-    final messages = ref.watch(orderMessagesProvider(widget.orderId));
+    final feed = ref.watch(orderMessagesProvider(widget.orderId));
 
     // Mark read whenever new inbound messages land.
     ref.listen(orderMessagesProvider(widget.orderId), (_, next) {
-      final list = next.valueOrNull;
+      final list = next.valueOrNull?.messages;
       if (list == null) return;
       if (list.length != _lastSeenCount) {
         _lastSeenCount = list.length;
@@ -168,10 +182,11 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
         children: [
           Expanded(
             child: AsyncValueView(
-              value: messages,
+              value: feed,
               onRetry: () =>
                   ref.invalidate(orderMessagesProvider(widget.orderId)),
-              data: (list) {
+              data: (chatFeed) {
+                final list = chatFeed.messages;
                 if (list.isEmpty) {
                   return Center(
                     child: Text(
@@ -199,6 +214,14 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
               },
             ),
           ),
+          if (feed.valueOrNull?.counterpartyTyping ?? false)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 6),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _TypingBubble(),
+              ),
+            ),
           _Composer(
             controller: _input,
             sending: _sending,
@@ -210,6 +233,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
               _pendingImageBytes = null;
             }),
             onSend: _send,
+            onTextChanged: _onComposerChanged,
           ),
         ],
       ),
@@ -339,6 +363,7 @@ class _Composer extends StatelessWidget {
     required this.onAttach,
     required this.onRemoveAttachment,
     required this.onSend,
+    required this.onTextChanged,
   });
 
   final TextEditingController controller;
@@ -348,6 +373,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onAttach;
   final VoidCallback onRemoveAttachment;
   final VoidCallback onSend;
+  final ValueChanged<String> onTextChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -446,6 +472,7 @@ class _Composer extends StatelessWidget {
                     minLines: 1,
                     maxLines: 4,
                     textInputAction: TextInputAction.send,
+                    onChanged: onTextChanged,
                     onSubmitted: (_) => onSend(),
                     decoration: const InputDecoration(
                       hintText: 'Message',
@@ -471,6 +498,73 @@ class _Composer extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Three pulsing dots, styled like the counterparty's message bubbles —
+/// shown while `ChatFeed.counterpartyTyping` is true.
+class _TypingBubble extends StatefulWidget {
+  const _TypingBubble();
+
+  @override
+  State<_TypingBubble> createState() => _TypingBubbleState();
+}
+
+class _TypingBubbleState extends State<_TypingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1000),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+          bottomLeft: Radius.circular(4),
+          bottomRight: Radius.circular(16),
+        ),
+      ),
+      child: SizedBox(
+        width: 30,
+        height: 8,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(3, (i) {
+                final phase = (_controller.value + i * 0.25) % 1.0;
+                final bounce = (1 - (phase * 2 - 1).abs()).clamp(0.0, 1.0);
+                return Opacity(
+                  opacity: 0.35 + 0.65 * bounce,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: scheme.onSurfaceVariant,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                );
+              }),
+            );
+          },
         ),
       ),
     );

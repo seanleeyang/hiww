@@ -7,9 +7,10 @@ class ChatRepository {
   ChatRepository(this._api);
   final ApiClient _api;
 
-  Future<List<Message>> messages(String orderId) async {
+  Future<ChatFeed> feed(String orderId) async {
     final data = await _api.get('/api/orders/$orderId/messages');
-    final items = ((data as Map)['items'] as List?) ?? [];
+    final map = data as Map;
+    final items = (map['items'] as List?) ?? [];
     // One malformed row must not take down the whole conversation — parse
     // defensively and skip anything that doesn't fit, rather than letting
     // the exception propagate and silently killing the polling stream.
@@ -21,7 +22,21 @@ class ChatRepository {
         // skip malformed row
       }
     }
-    return parsed;
+    return ChatFeed(
+      messages: parsed,
+      counterpartyTyping: map['counterparty_typing'] == true,
+    );
+  }
+
+  /// Best-effort heartbeat while composing — the counterparty picks it up on
+  /// their next poll. A missed ping just means the indicator flickers off a
+  /// touch early; never worth surfacing an error for.
+  Future<void> sendTyping(String orderId) async {
+    try {
+      await _api.post('/api/orders/$orderId/typing');
+    } catch (_) {
+      // best-effort
+    }
   }
 
   /// Returns a safety-warning string when the message (or its photo) tripped
@@ -71,19 +86,21 @@ final unreadTotalProvider = Provider<int>((ref) {
   return inbox.fold(0, (sum, t) => sum + t.unreadCount);
 });
 
-/// Polls one conversation every 5 s while a chat screen is open. A single
+/// Polls one conversation every 3 s while a chat screen is open — shorter
+/// than most polls in this app so the typing indicator stays reasonably
+/// responsive (there's no websocket here; this is the tradeoff). A single
 /// failed fetch (a network blip, a transient 5xx) must not permanently kill
 /// the polling loop — an uncaught throw inside an async* generator ends the
 /// stream for good, so every fetch here is guarded to keep the loop alive.
-final orderMessagesProvider = StreamProvider.family<List<Message>, String>((
+final orderMessagesProvider = StreamProvider.family<ChatFeed, String>((
   ref,
   orderId,
 ) async* {
   final repo = ref.watch(chatRepositoryProvider);
-  List<Message>? last;
+  ChatFeed? last;
   Future<void> fetch() async {
     try {
-      last = await repo.messages(orderId);
+      last = await repo.feed(orderId);
     } catch (_) {
       // keep showing the previous value; the next poll tries again
     }
@@ -91,7 +108,7 @@ final orderMessagesProvider = StreamProvider.family<List<Message>, String>((
 
   await fetch();
   if (last != null) yield last!;
-  await for (final _ in Stream<void>.periodic(const Duration(seconds: 5))) {
+  await for (final _ in Stream<void>.periodic(const Duration(seconds: 3))) {
     await fetch();
     if (last != null) yield last!;
   }

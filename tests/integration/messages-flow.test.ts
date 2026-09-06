@@ -92,4 +92,38 @@ describe('messages / inbox flow', () => {
     });
     expect(inbox.json().data.items).toHaveLength(0);
   });
+
+  it('a typing heartbeat shows up as counterparty_typing for the other participant only', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const noOneTyping = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(noOneTyping.json().data.counterparty_typing).toBe(false);
+
+    const ping = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/typing`,
+      headers: authHeader(order.traveler),
+    });
+    expect(ping.statusCode).toBe(200);
+
+    // The shopper sees the traveler typing...
+    const asShopper = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(asShopper.json().data.counterparty_typing).toBe(true);
+
+    // ...but the traveler doesn't see themselves as "typing" from their own view.
+    const asTraveler = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+    });
+    expect(asTraveler.json().data.counterparty_typing).toBe(false);
+  });
 });

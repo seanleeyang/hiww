@@ -33,6 +33,15 @@ class Message {
   );
 }
 
+/// One poll of a conversation: the messages plus whether the other
+/// participant is currently typing.
+class ChatFeed {
+  const ChatFeed({required this.messages, required this.counterpartyTyping});
+
+  final List<Message> messages;
+  final bool counterpartyTyping;
+}
+
 class InboxThread {
   const InboxThread({
     required this.orderId,

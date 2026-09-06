@@ -11,6 +11,7 @@ import {
   runChatModerationCheck,
 } from '@/services/chat-moderation';
 import { detectQrCode } from '@/services/qr-check';
+import { recordTyping, isCounterpartyTyping } from '@/services/typing';
 import { config } from '@/config/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,7 +67,14 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         image_url: hidden_at ? null : image_url,
       }));
 
-      reply.send({ success: true, data: { items }, code: 'MESSAGES_LISTED' });
+      reply.send({
+        success: true,
+        data: {
+          items,
+          counterparty_typing: isCounterpartyTyping(request.params.id, request.userId),
+        },
+        code: 'MESSAGES_LISTED',
+      });
     }
   );
 
@@ -162,6 +170,19 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         data: { id, warning: qrFound ? QR_WARNING : leak.flagged ? LEAKAGE_WARNING : null },
         code: 'MESSAGE_SENT',
       });
+    }
+  );
+
+  // Fire-and-forget heartbeat while composing — the counterparty picks it up
+  // on their next poll of GET .../messages (`counterparty_typing`). No
+  // response body needed; the sender doesn't care whether this succeeds.
+  app.post<{ Params: { id: string } }>(
+    '/api/orders/:id/typing',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      await loadOrderForParticipant(request, request.params.id);
+      recordTyping(request.params.id, request.userId);
+      reply.send({ success: true, data: { ok: true }, code: 'TYPING_RECORDED' });
     }
   );
 
