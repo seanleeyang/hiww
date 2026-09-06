@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,7 +45,28 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
         imageQuality: 85,
       );
       if (file == null) return;
-      setState(() => _busy = true);
+      await _upload(file);
+    } catch (_) {
+      _toast('Could not add that photo. Try another.');
+    }
+  }
+
+  /// The general file browser (Downloads, Files app, cloud drives) rather
+  /// than just the Photos picker `_pick(ImageSource.gallery)` opens.
+  Future<void> _pickFromFiles() async {
+    try {
+      final picked = await FilePicker.pickFile(type: FileType.image);
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      await _upload(XFile.fromData(bytes, name: picked.name));
+    } catch (_) {
+      _toast('Could not add that photo. Try another.');
+    }
+  }
+
+  Future<void> _upload(XFile file) async {
+    setState(() => _busy = true);
+    try {
       final url = await ref.read(uploadsRepositoryProvider).uploadImage(file);
       if (!mounted) return;
       widget.onChanged(url);
@@ -166,36 +188,49 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
     );
   }
 
-  /// Open the source sheet; a `null` result from a "Remove photo" tap clears
+  /// Centered dialog (not a bottom sheet — easier to reach than the very
+  /// edge of the screen). A `null` result from a "Remove photo" tap clears
   /// the value, a plain dismiss leaves it unchanged.
   Future<void> _showMenu() async {
-    final choice = await showModalBottomSheet<_SheetChoice>(
+    final choice = await showDialog<_SheetChoice>(
       context: context,
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!kIsWeb)
-              ListTile(
-                leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Take a photo'),
-                onTap: () =>
-                    Navigator.pop(context, const _SheetChoice.camera()),
+      builder: (_) => SimpleDialog(
+        title: Text(widget.label),
+        children: [
+          if (!kIsWeb)
+            SimpleDialogOption(
+              onPressed: () =>
+                  Navigator.pop(context, const _SheetChoice.camera()),
+              child: const _MenuRow(
+                icon: Icons.photo_camera_outlined,
+                label: 'Take a photo',
               ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Choose from gallery'),
-              onTap: () => Navigator.pop(context, const _SheetChoice.gallery()),
             ),
-            if (widget.value != null)
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('Remove photo'),
-                onTap: () =>
-                    Navigator.pop(context, const _SheetChoice.remove()),
+          SimpleDialogOption(
+            onPressed: () =>
+                Navigator.pop(context, const _SheetChoice.gallery()),
+            child: const _MenuRow(
+              icon: Icons.photo_library_outlined,
+              label: 'Choose from gallery',
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, const _SheetChoice.files()),
+            child: const _MenuRow(
+              icon: Icons.folder_open_outlined,
+              label: 'Choose from files',
+            ),
+          ),
+          if (widget.value != null)
+            SimpleDialogOption(
+              onPressed: () =>
+                  Navigator.pop(context, const _SheetChoice.remove()),
+              child: const _MenuRow(
+                icon: Icons.delete_outline,
+                label: 'Remove photo',
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
     switch (choice?.kind) {
@@ -203,6 +238,8 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
         await _pick(ImageSource.camera);
       case _ChoiceKind.gallery:
         await _pick(ImageSource.gallery);
+      case _ChoiceKind.files:
+        await _pickFromFiles();
       case _ChoiceKind.remove:
         widget.onChanged(null);
       case null:
@@ -211,14 +248,32 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
   }
 }
 
-enum _ChoiceKind { camera, gallery, remove }
+enum _ChoiceKind { camera, gallery, files, remove }
 
 class _SheetChoice {
   const _SheetChoice._(this.kind);
   const _SheetChoice.camera() : this._(_ChoiceKind.camera);
   const _SheetChoice.gallery() : this._(_ChoiceKind.gallery);
+  const _SheetChoice.files() : this._(_ChoiceKind.files);
   const _SheetChoice.remove() : this._(_ChoiceKind.remove);
   final _ChoiceKind kind;
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        const SizedBox(width: 16),
+        Text(label),
+      ],
+    );
+  }
 }
 
 class _EditChip extends StatelessWidget {
