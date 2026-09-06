@@ -129,6 +129,35 @@ Existing local-disk files keep being served from `/uploads/*`; only new
 uploads go to R2. Anything uploaded before the switch is already gone after
 the next redeploy — re-upload if needed.
 
+## Uptime monitoring & alerting
+
+Render's free tier sleeps the service after 15 min idle, and there's no
+built-in alerting if the API goes down for a real reason (bad deploy, Neon
+outage, etc). **UptimeRobot** (free) fixes both: it pings `/health` often
+enough to keep the service awake, and emails you if it stops responding.
+
+1. Sign up at <https://uptimerobot.com> (free plan is enough).
+2. **Add New Monitor**:
+   - Monitor type: **HTTP(s)**
+   - Friendly name: `Hiww API`
+   - URL: `https://hiww-api.onrender.com/health`
+   - Monitoring interval: **5 minutes** (free-plan minimum, and comfortably
+     under Render's 15-min sleep timer)
+3. Under **Alert Contacts**, make sure your email (added at signup) is
+   attached to the monitor — it is by default. You can also add a Slack
+   webhook or SMS contact if you want alerts somewhere other than email.
+4. Save. UptimeRobot immediately starts polling; the dashboard shows uptime %
+   and response time, and you'll get an email the moment a check fails plus
+   another when it recovers.
+
+This monitor call is a real HTTP request but not a deep health check — it
+confirms the process is up and responding, not that the database connection
+is healthy. That's an acceptable tradeoff for a pilot; if you want DB-aware
+alerting later, `getHealthSummary()` in `src/config/health.ts` is the place
+to add a real `db.selectFrom(...).executeTakeFirst()` probe (and switch
+`/health` to return 503 when it fails, so UptimeRobot treats a DB outage as
+downtime too).
+
 ## Rolling back
 
 Render dashboard → **Deploys** → pick a previous successful deploy → **Redeploy**.
