@@ -211,5 +211,23 @@ export async function runChatModerationCheck(
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[chat-moderation] failed for message', message.id, err);
+    // console.warn alone only reaches Render's raw logs, which an operator
+    // without dashboard access can't easily check — mirror it to the audit
+    // trail (visible in the admin console's Audit tab) so a persistently
+    // failing check (bad API key, no credits, model access issue) is
+    // actually discoverable, not just silently degrading to no moderation.
+    await recordAudit(
+      db,
+      { id: null, role: 'system' },
+      {
+        action: 'message.check_failed',
+        targetType: 'message',
+        targetId: message.id,
+        summary: `AI chat check failed for a message on order ${message.order_id}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+        metadata: { error: err instanceof Error ? err.message : String(err) },
+      }
+    );
   }
 }

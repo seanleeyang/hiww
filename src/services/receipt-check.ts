@@ -64,5 +64,17 @@ export async function runReceiptCheck(
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[receipt-check] failed for order', order.id, err);
+    // Mirror to the audit trail (visible in the admin console's Audit tab)
+    // so a persistently failing check is actually discoverable — otherwise
+    // it silently degrades to no risk assessment with no visible sign.
+    await recordAudit(db, { id: null, role: 'system' }, {
+      action: 'order.receipt_check_failed',
+      targetType: 'order',
+      targetId: order.id,
+      summary: `AI receipt check failed for order ${order.id}: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+      metadata: { error: err instanceof Error ? err.message : String(err) },
+    });
   }
 }

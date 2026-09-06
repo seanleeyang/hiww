@@ -21,7 +21,9 @@ export type AuditAction =
   | 'kyc.review'
   | 'user.flag'
   | 'message.flag'
-  | 'message.flag_cleared';
+  | 'message.flag_cleared'
+  | 'message.check_failed'
+  | 'order.receipt_check_failed';
 
 export interface AuditActor {
   id?: string | null;

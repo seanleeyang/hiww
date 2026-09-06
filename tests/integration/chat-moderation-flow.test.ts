@@ -1,6 +1,7 @@
 import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
 import { createAcceptedOrder } from '../helpers/flows';
 import { __setQrDetector } from '@/services/qr-check';
+import { __setChatModerationAnalyzer } from '@/services/ai';
 
 /**
  * The test run uses the mock chat moderation analyzer (AI_CHAT_MODERATION
@@ -18,6 +19,7 @@ describe('AI chat moderation', () => {
   afterEach(async () => {
     await closeTestApp(ctx);
     __setQrDetector(undefined);
+    __setChatModerationAnalyzer(undefined);
   });
 
   const send = (
@@ -344,5 +346,28 @@ describe('AI chat moderation', () => {
       headers: authHeader(order.traveler),
     });
     expect(asCounterparty.json().data.items[0].image_url).toBeNull();
+  });
+
+  it('a persistently failing AI check is logged to the audit trail, not just silently swallowed', async () => {
+    __setChatModerationAnalyzer({
+      analyze: async () => {
+        throw new Error('authentication_error: invalid x-api-key');
+      },
+    });
+
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, 'an ordinary message');
+    expect(res.statusCode).toBe(201); // the send itself never fails over this
+
+    const audit = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/admin/audit?action=message.check_failed',
+      headers: authHeader(admin),
+    });
+    const items = audit.json().data.items as Array<{ summary: string }>;
+    expect(items.length).toBeGreaterThan(0);
+    expect(items[0].summary).toContain('invalid x-api-key');
   });
 });
