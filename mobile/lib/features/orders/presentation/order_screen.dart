@@ -62,6 +62,7 @@ class OrderScreen extends ConsumerWidget {
                             fallbackAsset: stockForCategory(o.requestCategory),
                             height: 76,
                             borderRadius: 14,
+                            enableFullscreen: true,
                           ),
                         ),
                       ),
@@ -262,8 +263,9 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
               value: null,
               label: _busy ? 'Uploading…' : 'Upload purchase receipt',
               onChanged: (url) {
-                if (url != null)
+                if (url != null) {
                   _run(() => repo.submitPurchaseProof(o.id, url));
+                }
               },
             ),
           ],
@@ -366,28 +368,12 @@ class _ReceiptCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          GestureDetector(
-            onTap: () => showDialog<void>(
-              context: context,
-              builder: (_) => Dialog(
-                backgroundColor: Colors.black,
-                insetPadding: const EdgeInsets.all(12),
-                child: InteractiveViewer(
-                  child: HeroImage(
-                    url: url,
-                    fallbackAsset: 'assets/images/electronics.jpg',
-                    height: 480,
-                    borderRadius: 0,
-                  ),
-                ),
-              ),
-            ),
-            child: HeroImage(
-              url: url,
-              fallbackAsset: 'assets/images/electronics.jpg',
-              height: 150,
-              borderRadius: 12,
-            ),
+          HeroImage(
+            url: url,
+            fallbackAsset: 'assets/images/electronics.jpg',
+            height: 150,
+            borderRadius: 12,
+            enableFullscreen: true,
           ),
         ],
       ),

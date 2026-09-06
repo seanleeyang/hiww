@@ -72,5 +72,7 @@
 		<string>Hiww uses the camera so you can photograph an item for a want or trip.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Hiww needs photo access so you can attach a picture to a want, trip or your profile.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Hiww saves photos to your library so you can view them later without an internet connection.</string>
 	</dict>
 </plist>

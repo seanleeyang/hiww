@@ -108,6 +108,7 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
                   url: o.requestImageUrl,
                   fallbackAsset: stockForCategory(o.requestCategory),
                   height: 170,
+                  enableFullscreen: true,
                 ),
                 const SizedBox(height: 14),
                 SoftCard(

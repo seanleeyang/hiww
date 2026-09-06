@@ -42,6 +42,7 @@ class TripDetailScreen extends ConsumerWidget {
                     fallbackAsset: stockForCountry(trip.arrivalCountry),
                     height: 190,
                     heroTag: 'trip-${trip.id}',
+                    enableFullscreen: true,
                   ),
                   const SizedBox(height: 16),
                   Text(

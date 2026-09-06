@@ -53,6 +53,7 @@ class WantDetailScreen extends ConsumerWidget {
                     fallbackAsset: stockForCategory(want.category),
                     height: 200,
                     heroTag: 'want-${want.id}',
+                    enableFullscreen: true,
                   ),
                   const SizedBox(height: 16),
                   Row(
