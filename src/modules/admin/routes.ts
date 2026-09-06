@@ -181,6 +181,130 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     reply.send({ success: true, data: { message_id: message.id }, code: 'MESSAGE_FLAG_CLEARED' });
   });
 
+  // All trips, most recent first — lets an operator find and remove a
+  // problematic post regardless of its current status.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.get('/api/admin/trips', async (request: any, reply: any) => {
+    const trips = await request.db
+      .selectFrom('trips')
+      .innerJoin('users', 'users.id', 'trips.traveler_id')
+      .select([
+        'trips.id',
+        'trips.traveler_id',
+        'trips.departure_country',
+        'trips.arrival_country',
+        'trips.departure_city',
+        'trips.arrival_city',
+        'trips.title',
+        'trips.status',
+        'trips.departure_date',
+        'trips.return_date',
+        'trips.created_at',
+        'users.email as traveler_email',
+        'users.full_name as traveler_name',
+      ])
+      .orderBy('trips.created_at', 'desc')
+      .limit(200)
+      .execute();
+
+    reply.send({ success: true, data: { trips }, code: 'ADMIN_TRIPS' });
+  });
+
+  // Operator removes a trip — same effect as the traveler cancelling their
+  // own, but without the active-order guard: this is for taking down a
+  // problem post, not a routine cancel, so an operator can act even if the
+  // trip has orders in flight (those still resolve independently).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/trips/:id/remove', async (request: any, reply: any) => {
+    const trip = await request.db
+      .selectFrom('trips')
+      .select(['id', 'status'])
+      .where('id', '=', request.params.id)
+      .executeTakeFirst();
+    if (!trip) {
+      throw new AppError('NOT_FOUND', 404, 'Trip not found');
+    }
+
+    const reason = typeof (request.body as any)?.reason === 'string' ? (request.body as any).reason.trim() : '';
+
+    await request.db
+      .updateTable('trips')
+      .set({ status: 'cancelled', updated_at: new Date() })
+      .where('id', '=', trip.id)
+      .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'trip.remove_by_admin',
+      targetType: 'trip',
+      targetId: trip.id,
+      summary: `Operator removed trip ${trip.id}`,
+      metadata: { from_status: trip.status, reason: reason || null },
+    });
+
+    reply.send({ success: true, data: { id: trip.id, status: 'cancelled' }, code: 'TRIP_REMOVED_BY_ADMIN' });
+  });
+
+  // Same as above, for wants.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.get('/api/admin/requests', async (request: any, reply: any) => {
+    const requests = await request.db
+      .selectFrom('requests')
+      .innerJoin('users', 'users.id', 'requests.shopper_id')
+      .select([
+        'requests.id',
+        'requests.shopper_id',
+        'requests.item_description',
+        'requests.title',
+        'requests.source_country',
+        'requests.source_city',
+        'requests.category',
+        'requests.budget',
+        'requests.status',
+        'requests.created_at',
+        'users.email as shopper_email',
+        'users.full_name as shopper_name',
+      ])
+      .orderBy('requests.created_at', 'desc')
+      .limit(200)
+      .execute();
+
+    reply.send({ success: true, data: { requests }, code: 'ADMIN_REQUESTS' });
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/requests/:id/remove', async (request: any, reply: any) => {
+    const itemRequest = await request.db
+      .selectFrom('requests')
+      .select(['id', 'status'])
+      .where('id', '=', request.params.id)
+      .executeTakeFirst();
+    if (!itemRequest) {
+      throw new AppError('NOT_FOUND', 404, 'Request not found');
+    }
+
+    const reason = typeof (request.body as any)?.reason === 'string' ? (request.body as any).reason.trim() : '';
+
+    await request.db
+      .updateTable('requests')
+      .set({ status: 'cancelled', updated_at: new Date() })
+      .where('id', '=', itemRequest.id)
+      .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'request.remove_by_admin',
+      targetType: 'request',
+      targetId: itemRequest.id,
+      summary: `Operator removed want ${itemRequest.id}`,
+      metadata: { from_status: itemRequest.status, reason: reason || null },
+    });
+
+    reply.send({
+      success: true,
+      data: { id: itemRequest.id, status: 'cancelled' },
+      code: 'REQUEST_REMOVED_BY_ADMIN',
+    });
+  });
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.get('/api/admin/users', async (request: any, reply: any) => {
     const users = await request.db

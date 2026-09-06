@@ -1,7 +1,8 @@
 import { FastifyInstance } from 'fastify';
-import { createRequestSchema } from '@/types/schemas';
+import { createRequestSchema, updateRequestSchema } from '@/types/schemas';
 import { AppError, generateId } from '@/utils/helpers';
 import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registerRequestsRoutes(app: FastifyInstance): Promise<void> {
@@ -104,6 +105,98 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         success: true,
         data: { ...itemRequest, shopper: shopper ? toUserSummary(shopper) : null },
         code: 'REQUEST_FOUND',
+      });
+    }
+  );
+
+  app.patch<{ Params: { id: string }; Body: unknown }>(
+    '/api/requests/:id',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const itemRequest = await request.db
+        .selectFrom('requests')
+        .selectAll()
+        .where('id', '=', request.params.id)
+        .executeTakeFirst();
+      if (!itemRequest) {
+        throw new AppError('NOT_FOUND', 404, 'Request not found');
+      }
+      if (itemRequest.shopper_id !== request.userId) {
+        throw new AppError('FORBIDDEN', 403, 'Not your want');
+      }
+      if (itemRequest.status !== 'open') {
+        throw new AppError('INVALID_STATE', 400, 'Only an open want can be edited');
+      }
+
+      const parsed = updateRequestSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'Invalid want update');
+      }
+      const d = parsed.data;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const patch: Record<string, any> = { updated_at: new Date() };
+      if (d.item_description !== undefined) patch.item_description = d.item_description;
+      if (d.category !== undefined) patch.category = d.category;
+      if (d.estimated_weight_kg !== undefined) patch.estimated_weight_kg = d.estimated_weight_kg;
+      if (d.budget !== undefined) patch.budget = d.budget;
+      if (d.quantity !== undefined) patch.quantity = d.quantity;
+      if (d.title !== undefined) patch.title = d.title;
+      if (d.source_city !== undefined) patch.source_city = d.source_city;
+      if (d.need_by !== undefined) patch.need_by = new Date(d.need_by);
+      if (d.image_url !== undefined) patch.image_url = d.image_url;
+
+      await request.db.updateTable('requests').set(patch).where('id', '=', itemRequest.id).execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'request.update',
+        targetType: 'request',
+        targetId: itemRequest.id,
+        summary: `Shopper updated want ${itemRequest.id}`,
+        metadata: { fields: Object.keys(patch).filter((k) => k !== 'updated_at') },
+      });
+
+      reply.send({ success: true, data: { id: itemRequest.id }, code: 'REQUEST_UPDATED' });
+    }
+  );
+
+  app.post<{ Params: { id: string } }>(
+    '/api/requests/:id/cancel',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const itemRequest = await request.db
+        .selectFrom('requests')
+        .selectAll()
+        .where('id', '=', request.params.id)
+        .executeTakeFirst();
+      if (!itemRequest) {
+        throw new AppError('NOT_FOUND', 404, 'Request not found');
+      }
+      if (itemRequest.shopper_id !== request.userId) {
+        throw new AppError('FORBIDDEN', 403, 'Not your want');
+      }
+      if (itemRequest.status !== 'open') {
+        throw new AppError('INVALID_STATE', 400, 'Want is not open');
+      }
+
+      await request.db
+        .updateTable('requests')
+        .set({ status: 'cancelled', updated_at: new Date() })
+        .where('id', '=', itemRequest.id)
+        .execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'request.cancel',
+        targetType: 'request',
+        targetId: itemRequest.id,
+        summary: `Shopper cancelled want ${itemRequest.id}`,
+        metadata: {},
+      });
+
+      reply.send({
+        success: true,
+        data: { id: itemRequest.id, status: 'cancelled' },
+        code: 'REQUEST_CANCELLED',
       });
     }
   );

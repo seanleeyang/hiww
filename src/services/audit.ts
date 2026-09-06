@@ -23,7 +23,13 @@ export type AuditAction =
   | 'message.flag'
   | 'message.flag_cleared'
   | 'message.check_failed'
-  | 'order.receipt_check_failed';
+  | 'order.receipt_check_failed'
+  | 'trip.update'
+  | 'trip.cancel'
+  | 'trip.remove_by_admin'
+  | 'request.update'
+  | 'request.cancel'
+  | 'request.remove_by_admin';
 
 export interface AuditActor {
   id?: string | null;
@@ -32,7 +38,7 @@ export interface AuditActor {
 
 export interface AuditInput {
   action: AuditAction;
-  targetType: 'order' | 'user' | 'dispute' | 'message';
+  targetType: 'order' | 'user' | 'dispute' | 'message' | 'trip' | 'request';
   targetId: string;
   summary: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

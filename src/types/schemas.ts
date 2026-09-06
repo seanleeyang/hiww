@@ -21,6 +21,23 @@ export const createTripSchema = z.object({
 
 export type CreateTripInput = z.infer<typeof createTripSchema>;
 
+// Route (departure/arrival country) is intentionally not editable — it's
+// the trip's identity; changing it would silently invalidate whatever a
+// shopper matched against. Everything else about the trip can be corrected.
+export const updateTripSchema = z.object({
+  departure_date: z.string().datetime().optional(),
+  return_date: z.string().datetime().optional(),
+  max_weight_kg: z.number().positive().optional(),
+  max_items: z.number().positive().optional(),
+  title: optionalText(120),
+  departure_city: optionalText(120),
+  arrival_city: optionalText(120),
+  note: optionalText(1000),
+  cover_image_url: optionalUrl,
+});
+
+export type UpdateTripInput = z.infer<typeof updateTripSchema>;
+
 export const createRequestSchema = z.object({
   item_description: z.string().min(10),
   source_country: z.string().min(1),
@@ -36,6 +53,24 @@ export const createRequestSchema = z.object({
 });
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;
+
+// Source country is intentionally not editable, same reasoning as trips.
+export const updateRequestSchema = z.object({
+  item_description: z.string().min(10).optional(),
+  category: z.string().min(1).optional(),
+  estimated_weight_kg: z.number().positive().optional(),
+  budget: z
+    .string()
+    .regex(/^\d+(\.\d{2})?$/)
+    .optional(),
+  quantity: z.number().int().min(1).max(99).optional(),
+  title: optionalText(120),
+  source_city: optionalText(120),
+  need_by: z.string().datetime().optional(),
+  image_url: optionalUrl,
+});
+
+export type UpdateRequestInput = z.infer<typeof updateRequestSchema>;
 
 export const purchaseProofSchema = z.object({
   image_url: z.string().trim().url().max(2048),
