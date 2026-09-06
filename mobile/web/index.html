@@ -34,27 +34,103 @@
     }
     html, body { margin: 0; padding: 0; height: 100%; background: #FBF7F3; }
     @media (prefers-color-scheme: dark) { html, body { background: #201B17; } }
+
     #loading {
-      position: fixed; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 20px;
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
       font-family: 'Plus Jakarta Sans', -apple-system, "Segoe UI", Roboto, sans-serif;
       color: #1E2422;
+      overflow: hidden;
     }
     @media (prefers-color-scheme: dark) { #loading { color: #F2EDE7; } }
-    #loading .mark { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; }
-    #loading .mark span { color: #E1523A; }
-    #loading .spinner {
-      width: 22px; height: 22px; border-radius: 50%;
-      border: 2.5px solid rgba(128,128,128,0.25); border-top-color: #E1523A;
-      animation: spin 0.9s linear infinite;
+
+    /* A soft, slowly-drifting coral glow behind the mark — subtle motion in
+       the background so the screen feels alive even before the wordmark
+       finishes revealing itself. */
+    #loading::before {
+      content: '';
+      position: absolute;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(225,82,58,0.16), transparent 70%);
+      animation: drift 7s ease-in-out infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-color-scheme: dark) {
+      #loading::before { background: radial-gradient(circle, rgba(225,82,58,0.22), transparent 70%); }
+    }
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(3%, -4%) scale(1.08); }
+    }
+
+    #loading .stack {
+      position: relative;
+      display: flex; flex-direction: column; align-items: center; gap: 26px;
+      animation: rise 0.7s cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #loading .mark { font-size: 46px; font-weight: 800; letter-spacing: -1px; display: flex; }
+    #loading .mark .letter {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(16px) scale(.94);
+      animation: letterIn .55s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    #loading .mark .letter:nth-child(1) { animation-delay: .05s; }
+    #loading .mark .letter:nth-child(2) { animation-delay: .12s; }
+    #loading .mark .letter:nth-child(3) { animation-delay: .19s; }
+    #loading .mark .letter:nth-child(4) { animation-delay: .26s; }
+    @keyframes letterIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    #loading .mark .dot {
+      color: #E1523A;
+      transform-origin: center;
+      animation:
+        dotIn .5s cubic-bezier(.34,1.56,.64,1) .34s both,
+        dotPulse 1.7s ease-in-out .95s infinite;
+    }
+    @keyframes dotIn { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+    @keyframes dotPulse {
+      0%, 100% { transform: scale(1); text-shadow: 0 0 0 rgba(225,82,58,0); }
+      50% { transform: scale(1.3); text-shadow: 0 0 14px rgba(225,82,58,0.65); }
+    }
+
+    #loading .track {
+      width: 130px; height: 4px; border-radius: 999px;
+      background: rgba(128,128,128,0.2);
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeIn .4s ease-out .5s forwards;
+    }
+    #loading .track .bar {
+      width: 45%; height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #E1523A, transparent);
+      animation: scan 1.3s ease-in-out infinite;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes scan {
+      0% { transform: translateX(-130%); }
+      100% { transform: translateX(320%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #loading::before, #loading .stack, #loading .mark .letter, #loading .mark .dot, #loading .track, #loading .track .bar {
+        animation: none !important; opacity: 1 !important; transform: none !important;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="loading">
-    <div class="mark">Hiww<span>.</span></div>
-    <div class="spinner"></div>
+    <div class="stack">
+      <div class="mark">
+        <span class="letter">H</span><span class="letter">i</span><span class="letter">w</span><span class="letter">w</span><span class="letter dot">.</span>
+      </div>
+      <div class="track"><div class="bar"></div></div>
+    </div>
   </div>
   <script>
     window.addEventListener('flutter-first-frame', function () {
