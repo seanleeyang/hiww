@@ -16,6 +16,7 @@ import * as m013 from './013_quantity_and_purchase_proof';
 import * as m014 from './014_receipt_analysis';
 import * as m015 from './015_message_moderation';
 import * as m016 from './016_message_hidden';
+import * as m017 from './017_message_image';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -35,4 +36,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '014_receipt_analysis', up: m014.up },
   { name: '015_message_moderation', up: m015.up },
   { name: '016_message_hidden', up: m016.up },
+  { name: '017_message_image', up: m017.up },
 ];

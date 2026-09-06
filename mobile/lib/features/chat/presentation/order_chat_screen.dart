@@ -1,11 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/format.dart';
 import '../../../ui/async_value_view.dart';
+import '../../../ui/fullscreen_image_viewer.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../orders/data/orders_repository.dart';
+import '../../uploads/data/uploads_repository.dart';
 import '../data/chat_repository.dart';
 import '../domain/message.dart';
 
@@ -20,6 +24,8 @@ class OrderChatScreen extends ConsumerStatefulWidget {
 class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   final _input = TextEditingController();
   bool _sending = false;
+  bool _attaching = false;
+  String? _pendingImageUrl;
   int _lastSeenCount = -1;
 
   @override
@@ -38,21 +44,60 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     try {
       await ref.read(chatRepositoryProvider).markRead(widget.orderId);
       ref.invalidate(inboxProvider);
-    } catch (_) {/* best effort */}
+    } catch (_) {
+      /* best effort */
+    }
+  }
+
+  Future<void> _attachPhoto() async {
+    setState(() => _attaching = true);
+    try {
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+      if (file == null) return;
+      final url = await ref.read(uploadsRepositoryProvider).uploadImage(file);
+      if (mounted) setState(() => _pendingImageUrl = url);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not attach that photo. Try another.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _attaching = false);
+    }
   }
 
   Future<void> _send() async {
     final text = _input.text.trim();
-    if (text.isEmpty) return;
+    final imageUrl = _pendingImageUrl;
+    if (text.isEmpty && imageUrl == null) return;
     setState(() => _sending = true);
     try {
-      final warning = await ref.read(chatRepositoryProvider).send(widget.orderId, text);
+      final warning = await ref
+          .read(chatRepositoryProvider)
+          .send(widget.orderId, body: text, imageUrl: imageUrl);
       _input.clear();
+      setState(() => _pendingImageUrl = null);
       ref.invalidate(orderMessagesProvider(widget.orderId));
       ref.invalidate(inboxProvider);
       if (warning != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(warning), duration: const Duration(seconds: 6)),
+          SnackBar(
+            content: Text(warning),
+            duration: const Duration(seconds: 6),
+          ),
         );
       }
     } on ApiException catch (e) {
@@ -93,12 +138,15 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
           children: [
             Text(title),
             if (subtitle != null)
-              Text(subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
           ],
         ),
       ),
@@ -107,13 +155,17 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
           Expanded(
             child: AsyncValueView(
               value: messages,
-              onRetry: () => ref.invalidate(orderMessagesProvider(widget.orderId)),
+              onRetry: () =>
+                  ref.invalidate(orderMessagesProvider(widget.orderId)),
               data: (list) {
                 if (list.isEmpty) {
                   return Center(
-                    child: Text('Say hello 👋',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    child: Text(
+                      'Say hello 👋',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   );
                 }
                 return ListView.builder(
@@ -128,7 +180,15 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
               },
             ),
           ),
-          _Composer(controller: _input, sending: _sending, onSend: _send),
+          _Composer(
+            controller: _input,
+            sending: _sending,
+            attaching: _attaching,
+            pendingImageUrl: _pendingImageUrl,
+            onAttach: _attachPhoto,
+            onRemoveAttachment: () => setState(() => _pendingImageUrl = null),
+            onSend: _send,
+          ),
         ],
       ),
     );
@@ -148,7 +208,9 @@ class _Bubble extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.76),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.76,
+        ),
         decoration: BoxDecoration(
           color: mine ? scheme.primary : scheme.surfaceContainerHigh,
           borderRadius: BorderRadius.only(
@@ -161,8 +223,28 @@ class _Bubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(message.body,
-                style: TextStyle(color: mine ? scheme.onPrimary : scheme.onSurface)),
+            if (message.imageUrl != null) ...[
+              GestureDetector(
+                onTap: () => showFullscreenImage(context, message.imageUrl!),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: CachedNetworkImage(
+                    imageUrl: message.imageUrl!,
+                    width: 180,
+                    height: 180,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              if (message.body.isNotEmpty) const SizedBox(height: 8),
+            ],
+            if (message.body.isNotEmpty)
+              Text(
+                message.body,
+                style: TextStyle(
+                  color: mine ? scheme.onPrimary : scheme.onSurface,
+                ),
+              ),
             if (message.createdAt != null) ...[
               const SizedBox(height: 3),
               Text(
@@ -185,42 +267,99 @@ class _Composer extends StatelessWidget {
   const _Composer({
     required this.controller,
     required this.sending,
+    required this.attaching,
+    required this.pendingImageUrl,
+    required this.onAttach,
+    required this.onRemoveAttachment,
     required this.onSend,
   });
 
   final TextEditingController controller;
   final bool sending;
+  final bool attaching;
+  final String? pendingImageUrl;
+  final VoidCallback onAttach;
+  final VoidCallback onRemoveAttachment;
   final VoidCallback onSend;
 
   @override
   Widget build(BuildContext context) {
+    final busy = sending || attaching;
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: TextField(
-                controller: controller,
-                minLines: 1,
-                maxLines: 4,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => onSend(),
-                decoration: const InputDecoration(
-                  hintText: 'Message',
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                ),
+            if (pendingImageUrl != null) ...[
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: CachedNetworkImage(
+                      imageUrl: pendingImageUrl!,
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    top: -8,
+                    right: -8,
+                    child: IconButton(
+                      onPressed: onRemoveAttachment,
+                      icon: const Icon(Icons.cancel, size: 20),
+                      color: Theme.of(context).colorScheme.error,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 8),
-            IconButton.filled(
-              onPressed: sending ? null : onSend,
-              tooltip: 'Send',
-              icon: sending
-                  ? const SizedBox(
-                      height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.send_rounded),
+              const SizedBox(height: 8),
+            ],
+            Row(
+              children: [
+                IconButton(
+                  onPressed: busy ? null : onAttach,
+                  tooltip: 'Attach a photo',
+                  icon: attaching
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.add_photo_alternate_outlined),
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    minLines: 1,
+                    maxLines: 4,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => onSend(),
+                    decoration: const InputDecoration(
+                      hintText: 'Message',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  onPressed: busy ? null : onSend,
+                  tooltip: 'Send',
+                  icon: sending
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_rounded),
+                ),
+              ],
             ),
           ],
         ),

@@ -71,6 +71,9 @@ export function redactLeakage(body: string): MessageRedaction {
 export const LEAKAGE_WARNING =
   "We removed contact details or off-platform payment mentions from your message to keep everyone safe — the rest still sent. Messages are reviewed for anything else that looks unsafe.";
 
+export const QR_WARNING =
+  "We removed a QR code from your photo — sharing payment or contact QR codes isn't allowed here. Messages are reviewed for anything else that looks unsafe.";
+
 /** Shown in place of a message an operator or the AI check pulled after the fact. */
 export const HIDDEN_TO_SENDER =
   "Your message was removed — it didn't meet Hiww's chat guidelines and is under review.";

@@ -181,6 +181,7 @@ export interface MessagesTable {
   order_id: string;
   sender_id: string;
   body: string;
+  image_url?: string | null;
   created_at: Generated<Date>;
   read_at?: Date | null;
   flag_risk?: 'medium' | 'high' | null;

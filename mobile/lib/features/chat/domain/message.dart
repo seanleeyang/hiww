@@ -7,6 +7,7 @@ class Message {
     required this.senderId,
     required this.senderName,
     required this.body,
+    this.imageUrl,
     this.createdAt,
     this.readAt,
   });
@@ -15,17 +16,21 @@ class Message {
   final String senderId;
   final String senderName;
   final String body;
+  final String? imageUrl;
   final DateTime? createdAt;
   final DateTime? readAt;
 
   factory Message.fromJson(Map<String, dynamic> j) => Message(
-        id: j['id'].toString(),
-        senderId: j['sender_id'].toString(),
-        senderName: (j['sender_name'] ?? '').toString(),
-        body: (j['body'] ?? '').toString(),
-        createdAt: parseDate(j['created_at']),
-        readAt: parseDate(j['read_at']),
-      );
+    id: j['id'].toString(),
+    senderId: j['sender_id'].toString(),
+    senderName: (j['sender_name'] ?? '').toString(),
+    body: (j['body'] ?? '').toString(),
+    imageUrl: (j['image_url'] as String?)?.trim().isEmpty ?? true
+        ? null
+        : j['image_url'] as String,
+    createdAt: parseDate(j['created_at']),
+    readAt: parseDate(j['read_at']),
+  );
 }
 
 class InboxThread {
@@ -46,13 +51,13 @@ class InboxThread {
   final int unreadCount;
 
   factory InboxThread.fromJson(Map<String, dynamic> j) => InboxThread(
-        orderId: j['order_id'].toString(),
-        itemDescription: (j['item_description'] ?? '').toString(),
-        orderStatus: (j['order_status'] ?? '').toString(),
-        counterparty: UserSummary.fromJson(j['counterparty']),
-        lastMessage: j['last_message'] is Map
-            ? Message.fromJson(Map<String, dynamic>.from(j['last_message'] as Map))
-            : null,
-        unreadCount: (j['unread_count'] as num?)?.toInt() ?? 0,
-      );
+    orderId: j['order_id'].toString(),
+    itemDescription: (j['item_description'] ?? '').toString(),
+    orderStatus: (j['order_status'] ?? '').toString(),
+    counterparty: UserSummary.fromJson(j['counterparty']),
+    lastMessage: j['last_message'] is Map
+        ? Message.fromJson(Map<String, dynamic>.from(j['last_message'] as Map))
+        : null,
+    unreadCount: (j['unread_count'] as num?)?.toInt() ?? 0,
+  );
 }

@@ -57,9 +57,14 @@ export const reviewSchema = z.object({
   comment: z.string().trim().max(1000).optional(),
 });
 
-export const messageSchema = z.object({
-  body: z.string().trim().min(1).max(2000),
-});
+export const messageSchema = z
+  .object({
+    body: z.string().trim().max(2000).optional(),
+    image_url: z.string().trim().url().max(2048).optional(),
+  })
+  .refine((data) => Boolean(data.body) || Boolean(data.image_url), {
+    message: 'Provide a message or a photo',
+  });
 
 export const profileUpdateSchema = z
   .object({

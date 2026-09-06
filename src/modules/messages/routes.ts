@@ -7,8 +7,10 @@ import {
   redactLeakage,
   presentMessageBody,
   LEAKAGE_WARNING,
+  QR_WARNING,
   runChatModerationCheck,
 } from '@/services/chat-moderation';
+import { detectQrCode } from '@/services/qr-check';
 import { config } from '@/config/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,6 +49,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           'messages.id',
           'messages.sender_id',
           'messages.body',
+          'messages.image_url',
           'messages.hidden_at',
           'messages.created_at',
           'messages.read_at',
@@ -57,9 +60,10 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         .execute();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const items = rows.map(({ hidden_at, ...row }: any) => ({
+      const items = rows.map(({ hidden_at, image_url, ...row }: any) => ({
         ...row,
         body: presentMessageBody({ ...row, hidden_at }, request.userId),
+        image_url: hidden_at ? null : image_url,
       }));
 
       reply.send({ success: true, data: { items }, code: 'MESSAGES_LISTED' });
@@ -72,14 +76,41 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
     async (request: any, reply: any) => {
       const parsed = messageSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Message body is required');
+        throw new AppError('VALIDATION_ERROR', 400, 'Provide a message or a photo');
       }
       await loadOrderForParticipant(request, request.params.id);
 
+      const id = generateId();
+
       // Redact contact info / off-platform-payment mentions in place — the
       // raw text is never stored, so it can't leak even briefly.
-      const leak = redactLeakage(parsed.data.body);
-      const id = generateId();
+      const leak = redactLeakage(parsed.data.body ?? '');
+      const reasons = [...leak.reasons];
+      let flagged = leak.flagged;
+
+      // A photo containing a QR code is rejected outright rather than just
+      // flagged — there's rarely a legitimate reason to send one in order
+      // chat, and unlike text there's no clean way to redact just the QR
+      // out of an image. The raw URL only ever lands in the audit log.
+      let imageUrl: string | null = parsed.data.image_url ?? null;
+      let qrFound = false;
+      if (imageUrl) {
+        const qr = await detectQrCode(imageUrl);
+        if (qr.found) {
+          qrFound = true;
+          flagged = true;
+          reasons.push(qr.reason ?? 'contains a QR code');
+          await recordAudit(request.db, actorFromRequest(request), {
+            action: 'message.flag',
+            targetType: 'message',
+            targetId: id,
+            summary: `Photo on order ${request.params.id} rejected — looked like ${qr.reason}`,
+            metadata: { risk: 'medium', reason: qr.reason, original_image_url: imageUrl, payload: qr.payload },
+          });
+          imageUrl = null;
+        }
+      }
+
       await request.db
         .insertInto('messages')
         .values({
@@ -87,9 +118,10 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           order_id: request.params.id,
           sender_id: request.userId,
           body: leak.body,
+          image_url: imageUrl,
           created_at: new Date(),
-          flag_risk: leak.flagged ? 'medium' : null,
-          flag_reasons: leak.flagged ? JSON.stringify(leak.reasons) : null,
+          flag_risk: flagged ? 'medium' : null,
+          flag_reasons: flagged ? JSON.stringify(reasons) : null,
         })
         .execute();
 
@@ -110,7 +142,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       const moderation = runChatModerationCheck(
         request.db,
         { id, order_id: request.params.id, body: leak.body },
-        leak.flagged ? 'medium' : null
+        flagged ? 'medium' : null
       );
       if (config.aiChatModeration === 'claude') {
         void moderation.catch(() => undefined);
@@ -120,7 +152,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
 
       reply.status(201).send({
         success: true,
-        data: { id, warning: leak.flagged ? LEAKAGE_WARNING : null },
+        data: { id, warning: qrFound ? QR_WARNING : leak.flagged ? LEAKAGE_WARNING : null },
         code: 'MESSAGE_SENT',
       });
     }
@@ -162,7 +194,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       for (const order of orders) {
         const last = await request.db
           .selectFrom('messages')
-          .select(['id', 'sender_id', 'body', 'hidden_at', 'created_at'])
+          .select(['id', 'sender_id', 'body', 'image_url', 'hidden_at', 'created_at'])
           .where('order_id', '=', order.id)
           .orderBy('created_at', 'desc')
           .limit(1)
@@ -170,6 +202,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         if (!last) continue;
         const { hidden_at, ...lastPublic } = last;
         lastPublic.body = presentMessageBody({ ...last, hidden_at }, request.userId);
+        if (hidden_at) lastPublic.image_url = null;
 
         const unread = await request.db
           .selectFrom('messages')

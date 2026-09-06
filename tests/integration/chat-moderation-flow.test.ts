@@ -1,5 +1,6 @@
 import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
 import { createAcceptedOrder } from '../helpers/flows';
+import { __setQrDetector } from '@/services/qr-check';
 
 /**
  * The test run uses the mock chat moderation analyzer (AI_CHAT_MODERATION
@@ -16,14 +17,19 @@ describe('AI chat moderation', () => {
 
   afterEach(async () => {
     await closeTestApp(ctx);
+    __setQrDetector(undefined);
   });
 
-  const send = (order: Awaited<ReturnType<typeof createAcceptedOrder>>, body: string) =>
+  const send = (
+    order: Awaited<ReturnType<typeof createAcceptedOrder>>,
+    body?: string,
+    imageUrl?: string
+  ) =>
     ctx.app.inject({
       method: 'POST',
       url: `/api/orders/${order.orderId}/messages`,
       headers: authHeader(order.shopper),
-      payload: { body },
+      payload: { body, image_url: imageUrl },
     });
 
   const reviewQueue = async (admin: Awaited<ReturnType<typeof createUser>>) => {
@@ -206,5 +212,55 @@ describe('AI chat moderation', () => {
 
     const queue = await reviewQueue(admin);
     expect(queue.some((q) => q.type === 'message' && q.order_id === order.orderId)).toBe(true);
+  });
+
+  it('a photo with a QR code is rejected outright, not just flagged', async () => {
+    __setQrDetector(async () => ({
+      found: true,
+      payload: 'https://wa.me/1234567890',
+      reason: 'a WhatsApp QR code',
+    }));
+
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, "here's a pic", 'https://example.com/uploads/qr-photo.jpg');
+    expect(res.statusCode).toBe(201);
+    expect(res.json().data.warning).toBeTruthy();
+
+    // The photo never gets stored — the caption text does.
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(list.json().data.items[0].image_url).toBeNull();
+    expect(list.json().data.items[0].body).toBe("here's a pic");
+
+    const queue = await reviewQueue(admin);
+    const entry = queue.find((q) => q.type === 'message' && q.order_id === order.orderId);
+    expect(entry).toBeDefined();
+    expect(entry.flags).toContain('a WhatsApp QR code');
+  });
+
+  it('a plain photo with no QR code sends normally', async () => {
+    __setQrDetector(async () => ({ found: false }));
+
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, undefined, 'https://example.com/uploads/item-photo.jpg');
+    expect(res.statusCode).toBe(201);
+    expect(res.json().data.warning).toBeNull();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(list.json().data.items[0].image_url).toBe('https://example.com/uploads/item-photo.jpg');
+
+    const queue = await reviewQueue(admin);
+    expect(queue.some((q) => q.type === 'message' && q.order_id === order.orderId)).toBe(false);
   });
 });
