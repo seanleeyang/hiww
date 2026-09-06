@@ -215,4 +215,56 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
       reply.send({ success: true, data: { id: trip.id, status: 'cancelled' }, code: 'TRIP_CANCELLED' });
     }
   );
+
+  // A real delete, not a status change — only when nothing has happened on
+  // this trip yet. Any offer (even one still pending, not yet accepted)
+  // blocks it: accepting a pending offer later fills in the resulting
+  // order's trip_id from the offer's, so deleting the trip out from under a
+  // live offer would silently orphan that offer and break that order.
+  // Cancel is the right tool once there's any activity at all.
+  app.delete<{ Params: { id: string } }>(
+    '/api/trips/:id',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const trip = await request.db
+        .selectFrom('trips')
+        .selectAll()
+        .where('id', '=', request.params.id)
+        .executeTakeFirst();
+      if (!trip) {
+        throw new AppError('NOT_FOUND', 404, 'Trip not found');
+      }
+      if (trip.traveler_id !== request.userId) {
+        throw new AppError('FORBIDDEN', 403, 'Not your trip');
+      }
+      if (trip.status !== 'published') {
+        throw new AppError('INVALID_STATE', 400, 'Trip is not active');
+      }
+
+      const anyOffer = await request.db
+        .selectFrom('offers')
+        .select(['id'])
+        .where('trip_id', '=', trip.id)
+        .executeTakeFirst();
+      if (anyOffer) {
+        throw new AppError(
+          'TRIP_HAS_OFFERS',
+          400,
+          'This trip already has an offer on it — cancel it instead of deleting'
+        );
+      }
+
+      await request.db.deleteFrom('trips').where('id', '=', trip.id).execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'trip.delete',
+        targetType: 'trip',
+        targetId: trip.id,
+        summary: `Traveler deleted trip ${trip.id}`,
+        metadata: {},
+      });
+
+      reply.send({ success: true, data: { id: trip.id }, code: 'TRIP_DELETED' });
+    }
+  );
 }

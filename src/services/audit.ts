@@ -26,6 +26,7 @@ export type AuditAction =
   | 'order.receipt_check_failed'
   | 'trip.update'
   | 'trip.cancel'
+  | 'trip.delete'
   | 'trip.remove_by_admin'
   | 'request.update'
   | 'request.cancel'

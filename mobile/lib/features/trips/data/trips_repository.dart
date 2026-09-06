@@ -74,6 +74,10 @@ class TripsRepository {
   }
 
   Future<void> cancel(String id) => _api.post('/api/trips/$id/cancel');
+
+  /// A real delete — only allowed while the trip has zero offers, even
+  /// pending ones. Use [cancel] once there's any activity on it.
+  Future<void> delete(String id) => _api.delete('/api/trips/$id');
 }
 
 final tripsRepositoryProvider = Provider<TripsRepository>(

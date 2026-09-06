@@ -75,6 +75,75 @@ describe('trip/want edit, cancel, and admin removal', () => {
     expect(res.statusCode).toBe(400);
   });
 
+  it('lets a traveler delete a trip with no offers on it, and it is gone for good', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const tripId = await createTrip(ctx, traveler);
+
+    const res = await ctx.app.inject({
+      method: 'DELETE',
+      url: `/api/trips/${tripId}`,
+      headers: authHeader(traveler),
+    });
+    expect(res.statusCode).toBe(200);
+
+    const trip = await ctx.db.selectFrom('trips').selectAll().where('id', '=', tripId).executeTakeFirst();
+    expect(trip).toBeUndefined();
+  });
+
+  it('blocks deleting a trip that already has a pending (not yet accepted) offer', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const shopper = await createUser(ctx, { user_type: 'shopper' });
+    const tripId = await createTrip(ctx, traveler);
+    const requestId = await createRequest(ctx, shopper);
+
+    const offerRes = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/offers',
+      headers: authHeader(traveler),
+      payload: {
+        request_id: requestId,
+        trip_id: tripId,
+        quoted_price: '75.00',
+        delivery_date: '2026-11-18T10:00:00.000Z',
+      },
+    });
+    expect(offerRes.statusCode).toBe(201);
+
+    const deleteRes = await ctx.app.inject({
+      method: 'DELETE',
+      url: `/api/trips/${tripId}`,
+      headers: authHeader(traveler),
+    });
+    expect(deleteRes.statusCode).toBe(400);
+
+    const trip = await ctx.db.selectFrom('trips').selectAll().where('id', '=', tripId).executeTakeFirst();
+    expect(trip).toBeTruthy();
+  });
+
+  it('blocks deleting a trip that already has an accepted offer', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await ctx.app.inject({
+      method: 'DELETE',
+      url: `/api/trips/${order.tripId}`,
+      headers: authHeader(order.traveler),
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('blocks deleting someone else\'s trip', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const stranger = await createUser(ctx, { user_type: 'traveler' });
+    const tripId = await createTrip(ctx, traveler);
+
+    const res = await ctx.app.inject({
+      method: 'DELETE',
+      url: `/api/trips/${tripId}`,
+      headers: authHeader(stranger),
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
   it('lets a shopper edit their own open want', async () => {
     const shopper = await createUser(ctx, { user_type: 'shopper' });
     const requestId = await createRequest(ctx, shopper);

@@ -159,6 +159,45 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     }
   }
 
+  Future<void> _deleteTrip() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this trip?'),
+        content: const Text(
+          'This removes the post entirely, not just from search — only possible '
+          'while it has no offers yet. This can\'t be undone.',
+        ),
+        actions: [
+          TextButton(onPressed: () => context.pop(false), child: const Text('Keep trip')),
+          FilledButton(
+            onPressed: () => context.pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            child: const Text('Delete trip'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _submitting = true);
+    try {
+      final id = widget.existing!.id;
+      await ref.read(tripsRepositoryProvider).delete(id);
+      ref.invalidate(myTripsProvider);
+      ref.invalidate(feedProvider);
+      if (!mounted) return;
+      context.pop();
+      context.pop();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.message;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,10 +205,19 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
         title: Text(_editing ? 'Edit trip' : 'Post a trip'),
         actions: [
           if (_editing)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: 'Cancel trip',
-              onPressed: _submitting ? null : _cancelTrip,
+            PopupMenuButton<_TripAction>(
+              enabled: !_submitting,
+              onSelected: (a) => a == _TripAction.delete ? _deleteTrip() : _cancelTrip(),
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: _TripAction.delete,
+                  child: Text('Delete trip'),
+                ),
+                PopupMenuItem(
+                  value: _TripAction.cancel,
+                  child: Text('Cancel trip'),
+                ),
+              ],
             ),
         ],
       ),
@@ -324,3 +372,5 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     );
   }
 }
+
+enum _TripAction { delete, cancel }

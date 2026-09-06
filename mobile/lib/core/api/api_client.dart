@@ -61,6 +61,8 @@ class ApiClient {
   Future<Object?> patch(String path, {Object? body}) =>
       _send(() => _dio.patch(path, data: body ?? const <String, dynamic>{}));
 
+  Future<Object?> delete(String path) => _send(() => _dio.delete(path));
+
   /// Multipart upload of raw [bytes] as the `file` field. Works on web too
   /// because the payload is bytes, not a file path.
   Future<Object?> upload(
