@@ -26,12 +26,15 @@ async function summariesFor(request: any, ids: string[]): Promise<Map<string, Us
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<void> {
-  app.get<{ Querystring: { type?: string; category?: string; limit?: string } }>(
+  app.get<{ Querystring: { type?: string; category?: string; country?: string; limit?: string } }>(
     '/api/discover/feed',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
       const type = ['trips', 'wants'].includes(request.query.type) ? request.query.type : 'all';
       const category = (request.query.category || '').trim().toLowerCase();
+      // Trips have no category of their own — a route (departure/arrival
+      // country) is the dimension that actually applies to them.
+      const country = (request.query.country || '').trim().toUpperCase();
       const limit = Math.min(50, Math.max(1, parseInt(request.query.limit || '30', 10) || 30));
 
       // Shared reference data (small at pilot scale — one query each).
@@ -50,14 +53,18 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
       const items: any[] = [];
 
       if (type !== 'wants') {
-        const trips = await request.db
+        let tripsQuery = request.db
           .selectFrom('trips')
           .selectAll()
           .where('status', '=', 'published')
-          .where('traveler_id', '!=', request.userId)
-          .orderBy('created_at', 'desc')
-          .limit(limit)
-          .execute();
+          .where('traveler_id', '!=', request.userId);
+        if (country) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          tripsQuery = tripsQuery.where((eb: any) =>
+            eb.or([eb('departure_country', '=', country), eb('arrival_country', '=', country)])
+          );
+        }
+        const trips = await tripsQuery.orderBy('created_at', 'desc').limit(limit).execute();
         const summaries = await summariesFor(request, trips.map((t: any) => t.traveler_id));
 
         for (const trip of trips) {

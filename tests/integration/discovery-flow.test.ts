@@ -118,6 +118,34 @@ describe('discovery feed + route match', () => {
     expect(items[0].id).toBe(beautyId);
   });
 
+  it('filters trips by country (departure or arrival), not category', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const viewer = await createUser(ctx, { user_type: 'shopper' });
+    // Unique codes so this isn't polluted by other suites sharing the DB.
+    const matchByArrival = await postTrip(traveler, {
+      departure_country: 'DZ1',
+      arrival_country: 'DZ2',
+    });
+    const matchByDeparture = await postTrip(traveler, {
+      departure_country: 'DZ2',
+      arrival_country: 'DZ3',
+    });
+    const noMatch = await postTrip(traveler, {
+      departure_country: 'DZ4',
+      arrival_country: 'DZ5',
+    });
+
+    const res = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/discover/feed?type=trips&country=dz2', // lowercase — should still match
+      headers: authHeader(viewer),
+    });
+    const ids = res.json().data.items.map((i: { id: string }) => i.id);
+    expect(ids).toContain(matchByArrival);
+    expect(ids).toContain(matchByDeparture);
+    expect(ids).not.toContain(noMatch);
+  });
+
   it('route-match counts travelers heading to a country', async () => {
     const t1 = await createUser(ctx, { user_type: 'traveler' });
     const t2 = await createUser(ctx, { user_type: 'traveler' });
