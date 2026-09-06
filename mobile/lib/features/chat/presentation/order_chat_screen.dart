@@ -46,10 +46,15 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     if (text.isEmpty) return;
     setState(() => _sending = true);
     try {
-      await ref.read(chatRepositoryProvider).send(widget.orderId, text);
+      final warning = await ref.read(chatRepositoryProvider).send(widget.orderId, text);
       _input.clear();
       ref.invalidate(orderMessagesProvider(widget.orderId));
       ref.invalidate(inboxProvider);
+      if (warning != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(warning), duration: const Duration(seconds: 6)),
+        );
+      }
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)

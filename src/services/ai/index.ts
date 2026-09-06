@@ -2,8 +2,17 @@ import { config } from '@/config/env';
 import type { ReceiptAnalyzer } from './types';
 import { MockReceiptAnalyzer } from './mock-receipt-analyzer';
 import { ClaudeReceiptAnalyzer } from './claude-receipt-analyzer';
+import type { ChatModerationAnalyzer } from './chat-moderation-types';
+import { MockChatModerationAnalyzer } from './mock-chat-moderation-analyzer';
+import { ClaudeChatModerationAnalyzer } from './claude-chat-moderation-analyzer';
 
 export type { ReceiptAnalyzer, ReceiptAnalysis, ReceiptRisk, ReceiptAnalysisInput } from './types';
+export type {
+  ChatModerationAnalyzer,
+  ChatModerationResult,
+  ModerationRisk,
+  ChatModerationInput,
+} from './chat-moderation-types';
 
 let cached: ReceiptAnalyzer | undefined;
 
@@ -23,4 +32,25 @@ export function getReceiptAnalyzer(): ReceiptAnalyzer {
 /** Test seam. */
 export function __setReceiptAnalyzer(analyzer: ReceiptAnalyzer | undefined): void {
   cached = analyzer;
+}
+
+let cachedModeration: ChatModerationAnalyzer | undefined;
+
+/**
+ * The configured chat moderation analyzer. `claude` needs both
+ * AI_CHAT_MODERATION=claude and an ANTHROPIC_API_KEY; anything else (and the
+ * test run) gets the mock.
+ */
+export function getChatModerationAnalyzer(): ChatModerationAnalyzer {
+  if (cachedModeration) return cachedModeration;
+  cachedModeration =
+    config.aiChatModeration === 'claude' && config.anthropicApiKey
+      ? new ClaudeChatModerationAnalyzer(config.anthropicApiKey, config.aiChatModel)
+      : new MockChatModerationAnalyzer();
+  return cachedModeration;
+}
+
+/** Test seam. */
+export function __setChatModerationAnalyzer(analyzer: ChatModerationAnalyzer | undefined): void {
+  cachedModeration = analyzer;
 }

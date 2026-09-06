@@ -56,6 +56,14 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
+      # AI chat moderation: flags contact-info / off-platform-payment leakage
+      # and abusive messages in order chat. Uses the same ANTHROPIC_API_KEY
+      # above, on a cheap text-only model.
+      - key: AI_CHAT_MODERATION
+        value: claude
+      - key: AI_CHAT_MODEL
+        value: claude-haiku-4-5
+
       # Uploaded images -> Cloudflare R2 (Render's free disk is ephemeral).
       # Until all five R2_* values are set the app logs a warning and falls
       # back to local disk. See docs/DEPLOY.md.

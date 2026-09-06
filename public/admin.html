@@ -113,6 +113,8 @@
         <div id="disputeList"></div>
         <h2 style="margin-top:24px">Receipts flagged by the AI check</h2>
         <div id="receiptList"></div>
+        <h2 style="margin-top:24px">Messages flagged by the chat check</h2>
+        <div id="messageList"></div>
       </div>
     </div>
 
@@ -265,14 +267,15 @@
   }
 
   async function renderQueue() {
-    var host = $('#kycList'); var dhost = $('#disputeList'); var rhost = $('#receiptList');
-    host.textContent = 'Loading…'; dhost.textContent = ''; rhost.textContent = '';
+    var host = $('#kycList'); var dhost = $('#disputeList'); var rhost = $('#receiptList'); var mhost = $('#messageList');
+    host.textContent = 'Loading…'; dhost.textContent = ''; rhost.textContent = ''; mhost.textContent = '';
     try {
       var r = await api('GET', '/api/admin/reviews');
       var q = r.data.queue || [];
       var kyc = q.filter(function (x) { return x.type === 'kyc'; });
       var disputes = q.filter(function (x) { return x.type === 'dispute'; });
       var receipts = q.filter(function (x) { return x.type === 'receipt'; });
+      var messages = q.filter(function (x) { return x.type === 'message'; });
 
       host.innerHTML = '';
       if (!kyc.length) host.appendChild(el('div', { class: 'empty', text: 'Nobody waiting for KYC review.' }));
@@ -318,6 +321,27 @@
           ])
         ]);
         rhost.appendChild(row);
+      });
+
+      mhost.innerHTML = '';
+      if (!messages.length) mhost.appendChild(el('div', { class: 'empty', text: 'No messages flagged.' }));
+      messages.forEach(function (x) {
+        var flags = el('ul', { style: 'margin:6px 0 6px 18px' });
+        (x.flags || []).forEach(function (f) { flags.appendChild(el('li', { text: f })); });
+        var row = el('div', { class: 'stack', style: 'padding:12px 0;border-bottom:1px solid var(--line)' }, [
+          el('div', {}, [
+            'Order ', el('span', { class: 'mono', text: shortId(x.order_id) }), ' · from ',
+            el('span', { text: x.sender_name || shortId(x.sender_id) }), ' · ',
+            el('span', { class: 'badge ' + (x.risk === 'high' ? 'b-danger' : 'b-amber'), text: x.risk + ' risk' })
+          ]),
+          el('div', { class: 'mono', style: 'white-space:pre-wrap', text: x.body }),
+          x.summary ? el('div', { class: 'muted', text: x.summary }) : el('span', {}),
+          flags,
+          el('div', { class: 'row-actions' }, [
+            btn('Clear flag', 'clear-message', { mid: x.id }, 'small secondary')
+          ])
+        ]);
+        mhost.appendChild(row);
       });
     } catch (e) { host.innerHTML = ''; host.appendChild(errBox(e)); }
   }
@@ -550,7 +574,7 @@
 
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest('button[data-act]'); if (!b) return;
-    var act = b.dataset.act, uid = b.dataset.uid, oid = b.dataset.oid;
+    var act = b.dataset.act, uid = b.dataset.uid, oid = b.dataset.oid, mid = b.dataset.mid;
     if (act === 'refresh-queue') return renderQueue();
     if (act === 'refresh-orders') return renderOrders();
     if (act === 'refresh-users') return renderUsers();
@@ -559,6 +583,7 @@
     if (act === 'approve-kyc') return run(b, api('POST', '/api/admin/users/' + uid + '/kyc-review', { status: 'approved', note: 'Approved in console' }), 'KYC approved', refreshCurrent);
     if (act === 'reject-kyc') return run(b, api('POST', '/api/admin/users/' + uid + '/kyc-review', { status: 'rejected', note: 'Rejected in console' }), 'KYC rejected', refreshCurrent);
     if (act === 'clear-receipt') return run(b, api('POST', '/api/admin/orders/' + oid + '/clear-receipt-flag', {}), 'Receipt flag cleared', renderQueue);
+    if (act === 'clear-message') return run(b, api('POST', '/api/admin/messages/' + mid + '/clear-flag', {}), 'Message flag cleared', renderQueue);
     if (act === 'flag') return run(b, api('POST', '/api/admin/users/' + uid + '/flag', { risk_status: 'flagged', reason: 'Flagged in console' }), 'User flagged', refreshCurrent);
     if (act === 'unflag') return run(b, api('POST', '/api/admin/users/' + uid + '/flag', { risk_status: 'clear', reason: 'Cleared in console' }), 'Flag cleared', refreshCurrent);
     if (act === 'confirm-payment') {

@@ -176,6 +176,7 @@ Migrations are forward-only; a rollback that needs a schema change is a manual j
 | `MONEY_RATE_LIMIT_MAX` / `UPLOAD_RATE_LIMIT_MAX` | defaults | 30 / 20 per minute per IP |
 | `PAYMENT_PROVIDER` / `IDENTITY_PROVIDER` | blueprint | `mock` until a real vendor is wired |
 | `AI_RECEIPT_ANALYZER` / `AI_MODEL` | blueprint | `claude` / `claude-opus-5` — the AI receipt check |
-| `ANTHROPIC_API_KEY` | you | from console.anthropic.com; without it the receipt check falls back to the mock |
+| `AI_CHAT_MODERATION` / `AI_CHAT_MODEL` | blueprint | `claude` / `claude-haiku-4-5` — flags leakage/abuse in order chat; same `ANTHROPIC_API_KEY` |
+| `ANTHROPIC_API_KEY` | you | from console.anthropic.com; without it both the receipt check and the chat moderation check fall back to their mocks |
 | `UPLOADS_BACKEND` | blueprint | `r2` — see "Uploads on R2" |
 | `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_PUBLIC_BASE_URL` | you | all five required; any missing → falls back to local disk |

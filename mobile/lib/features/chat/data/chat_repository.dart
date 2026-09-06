@@ -13,8 +13,14 @@ class ChatRepository {
     return items.map((e) => Message.fromJson(Map<String, dynamic>.from(e as Map))).toList();
   }
 
-  Future<void> send(String orderId, String body) =>
-      _api.post('/api/orders/$orderId/messages', body: {'body': body});
+  /// Returns a safety-warning string when the message tripped the leakage
+  /// check (contact info, off-platform payment) — the message still sends
+  /// either way; the caller decides how to surface the warning.
+  Future<String?> send(String orderId, String body) async {
+    final data = await _api.post('/api/orders/$orderId/messages', body: {'body': body});
+    final warning = (data as Map)['warning'];
+    return warning is String ? warning : null;
+  }
 
   Future<void> markRead(String orderId) =>
       _api.post('/api/orders/$orderId/messages/read');

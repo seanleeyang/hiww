@@ -19,7 +19,9 @@ export type AuditAction =
   | 'dispute.open'
   | 'dispute.resolve'
   | 'kyc.review'
-  | 'user.flag';
+  | 'user.flag'
+  | 'message.flag'
+  | 'message.flag_cleared';
 
 export interface AuditActor {
   id?: string | null;
@@ -28,7 +30,7 @@ export interface AuditActor {
 
 export interface AuditInput {
   action: AuditAction;
-  targetType: 'order' | 'user' | 'dispute';
+  targetType: 'order' | 'user' | 'dispute' | 'message';
   targetId: string;
   summary: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

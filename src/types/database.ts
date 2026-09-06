@@ -183,6 +183,11 @@ export interface MessagesTable {
   body: string;
   created_at: Generated<Date>;
   read_at?: Date | null;
+  flag_risk?: 'medium' | 'high' | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  flag_reasons?: any[] | null;
+  flag_summary?: string | null;
+  flag_reviewed_at?: Date | null;
 }
 
 export interface AuditLogTable {

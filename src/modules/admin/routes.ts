@@ -37,6 +37,27 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         .orderBy('purchased_at', 'desc')
         .execute();
 
+      // Chat messages the leakage/moderation check flagged and no operator
+      // has cleared yet.
+      const flaggedMessages = await request.db
+        .selectFrom('messages')
+        .innerJoin('users as sender', 'sender.id', 'messages.sender_id')
+        .select([
+          'messages.id',
+          'messages.order_id',
+          'messages.sender_id',
+          'messages.body',
+          'messages.flag_risk',
+          'messages.flag_reasons',
+          'messages.flag_summary',
+          'messages.created_at',
+          'sender.full_name as sender_name',
+        ])
+        .where('messages.flag_risk', 'in', ['medium', 'high'])
+        .where('messages.flag_reviewed_at', 'is', null)
+        .orderBy('messages.created_at', 'desc')
+        .execute();
+
       const queue = [
         ...openDisputes.map((dispute: any) => ({
           type: 'dispute',
@@ -69,6 +90,18 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           flags: order.receipt_analysis?.flags ?? [],
           summary: order.receipt_analysis?.summary ?? null,
           created_at: order.purchased_at,
+        })),
+        ...flaggedMessages.map((msg: any) => ({
+          type: 'message',
+          id: msg.id,
+          order_id: msg.order_id,
+          sender_id: msg.sender_id,
+          sender_name: msg.sender_name,
+          body: msg.body,
+          risk: msg.flag_risk,
+          flags: msg.flag_reasons ?? [],
+          summary: msg.flag_summary ?? null,
+          created_at: msg.created_at,
         })),
       ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
@@ -113,6 +146,35 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     });
 
     reply.send({ success: true, data: { order_id: order.id }, code: 'RECEIPT_FLAG_CLEARED' });
+  });
+
+  // Operator has looked at a flagged message — drop it from the review queue.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post<{ Params: { id: string } }>('/api/admin/messages/:id/clear-flag', async (request: any, reply: any) => {
+    const message = await request.db
+      .selectFrom('messages')
+      .select(['id', 'flag_risk'])
+      .where('id', '=', request.params.id)
+      .executeTakeFirst();
+    if (!message) {
+      throw new AppError('NOT_FOUND', 404, 'Message not found');
+    }
+
+    await request.db
+      .updateTable('messages')
+      .set({ flag_reviewed_at: new Date() })
+      .where('id', '=', message.id)
+      .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'message.flag_cleared',
+      targetType: 'message',
+      targetId: message.id,
+      summary: `Operator cleared the flag on message ${message.id}`,
+      metadata: { risk: message.flag_risk ?? null },
+    });
+
+    reply.send({ success: true, data: { message_id: message.id }, code: 'MESSAGE_FLAG_CLEARED' });
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

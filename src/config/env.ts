@@ -123,4 +123,14 @@ export const config = {
   aiReceiptAnalyzer: process.env.AI_RECEIPT_ANALYZER || 'mock',
   aiModel: process.env.AI_MODEL || 'claude-opus-5',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
+  /**
+   * AI chat moderation. Every message posted to an order's chat is checked
+   * for contact-info/payment "leakage" attempts (moving the deal off-platform)
+   * and abusive behaviour. `mock` (default) is deterministic for tests and
+   * local dev; `claude` calls the Anthropic API and needs ANTHROPIC_API_KEY.
+   * Advisory only — a flagged message still sends, it just surfaces a warning
+   * to the sender and puts the message in the admin review queue.
+   */
+  aiChatModeration: process.env.AI_CHAT_MODERATION || 'mock',
+  aiChatModel: process.env.AI_CHAT_MODEL || 'claude-haiku-4-5',
 };

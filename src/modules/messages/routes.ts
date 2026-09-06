@@ -2,6 +2,9 @@ import { FastifyInstance } from 'fastify';
 import { AppError, generateId } from '@/utils/helpers';
 import { messageSchema } from '@/types/schemas';
 import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
+import { recordAudit, actorFromRequest } from '@/services/audit';
+import { checkMessageLeakage, LEAKAGE_WARNING, runChatModerationCheck } from '@/services/chat-moderation';
+import { config } from '@/config/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadOrderForParticipant(request: any, orderId: string): Promise<any> {
@@ -61,6 +64,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       }
       await loadOrderForParticipant(request, request.params.id);
 
+      const leak = checkMessageLeakage(parsed.data.body);
       const id = generateId();
       await request.db
         .insertInto('messages')
@@ -70,10 +74,40 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           sender_id: request.userId,
           body: parsed.data.body,
           created_at: new Date(),
+          flag_risk: leak.flagged ? 'medium' : null,
+          flag_reasons: leak.flagged ? JSON.stringify(leak.reasons) : null,
         })
         .execute();
 
-      reply.status(201).send({ success: true, data: { id }, code: 'MESSAGE_SENT' });
+      if (leak.flagged) {
+        await recordAudit(request.db, actorFromRequest(request), {
+          action: 'message.flag',
+          targetType: 'message',
+          targetId: id,
+          summary: `Message on order ${request.params.id} flagged by pattern check: ${leak.reasons.join(', ')}`,
+          metadata: { risk: 'medium', reasons: leak.reasons },
+        });
+      }
+
+      // Runs after the response so it never slows down sending. The mock
+      // analyzer is instant and deterministic, so tests await it directly;
+      // the real model takes a moment and runs in the background.
+      const moderation = runChatModerationCheck(
+        request.db,
+        { id, order_id: request.params.id, body: parsed.data.body },
+        leak.flagged ? 'medium' : null
+      );
+      if (config.aiChatModeration === 'claude') {
+        void moderation.catch(() => undefined);
+      } else {
+        await moderation;
+      }
+
+      reply.status(201).send({
+        success: true,
+        data: { id, warning: leak.flagged ? LEAKAGE_WARNING : null },
+        code: 'MESSAGE_SENT',
+      });
     }
   );
 
