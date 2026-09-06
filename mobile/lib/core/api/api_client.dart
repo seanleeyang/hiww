@@ -18,7 +18,14 @@ class ApiClient {
           baseUrl: baseUrl,
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 20),
-          headers: {'Content-Type': 'application/json'},
+          // Every response here is dynamic, user-specific marketplace data —
+          // there's never a legitimate reason for the browser to serve a
+          // cached copy on web, so opt out explicitly rather than relying on
+          // the backend to always remember to set this on every route.
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+          },
         ),
       ) {
     _dio.interceptors.add(

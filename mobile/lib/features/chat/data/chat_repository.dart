@@ -10,9 +10,18 @@ class ChatRepository {
   Future<List<Message>> messages(String orderId) async {
     final data = await _api.get('/api/orders/$orderId/messages');
     final items = ((data as Map)['items'] as List?) ?? [];
-    return items
-        .map((e) => Message.fromJson(Map<String, dynamic>.from(e as Map)))
-        .toList();
+    // One malformed row must not take down the whole conversation — parse
+    // defensively and skip anything that doesn't fit, rather than letting
+    // the exception propagate and silently killing the polling stream.
+    final parsed = <Message>[];
+    for (final e in items) {
+      try {
+        parsed.add(Message.fromJson(Map<String, dynamic>.from(e as Map)));
+      } catch (_) {
+        // skip malformed row
+      }
+    }
+    return parsed;
   }
 
   /// Returns a safety-warning string when the message (or its photo) tripped
@@ -62,14 +71,28 @@ final unreadTotalProvider = Provider<int>((ref) {
   return inbox.fold(0, (sum, t) => sum + t.unreadCount);
 });
 
-/// Polls one conversation every 5 s while a chat screen is open.
+/// Polls one conversation every 5 s while a chat screen is open. A single
+/// failed fetch (a network blip, a transient 5xx) must not permanently kill
+/// the polling loop — an uncaught throw inside an async* generator ends the
+/// stream for good, so every fetch here is guarded to keep the loop alive.
 final orderMessagesProvider = StreamProvider.family<List<Message>, String>((
   ref,
   orderId,
 ) async* {
   final repo = ref.watch(chatRepositoryProvider);
-  yield await repo.messages(orderId);
+  List<Message>? last;
+  Future<void> fetch() async {
+    try {
+      last = await repo.messages(orderId);
+    } catch (_) {
+      // keep showing the previous value; the next poll tries again
+    }
+  }
+
+  await fetch();
+  if (last != null) yield last!;
   await for (final _ in Stream<void>.periodic(const Duration(seconds: 5))) {
-    yield await repo.messages(orderId);
+    await fetch();
+    if (last != null) yield last!;
   }
 });
