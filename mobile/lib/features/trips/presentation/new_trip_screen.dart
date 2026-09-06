@@ -119,6 +119,13 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     }
   }
 
+  /// A single "Cancel trip" action for the user — whether that ends up being
+  /// a real delete (no offers yet) or a status change (some interest
+  /// already) is an implementation detail they shouldn't have to reason
+  /// about. Tries the real delete first and silently falls back to cancel
+  /// when offers exist; if an order is actually in progress, neither is
+  /// appropriate — that's resolved per-order via "Report a problem", not
+  /// here, since one trip can carry many shoppers' orders.
   Future<void> _cancelTrip() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -141,61 +148,41 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     if (confirmed != true) return;
 
     setState(() => _submitting = true);
-    try {
-      final id = widget.existing!.id;
-      await ref.read(tripsRepositoryProvider).cancel(id);
-      ref.invalidate(myTripsProvider);
-      ref.invalidate(feedProvider);
-      ref.invalidate(tripDetailProvider(id));
-      if (!mounted) return;
-      context.pop();
-      context.pop();
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _submitting = false;
-        _error = e.message;
-      });
-    }
-  }
+    final id = widget.existing!.id;
+    final repo = ref.read(tripsRepositoryProvider);
 
-  Future<void> _deleteTrip() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete this trip?'),
-        content: const Text(
-          'This removes the post entirely, not just from search — only possible '
-          'while it has no offers yet. This can\'t be undone.',
-        ),
-        actions: [
-          TextButton(onPressed: () => context.pop(false), child: const Text('Keep trip')),
-          FilledButton(
-            onPressed: () => context.pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Delete trip'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    setState(() => _submitting = true);
     try {
-      final id = widget.existing!.id;
-      await ref.read(tripsRepositoryProvider).delete(id);
-      ref.invalidate(myTripsProvider);
-      ref.invalidate(feedProvider);
-      if (!mounted) return;
-      context.pop();
-      context.pop();
+      await repo.delete(id);
     } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _submitting = false;
-        _error = e.message;
-      });
+      if (e.code != 'TRIP_HAS_OFFERS') {
+        if (!mounted) return;
+        setState(() {
+          _submitting = false;
+          _error = e.message;
+        });
+        return;
+      }
+      try {
+        await repo.cancel(id);
+      } on ApiException catch (e2) {
+        if (!mounted) return;
+        setState(() {
+          _submitting = false;
+          _error = e2.code == 'TRIP_HAS_ACTIVE_ORDERS'
+              ? 'This trip has an order still in progress. Use "Report a problem" '
+                  'on that order instead — cancelling the trip itself won\'t resolve it.'
+              : e2.message;
+        });
+        return;
+      }
     }
+
+    ref.invalidate(myTripsProvider);
+    ref.invalidate(feedProvider);
+    ref.invalidate(tripDetailProvider(id));
+    if (!mounted) return;
+    context.pop();
+    context.pop();
   }
 
   @override
@@ -205,19 +192,10 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
         title: Text(_editing ? 'Edit trip' : 'Post a trip'),
         actions: [
           if (_editing)
-            PopupMenuButton<_TripAction>(
-              enabled: !_submitting,
-              onSelected: (a) => a == _TripAction.delete ? _deleteTrip() : _cancelTrip(),
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: _TripAction.delete,
-                  child: Text('Delete trip'),
-                ),
-                PopupMenuItem(
-                  value: _TripAction.cancel,
-                  child: Text('Cancel trip'),
-                ),
-              ],
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Cancel trip',
+              onPressed: _submitting ? null : _cancelTrip,
             ),
         ],
       ),
@@ -372,5 +350,3 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     );
   }
 }
-
-enum _TripAction { delete, cancel }
