@@ -58,6 +58,18 @@ export interface MessageRedaction {
  * subtler cases (harassment, indirect phrasing) are left to the async AI
  * pass below, which can't redact — see `runChatModerationCheck`.
  */
+// Reasons that mean "this message is trying to move the conversation off
+// the platform" — once one of these fires, a nearby number is unambiguous
+// regardless of length, unlike a bare number found on its own.
+const CONTEXTUAL_TRIGGER_REASONS = new Set([
+  'mentions bank/PromptPay payment details',
+  'mentions an outside messaging app',
+  'suggests paying outside the app',
+]);
+
+/** 4+ digits, not 9+ — only ever applied after a payment/app keyword already fired. */
+const SHORT_NUMBER_RE = /\b\d(?:[-.\s]?\d){3,}\b/g;
+
 export function redactLeakage(body: string): MessageRedaction {
   const reasons = new Set<string>();
   let redacted = body;
@@ -65,6 +77,16 @@ export function redactLeakage(body: string): MessageRedaction {
     if (re.test(redacted)) reasons.add(reason);
     redacted = redacted.replace(re, placeholder);
   }
+
+  // "my promptpay is 98268203" — 8 digits, under the general 9-digit
+  // threshold that keeps ordinary numbers (prices, quantities) from being
+  // flagged. But the keyword already makes intent unambiguous, so sweep
+  // again for shorter digit runs once one has fired.
+  if ([...reasons].some((r) => CONTEXTUAL_TRIGGER_REASONS.has(r))) {
+    if (SHORT_NUMBER_RE.test(redacted)) reasons.add('possible phone/account number');
+    redacted = redacted.replace(SHORT_NUMBER_RE, '[number hidden]');
+  }
+
   return { body: redacted, flagged: reasons.size > 0, reasons: [...reasons] };
 }
 

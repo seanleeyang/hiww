@@ -124,6 +124,24 @@ describe('AI chat moderation', () => {
     expect(bodies[1]).toContain('[hidden]');
   });
 
+  it('a short number next to a payment keyword is redacted even under the general digit threshold', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    // 8 digits — below the general 9-digit phone/account threshold on its
+    // own, but "promptpay" right next to it makes the number unambiguous.
+    const res = await send(order, 'my promptpay is 98268203');
+    expect(res.json().data.warning).toBeTruthy();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const body = list.json().data.items[0].body as string;
+    expect(body).not.toContain('98268203');
+    expect(body).toContain('[number hidden]');
+  });
+
   it('a message the AI check calls high-risk is hidden from both participants', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);
