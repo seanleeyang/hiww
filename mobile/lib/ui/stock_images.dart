@@ -4,10 +4,13 @@ library;
 
 const _cities = <String, String>{
   'TH': 'assets/images/bangkok.jpg',
-  'JP': 'assets/images/tokyo.jpg',
+  'JP': 'assets/images/japan.jpg',
   'KR': 'assets/images/seoul.jpg',
   'GB': 'assets/images/london.jpg',
   'UK': 'assets/images/london.jpg',
+  'TW': 'assets/images/taipei.jpg',
+  'HK': 'assets/images/hongkong.jpg',
+  'CN': 'assets/images/china.jpg',
 };
 
 const _categories = <String, String>{
