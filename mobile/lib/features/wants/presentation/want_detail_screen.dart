@@ -8,6 +8,7 @@ import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/initials_avatar.dart';
 import '../../../ui/marketplace_bits.dart';
+import '../../../ui/responsive_body.dart';
 import '../../../ui/section_header.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/status_pill.dart';
@@ -29,97 +30,99 @@ class WantDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Want')),
-      body: AsyncValueView(
-        value: detail,
-        onRetry: () => ref.invalidate(wantDetailProvider(wantId)),
-        data: (d) {
-          final want = d.want;
-          final mine = me?.id == want.shopperId;
-          final iAmTraveler = me?.userType.isTraveler ?? false;
+      body: ResponsiveBody(
+        child: AsyncValueView(
+          value: detail,
+          onRetry: () => ref.invalidate(wantDetailProvider(wantId)),
+          data: (d) {
+            final want = d.want;
+            final mine = me?.id == want.shopperId;
+            final iAmTraveler = me?.userType.isTraveler ?? false;
 
-          return RefreshIndicator(
-            onRefresh: () => ref.pullToRefreshAll([
-              wantDetailProvider(wantId).future,
-              if (mine) wantOffersProvider(wantId).future,
-            ]),
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-              children: [
-                HeroImage(
-                  url: want.imageUrl,
-                  fallbackAsset: stockForCategory(want.category),
-                  height: 200,
-                  heroTag: 'want-${want.id}',
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        want.displayTitle,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ),
-                    StatusPill(want.status),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(want.itemDescription),
-                const SizedBox(height: 14),
-                SoftCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            return RefreshIndicator(
+              onRefresh: () => ref.pullToRefreshAll([
+                wantDetailProvider(wantId).future,
+                if (mine) wantOffersProvider(wantId).future,
+              ]),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                children: [
+                  HeroImage(
+                    url: want.imageUrl,
+                    fallbackAsset: stockForCategory(want.category),
+                    height: 200,
+                    heroTag: 'want-${want.id}',
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
                     children: [
-                      IconLine(
-                        Icons.sell_outlined,
-                        'Budget ${want.budgetLabel}',
+                      Expanded(
+                        child: Text(
+                          want.displayTitle,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
-                      if (want.quantity > 1) ...[
-                        const SizedBox(height: 6),
-                        IconLine(Icons.numbers, 'Quantity ${want.quantity}'),
-                      ],
-                      const SizedBox(height: 6),
-                      IconLine(
-                        Icons.public,
-                        'Buy in ${want.sourceCity ?? countryName(want.sourceCountry)}',
-                      ),
-                      if (want.needByLabel != null) ...[
-                        const SizedBox(height: 6),
-                        IconLine(Icons.event_outlined, want.needByLabel!),
-                      ],
+                      StatusPill(want.status),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                if (d.shopper != null) ...[
-                  AvatarRating(user: d.shopper!, radius: 20),
-                  const SizedBox(height: 16),
-                  ReviewsPreview(userId: want.shopperId, max: 2),
-                ],
-                const SizedBox(height: 8),
-                if (mine)
-                  _OffersSection(
-                    wantId: wantId,
-                    requestOpen: want.status == 'open',
-                  )
-                else if (iAmTraveler && want.status == 'open')
-                  FilledButton.icon(
-                    onPressed: () => context.push('/wants/$wantId/offer'),
-                    icon: const Icon(Icons.local_offer_outlined),
-                    label: const Text('Make an offer'),
-                  )
-                else if (want.status != 'open')
-                  Text(
-                    'This want is no longer taking offers.',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(height: 6),
+                  Text(want.itemDescription),
+                  const SizedBox(height: 14),
+                  SoftCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        IconLine(
+                          Icons.sell_outlined,
+                          'Budget ${want.budgetLabel}',
+                        ),
+                        if (want.quantity > 1) ...[
+                          const SizedBox(height: 6),
+                          IconLine(Icons.numbers, 'Quantity ${want.quantity}'),
+                        ],
+                        const SizedBox(height: 6),
+                        IconLine(
+                          Icons.public,
+                          'Buy in ${want.sourceCity ?? countryName(want.sourceCountry)}',
+                        ),
+                        if (want.needByLabel != null) ...[
+                          const SizedBox(height: 6),
+                          IconLine(Icons.event_outlined, want.needByLabel!),
+                        ],
+                      ],
                     ),
                   ),
-              ],
-            ),
-          );
-        },
+                  const SizedBox(height: 16),
+                  if (d.shopper != null) ...[
+                    AvatarRating(user: d.shopper!, radius: 20),
+                    const SizedBox(height: 16),
+                    ReviewsPreview(userId: want.shopperId, max: 2),
+                  ],
+                  const SizedBox(height: 8),
+                  if (mine)
+                    _OffersSection(
+                      wantId: wantId,
+                      requestOpen: want.status == 'open',
+                    )
+                  else if (iAmTraveler && want.status == 'open')
+                    FilledButton.icon(
+                      onPressed: () => context.push('/wants/$wantId/offer'),
+                      icon: const Icon(Icons.local_offer_outlined),
+                      label: const Text('Make an offer'),
+                    )
+                  else if (want.status != 'open')
+                    Text(
+                      'This want is no longer taking offers.',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
