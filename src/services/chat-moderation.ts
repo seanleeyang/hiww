@@ -3,41 +3,63 @@ import type { Database } from '@/types/database';
 import { getChatModerationAnalyzer } from '@/services/ai';
 import { recordAudit } from '@/services/audit';
 
-const LEAK_PATTERNS: Array<{ re: RegExp; reason: string }> = [
-  { re: /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/, reason: 'possible phone number' },
-  { re: /\b\d{9,}\b/, reason: 'possible phone number' },
-  { re: /[\w.+-]+@[\w-]+\.[a-z]{2,}/i, reason: 'email address' },
+const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> = [
+  { re: /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, reason: 'possible phone number', placeholder: '[phone number hidden]' },
+  { re: /\b\d{9,}\b/g, reason: 'possible phone number', placeholder: '[phone number hidden]' },
+  { re: /[\w.+-]+@[\w-]+\.[a-z]{2,}/gi, reason: 'email address', placeholder: '[email hidden]' },
   {
-    re: /\b(whatsapp|line id|telegram|wechat|signal app|@[a-z0-9_]{3,})\b/i,
+    re: /\b(whatsapp|line id|telegram|wechat|signal app|@[a-z0-9_]{3,})\b/gi,
     reason: 'mentions an outside messaging app',
+    placeholder: '[hidden]',
   },
   {
-    re: /\b(pay(ment)?\s*(me|directly|outside)|cash only|skip the app|off[- ]platform|outside (of )?the app)\b/i,
+    re: /\b(pay(ment)?\s*(me|directly|outside)|cash only|skip the app|off[- ]platform|outside (of )?the app)\b/gi,
     reason: 'suggests paying outside the app',
+    placeholder: '[hidden]',
   },
 ];
 
-export interface MessageLeakCheck {
+export interface MessageRedaction {
+  /** The text to actually store/show — contact info etc. replaced with a placeholder. */
+  body: string;
   flagged: boolean;
   reasons: string[];
 }
 
 /**
- * Instant, free, deterministic pattern match — catches the obvious leakage
- * attempts (contact info, off-platform payment) before the message is even
- * stored. Runs synchronously on every send; the subtler cases (harassment,
- * indirect phrasing) are left to the async AI pass below.
+ * Instant, free, deterministic pattern match — redacts the obvious leakage
+ * attempts (contact info, off-platform payment) in place before the message
+ * is ever stored, so the raw phone number / email / handle is never exposed
+ * to the other party even briefly. Runs synchronously on every send; the
+ * subtler cases (harassment, indirect phrasing) are left to the async AI
+ * pass below, which can't redact — see `runChatModerationCheck`.
  */
-export function checkMessageLeakage(body: string): MessageLeakCheck {
+export function redactLeakage(body: string): MessageRedaction {
   const reasons = new Set<string>();
-  for (const { re, reason } of LEAK_PATTERNS) {
-    if (re.test(body)) reasons.add(reason);
+  let redacted = body;
+  for (const { re, reason, placeholder } of LEAK_PATTERNS) {
+    if (re.test(redacted)) reasons.add(reason);
+    redacted = redacted.replace(re, placeholder);
   }
-  return { flagged: reasons.size > 0, reasons: [...reasons] };
+  return { body: redacted, flagged: reasons.size > 0, reasons: [...reasons] };
 }
 
 export const LEAKAGE_WARNING =
-  'For your safety, keep item details, payments and contact info inside Hiww. Messages are reviewed for anything that looks unsafe.';
+  "We removed contact details or off-platform payment mentions from your message to keep everyone safe — the rest still sent. Messages are reviewed for anything else that looks unsafe.";
+
+/** Shown in place of a message an operator or the AI check pulled after the fact. */
+export const HIDDEN_TO_SENDER =
+  "Your message was removed — it didn't meet Hiww's chat guidelines and is under review.";
+export const HIDDEN_TO_OTHERS = "A message was removed — it didn't meet Hiww's chat guidelines.";
+
+/** What a participant should see instead of the raw body, if anything. */
+export function presentMessageBody(
+  message: { body: string; hidden_at?: Date | string | null; sender_id: string },
+  viewerId: string
+): string {
+  if (!message.hidden_at) return message.body;
+  return message.sender_id === viewerId ? HIDDEN_TO_SENDER : HIDDEN_TO_OTHERS;
+}
 
 interface MessageForCheck {
   id: string;
@@ -46,10 +68,13 @@ interface MessageForCheck {
 }
 
 /**
- * Background AI pass. Runs after the message is already stored and the
- * sender's request has returned, so it never adds latency to sending a
- * message — same fire-and-forget shape as the receipt check. Never
- * downgrades a risk the synchronous regex pass already set, only escalates.
+ * Background AI pass. Runs after the message is already stored (with any
+ * regex redaction already applied) and the sender's request has returned,
+ * so it never adds latency to sending — same fire-and-forget shape as the
+ * receipt check. A `high` verdict retroactively hides the message (an
+ * operator can still see it in the review queue); `medium` only flags it,
+ * since confidence is lower and hiding real conversation is costlier than
+ * the residual risk. Never downgrades a risk the regex pass already set.
  */
 export async function runChatModerationCheck(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,6 +95,7 @@ export async function runChatModerationCheck(
         flag_risk: result.risk,
         flag_reasons: JSON.stringify(result.reasons),
         flag_summary: result.summary,
+        ...(result.risk === 'high' ? { hidden_at: new Date() } : {}),
       })
       .where('id', '=', message.id)
       .execute();
@@ -81,7 +107,10 @@ export async function runChatModerationCheck(
         action: 'message.flag',
         targetType: 'message',
         targetId: message.id,
-        summary: `AI chat check flagged a message on order ${message.order_id} as ${result.risk} risk`,
+        summary:
+          result.risk === 'high'
+            ? `AI chat check hid a message on order ${message.order_id} (high risk)`
+            : `AI chat check flagged a message on order ${message.order_id} as ${result.risk} risk`,
         metadata: { risk: result.risk, reasons: result.reasons, model: result.model },
       }
     );

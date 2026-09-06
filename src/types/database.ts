@@ -188,6 +188,7 @@ export interface MessagesTable {
   flag_reasons?: any[] | null;
   flag_summary?: string | null;
   flag_reviewed_at?: Date | null;
+  hidden_at?: Date | null;
 }
 
 export interface AuditLogTable {

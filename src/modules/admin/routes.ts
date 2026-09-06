@@ -50,6 +50,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           'messages.flag_risk',
           'messages.flag_reasons',
           'messages.flag_summary',
+          'messages.hidden_at',
           'messages.created_at',
           'sender.full_name as sender_name',
         ])
@@ -101,6 +102,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           risk: msg.flag_risk,
           flags: msg.flag_reasons ?? [],
           summary: msg.flag_summary ?? null,
+          hidden: Boolean(msg.hidden_at),
           created_at: msg.created_at,
         })),
       ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -160,9 +162,11 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       throw new AppError('NOT_FOUND', 404, 'Message not found');
     }
 
+    // Clearing means "I looked at this, it's fine" — restores a message the
+    // AI check had hidden, in addition to dropping it from the queue.
     await request.db
       .updateTable('messages')
-      .set({ flag_reviewed_at: new Date() })
+      .set({ flag_reviewed_at: new Date(), hidden_at: null })
       .where('id', '=', message.id)
       .execute();
 

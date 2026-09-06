@@ -3,7 +3,12 @@ import { AppError, generateId } from '@/utils/helpers';
 import { messageSchema } from '@/types/schemas';
 import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
 import { recordAudit, actorFromRequest } from '@/services/audit';
-import { checkMessageLeakage, LEAKAGE_WARNING, runChatModerationCheck } from '@/services/chat-moderation';
+import {
+  redactLeakage,
+  presentMessageBody,
+  LEAKAGE_WARNING,
+  runChatModerationCheck,
+} from '@/services/chat-moderation';
 import { config } from '@/config/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,13 +40,14 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
     async (request: any, reply: any) => {
       await loadOrderForParticipant(request, request.params.id);
 
-      const items = await request.db
+      const rows = await request.db
         .selectFrom('messages')
         .innerJoin('users as sender', 'sender.id', 'messages.sender_id')
         .select([
           'messages.id',
           'messages.sender_id',
           'messages.body',
+          'messages.hidden_at',
           'messages.created_at',
           'messages.read_at',
           'sender.full_name as sender_name',
@@ -49,6 +55,12 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         .where('messages.order_id', '=', request.params.id)
         .orderBy('messages.created_at', 'asc')
         .execute();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items = rows.map(({ hidden_at, ...row }: any) => ({
+        ...row,
+        body: presentMessageBody({ ...row, hidden_at }, request.userId),
+      }));
 
       reply.send({ success: true, data: { items }, code: 'MESSAGES_LISTED' });
     }
@@ -64,7 +76,9 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       }
       await loadOrderForParticipant(request, request.params.id);
 
-      const leak = checkMessageLeakage(parsed.data.body);
+      // Redact contact info / off-platform-payment mentions in place — the
+      // raw text is never stored, so it can't leak even briefly.
+      const leak = redactLeakage(parsed.data.body);
       const id = generateId();
       await request.db
         .insertInto('messages')
@@ -72,7 +86,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           id,
           order_id: request.params.id,
           sender_id: request.userId,
-          body: parsed.data.body,
+          body: leak.body,
           created_at: new Date(),
           flag_risk: leak.flagged ? 'medium' : null,
           flag_reasons: leak.flagged ? JSON.stringify(leak.reasons) : null,
@@ -84,17 +98,18 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           action: 'message.flag',
           targetType: 'message',
           targetId: id,
-          summary: `Message on order ${request.params.id} flagged by pattern check: ${leak.reasons.join(', ')}`,
-          metadata: { risk: 'medium', reasons: leak.reasons },
+          summary: `Message on order ${request.params.id} redacted by pattern check: ${leak.reasons.join(', ')}`,
+          metadata: { risk: 'medium', reasons: leak.reasons, original_body: parsed.data.body },
         });
       }
 
-      // Runs after the response so it never slows down sending. The mock
-      // analyzer is instant and deterministic, so tests await it directly;
-      // the real model takes a moment and runs in the background.
+      // Runs after the response so it never slows down sending. Checks the
+      // already-redacted text — never sends raw contact info to the model.
+      // The mock analyzer is instant and deterministic, so tests await it
+      // directly; the real model takes a moment and runs in the background.
       const moderation = runChatModerationCheck(
         request.db,
-        { id, order_id: request.params.id, body: parsed.data.body },
+        { id, order_id: request.params.id, body: leak.body },
         leak.flagged ? 'medium' : null
       );
       if (config.aiChatModeration === 'claude') {
@@ -147,12 +162,14 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       for (const order of orders) {
         const last = await request.db
           .selectFrom('messages')
-          .select(['id', 'sender_id', 'body', 'created_at'])
+          .select(['id', 'sender_id', 'body', 'hidden_at', 'created_at'])
           .where('order_id', '=', order.id)
           .orderBy('created_at', 'desc')
           .limit(1)
           .executeTakeFirst();
         if (!last) continue;
+        const { hidden_at, ...lastPublic } = last;
+        lastPublic.body = presentMessageBody({ ...last, hidden_at }, request.userId);
 
         const unread = await request.db
           .selectFrom('messages')
@@ -175,7 +192,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           item_description: order.item_description,
           order_status: order.status,
           counterparty: counterparty ? toUserSummary(counterparty) : null,
-          last_message: last,
+          last_message: lastPublic,
           unread_count: Number(unread?.count ?? 0),
         });
       }

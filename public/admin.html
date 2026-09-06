@@ -332,7 +332,8 @@
           el('div', {}, [
             'Order ', el('span', { class: 'mono', text: shortId(x.order_id) }), ' · from ',
             el('span', { text: x.sender_name || shortId(x.sender_id) }), ' · ',
-            el('span', { class: 'badge ' + (x.risk === 'high' ? 'b-danger' : 'b-amber'), text: x.risk + ' risk' })
+            el('span', { class: 'badge ' + (x.risk === 'high' ? 'b-danger' : 'b-amber'), text: x.risk + ' risk' }),
+            x.hidden ? el('span', { class: 'badge b-grey', style: 'margin-left:6px', text: 'hidden from chat' }) : el('span', {})
           ]),
           el('div', { class: 'mono', style: 'white-space:pre-wrap', text: x.body }),
           x.summary ? el('div', { class: 'muted', text: x.summary }) : el('span', {}),
