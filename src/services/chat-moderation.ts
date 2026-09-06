@@ -2,6 +2,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from '@/types/database';
 import { getChatModerationAnalyzer } from '@/services/ai';
 import { recordAudit } from '@/services/audit';
+import { recordNotification } from '@/services/notify';
 
 const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> = [
   {
@@ -113,6 +114,7 @@ export function presentMessageBody(
 interface MessageForCheck {
   id: string;
   order_id: string;
+  sender_id: string;
   body: string;
   /** Already past the QR check — never a photo that was rejected outright. */
   image_url?: string | null;
@@ -168,6 +170,22 @@ export async function runChatModerationCheck(
         metadata: { risk: result.risk, reasons: result.reasons, model: result.model },
       }
     );
+
+    // The instant regex/QR checks return a `warning` in the send response
+    // itself, so the sender finds out immediately. This check runs after
+    // that response has already gone out, so a hidden message needs its own
+    // notification or the sender only discovers it by noticing the
+    // placeholder text next time they open the chat.
+    if (result.risk === 'high') {
+      await recordNotification(db, {
+        userId: message.sender_id,
+        type: 'message_flagged',
+        subject: 'A message was removed',
+        body: "One of your chat messages didn't meet Hiww's chat guidelines and was removed. It's under review.",
+        orderId: message.order_id,
+        link: `/orders/${message.order_id}/chat`,
+      });
+    }
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[chat-moderation] failed for message', message.id, err);

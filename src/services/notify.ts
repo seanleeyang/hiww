@@ -16,7 +16,8 @@ export type NotificationType =
   | 'delivered'
   | 'payout_sent'
   | 'dispute_opened'
-  | 'dispute_resolved';
+  | 'dispute_resolved'
+  | 'message_flagged';
 
 export interface NotificationInput {
   userId: string;

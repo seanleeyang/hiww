@@ -35,15 +35,16 @@ class NotificationsScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(notificationsProvider),
           data: (data) {
             if (data.items.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 90),
-                EmptyState(
-                  icon: Icons.notifications_none,
-                  title: 'Nothing yet',
-                  message:
-                      'Updates on your orders — payments, shipping, delivery — show up here.',
-                ),
-              ]);
+              return ListView(
+                children: const [
+                  SizedBox(height: 90),
+                  EmptyState(
+                    icon: Icons.notifications_none,
+                    title: 'Nothing yet',
+                    message: 'Updates on your orders — payments, shipping, delivery — show up here.',
+                  ),
+                ],
+              );
             }
             return ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -60,7 +61,8 @@ class NotificationsScreen extends ConsumerWidget {
                       ref.invalidate(notificationsProvider);
                     }
                     if (!context.mounted) return;
-                    final to = n.link ??
+                    final to =
+                        n.link ??
                         (n.orderId != null ? '/orders/${n.orderId}' : null);
                     if (to != null) context.push(to);
                   },
@@ -79,14 +81,19 @@ class NotificationsScreen extends ConsumerWidget {
                         child: Text(
                           n.subject,
                           style: TextStyle(
-                            fontWeight:
-                                n.isUnread ? FontWeight.w700 : FontWeight.w600,
+                            fontWeight: n.isUnread
+                                ? FontWeight.w700
+                                : FontWeight.w600,
                           ),
                         ),
                       ),
-                      Text(timeAgo(n.createdAt),
-                          style: TextStyle(
-                              fontSize: 12, color: scheme.onSurfaceVariant)),
+                      Text(
+                        timeAgo(n.createdAt),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                   subtitle: Padding(
@@ -111,16 +118,17 @@ class NotificationsScreen extends ConsumerWidget {
   }
 
   static IconData _iconFor(String type) => switch (type) {
-        'offer_received' => Icons.local_offer_outlined,
-        'offer_accepted' => Icons.handshake_outlined,
-        'payment_claimed' => Icons.hourglass_top,
-        'payment_confirmed' => Icons.payments_outlined,
-        'purchase_proof' => Icons.receipt_long_outlined,
-        'shipped' => Icons.local_shipping_outlined,
-        'delivered' => Icons.check_circle_outline,
-        'payout_sent' => Icons.account_balance_wallet_outlined,
-        'dispute_opened' => Icons.report_gmailerrorred_outlined,
-        'dispute_resolved' => Icons.gavel_outlined,
-        _ => Icons.notifications_none,
-      };
+    'offer_received' => Icons.local_offer_outlined,
+    'offer_accepted' => Icons.handshake_outlined,
+    'payment_claimed' => Icons.hourglass_top,
+    'payment_confirmed' => Icons.payments_outlined,
+    'purchase_proof' => Icons.receipt_long_outlined,
+    'shipped' => Icons.local_shipping_outlined,
+    'delivered' => Icons.check_circle_outline,
+    'payout_sent' => Icons.account_balance_wallet_outlined,
+    'dispute_opened' => Icons.report_gmailerrorred_outlined,
+    'dispute_resolved' => Icons.gavel_outlined,
+    'message_flagged' => Icons.flag_outlined,
+    _ => Icons.notifications_none,
+  };
 }

@@ -171,6 +171,19 @@ describe('AI chat moderation', () => {
     });
     expect(asCounterparty.json().data.items[0].body).toMatch(/a message was removed/i);
     expect(asCounterparty.json().data.items[0].body).not.toContain('suspicious');
+
+    // The instant regex/QR checks return a `warning` in the send response
+    // itself, but this is the async AI check — it runs after that response
+    // already went out, so the sender needs an explicit notification.
+    const notifications = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/notifications',
+      headers: authHeader(order.shopper),
+    });
+    const items = notifications.json().data.items as Array<{ type: string; order_id: string }>;
+    expect(items.some((n) => n.type === 'message_flagged' && n.order_id === order.orderId)).toBe(
+      true
+    );
   });
 
   it('clearing a hidden message restores it to the conversation', async () => {

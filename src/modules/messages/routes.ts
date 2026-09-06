@@ -142,7 +142,13 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       // model takes a moment and runs in the background.
       const moderation = runChatModerationCheck(
         request.db,
-        { id, order_id: request.params.id, body: leak.body, image_url: imageUrl },
+        {
+          id,
+          order_id: request.params.id,
+          sender_id: request.userId,
+          body: leak.body,
+          image_url: imageUrl,
+        },
         flagged ? 'medium' : null
       );
       if (config.aiChatModeration === 'claude') {
