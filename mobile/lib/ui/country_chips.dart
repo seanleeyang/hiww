@@ -17,7 +17,6 @@ class CountryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -34,16 +33,6 @@ class CountryChips extends StatelessWidget {
               label: Text(c.name),
               selected: selected == c.code,
               onSelected: (_) => onSelected(c.code),
-            ),
-            const SizedBox(width: 8),
-          ],
-          for (final c in kComingSoonCountries) ...[
-            Chip(
-              label: Text(c.name),
-              avatar: Icon(Icons.schedule, size: 16, color: scheme.onSurfaceVariant),
-              backgroundColor: scheme.surfaceContainerHigh,
-              labelStyle: TextStyle(color: scheme.onSurfaceVariant),
-              side: BorderSide.none,
             ),
             const SizedBox(width: 8),
           ],
