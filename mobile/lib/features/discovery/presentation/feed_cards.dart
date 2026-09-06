@@ -27,8 +27,14 @@ class TripFeedCard extends StatelessWidget {
   final int matchCount;
   final VoidCallback? onTap;
 
+  /// Below this, a lone match's payout reads as unimpressive rather than
+  /// enticing — skip the badge and let the match-count line speak instead.
+  static const _earnBadgeFloor = 300;
+
   @override
   Widget build(BuildContext context) {
+    final showEarnBadge =
+        earnMin != null && earnMax != null && (double.tryParse(earnMax!) ?? 0) >= _earnBadgeFloor;
     return SoftCard(
       padding: EdgeInsets.zero,
       onTap: onTap,
@@ -44,7 +50,7 @@ class TripFeedCard extends StatelessWidget {
                 borderRadius: 20,
                 heroTag: 'trip-${trip.id}',
               ),
-              if (earnMin != null && earnMax != null)
+              if (showEarnBadge)
                 Positioned(
                   right: 12,
                   bottom: 12,
