@@ -4,6 +4,7 @@ final _dayMonth = DateFormat('MMM d');
 final _monthDayYear = DateFormat('MMM d, y');
 final _dayMonthTime = DateFormat('MMM d, h:mm a');
 final _timeOnly = DateFormat('h:mm a');
+final _dMmmY = DateFormat('d MMM y');
 
 /// `฿1,500` / `฿1,234.56` — the backend stores amounts as decimal strings.
 String money(Object? amount) {
@@ -22,15 +23,12 @@ String money(Object? amount) {
   return '฿${f.format(value)}';
 }
 
-/// `Nov 12–19` (same month) / `Nov 28 – Dec 3` / single date `Nov 12`.
+/// `12 Nov 2026 to 19 Nov 2026` / single date `12 Nov 2026`.
 String dateRange(DateTime? start, DateTime? end) {
   if (start == null && end == null) return '';
-  if (start == null) return _dayMonth.format(end!);
-  if (end == null) return _dayMonth.format(start);
-  if (start.year == end.year && start.month == end.month) {
-    return '${_dayMonth.format(start)}–${end.day}';
-  }
-  return '${_dayMonth.format(start)} – ${_dayMonth.format(end)}';
+  if (start == null) return _dMmmY.format(end!);
+  if (end == null) return _dMmmY.format(start);
+  return '${_dMmmY.format(start)} to ${_dMmmY.format(end)}';
 }
 
 String dateLong(DateTime? d) => d == null ? '' : _monthDayYear.format(d);

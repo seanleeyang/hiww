@@ -5,7 +5,9 @@ import '../theme/app_colors.dart';
 import 'initials_avatar.dart';
 import 'star_rating.dart';
 
-/// "BKK → NRT · Nov 12–19"
+/// "Bangkok to Tokyo" with "12 Nov 2026 to 19 Nov 2026" below — stacked
+/// rather than joined on one line, since spelled-out routes and full dates
+/// are too long to fit a single line on a phone-width card.
 class RouteChip extends StatelessWidget {
   const RouteChip({super.key, required this.route, this.dates});
   final String route;
@@ -15,14 +17,34 @@ class RouteChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Text(
-        dates == null || dates!.isEmpty ? route : '$route  ·  $dates',
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            route,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
+          if (dates != null && dates!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              dates!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

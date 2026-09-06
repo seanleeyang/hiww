@@ -1,3 +1,4 @@
+import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../shared/domain/user_summary.dart';
 
@@ -36,9 +37,9 @@ class Trip {
   final String status;
   final DateTime? createdAt;
 
-  String get fromLabel => departureCity ?? departureCountry;
-  String get toLabel => arrivalCity ?? arrivalCountry;
-  String get route => '$fromLabel → $toLabel';
+  String get fromLabel => departureCity ?? defaultCityFor(departureCountry) ?? countryName(departureCountry);
+  String get toLabel => arrivalCity ?? defaultCityFor(arrivalCountry) ?? countryName(arrivalCountry);
+  String get route => '$fromLabel to $toLabel';
   String get dates => dateRange(departureDate, returnDate);
 
   factory Trip.fromJson(Map<String, dynamic> j) => Trip(

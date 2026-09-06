@@ -24,3 +24,22 @@ String countryName(String code) {
   }
   return code;
 }
+
+/// A likely-default city shown when a traveler leaves the city field blank —
+/// skipped for countries too large to have one obvious hub (US, CN, AU).
+const _defaultCities = <String, String>{
+  'JP': 'Tokyo',
+  'KR': 'Seoul',
+  'TH': 'Bangkok',
+  'SG': 'Singapore',
+  'GB': 'London',
+  'FR': 'Paris',
+  'IT': 'Milan',
+  'DE': 'Frankfurt',
+  'HK': 'Hong Kong',
+  'TW': 'Taipei',
+  'MY': 'Kuala Lumpur',
+  'AE': 'Dubai',
+};
+
+String? defaultCityFor(String code) => _defaultCities[code.toUpperCase()];
