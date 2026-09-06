@@ -188,7 +188,12 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
                   itemCount: list.length,
                   itemBuilder: (context, i) {
                     final m = list[list.length - 1 - i];
-                    return _Bubble(message: m, mine: m.senderId == me?.id);
+                    final mine = m.senderId == me?.id;
+                    return _Bubble(
+                      message: m,
+                      mine: mine,
+                      showStatus: i == 0 && mine,
+                    );
                   },
                 );
               },
@@ -213,9 +218,17 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message, required this.mine});
+  const _Bubble({
+    required this.message,
+    required this.mine,
+    this.showStatus = false,
+  });
   final Message message;
   final bool mine;
+
+  /// Show a "Sent"/"Read" line under this bubble — only the latest message
+  /// the current user sent, matching the usual chat-app convention.
+  final bool showStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -278,13 +291,36 @@ class _Bubble extends StatelessWidget {
               ),
             if (message.createdAt != null) ...[
               const SizedBox(height: 3),
-              Text(
-                shortDate(message.createdAt),
-                style: TextStyle(
-                  fontSize: 10,
-                  color: (mine ? scheme.onPrimary : scheme.onSurfaceVariant)
-                      .withValues(alpha: 0.7),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    chatTimestamp(message.createdAt),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: (mine ? scheme.onPrimary : scheme.onSurfaceVariant)
+                          .withValues(alpha: 0.7),
+                    ),
+                  ),
+                  if (showStatus) ...[
+                    const SizedBox(width: 4),
+                    Icon(
+                      message.readAt != null ? Icons.done_all : Icons.done,
+                      size: 13,
+                      color: (message.readAt != null
+                          ? scheme.onPrimary
+                          : scheme.onPrimary.withValues(alpha: 0.7)),
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      message.readAt != null ? 'Read' : 'Sent',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: scheme.onPrimary.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ],

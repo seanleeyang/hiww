@@ -2,6 +2,8 @@ import 'package:intl/intl.dart';
 
 final _dayMonth = DateFormat('MMM d');
 final _monthDayYear = DateFormat('MMM d, y');
+final _dayMonthTime = DateFormat('MMM d, h:mm a');
+final _timeOnly = DateFormat('h:mm a');
 
 /// `฿1,500` / `฿1,234.56` — the backend stores amounts as decimal strings.
 String money(Object? amount) {
@@ -36,6 +38,15 @@ String dateLong(DateTime? d) => d == null ? '' : _monthDayYear.format(d);
 /// `Nov 14` for a stepper timestamp.
 String shortDate(DateTime? d) => d == null ? '' : _dayMonth.format(d);
 
+/// `2:30 PM` for a message sent today, `Sep 6, 2:30 PM` otherwise.
+String chatTimestamp(DateTime? d) {
+  if (d == null) return '';
+  final now = DateTime.now();
+  final sameDay =
+      d.year == now.year && d.month == now.month && d.day == now.day;
+  return sameDay ? _timeOnly.format(d) : _dayMonthTime.format(d);
+}
+
 DateTime? parseDate(Object? raw) {
   if (raw is String && raw.isNotEmpty) return DateTime.tryParse(raw)?.toLocal();
   return null;
@@ -43,10 +54,15 @@ DateTime? parseDate(Object? raw) {
 
 /// `AL` from `Ada Lovelace`, `H` from `Hiww`.
 String initials(String name) {
-  final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+  final parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((p) => p.isNotEmpty)
+      .toList();
   if (parts.isEmpty) return '?';
   if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-  return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+  return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+      .toUpperCase();
 }
 
 String pluralize(int n, String singular, [String? plural]) =>
