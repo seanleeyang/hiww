@@ -67,10 +67,11 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
               Tab(text: 'Wants'),
             ],
           ),
-          const Expanded(
+          Expanded(
             child: TabBarView(
-              physics: NeverScrollableScrollPhysics(),
-              children: [_TripsBrowseTab(), _WantsBrowseTab()],
+              controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: const [_TripsBrowseTab(), _WantsBrowseTab()],
             ),
           ),
         ],
