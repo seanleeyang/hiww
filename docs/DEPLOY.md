@@ -109,19 +109,38 @@ S3-compatible with a 10 GB free tier.
 
 1. **Cloudflare dashboard → R2 → Create bucket.** Name it `hiww-uploads`
    (region: automatic).
-2. **Bucket → Settings → Public access → "R2.dev subdomain" → Allow.**
-   You get a URL like `https://pub-<hash>.r2.dev` — this is `R2_PUBLIC_BASE_URL`.
+2. **Bucket → Settings → Public access → "R2.dev subdomain" (may show as
+   "Public Development URL") → Allow.** You get a URL like
+   `https://pub-<hash>.r2.dev` — this is `R2_PUBLIC_BASE_URL`.
    (For a real launch, connect a custom domain instead.)
-3. **R2 → Manage API Tokens → Create API Token.** Permission **Object Read &
+3. **Set a CORS policy on the bucket — required, not optional.** Without
+   this, photos intermittently fail to load in the app (works right after
+   upload via SPA navigation, then silently breaks on a plain page refresh
+   — the browser blocks the cross-origin fetch the app needs to read the
+   image bytes). R2's dashboard CORS editor takes the same shape as S3:
+   ```json
+   [
+     {
+       "AllowedOrigins": ["*"],
+       "AllowedMethods": ["GET"],
+       "AllowedHeaders": ["*"],
+       "MaxAgeSeconds": 3600
+     }
+   ]
+   ```
+   Bucket → Settings → CORS Policy → paste the above → Save. (This can't be
+   set with the Object Read & Write token from the next step — bucket-level
+   config needs an Admin Read & Write R2 API token, or the dashboard editor.)
+4. **R2 → Manage API Tokens → Create API Token.** Permission **Object Read &
    Write**, scoped to this bucket. It gives you an **Access Key ID** and a
    **Secret Access Key**. Your **Account ID** is on the R2 overview page.
-4. **Render → `hiww-api` → Environment**, set:
+5. **Render → `hiww-api` → Environment**, set:
    - `R2_ACCOUNT_ID` — the account id
    - `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` — from the token
    - `R2_BUCKET` — `hiww-uploads`
    - `R2_PUBLIC_BASE_URL` — the `https://pub-<hash>.r2.dev` URL
    (`UPLOADS_BACKEND=r2` is already set by the blueprint.)
-5. Save — Render redeploys. New uploads now go to R2 and survive deploys.
+6. Save — Render redeploys. New uploads now go to R2 and survive deploys.
    Until all five values are set the app logs a warning and keeps using the
    (ephemeral) local disk, so a half-done config never breaks the deploy.
 
