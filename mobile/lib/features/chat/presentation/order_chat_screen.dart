@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +27,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   final _input = TextEditingController();
   bool _sending = false;
   bool _attaching = false;
+  Uint8List? _pendingImageBytes;
   String? _pendingImageUrl;
   int _lastSeenCount = -1;
 
@@ -59,15 +62,23 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
         imageQuality: 85,
       );
       if (file == null) return;
+      // Show the picked photo straight from local bytes — no reason to round
+      // trip to the network just to preview something already on the device,
+      // and it sidesteps the delay before a freshly-uploaded R2 object is
+      // reliably readable back (the same lag seen with want/trip photos).
+      final bytes = await file.readAsBytes();
+      if (mounted) setState(() => _pendingImageBytes = bytes);
       final url = await ref.read(uploadsRepositoryProvider).uploadImage(file);
       if (mounted) setState(() => _pendingImageUrl = url);
     } on ApiException catch (e) {
       if (mounted) {
+        setState(() => _pendingImageBytes = null);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (_) {
       if (mounted) {
+        setState(() => _pendingImageBytes = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Could not attach that photo. Try another.'),
@@ -89,7 +100,10 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
           .read(chatRepositoryProvider)
           .send(widget.orderId, body: text, imageUrl: imageUrl);
       _input.clear();
-      setState(() => _pendingImageUrl = null);
+      setState(() {
+        _pendingImageUrl = null;
+        _pendingImageBytes = null;
+      });
       ref.invalidate(orderMessagesProvider(widget.orderId));
       ref.invalidate(inboxProvider);
       if (warning != null && mounted) {
@@ -184,9 +198,12 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
             controller: _input,
             sending: _sending,
             attaching: _attaching,
-            pendingImageUrl: _pendingImageUrl,
+            pendingImageBytes: _pendingImageBytes,
             onAttach: _attachPhoto,
-            onRemoveAttachment: () => setState(() => _pendingImageUrl = null),
+            onRemoveAttachment: () => setState(() {
+              _pendingImageUrl = null;
+              _pendingImageBytes = null;
+            }),
             onSend: _send,
           ),
         ],
@@ -282,7 +299,7 @@ class _Composer extends StatelessWidget {
     required this.controller,
     required this.sending,
     required this.attaching,
-    required this.pendingImageUrl,
+    required this.pendingImageBytes,
     required this.onAttach,
     required this.onRemoveAttachment,
     required this.onSend,
@@ -291,7 +308,7 @@ class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
   final bool attaching;
-  final String? pendingImageUrl;
+  final Uint8List? pendingImageBytes;
   final VoidCallback onAttach;
   final VoidCallback onRemoveAttachment;
   final VoidCallback onSend;
@@ -306,43 +323,37 @@ class _Composer extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (pendingImageUrl != null) ...[
+            if (pendingImageBytes != null) ...[
               Stack(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: CachedNetworkImage(
-                      imageUrl: pendingImageUrl!,
+                    child: Image.memory(
+                      pendingImageBytes!,
                       width: 64,
                       height: 64,
                       fit: BoxFit.cover,
-                      placeholder: (context, _) => Container(
-                        width: 64,
-                        height: 64,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
-                        child: const Center(
-                          child: SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                  if (attaching)
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: ColoredBox(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          child: const Center(
+                            child: SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      errorWidget: (context, _, _) => Container(
-                        width: 64,
-                        height: 64,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
                     ),
-                  ),
                   Positioned(
                     top: -8,
                     right: -8,
