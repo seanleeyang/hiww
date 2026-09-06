@@ -99,6 +99,7 @@
     <nav>
       <button data-tab="queue" class="active">Review queue</button>
       <button data-tab="orders">Orders</button>
+      <button data-tab="listings">Listings</button>
       <button data-tab="money">Money</button>
       <button data-tab="users">Users</button>
       <button data-tab="audit">Audit</button>
@@ -123,6 +124,18 @@
         <h2>Orders <button class="ghost small" data-act="refresh-orders" style="float:right">Refresh</button></h2>
         <div id="ordersTable"></div>
         <div class="hint">"Confirm payment" — only click after the shopper's money is really in your account, then record it in your spreadsheet.</div>
+      </div>
+    </div>
+
+    <div id="tab-listings" class="tab" hidden>
+      <div class="card">
+        <h2>Trips <button class="ghost small" data-act="refresh-listings" style="float:right">Refresh</button></h2>
+        <div id="tripsTable"></div>
+      </div>
+      <div class="card">
+        <h2>Wants</h2>
+        <div id="wantsTable"></div>
+        <div class="hint">Removing a post here takes it down immediately, the same as the owner cancelling it — but works even if the post has orders in progress, so use it for scam/spam listings, not routine cleanup.</div>
       </div>
     </div>
 
@@ -216,7 +229,7 @@
     var map = { pending_payment: 'b-amber', confirmed: 'b-blue', purchased: 'b-blue', in_transit: 'b-purple',
       delivered: 'b-green', cancelled: 'b-grey', open: 'b-amber', resolved: 'b-green',
       closed: 'b-grey', approved: 'b-green', rejected: 'b-danger', pending: 'b-amber',
-      flagged: 'b-danger', restricted: 'b-danger', clear: 'b-grey' };
+      flagged: 'b-danger', restricted: 'b-danger', clear: 'b-grey', published: 'b-blue' };
     return el('span', { class: 'badge ' + (map[status] || 'b-grey'), text: status });
   }
   var shortId = function (id) { return id ? id.slice(0, 8) : '—'; };
@@ -251,6 +264,7 @@
     document.querySelectorAll('.tab').forEach(function (t) { t.hidden = t.id !== 'tab-' + tab; });
     if (tab === 'queue') renderQueue();
     if (tab === 'orders') renderOrders();
+    if (tab === 'listings') renderListings();
     if (tab === 'money') renderMoney();
     if (tab === 'users') renderUsers();
     if (tab === 'audit') renderAudit();
@@ -420,6 +434,55 @@
     } catch (e) { host.innerHTML = ''; host.appendChild(errBox(e)); }
   }
 
+  async function renderListings() {
+    var tHost = $('#tripsTable'); var wHost = $('#wantsTable');
+    tHost.textContent = 'Loading…'; wHost.textContent = 'Loading…';
+    try {
+      await loadUsers();
+      var trips = (await api('GET', '/api/admin/trips')).data.trips || [];
+      tHost.innerHTML = '';
+      if (!trips.length) { tHost.appendChild(el('div', { class: 'empty', text: 'No trips yet.' })); }
+      else {
+        var tt = el('table');
+        tt.appendChild(el('tr', {}, ['Trip', 'Route', 'Traveler', 'Status', ''].map(function (h) { return el('th', { text: h }); })));
+        trips.forEach(function (t) {
+          var route = (t.departure_city || t.departure_country) + ' → ' + (t.arrival_city || t.arrival_country);
+          var actions = el('div', { class: 'row-actions' });
+          if (t.status === 'published') actions.appendChild(btn('Remove', 'remove-trip', { id: t.id }, 'small secondary'));
+          tt.appendChild(el('tr', {}, [
+            el('td', { class: 'mono', text: shortId(t.id) }),
+            el('td', {}, [ el('div', { text: t.title || route }), t.title ? el('div', { class: 'muted', text: route }) : el('span', {}) ]),
+            el('td', { class: 'muted', text: t.traveler_name + ' (' + t.traveler_email + ')' }),
+            el('td', {}, [ badge(t.status) ]),
+            el('td', {}, [ actions ])
+          ]));
+        });
+        tHost.appendChild(tt);
+      }
+
+      var wants = (await api('GET', '/api/admin/requests')).data.requests || [];
+      wHost.innerHTML = '';
+      if (!wants.length) { wHost.appendChild(el('div', { class: 'empty', text: 'No wants yet.' })); }
+      else {
+        var wt = el('table');
+        wt.appendChild(el('tr', {}, ['Want', 'Item', 'Shopper', 'Budget', 'Status', ''].map(function (h) { return el('th', { text: h }); })));
+        wants.forEach(function (w) {
+          var actions = el('div', { class: 'row-actions' });
+          if (w.status === 'open') actions.appendChild(btn('Remove', 'remove-want', { id: w.id }, 'small secondary'));
+          wt.appendChild(el('tr', {}, [
+            el('td', { class: 'mono', text: shortId(w.id) }),
+            el('td', { text: w.title || w.item_description }),
+            el('td', { class: 'muted', text: w.shopper_name + ' (' + w.shopper_email + ')' }),
+            el('td', { class: 'mono', text: '฿' + w.budget }),
+            el('td', {}, [ badge(w.status) ]),
+            el('td', {}, [ actions ])
+          ]));
+        });
+        wHost.appendChild(wt);
+      }
+    } catch (e) { tHost.innerHTML = ''; tHost.appendChild(errBox(e)); wHost.innerHTML = ''; }
+  }
+
   function recordPayout(orderId, suggestedAmount) {
     var amount = prompt('Amount paid to the traveller (goods price):', suggestedAmount || '');
     if (!amount) return;
@@ -575,10 +638,21 @@
 
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest('button[data-act]'); if (!b) return;
-    var act = b.dataset.act, uid = b.dataset.uid, oid = b.dataset.oid, mid = b.dataset.mid;
+    var act = b.dataset.act, uid = b.dataset.uid, oid = b.dataset.oid, mid = b.dataset.mid, id = b.dataset.id;
     if (act === 'refresh-queue') return renderQueue();
     if (act === 'refresh-orders') return renderOrders();
+    if (act === 'refresh-listings') return renderListings();
     if (act === 'refresh-users') return renderUsers();
+    if (act === 'remove-trip') {
+      var tReason = prompt('Why is this trip being removed? (shown in the audit log)', '');
+      if (tReason === null) return;
+      return run(b, api('POST', '/api/admin/trips/' + id + '/remove', { reason: tReason }), 'Trip removed', renderListings);
+    }
+    if (act === 'remove-want') {
+      var wReason = prompt('Why is this want being removed? (shown in the audit log)', '');
+      if (wReason === null) return;
+      return run(b, api('POST', '/api/admin/requests/' + id + '/remove', { reason: wReason }), 'Want removed', renderListings);
+    }
     if (act === 'refresh-audit') return renderAudit();
     if (act === 'refresh-money') return renderMoney();
     if (act === 'approve-kyc') return run(b, api('POST', '/api/admin/users/' + uid + '/kyc-review', { status: 'approved', note: 'Approved in console' }), 'KYC approved', refreshCurrent);
