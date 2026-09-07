@@ -1,0 +1,41 @@
+name: Deploy web app
+
+# Mirrors render.yaml's autoDeployTrigger for the backend: pushing to main
+# rebuilds the Flutter web app and redeploys it to Cloudflare Pages, so a
+# single push updates both the API (Render) and the app (Cloudflare Pages)
+# with no manual `wrangler pages deploy` step.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --release --dart-define=HIWW_API_BASE_URL=https://hiww-api.onrender.com
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '22ec2a7a75e1a68186d52c98bd8ec101'
+        run: npx wrangler pages deploy build/web --project-name=hiww --branch=main --commit-dirty=true
