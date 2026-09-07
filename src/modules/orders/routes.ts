@@ -3,6 +3,7 @@ import { AppError } from '@/utils/helpers';
 import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification } from '@/services/notify';
+import { expireOverduePayments } from '@/services/order-expiry';
 
 /** Drop the operator-only AI receipt fields before returning an order to a participant. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +25,8 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
     '/api/orders',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
+      await expireOverduePayments(request.db);
+
       const page = Math.max(1, parseInt(request.query.page || '1', 10) || 1);
       const limit = Math.min(100, Math.max(1, parseInt(request.query.limit || '20', 10) || 20));
       const offset = (page - 1) * limit;
@@ -58,6 +61,8 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
     '/api/orders/:id',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
+      await expireOverduePayments(request.db);
+
       const order = await request.db
         .selectFrom('orders')
         .selectAll()
@@ -126,6 +131,8 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
     '/api/orders/:id/claim-payment',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
+      await expireOverduePayments(request.db);
+
       const order = await request.db
         .selectFrom('orders')
         .selectAll()
@@ -139,7 +146,13 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         throw new AppError('FORBIDDEN', 403, 'Only the shopper can report a payment');
       }
       if (order.status !== 'pending_payment') {
-        throw new AppError('INVALID_STATUS', 409, 'This order is not awaiting payment');
+        throw new AppError(
+          'INVALID_STATUS',
+          409,
+          order.status === 'cancelled'
+            ? 'This order was cancelled because payment was not made in time'
+            : 'This order is not awaiting payment'
+        );
       }
 
       await request.db

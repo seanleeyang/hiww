@@ -193,6 +193,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       const unitPrice = total.div(quantity).toDecimalPlaces(2).toString();
       const orderId = generateId();
       const now = new Date();
+      const paymentDeadlineAt = new Date(now.getTime() + config.paymentTimeoutMinutes * 60_000);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await request.db.transaction().execute(async (trx: any) => {
@@ -220,6 +221,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             total_price: total.toString(),
             fees,
             status: 'pending_payment',
+            payment_deadline_at: paymentDeadlineAt,
             created_at: now,
             updated_at: now,
           })
@@ -236,6 +238,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             fees,
             shopper_id: requestRow.shopper_id,
             traveler_id: offer.traveler_id,
+            payment_deadline_at: paymentDeadlineAt,
           },
         });
         await recordNotification(trx, {

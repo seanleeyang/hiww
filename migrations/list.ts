@@ -20,6 +20,7 @@ import * as m017 from './017_message_image';
 import * as m018 from './018_contact_details';
 import * as m019 from './019_remove_bio';
 import * as m020 from './020_otp_verification';
+import * as m021 from './021_payment_timeout';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -43,4 +44,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '018_contact_details', up: m018.up },
   { name: '019_remove_bio', up: m019.up },
   { name: '020_otp_verification', up: m020.up },
+  { name: '021_payment_timeout', up: m021.up },
 ];

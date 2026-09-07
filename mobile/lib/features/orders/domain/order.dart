@@ -27,6 +27,8 @@ class Order {
     this.requestCategory,
     this.createdAt,
     this.paymentClaimedAt,
+    this.paymentDeadlineAt,
+    this.cancelledAt,
     this.confirmedAt,
     this.purchaseProofUrl,
     this.purchasedAt,
@@ -49,6 +51,10 @@ class Order {
   final String? requestCategory;
   final DateTime? createdAt;
   final DateTime? paymentClaimedAt;
+
+  /// Order auto-cancels if payment isn't claimed by this time.
+  final DateTime? paymentDeadlineAt;
+  final DateTime? cancelledAt;
   final DateTime? confirmedAt;
   final String? purchaseProofUrl;
   final DateTime? purchasedAt;
@@ -76,6 +82,8 @@ class Order {
         requestCategory: j['request_category']?.toString(),
         createdAt: parseDate(j['created_at']),
         paymentClaimedAt: parseDate(j['payment_claimed_at']),
+        paymentDeadlineAt: parseDate(j['payment_deadline_at']),
+        cancelledAt: parseDate(j['cancelled_at']),
         confirmedAt: parseDate(j['confirmed_at']),
         purchaseProofUrl: (j['purchase_proof_url'] as String?)?.trim().isEmpty ?? true
             ? null

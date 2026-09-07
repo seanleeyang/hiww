@@ -9,6 +9,7 @@ import { generateId } from '@/utils/helpers';
 export type AuditAction =
   | 'order.create'
   | 'order.payment_claim'
+  | 'order.payment_timeout'
   | 'payment.confirm'
   | 'order.purchase_proof'
   | 'order.receipt_flag'

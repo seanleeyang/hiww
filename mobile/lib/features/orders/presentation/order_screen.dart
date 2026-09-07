@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -209,10 +211,26 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
 
     switch (o.status) {
       case 'pending_payment':
-        if (!widget.isShopper) return note('Waiting for the shopper to pay.');
+        final showCountdown = o.paymentDeadlineAt != null && o.paymentClaimedAt == null;
+        if (!widget.isShopper) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (showCountdown) ...[
+                _PaymentCountdownBanner(orderId: o.id, deadline: o.paymentDeadlineAt!, forShopper: false),
+                const SizedBox(height: 12),
+              ],
+              note('Waiting for the shopper to pay.'),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (showCountdown) ...[
+              _PaymentCountdownBanner(orderId: o.id, deadline: o.paymentDeadlineAt!, forShopper: true),
+              const SizedBox(height: 12),
+            ],
             SoftCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,6 +345,73 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
       default:
         return note('This order is ${o.status.replaceAll('_', ' ')}.');
     }
+  }
+}
+
+/// A ticking "pay within Xh Xm" banner shown while an order awaits payment.
+/// Purely visual on a timer — the actual cancellation only ever happens
+/// server-side (see `src/services/order-expiry.ts`), so once the countdown
+/// hits zero this just refreshes the order once to pick up the real status.
+class _PaymentCountdownBanner extends ConsumerStatefulWidget {
+  const _PaymentCountdownBanner({
+    required this.orderId,
+    required this.deadline,
+    required this.forShopper,
+  });
+  final String orderId;
+  final DateTime deadline;
+  final bool forShopper;
+
+  @override
+  ConsumerState<_PaymentCountdownBanner> createState() => _PaymentCountdownBannerState();
+}
+
+class _PaymentCountdownBannerState extends ConsumerState<_PaymentCountdownBanner> {
+  Timer? _timer;
+  bool _refreshedOnExpiry = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!mounted) return;
+      if (DateTime.now().isAfter(widget.deadline) && !_refreshedOnExpiry) {
+        _refreshedOnExpiry = true;
+        ref.invalidate(orderProvider(widget.orderId));
+      }
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final urgent = widget.deadline.difference(DateTime.now()).inMinutes < 15;
+    final scheme = Theme.of(context).colorScheme;
+    final fg = urgent ? scheme.onErrorContainer : scheme.onPrimaryContainer;
+    final label = widget.forShopper
+        ? 'Pay within ${countdown(widget.deadline)} or the order is cancelled automatically.'
+        : 'Shopper has ${countdown(widget.deadline)} to pay before the order auto-cancels.';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: urgent ? scheme.errorContainer : scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.timer_outlined, size: 18, color: fg),
+          const SizedBox(width: 8),
+          Expanded(child: Text(label, style: TextStyle(color: fg, fontSize: 13))),
+        ],
+      ),
+    );
   }
 }
 

@@ -86,6 +86,13 @@ export const config = {
     process.env.PILOT_PAYMENT_INSTRUCTIONS ||
     'Payment instructions have not been configured yet. Contact the Hiww team to arrange payment.',
   /**
+   * Minutes a shopper has to pay after their offer is accepted before the
+   * order auto-cancels (see `src/services/order-expiry.ts`). There's no
+   * background job — the deadline is only enforced lazily, the moment an
+   * order is next read or acted on.
+   */
+  paymentTimeoutMinutes: Number(process.env.PAYMENT_TIMEOUT_MINUTES || '60'),
+  /**
    * User-uploaded images (want photos, trip covers, avatars). Local disk during
    * the pilot; swap for object storage (S3/GCS) before production. `uploadDir`
    * is resolved from the process working directory (the project root).

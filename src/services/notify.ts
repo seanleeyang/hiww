@@ -11,6 +11,7 @@ export type NotificationType =
   | 'offer_accepted'
   | 'payment_claimed'
   | 'payment_confirmed'
+  | 'payment_timeout'
   | 'purchase_proof'
   | 'shipped'
   | 'delivered'

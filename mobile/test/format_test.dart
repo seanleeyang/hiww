@@ -56,4 +56,23 @@ void main() {
     expect(pluralize(3, 'traveler'), '3 travelers');
     expect(pluralize(2, 'want'), '2 wants');
   });
+
+  group('countdown', () {
+    final now = DateTime(2026, 11, 12, 10, 0);
+    test('shows hours and minutes when over an hour remains', () {
+      expect(countdown(now.add(const Duration(hours: 1, minutes: 5)), now: now), '1h 5m left');
+    });
+    test('shows minutes only under an hour', () {
+      expect(countdown(now.add(const Duration(minutes: 42)), now: now), '42m left');
+    });
+    test('shows a friendly message under a minute', () {
+      expect(countdown(now.add(const Duration(seconds: 30)), now: now), 'Less than a minute left');
+    });
+    test('reports Expired once the deadline has passed', () {
+      expect(countdown(now.subtract(const Duration(minutes: 1)), now: now), 'Expired');
+    });
+    test('empty for a null deadline', () {
+      expect(countdown(null, now: now), '');
+    });
+  });
 }

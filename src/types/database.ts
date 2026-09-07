@@ -105,6 +105,14 @@ export interface OrdersTable {
     | 'cancelled';
   /** Set when the shopper says they have sent payment (manual-money pilot signal). */
   payment_claimed_at?: Date | null;
+  /**
+   * Auto-cancel deadline (migration 021) — set at order creation to
+   * now + PAYMENT_TIMEOUT_MINUTES. Enforced lazily; see
+   * `src/services/order-expiry.ts`. `cancelled_at` is set whenever an order
+   * actually cancels, for this reason or any future one.
+   */
+  payment_deadline_at?: Date | null;
+  cancelled_at?: Date | null;
   /** Per-stage timestamps for the order tracker (migration 007). */
   confirmed_at?: Date | null;
   /** Traveler's shop-receipt photo + when they marked the item bought (migration 013). */

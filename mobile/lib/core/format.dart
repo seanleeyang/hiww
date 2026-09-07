@@ -87,3 +87,16 @@ String timeAgo(DateTime? d, {DateTime? now}) {
   if (delta.inDays < 7) return '${delta.inDays}d';
   return _dayMonth.format(d);
 }
+
+/// `42m left` / `1h 5m left` / `Expired` — countdown to a future deadline
+/// (e.g. an order's payment window).
+String countdown(DateTime? deadline, {DateTime? now}) {
+  if (deadline == null) return '';
+  final remaining = deadline.difference(now ?? DateTime.now());
+  if (remaining.isNegative) return 'Expired';
+  final hours = remaining.inHours;
+  final minutes = remaining.inMinutes.remainder(60);
+  if (hours > 0) return '${hours}h ${minutes}m left';
+  if (minutes > 0) return '${minutes}m left';
+  return 'Less than a minute left';
+}

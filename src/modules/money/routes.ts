@@ -5,6 +5,7 @@ import { getPaymentProvider } from '@/services/providers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
+import { expireOverduePayments } from '@/services/order-expiry';
 
 // Tight per-IP ceiling on money movement (defaults to 30/min).
 const moneyRoute = {
@@ -94,6 +95,8 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
       if (!body.order_id) {
         throw new AppError('VALIDATION_ERROR', 400, 'order_id is required');
       }
+
+      await expireOverduePayments(request.db);
 
       const order = await request.db
         .selectFrom('orders')
