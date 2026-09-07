@@ -133,24 +133,20 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
         ),
         if (!widget.verified) ...[
           const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: AuthFormField(
-                  controller: _code,
-                  label: '6-digit code',
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: _busy ? null : _verify,
-                child: _busy
-                    ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Verify'),
-              ),
-            ],
+          AuthFormField(
+            controller: _code,
+            label: '6-digit code',
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _busy ? null : _verify,
+              child: _busy
+                  ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Verify'),
+            ),
           ),
           Align(
             alignment: Alignment.centerLeft,
