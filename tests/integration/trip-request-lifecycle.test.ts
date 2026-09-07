@@ -272,4 +272,53 @@ describe('trip/want edit, cancel, and admin removal', () => {
     expect(requests.statusCode).toBe(200);
     expect(requests.json().data.requests.some((r: { id: string }) => r.id === requestId)).toBe(true);
   });
+
+  it('lets an admin cancel every live trip and want at once, leaving completed ones alone', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const shopper = await createUser(ctx, { user_type: 'shopper' });
+    const liveTripId = await createTrip(ctx, traveler);
+    const liveRequestId = await createRequest(ctx, shopper);
+
+    // A completed order's trip/request should survive the bulk cancel.
+    const completedOrder = await createAcceptedOrder(ctx);
+    await ctx.db.updateTable('trips').set({ status: 'completed' }).where('id', '=', completedOrder.tripId).execute();
+    await ctx.db.updateTable('requests').set({ status: 'completed' }).where('id', '=', completedOrder.requestId).execute();
+
+    const tripsRes = await ctx.app.inject({ method: 'POST', url: '/api/admin/trips/remove-all', headers: authHeader(admin) });
+    expect(tripsRes.statusCode).toBe(200);
+    expect(tripsRes.json().data.removed).toBeGreaterThanOrEqual(1);
+
+    const wantsRes = await ctx.app.inject({ method: 'POST', url: '/api/admin/requests/remove-all', headers: authHeader(admin) });
+    expect(wantsRes.statusCode).toBe(200);
+    expect(wantsRes.json().data.removed).toBeGreaterThanOrEqual(1);
+
+    const liveTrip = await ctx.db.selectFrom('trips').select(['status']).where('id', '=', liveTripId).executeTakeFirst();
+    const liveRequest = await ctx.db.selectFrom('requests').select(['status']).where('id', '=', liveRequestId).executeTakeFirst();
+    expect(liveTrip?.status).toBe('cancelled');
+    expect(liveRequest?.status).toBe('cancelled');
+
+    const completedTrip = await ctx.db.selectFrom('trips').select(['status']).where('id', '=', completedOrder.tripId).executeTakeFirst();
+    const completedRequest = await ctx.db.selectFrom('requests').select(['status']).where('id', '=', completedOrder.requestId).executeTakeFirst();
+    expect(completedTrip?.status).toBe('completed');
+    expect(completedRequest?.status).toBe('completed');
+
+    const auditRows = await ctx.db
+      .selectFrom('audit_log')
+      .selectAll()
+      .where('action', 'in', ['trip.remove_by_admin', 'request.remove_by_admin'])
+      .where('target_id', '=', 'bulk')
+      .execute();
+    expect(auditRows.length).toBe(2);
+  });
+
+  it('blocks a non-admin from bulk-cancelling trips or wants', async () => {
+    const nonAdmin = await createUser(ctx, { user_type: 'traveler' });
+
+    const tripsRes = await ctx.app.inject({ method: 'POST', url: '/api/admin/trips/remove-all', headers: authHeader(nonAdmin) });
+    expect(tripsRes.statusCode).toBe(403);
+
+    const wantsRes = await ctx.app.inject({ method: 'POST', url: '/api/admin/requests/remove-all', headers: authHeader(nonAdmin) });
+    expect(wantsRes.statusCode).toBe(403);
+  });
 });

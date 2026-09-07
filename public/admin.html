@@ -129,13 +129,18 @@
 
     <div id="tab-listings" class="tab" hidden>
       <div class="card">
-        <h2>Trips <button class="ghost small" data-act="refresh-listings" style="float:right">Refresh</button></h2>
+        <h2>Trips
+          <button class="ghost small" data-act="refresh-listings" style="float:right">Refresh</button>
+          <button class="small secondary" data-act="remove-all-trips" style="float:right;margin-right:8px">Cancel ALL trips</button>
+        </h2>
         <div id="tripsTable"></div>
       </div>
       <div class="card">
-        <h2>Wants</h2>
+        <h2>Wants
+          <button class="small secondary" data-act="remove-all-wants" style="float:right">Cancel ALL wants</button>
+        </h2>
         <div id="wantsTable"></div>
-        <div class="hint">Removing a post here takes it down immediately, the same as the owner cancelling it — but works even if the post has orders in progress, so use it for scam/spam listings, not routine cleanup.</div>
+        <div class="hint">Removing a post here takes it down immediately, the same as the owner cancelling it — but works even if the post has orders in progress, so use it for scam/spam listings, not routine cleanup. "Cancel ALL" is for wiping the live listings back to a clean slate — it only touches trips/wants still visible in the app, and cancels rather than deletes, so it's reversible in the database if needed.</div>
       </div>
     </div>
 
@@ -652,6 +657,14 @@
       var wReason = prompt('Why is this want being removed? (shown in the audit log)', '');
       if (wReason === null) return;
       return run(b, api('POST', '/api/admin/requests/' + id + '/remove', { reason: wReason }), 'Want removed', renderListings);
+    }
+    if (act === 'remove-all-trips') {
+      if (!confirm('Cancel every live trip? This clears the Browse feed for everyone. This cannot be undone from the app itself.')) return;
+      return run(b, api('POST', '/api/admin/trips/remove-all', {}), 'All live trips cancelled', renderListings);
+    }
+    if (act === 'remove-all-wants') {
+      if (!confirm('Cancel every live want? This clears the Browse feed for everyone. This cannot be undone from the app itself.')) return;
+      return run(b, api('POST', '/api/admin/requests/remove-all', {}), 'All live wants cancelled', renderListings);
     }
     if (act === 'refresh-audit') return renderAudit();
     if (act === 'refresh-money') return renderMoney();

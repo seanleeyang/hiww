@@ -244,6 +244,31 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     reply.send({ success: true, data: { id: trip.id, status: 'cancelled' }, code: 'TRIP_REMOVED_BY_ADMIN' });
   });
 
+  // Bulk version of the above — cancels every trip that's still visible in
+  // the app (published or in progress). Leaves completed and already-
+  // cancelled trips untouched, since those aren't showing anywhere anyway
+  // and this is meant to clear the live listings, not rewrite history.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post('/api/admin/trips/remove-all', async (request: any, reply: any) => {
+    const now = new Date();
+    const removed = await request.db
+      .updateTable('trips')
+      .set({ status: 'cancelled', updated_at: now })
+      .where('status', 'in', ['published', 'in_progress'])
+      .returning(['id'])
+      .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'trip.remove_by_admin',
+      targetType: 'trip',
+      targetId: 'bulk',
+      summary: `Operator cancelled all ${removed.length} live trip(s)`,
+      metadata: { count: removed.length, ids: removed.map((r: { id: string }) => r.id) },
+    });
+
+    reply.send({ success: true, data: { removed: removed.length }, code: 'TRIPS_REMOVED_BY_ADMIN' });
+  });
+
   // Same as above, for wants.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.get('/api/admin/requests', async (request: any, reply: any) => {
@@ -303,6 +328,29 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       data: { id: itemRequest.id, status: 'cancelled' },
       code: 'REQUEST_REMOVED_BY_ADMIN',
     });
+  });
+
+  // Bulk version — cancels every want still visible in the app (open or
+  // accepted). Leaves completed and already-cancelled wants untouched.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post('/api/admin/requests/remove-all', async (request: any, reply: any) => {
+    const now = new Date();
+    const removed = await request.db
+      .updateTable('requests')
+      .set({ status: 'cancelled', updated_at: now })
+      .where('status', 'in', ['open', 'accepted'])
+      .returning(['id'])
+      .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'request.remove_by_admin',
+      targetType: 'request',
+      targetId: 'bulk',
+      summary: `Operator cancelled all ${removed.length} live want(s)`,
+      metadata: { count: removed.length, ids: removed.map((r: { id: string }) => r.id) },
+    });
+
+    reply.send({ success: true, data: { removed: removed.length }, code: 'REQUESTS_REMOVED_BY_ADMIN' });
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
