@@ -9,6 +9,9 @@ import { generateId } from '@/utils/helpers';
 export type NotificationType =
   | 'offer_received'
   | 'offer_accepted'
+  | 'offer_countered'
+  | 'offer_declined'
+  | 'offer_expired'
   | 'payment_claimed'
   | 'payment_confirmed'
   | 'payment_timeout'

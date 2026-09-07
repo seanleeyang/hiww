@@ -27,6 +27,23 @@ class OffersRepository {
     final items = ((data as Map)['items'] as List?) ?? [];
     return items.map((e) => Offer.fromJson(Map<String, dynamic>.from(e as Map))).toList();
   }
+
+  /// Returns the created order id.
+  Future<String> accept(String offerId) async {
+    final data = await _api.post('/api/offers/$offerId/accept');
+    return (data as Map)['order_id'].toString();
+  }
+
+  /// Propose a different price. Throws [ApiException] (409) if it isn't your
+  /// turn or the 2-counter limit has been reached.
+  Future<void> counter(String offerId, String quotedPrice) async {
+    await _api.post('/api/offers/$offerId/counter', body: {'quoted_price': quotedPrice});
+  }
+
+  /// Decline the offer's current price outright, ending the negotiation.
+  Future<void> reject(String offerId) async {
+    await _api.post('/api/offers/$offerId/reject');
+  }
 }
 
 final offersRepositoryProvider = Provider<OffersRepository>(

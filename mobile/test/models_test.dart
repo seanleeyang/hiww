@@ -87,6 +87,38 @@ void main() {
     expect(mine.requestItem, 'Nike Dunk Panda');
   });
 
+  test('Offer parses negotiation state (round, turn, price history)', () {
+    final offer = Offer.fromJson({
+      'id': 'o3',
+      'quoted_price': '110.00',
+      'status': 'pending',
+      'round': 2,
+      'last_actor': 'traveler',
+      'respond_by': '2026-11-20T00:00:00.000Z',
+      'my_turn': true,
+      'can_counter': false,
+      'price_history': [
+        {'by': 'traveler', 'price': '100.00', 'at': '2026-11-18T09:00:00.000Z'},
+        {'by': 'shopper', 'price': '120.00', 'at': '2026-11-18T10:00:00.000Z'},
+        {'by': 'traveler', 'price': '110.00', 'at': '2026-11-18T11:00:00.000Z'},
+      ],
+    });
+
+    expect(offer.round, 2);
+    expect(offer.lastActor, 'traveler');
+    expect(offer.myTurn, true);
+    expect(offer.canCounter, false);
+    expect(offer.isNegotiating, true);
+    expect(offer.priceHistory, hasLength(3));
+    expect(offer.priceHistory.last.by, 'traveler');
+    expect(offer.priceHistory.last.price, '110.00');
+
+    final fresh = Offer.fromJson({'id': 'o4', 'quoted_price': '50.00', 'status': 'pending'});
+    expect(fresh.round, 0);
+    expect(fresh.isNegotiating, false);
+    expect(fresh.priceHistory, isEmpty);
+  });
+
   test('Order parses stage timestamps and review flags', () {
     final o = Order.fromJson({
       'id': 'ord1',

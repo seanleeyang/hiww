@@ -80,6 +80,19 @@ export interface OffersTable {
   quoted_price: string; // Decimal as string
   delivery_date: Date;
   status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  /**
+   * Negotiation state (migration 022). `round` counts counters made so far,
+   * capped at 2 — see `src/modules/offers/routes.ts`. `last_actor` is who
+   * proposed the current `quoted_price` (the other side responds next).
+   * `respond_by` is enforced lazily like the payment timeout; see
+   * `src/services/offer-expiry.ts`. `price_history` is every price
+   * proposed, `[{by, price, at}]`, for the negotiation thread UI.
+   */
+  round: Generated<number>;
+  last_actor?: 'traveler' | 'shopper' | null;
+  respond_by?: Date | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  price_history: Generated<Record<string, any>[]>;
   created_at: Date;
   updated_at: Date;
 }

@@ -10,6 +10,9 @@ export type AuditAction =
   | 'order.create'
   | 'order.payment_claim'
   | 'order.payment_timeout'
+  | 'offer.counter'
+  | 'offer.decline'
+  | 'offer.expire'
   | 'payment.confirm'
   | 'order.purchase_proof'
   | 'order.receipt_flag'
@@ -40,7 +43,7 @@ export interface AuditActor {
 
 export interface AuditInput {
   action: AuditAction;
-  targetType: 'order' | 'user' | 'dispute' | 'message' | 'trip' | 'request';
+  targetType: 'order' | 'user' | 'dispute' | 'message' | 'trip' | 'request' | 'offer';
   targetId: string;
   summary: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

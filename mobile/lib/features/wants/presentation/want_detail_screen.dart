@@ -16,8 +16,10 @@ import '../../../ui/stock_images.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../orders/data/orders_repository.dart';
 import '../../shared/presentation/reviews_preview.dart';
+import '../data/offers_repository.dart';
 import '../data/wants_repository.dart';
 import '../domain/offer.dart';
+import 'offer_negotiation_actions.dart';
 import 'post_want_sheet.dart';
 
 class WantDetailScreen extends ConsumerWidget {
@@ -247,7 +249,10 @@ class _OfferCard extends ConsumerStatefulWidget {
 }
 
 class _OfferCardState extends ConsumerState<_OfferCard> {
-  bool _busy = false;
+  Future<void> _refreshAfterAction() async {
+    ref.invalidate(wantDetailProvider(widget.wantId));
+    ref.invalidate(wantOffersProvider(widget.wantId));
+  }
 
   Future<void> _accept() async {
     final o = widget.offer;
@@ -272,18 +277,15 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
       ),
     );
     if (ok != true) return;
-    setState(() => _busy = true);
     try {
-      final orderId = await ref.read(wantsRepositoryProvider).acceptOffer(o.id);
+      final orderId = await ref.read(offersRepositoryProvider).accept(o.id);
       ref.invalidate(myWantsProvider);
       ref.invalidate(myOrdersProvider);
-      ref.invalidate(wantDetailProvider(widget.wantId));
-      ref.invalidate(wantOffersProvider(widget.wantId));
+      await _refreshAfterAction();
       if (!mounted) return;
       context.go('/orders/$orderId');
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(e.message),
         action: e.code == 'PROFILE_INCOMPLETE'
@@ -291,6 +293,16 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
             : null,
       ));
     }
+  }
+
+  Future<void> _counter(String price) async {
+    await ref.read(offersRepositoryProvider).counter(widget.offer.id, price);
+    await _refreshAfterAction();
+  }
+
+  Future<void> _reject() async {
+    await ref.read(offersRepositoryProvider).reject(widget.offer.id);
+    await _refreshAfterAction();
   }
 
   @override
@@ -335,17 +347,21 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
               ],
             ],
           ),
-          if (widget.canAccept) ...[
+          if (o.isNegotiating) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Countered ${o.round} time${o.round == 1 ? '' : 's'}',
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+            ),
+          ],
+          if (o.status == 'pending') ...[
             const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _busy ? null : _accept,
-              child: _busy
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Accept offer'),
+            OfferNegotiationActions(
+              offer: o,
+              enabled: widget.canAccept,
+              onAccept: _accept,
+              onCounter: _counter,
+              onReject: _reject,
             ),
           ],
         ],

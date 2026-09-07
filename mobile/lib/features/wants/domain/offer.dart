@@ -1,5 +1,19 @@
 import '../../../core/format.dart';
 
+/// One price proposed during a negotiation — `by` is 'traveler' or 'shopper'.
+class PriceHistoryEntry {
+  const PriceHistoryEntry({required this.by, required this.price, this.at});
+  final String by;
+  final String price;
+  final DateTime? at;
+
+  factory PriceHistoryEntry.fromJson(Map<String, dynamic> j) => PriceHistoryEntry(
+        by: (j['by'] ?? '').toString(),
+        price: (j['price'] ?? '0').toString(),
+        at: parseDate(j['at']),
+      );
+}
+
 class Offer {
   const Offer({
     required this.id,
@@ -13,6 +27,12 @@ class Offer {
     this.requestId,
     this.requestItem,
     this.requestStatus,
+    this.round = 0,
+    this.lastActor,
+    this.respondBy,
+    this.myTurn = false,
+    this.canCounter = false,
+    this.priceHistory = const [],
   });
 
   final String id;
@@ -31,9 +51,20 @@ class Offer {
   final String? requestItem;
   final String? requestStatus;
 
+  /// Negotiation state — capped at 2 counters total (see backend
+  /// `config.maxOfferCounters`). `lastActor` is who proposed the current
+  /// price; `myTurn`/`canCounter` are computed server-side for the caller.
+  final int round;
+  final String? lastActor;
+  final DateTime? respondBy;
+  final bool myTurn;
+  final bool canCounter;
+  final List<PriceHistoryEntry> priceHistory;
+
   String get priceLabel => money(quotedPrice);
   String? get deliveryLabel =>
       deliveryDate == null ? null : 'Deliver by ${shortDate(deliveryDate)}';
+  bool get isNegotiating => status == 'pending' && round > 0;
 
   factory Offer.fromJson(Map<String, dynamic> j) => Offer(
         id: j['id'].toString(),
@@ -47,5 +78,14 @@ class Offer {
         requestId: j['request_id']?.toString(),
         requestItem: j['request_item']?.toString(),
         requestStatus: j['request_status']?.toString(),
+        round: (j['round'] as num?)?.toInt() ?? 0,
+        lastActor: j['last_actor']?.toString(),
+        respondBy: parseDate(j['respond_by']),
+        myTurn: j['my_turn'] == true,
+        canCounter: j['can_counter'] == true,
+        priceHistory: (j['price_history'] as List?)
+                ?.map((e) => PriceHistoryEntry.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList() ??
+            const [],
       );
 }

@@ -93,6 +93,16 @@ export const config = {
    */
   paymentTimeoutMinutes: Number(process.env.PAYMENT_TIMEOUT_MINUTES || '60'),
   /**
+   * Hours either side has to respond to an offer/counter before it
+   * auto-expires (see `src/services/offer-expiry.ts`) — keeps a negotiation
+   * from stalling indefinitely. Same lazy-enforcement pattern as
+   * `paymentTimeoutMinutes`: no background job, checked on next read.
+   */
+  offerResponseTimeoutHours: Number(process.env.OFFER_RESPONSE_TIMEOUT_HOURS || '24'),
+  /** Total counter-offers allowed in one negotiation before it must resolve
+   * (accept or decline) — see `POST /api/offers/:id/counter`. */
+  maxOfferCounters: Number(process.env.MAX_OFFER_COUNTERS || '2'),
+  /**
    * User-uploaded images (want photos, trip covers, avatars). Local disk during
    * the pilot; swap for object storage (S3/GCS) before production. `uploadDir`
    * is resolved from the process working directory (the project root).
