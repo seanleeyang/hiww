@@ -31,7 +31,7 @@ class _SignedOutRepository implements AuthRepository {
       throw UnimplementedError();
 
   @override
-  Future<void> resendOtp({required String channel}) => throw UnimplementedError();
+  Future<String?> resendOtp({required String channel}) => throw UnimplementedError();
 
   @override
   Future<void> logout() async {}

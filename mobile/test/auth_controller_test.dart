@@ -54,7 +54,7 @@ class _FakeAuthRepository implements AuthRepository {
   Future<AuthUser> verifyOtp({required String channel, required String code}) async => _user;
 
   @override
-  Future<void> resendOtp({required String channel}) async {}
+  Future<String?> resendOtp({required String channel}) async => null;
 
   @override
   Future<void> logout() async {

@@ -35,9 +35,13 @@ class AuthRepository {
     return me();
   }
 
-  /// Issues a fresh code for one channel; the old one stops working.
-  Future<void> resendOtp({required String channel}) async {
-    await _api.post('/api/auth/resend-otp', body: {'channel': channel});
+  /// Issues a fresh code for one channel; the old one stops working. Returns
+  /// the code itself only while there's no real SMS/email provider wired up
+  /// (`debug_otp` — see `src/services/otp/`); once one is configured this
+  /// comes back null and the code only ever reaches the real inbox/phone.
+  Future<String?> resendOtp({required String channel}) async {
+    final data = await _api.post('/api/auth/resend-otp', body: {'channel': channel});
+    return data is Map ? data['debug_otp']?.toString() : null;
   }
 
   Future<AuthUser> login({

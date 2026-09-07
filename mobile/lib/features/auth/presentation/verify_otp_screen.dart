@@ -60,6 +60,17 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
   bool _resending = false;
   String? _error;
   String? _info;
+  String? _devCode;
+
+  @override
+  void initState() {
+    super.initState();
+    // Registration already sent a code, but there's no UI-free way to know
+    // it without a real inbox/phone (no SMS/email provider is wired up yet
+    // — see src/services/otp/). Ask for a fresh one right away so the dev
+    // hint below is populated without an extra tap.
+    if (!widget.verified) _resend(showSentMessage: false);
+  }
 
   @override
   void dispose() {
@@ -89,16 +100,20 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
     }
   }
 
-  Future<void> _resend() async {
+  Future<void> _resend({bool showSentMessage = true}) async {
     setState(() {
       _resending = true;
       _error = null;
       _info = null;
     });
     try {
-      await ref.read(authControllerProvider.notifier).resendOtp(channel: widget.channel);
+      final devCode = await ref.read(authControllerProvider.notifier).resendOtp(channel: widget.channel);
       if (!mounted) return;
-      setState(() => _info = 'A new code was sent.');
+      setState(() {
+        _devCode = devCode;
+        if (devCode != null) _code.text = devCode;
+        if (showSentMessage && devCode == null) _info = 'A new code was sent.';
+      });
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _error = e.message);
@@ -132,6 +147,22 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
           ],
         ),
         if (!widget.verified) ...[
+          if (_devCode != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'No SMS/email provider is set up yet — dev code $_devCode has been filled in for you.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           AuthFormField(
             controller: _code,

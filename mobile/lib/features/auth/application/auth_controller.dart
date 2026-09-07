@@ -67,7 +67,7 @@ class AuthController extends AsyncNotifier<AuthState> {
     state = AsyncData(AuthSignedIn(user));
   }
 
-  Future<void> resendOtp({required String channel}) => _repo.resendOtp(channel: channel);
+  Future<String?> resendOtp({required String channel}) => _repo.resendOtp(channel: channel);
 
   Future<void> logout() async {
     await _repo.logout();
