@@ -194,7 +194,11 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
   Future<void> _showMenu() async {
     final choice = await showDialog<_SheetChoice>(
       context: context,
-      builder: (_) => SimpleDialog(
+      // Shadow `context` with the dialog's own — using the field's context
+      // to pop would pop whatever navigator this field happens to be
+      // hosted under (e.g. a bottom-tab's own nested one) instead of just
+      // dismissing this dialog.
+      builder: (context) => SimpleDialog(
         title: Text(widget.label),
         children: [
           if (!kIsWeb)

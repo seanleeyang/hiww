@@ -275,7 +275,7 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
     final o = widget.offer;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Accept this offer?'),
         content: Text(
           'You will pay ${o.priceLabel} for the goods. An order is created and '
@@ -283,11 +283,11 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => context.pop(false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => context.pop(true),
             child: const Text('Accept'),
           ),
         ],

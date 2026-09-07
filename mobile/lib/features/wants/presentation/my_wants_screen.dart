@@ -18,13 +18,30 @@ const _archivableStatuses = {'cancelled', 'completed'};
 Future<void> _archiveWant(BuildContext context, WidgetRef ref, String wantId) async {
   final ok = await showDialog<bool>(
     context: context,
-    builder: (_) => AlertDialog(
+    // Shadow `context` with the dialog's own — using the caller's context to
+    // pop here would pop the tab's own nested navigator instead of just
+    // dismissing the dialog, since this screen lives inside the bottom-tab
+    // shell, not on the root navigator.
+    builder: (context) => AlertDialog(
       title: const Text('Remove this want?'),
-      content: const Text('It disappears from your list. This does not affect its history.'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Remove')),
-      ],
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('It disappears from your list. This does not affect its history.'),
+          const SizedBox(height: 20),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () => context.pop(true),
+            child: const Text('Remove'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () => context.pop(false),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     ),
   );
   if (ok != true) return;
