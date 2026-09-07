@@ -26,6 +26,18 @@
   "errorLoginFailed": "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
   "loginNewToHiww": "เพิ่งรู้จัก Hiww ใช่ไหม?",
   "actionCreateAccount": "สร้างบัญชี",
+  "actionForgotPassword": "ลืมรหัสผ่าน?",
+
+  "forgotPasswordTitle": "รีเซ็ตรหัสผ่านของคุณ",
+  "forgotPasswordSubtitle": "กรอกอีเมลของคุณ แล้วเราจะส่งรหัสรีเซ็ตให้",
+  "actionSendCode": "ส่งรหัส",
+  "errorForgotPasswordFailed": "ส่งรหัสรีเซ็ตไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+  "resetPasswordTitle": "กรอกรหัสรีเซ็ตของคุณ",
+  "resetPasswordSubtitle": "เราได้ส่งรหัส 6 หลักไปที่ {email} แล้ว",
+  "fieldNewPassword": "รหัสผ่านใหม่",
+  "actionResetPassword": "รีเซ็ตรหัสผ่าน",
+  "errorResetPasswordFailed": "รีเซ็ตรหัสผ่านไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+  "rememberedPassword": "จำรหัสผ่านได้แล้วใช่ไหม?",
 
   "registerTitle": "สร้างบัญชีของคุณ",
   "registerSubtitle": "ช้อปจากนักเดินทาง หรือสร้างรายได้จากทริปที่คุณเดินทางอยู่แล้ว",

@@ -45,6 +45,17 @@ class _SignedOutRepository implements AuthRepository {
   Future<String?> resendOtp({required String channel}) => throw UnimplementedError();
 
   @override
+  Future<String?> forgotPassword({required String email}) => throw UnimplementedError();
+
+  @override
+  Future<AuthUser> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> logout() async {}
 }
 
@@ -76,5 +87,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ยินดีต้อนรับกลับ'), findsOneWidget);
+  });
+
+  testWidgets('forgot password link opens the reset flow', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(_SignedOutRepository()),
+        ],
+        child: const HiwwApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Forgot password?'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reset your password'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Send code'), findsOneWidget);
   });
 }

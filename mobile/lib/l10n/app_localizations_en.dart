@@ -79,6 +79,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionCreateAccount => 'Create an account';
 
   @override
+  String get actionForgotPassword => 'Forgot password?';
+
+  @override
+  String get forgotPasswordTitle => 'Reset your password';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Enter your email and we\'ll send you a reset code.';
+
+  @override
+  String get actionSendCode => 'Send code';
+
+  @override
+  String get errorForgotPasswordFailed =>
+      'Could not send a reset code. Please try again.';
+
+  @override
+  String get resetPasswordTitle => 'Enter your reset code';
+
+  @override
+  String resetPasswordSubtitle(String email) {
+    return 'We\'ve sent a 6-digit code to $email.';
+  }
+
+  @override
+  String get fieldNewPassword => 'New password';
+
+  @override
+  String get actionResetPassword => 'Reset password';
+
+  @override
+  String get errorResetPasswordFailed =>
+      'Could not reset your password. Please try again.';
+
+  @override
+  String get rememberedPassword => 'Remembered your password?';
+
+  @override
   String get registerTitle => 'Create your account';
 
   @override

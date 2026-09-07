@@ -236,6 +236,72 @@ abstract class AppLocalizations {
   /// **'Create an account'**
   String get actionCreateAccount;
 
+  /// No description provided for @actionForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get actionForgotPassword;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and we\'ll send you a reset code.'**
+  String get forgotPasswordSubtitle;
+
+  /// No description provided for @actionSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get actionSendCode;
+
+  /// No description provided for @errorForgotPasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send a reset code. Please try again.'**
+  String get errorForgotPasswordFailed;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your reset code'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent a 6-digit code to {email}.'**
+  String resetPasswordSubtitle(String email);
+
+  /// No description provided for @fieldNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get fieldNewPassword;
+
+  /// No description provided for @actionResetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get actionResetPassword;
+
+  /// No description provided for @errorResetPasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reset your password. Please try again.'**
+  String get errorResetPasswordFailed;
+
+  /// No description provided for @rememberedPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Remembered your password?'**
+  String get rememberedPassword;
+
   /// No description provided for @registerTitle.
   ///
   /// In en, this message translates to:

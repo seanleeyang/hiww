@@ -57,6 +57,19 @@ class _FakeAuthRepository implements AuthRepository {
   Future<String?> resendOtp({required String channel}) async => null;
 
   @override
+  Future<String?> forgotPassword({required String email}) async => null;
+
+  @override
+  Future<AuthUser> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    token = 'tok';
+    return _user;
+  }
+
+  @override
   Future<void> logout() async {
     loggedOut = true;
     token = null;

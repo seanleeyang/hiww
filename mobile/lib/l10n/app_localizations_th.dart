@@ -79,6 +79,44 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionCreateAccount => 'สร้างบัญชี';
 
   @override
+  String get actionForgotPassword => 'ลืมรหัสผ่าน?';
+
+  @override
+  String get forgotPasswordTitle => 'รีเซ็ตรหัสผ่านของคุณ';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'กรอกอีเมลของคุณ แล้วเราจะส่งรหัสรีเซ็ตให้';
+
+  @override
+  String get actionSendCode => 'ส่งรหัส';
+
+  @override
+  String get errorForgotPasswordFailed =>
+      'ส่งรหัสรีเซ็ตไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+
+  @override
+  String get resetPasswordTitle => 'กรอกรหัสรีเซ็ตของคุณ';
+
+  @override
+  String resetPasswordSubtitle(String email) {
+    return 'เราได้ส่งรหัส 6 หลักไปที่ $email แล้ว';
+  }
+
+  @override
+  String get fieldNewPassword => 'รหัสผ่านใหม่';
+
+  @override
+  String get actionResetPassword => 'รีเซ็ตรหัสผ่าน';
+
+  @override
+  String get errorResetPasswordFailed =>
+      'รีเซ็ตรหัสผ่านไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+
+  @override
+  String get rememberedPassword => 'จำรหัสผ่านได้แล้วใช่ไหม?';
+
+  @override
   String get registerTitle => 'สร้างบัญชีของคุณ';
 
   @override

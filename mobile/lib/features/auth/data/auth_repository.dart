@@ -56,6 +56,31 @@ class AuthRepository {
     return me();
   }
 
+  /// Requests a reset code for [email]. Always resolves the same way whether
+  /// or not the address is registered, so it can't be used to enumerate
+  /// accounts. Returns the code itself only while there's no real email
+  /// provider wired up (`debug_otp` — see `src/services/otp/`).
+  Future<String?> forgotPassword({required String email}) async {
+    final data = await _api.post('/api/auth/forgot-password', body: {'email': email});
+    return data is Map ? data['debug_otp']?.toString() : null;
+  }
+
+  /// Confirms a reset code and sets a new password, then signs the user in
+  /// with a fresh token — mirrors [register]'s "verify == sign in" shape.
+  Future<AuthUser> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final data = await _api.post('/api/auth/reset-password', body: {
+      'email': email,
+      'code': code,
+      'new_password': newPassword,
+    });
+    await _storeToken(data);
+    return me();
+  }
+
   Future<AuthUser> me() async {
     final data = await _api.get('/api/me');
     return AuthUser.fromJson(Map<String, dynamic>.from(data as Map));

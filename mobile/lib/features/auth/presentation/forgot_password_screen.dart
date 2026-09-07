@@ -8,55 +8,53 @@ import '../application/auth_controller.dart';
 import 'auth_form_field.dart';
 import 'auth_scaffold.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
-  final _password = TextEditingController();
   bool _submitting = false;
   String? _error;
 
   @override
   void dispose() {
     _email.dispose();
-    _password.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _submitting = true;
       _error = null;
     });
-    await ref
-        .read(authControllerProvider.notifier)
-        .login(email: _email.text.trim(), password: _password.text);
-    if (!mounted) return;
-    final state = ref.read(authControllerProvider);
-    setState(() {
-      _submitting = false;
-      _error = state.hasError
-          ? (state.error is ApiException
-              ? (state.error as ApiException).message
-              : l10n.errorLoginFailed)
-          : null;
-    });
+    final email = _email.text.trim();
+    try {
+      final devCode =
+          await ref.read(authControllerProvider.notifier).forgotPassword(email: email);
+      if (!mounted) return;
+      final query = <String, String>{'email': email};
+      if (devCode != null) query['devCode'] = devCode;
+      context.push(Uri(path: '/reset-password', queryParameters: query).toString());
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return AuthScaffold(
-      title: l10n.loginTitle,
-      subtitle: l10n.loginSubtitle,
+      title: l10n.forgotPasswordTitle,
+      subtitle: l10n.forgotPasswordSubtitle,
       form: Form(
         key: _formKey,
         child: Column(
@@ -67,6 +65,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               label: l10n.fieldEmail,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
+              onFieldSubmitted: (_) => _submit(),
               validator: (v) {
                 final value = v?.trim() ?? '';
                 if (!value.contains('@') || !value.contains('.')) {
@@ -74,23 +73,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 }
                 return null;
               },
-            ),
-            const SizedBox(height: 14),
-            AuthFormField(
-              controller: _password,
-              label: l10n.fieldPassword,
-              obscureText: true,
-              autofillHints: const [AutofillHints.password],
-              onFieldSubmitted: (_) => _submit(),
-              validator: (v) =>
-                  (v ?? '').length < 8 ? l10n.errorPasswordTooShort : null,
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _submitting ? null : () => context.push('/forgot-password'),
-                child: Text(l10n.actionForgotPassword),
-              ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 14),
@@ -105,7 +87,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l10n.actionLogIn),
+                  : Text(l10n.actionSendCode),
             ),
           ],
         ),
@@ -114,10 +96,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Text(l10n.loginNewToHiww),
+          Text(l10n.rememberedPassword),
           TextButton(
-            onPressed: _submitting ? null : () => context.go('/register'),
-            child: Text(l10n.actionCreateAccount),
+            onPressed: _submitting ? null : () => context.go('/login'),
+            child: Text(l10n.actionLogIn),
           ),
         ],
       ),

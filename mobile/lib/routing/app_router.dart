@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/presentation/account_screen.dart';
 import '../features/auth/application/auth_controller.dart';
+import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
+import '../features/auth/presentation/reset_password_screen.dart';
 import '../features/auth/presentation/verify_otp_screen.dart';
 import '../features/chat/data/chat_repository.dart';
 import '../features/chat/presentation/inbox_screen.dart';
@@ -79,7 +81,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
       final loc = state.matchedLocation;
-      final onAuthPage = loc == '/login' || loc == '/register';
+      final onAuthPage = loc == '/login' ||
+          loc == '/register' ||
+          loc == '/forgot-password' ||
+          loc == '/reset-password';
 
       if (auth.isLoading && auth.valueOrNull == null) {
         return loc == '/splash' ? null : '/splash';
@@ -99,6 +104,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, _) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (_, s) => ResetPasswordScreen(
+          email: s.uri.queryParameters['email'] ?? '',
+          devCode: s.uri.queryParameters['devCode'],
+        ),
+      ),
       GoRoute(path: '/verify', builder: (_, _) => const VerifyOtpScreen()),
       GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
       GoRoute(

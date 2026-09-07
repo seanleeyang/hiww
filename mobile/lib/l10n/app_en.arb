@@ -26,6 +26,21 @@
   "errorLoginFailed": "Could not log in. Please try again.",
   "loginNewToHiww": "New to Hiww?",
   "actionCreateAccount": "Create an account",
+  "actionForgotPassword": "Forgot password?",
+
+  "forgotPasswordTitle": "Reset your password",
+  "forgotPasswordSubtitle": "Enter your email and we'll send you a reset code.",
+  "actionSendCode": "Send code",
+  "errorForgotPasswordFailed": "Could not send a reset code. Please try again.",
+  "resetPasswordTitle": "Enter your reset code",
+  "resetPasswordSubtitle": "We've sent a 6-digit code to {email}.",
+  "@resetPasswordSubtitle": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "fieldNewPassword": "New password",
+  "actionResetPassword": "Reset password",
+  "errorResetPasswordFailed": "Could not reset your password. Please try again.",
+  "rememberedPassword": "Remembered your password?",
 
   "registerTitle": "Create your account",
   "registerSubtitle": "Shop from travelers, or earn on trips you already take.",

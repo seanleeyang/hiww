@@ -24,6 +24,7 @@ export type AuditAction =
   | 'dispute.resolve'
   | 'kyc.review'
   | 'user.flag'
+  | 'user.password_reset'
   | 'message.flag'
   | 'message.flag_cleared'
   | 'message.check_failed'

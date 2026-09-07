@@ -69,6 +69,19 @@ class AuthController extends AsyncNotifier<AuthState> {
 
   Future<String?> resendOtp({required String channel}) => _repo.resendOtp(channel: channel);
 
+  Future<String?> forgotPassword({required String email}) => _repo.forgotPassword(email: email);
+
+  /// Throws [ApiException] on a wrong/expired code — callers show it inline
+  /// rather than losing the (signed-out) state over it.
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final user = await _repo.resetPassword(email: email, code: code, newPassword: newPassword);
+    state = AsyncData(AuthSignedIn(user));
+  }
+
   Future<void> logout() async {
     await _repo.logout();
     state = const AsyncData(AuthSignedOut());

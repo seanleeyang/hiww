@@ -6,6 +6,7 @@ import { config } from '@/config/env';
 import { profileUpdateSchema, phoneSchema } from '@/types/schemas';
 import { toUserSummary } from '@/utils/user-summary';
 import { issueOtp, verifyOtp, isMockOtp } from '@/services/otp';
+import { recordAudit } from '@/services/audit';
 
 // Tighter abuse protection on the credential endpoints than the global default.
 const authRouteConfig = {
@@ -27,6 +28,16 @@ const verifyOtpSchema = z.object({
 
 const resendOtpSchema = z.object({
   channel: z.enum(['email', 'phone']),
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+const resetPasswordSchema = z.object({
+  email: z.string().email(),
+  code: z.string().trim().length(6),
+  new_password: z.string().min(8),
 });
 
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
@@ -122,6 +133,84 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       code: 'USER_LOGGED_IN',
     });
   });
+
+  // Reuses the email OTP channel — "prove you control this address" is the
+  // same check whether it's for verifying registration or for resetting a
+  // forgotten password. Always responds the same way regardless of whether
+  // the email is registered, so this can't be used to enumerate accounts.
+  app.post<{ Body: unknown }>(
+    '/api/auth/forgot-password',
+    { config: authRouteConfig },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const parsed = forgotPasswordSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'Invalid email');
+      }
+
+      const user = await request.db
+        .selectFrom('users')
+        .select(['id', 'email'])
+        .where('email', '=', parsed.data.email)
+        .executeTakeFirst();
+
+      const code = user ? await issueOtp(request.db, user.id, 'email', user.email) : undefined;
+
+      reply.send({
+        success: true,
+        data: { sent: true, ...(isMockOtp() && code ? { debug_otp: code } : {}) },
+        code: 'PASSWORD_RESET_REQUESTED',
+      });
+    }
+  );
+
+  app.post<{ Body: unknown }>(
+    '/api/auth/reset-password',
+    { config: authRouteConfig },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const parsed = resetPasswordSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'Invalid reset details');
+      }
+
+      const user = await request.db
+        .selectFrom('users')
+        .select(['id', 'email'])
+        .where('email', '=', parsed.data.email)
+        .executeTakeFirst();
+
+      const ok = user ? await verifyOtp(request.db, user.id, 'email', parsed.data.code) : false;
+      if (!user || !ok) {
+        throw new AppError('INVALID_OTP', 400, 'That code is wrong or has expired');
+      }
+
+      await request.db
+        .updateTable('users')
+        .set({ password_hash: hashPassword(parsed.data.new_password), updated_at: new Date() })
+        .where('id', '=', user.id)
+        .execute();
+
+      await recordAudit(request.db, { id: user.id, role: null }, {
+        action: 'user.password_reset',
+        targetType: 'user',
+        targetId: user.id,
+        summary: 'Password reset via forgot-password flow',
+      });
+
+      const token = signToken({
+        userId: user.id,
+        email: user.email,
+        exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+      });
+
+      reply.send({
+        success: true,
+        data: { userId: user.id, email: user.email, token },
+        code: 'PASSWORD_RESET',
+      });
+    }
+  );
 
   const meColumns = [
     'id',
