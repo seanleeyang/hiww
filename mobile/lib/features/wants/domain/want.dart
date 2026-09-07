@@ -16,6 +16,7 @@ class Want {
     this.needBy,
     this.status = 'open',
     this.createdAt,
+    this.targetTripId,
   });
 
   final String id;
@@ -31,6 +32,11 @@ class Want {
   final DateTime? needBy;
   final String status;
   final DateTime? createdAt;
+
+  /// Set when this want was sent directly to one trip's traveler ("Request
+  /// from this trip") — never shown in public browse.
+  final String? targetTripId;
+  bool get isDirectRequest => targetTripId != null;
 
   String get displayTitle =>
       (title != null && title!.isNotEmpty) ? title! : itemDescription;
@@ -52,6 +58,7 @@ class Want {
         needBy: parseDate(j['need_by']),
         status: (j['status'] ?? 'open').toString(),
         createdAt: parseDate(j['created_at']),
+        targetTripId: _s(j['target_trip_id']),
       );
 }
 

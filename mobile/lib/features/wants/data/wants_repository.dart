@@ -8,6 +8,9 @@ class WantsRepository {
   WantsRepository(this._api);
   final ApiClient _api;
 
+  /// Pass [targetTripId] for "Request from this trip" — the want is sent
+  /// directly and privately to that trip's traveler (never shown in public
+  /// browse) and immediately opens a negotiation at [budget].
   Future<String> create({
     required String title,
     required String itemDescription,
@@ -19,6 +22,7 @@ class WantsRepository {
     int quantity = 1,
     DateTime? needBy,
     String? imageUrl,
+    String? targetTripId,
   }) async {
     final body = <String, dynamic>{
       'item_description': itemDescription,
@@ -32,6 +36,7 @@ class WantsRepository {
     if (sourceCity != null && sourceCity.isNotEmpty) body['source_city'] = sourceCity;
     if (needBy != null) body['need_by'] = needBy.toUtc().toIso8601String();
     if (imageUrl != null && imageUrl.isNotEmpty) body['image_url'] = imageUrl;
+    if (targetTripId != null) body['target_trip_id'] = targetTripId;
     final data = await _api.post('/api/requests', body: body);
     return (data as Map)['id'].toString();
   }

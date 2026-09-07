@@ -38,10 +38,13 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
       const limit = Math.min(50, Math.max(1, parseInt(request.query.limit || '30', 10) || 30));
 
       // Shared reference data (small at pilot scale — one query each).
+      // Requests sent directly to one trip ("Request from this trip") are
+      // excluded — they aren't a general match for other trips to surface.
       const openRequests = await request.db
         .selectFrom('requests')
         .select(['id', 'shopper_id', 'source_country', 'budget', 'category'])
         .where('status', '=', 'open')
+        .where('target_trip_id', 'is', null)
         .execute();
       const publishedTrips = await request.db
         .selectFrom('trips')
@@ -102,6 +105,7 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
           .selectAll()
           .where('status', '=', 'open')
           .where('shopper_id', '!=', request.userId)
+          .where('target_trip_id', 'is', null)
           .orderBy('created_at', 'desc')
           .limit(limit);
         if (category) q = q.where('category', '=', category);

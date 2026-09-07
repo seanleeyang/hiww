@@ -50,6 +50,8 @@ export const createRequestSchema = z.object({
   source_city: optionalText(120),
   need_by: z.string().datetime().optional(),
   image_url: optionalUrl,
+  // Set via "Request from this trip" — see src/modules/requests/routes.ts.
+  target_trip_id: z.string().uuid().optional(),
 });
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;

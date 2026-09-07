@@ -72,6 +72,22 @@ class WantDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(want.itemDescription),
+                  if (want.isDirectRequest) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.lock_outline, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Sent directly to one traveler — not shown publicly',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   SoftCard(
                     child: Column(

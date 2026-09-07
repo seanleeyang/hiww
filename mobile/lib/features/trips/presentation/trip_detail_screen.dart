@@ -87,6 +87,8 @@ class TripDetailScreen extends ConsumerWidget {
                         context,
                         sourceCountry: trip.arrivalCountry,
                         sourceCity: trip.arrivalCity,
+                        targetTripId: trip.id,
+                        targetTravelerName: d.traveler?.fullName,
                       ),
                       icon: const Icon(Icons.add_shopping_cart_outlined),
                       label: const Text('Request from this trip'),

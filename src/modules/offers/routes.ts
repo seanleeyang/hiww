@@ -61,6 +61,13 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       if (requestRow.status !== 'open') {
         throw new AppError('INVALID_STATUS', 409, 'This request is no longer open');
       }
+      // A want sent via "Request from this trip" is private between the
+      // shopper and that one trip's traveler — nobody else can offer on it,
+      // even if they somehow know its id (it's already excluded from every
+      // browse/feed query).
+      if (requestRow.target_trip_id && requestRow.target_trip_id !== parsed.data.trip_id) {
+        throw new AppError('FORBIDDEN', 403, 'This want was sent directly to a different trip');
+      }
 
       const trip = await request.db
         .selectFrom('trips')

@@ -13,10 +13,15 @@ import '../data/wants_repository.dart';
 import '../domain/want.dart';
 
 /// Pass [existing] to edit that want in place instead of posting a new one.
+/// Pass [targetTripId] for "Request from this trip" — this sends the want
+/// directly and privately to that trip's traveler instead of posting it
+/// publicly for any traveler to see and offer on.
 Future<void> showPostWantSheet(
   BuildContext context, {
   String? sourceCountry,
   String? sourceCity,
+  String? targetTripId,
+  String? targetTravelerName,
   Want? existing,
 }) {
   return showModalBottomSheet<void>(
@@ -27,6 +32,8 @@ Future<void> showPostWantSheet(
       child: _PostWantSheet(
         sourceCountry: sourceCountry,
         sourceCity: sourceCity,
+        targetTripId: targetTripId,
+        targetTravelerName: targetTravelerName,
         existing: existing,
       ),
     ),
@@ -34,9 +41,17 @@ Future<void> showPostWantSheet(
 }
 
 class _PostWantSheet extends ConsumerStatefulWidget {
-  const _PostWantSheet({this.sourceCountry, this.sourceCity, this.existing});
+  const _PostWantSheet({
+    this.sourceCountry,
+    this.sourceCity,
+    this.targetTripId,
+    this.targetTravelerName,
+    this.existing,
+  });
   final String? sourceCountry;
   final String? sourceCity;
+  final String? targetTripId;
+  final String? targetTravelerName;
   final Want? existing;
 
   @override
@@ -125,6 +140,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
               quantity: _qty,
               needBy: _needBy,
               imageUrl: _photoUrl ?? '',
+              targetTripId: widget.targetTripId,
             );
         ref.invalidate(myWantsProvider);
         ref.invalidate(feedProvider);
@@ -151,8 +167,42 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(_editing ? 'Edit want' : 'Post a want',
-                style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              _editing
+                  ? 'Edit want'
+                  : widget.targetTripId != null
+                      ? 'Request from this trip'
+                      : 'Post a want',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            if (!_editing && widget.targetTripId != null) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.lock_outline, size: 18, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Sent directly to ${widget.targetTravelerName ?? 'the traveler'} — not shown '
+                        'publicly. Your budget below is your opening price; they can accept, '
+                        'counter, or decline.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             TextField(
               controller: _title,
@@ -311,7 +361,11 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text(_editing ? 'Save changes' : 'Post my want'),
+                  : Text(_editing
+                      ? 'Save changes'
+                      : widget.targetTripId != null
+                          ? 'Send request'
+                          : 'Post my want'),
             ),
           ],
         ),

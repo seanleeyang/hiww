@@ -3,6 +3,9 @@ import { createRequestSchema, updateRequestSchema } from '@/types/schemas';
 import { AppError, generateId } from '@/utils/helpers';
 import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
 import { recordAudit, actorFromRequest } from '@/services/audit';
+import { recordNotification } from '@/services/notify';
+import { requireCompleteProfile } from '@/utils/profile-guard';
+import { config } from '@/config/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registerRequestsRoutes(app: FastifyInstance): Promise<void> {
@@ -15,7 +18,32 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         throw new AppError('VALIDATION_ERROR', 400, 'Invalid request data');
       }
 
+      // "Request from this trip": validate the target up front so we don't
+      // create an orphaned want if it turns out to be invalid.
+      let targetTrip: { id: string; traveler_id: string; return_date: Date } | undefined;
+      if (parsed.data.target_trip_id) {
+        const trip = await request.db
+          .selectFrom('trips')
+          .select(['id', 'traveler_id', 'status', 'return_date'])
+          .where('id', '=', parsed.data.target_trip_id)
+          .executeTakeFirst();
+        if (!trip) {
+          throw new AppError('NOT_FOUND', 404, 'Trip not found');
+        }
+        if (trip.traveler_id === request.userId) {
+          throw new AppError('FORBIDDEN', 403, 'You cannot request from your own trip');
+        }
+        if (trip.status !== 'published' && trip.status !== 'in_progress') {
+          throw new AppError('INVALID_STATUS', 409, 'This trip is no longer accepting requests');
+        }
+        // A direct request can turn straight into an order if the traveler
+        // accepts it as-is, so the shopper needs to be reachable already.
+        await requireCompleteProfile(request.db, request.userId);
+        targetTrip = trip;
+      }
+
       const requestId = generateId();
+      const now = new Date();
       await request.db
         .insertInto('requests')
         .values({
@@ -31,13 +59,55 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
           source_city: parsed.data.source_city ?? null,
           need_by: parsed.data.need_by ? new Date(parsed.data.need_by) : null,
           image_url: parsed.data.image_url ?? null,
+          target_trip_id: targetTrip?.id ?? null,
           status: 'open',
-          created_at: new Date(),
-          updated_at: new Date(),
+          created_at: now,
+          updated_at: now,
         })
         .execute();
 
-      reply.status(201).send({ success: true, data: { id: requestId }, code: 'REQUEST_CREATED' });
+      let offerId: string | undefined;
+      if (targetTrip) {
+        // The shopper's stated budget is their opening price in a
+        // negotiation with that trip's traveler — same mechanics as a
+        // traveler-initiated offer (see offers/routes.ts), just started
+        // from the other side. Nobody else can see or offer on this want
+        // (excluded from GET /api/requests) so this is the only way in.
+        offerId = generateId();
+        const respondBy = new Date(now.getTime() + config.offerResponseTimeoutHours * 3_600_000);
+        await request.db
+          .insertInto('offers')
+          .values({
+            id: offerId,
+            traveler_id: targetTrip.traveler_id,
+            request_id: requestId,
+            trip_id: targetTrip.id,
+            quoted_price: parsed.data.budget,
+            delivery_date: targetTrip.return_date,
+            status: 'pending',
+            round: 0,
+            last_actor: 'shopper',
+            respond_by: respondBy,
+            price_history: JSON.stringify([{ by: 'shopper', price: parsed.data.budget, at: now.toISOString() }]),
+            created_at: now,
+            updated_at: now,
+          })
+          .execute();
+
+        await recordNotification(request.db, {
+          userId: targetTrip.traveler_id,
+          type: 'offer_received',
+          subject: 'Someone requested an item from your trip',
+          body: `A shopper wants "${parsed.data.item_description}" from your trip for ${parsed.data.budget}. Accept, counter, or decline within ${config.offerResponseTimeoutHours}h.`,
+          link: `/wants/${requestId}`,
+        });
+      }
+
+      reply.status(201).send({
+        success: true,
+        data: { id: requestId, ...(offerId ? { offer_id: offerId } : {}) },
+        code: 'REQUEST_CREATED',
+      });
     }
   );
 
@@ -65,7 +135,12 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
       const limit = Math.min(100, Math.max(1, parseInt(request.query.limit || '20', 10) || 20));
       const offset = (page - 1) * limit;
 
-      let base = request.db.selectFrom('requests').where('status', '=', 'open');
+      // Requests sent directly to one trip ("Request from this trip") are
+      // private between that shopper and traveler — never in public browse.
+      let base = request.db
+        .selectFrom('requests')
+        .where('status', '=', 'open')
+        .where('target_trip_id', 'is', null);
       if (request.userRole !== 'admin') {
         base = base.where('shopper_id', '!=', request.userId);
       }

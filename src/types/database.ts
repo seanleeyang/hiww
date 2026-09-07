@@ -68,6 +68,12 @@ export interface RequestsTable {
   source_city?: string | null;
   need_by?: Date | null;
   image_url?: string | null;
+  /**
+   * Set when this want was created via "Request from this trip" (migration
+   * 023) instead of posted publicly — excluded from `GET /api/requests`
+   * (the public browse feed); see `src/modules/requests/routes.ts`.
+   */
+  target_trip_id?: string | null;
   created_at: Date;
   updated_at: Date;
 }
