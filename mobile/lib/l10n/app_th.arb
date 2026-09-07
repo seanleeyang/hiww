@@ -22,7 +22,7 @@
   "actionLogIn": "เข้าสู่ระบบ",
 
   "loginTitle": "ยินดีต้อนรับกลับ",
-  "loginSubtitle": "เข้าสู่ระบบเพื่อช้อปปิ้งต่อได้ทั่วโลก",
+  "loginSubtitle": "เข้าสู่ระบบเพื่อช้อปทั่วโลก",
   "errorLoginFailed": "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
   "loginNewToHiww": "เพิ่งรู้จัก Hiww ใช่ไหม?",
   "actionCreateAccount": "สร้างบัญชี",

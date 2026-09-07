@@ -67,7 +67,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get loginTitle => 'ยินดีต้อนรับกลับ';
 
   @override
-  String get loginSubtitle => 'เข้าสู่ระบบเพื่อช้อปปิ้งต่อได้ทั่วโลก';
+  String get loginSubtitle => 'เข้าสู่ระบบเพื่อช้อปทั่วโลก';
 
   @override
   String get errorLoginFailed => 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
