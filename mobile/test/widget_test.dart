@@ -1,9 +1,20 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/app.dart';
 import 'package:hiww_mobile/features/auth/data/auth_repository.dart';
 import 'package:hiww_mobile/features/auth/domain/auth_user.dart';
+
+TextSpan? _findSpan(InlineSpan span, bool Function(TextSpan) test) {
+  if (span is! TextSpan) return null;
+  if (test(span)) return span;
+  for (final child in span.children ?? const <InlineSpan>[]) {
+    final found = _findSpan(child, test);
+    if (found != null) return found;
+  }
+  return null;
+}
 
 class _SignedOutRepository implements AuthRepository {
   @override
@@ -51,10 +62,17 @@ void main() {
 
     expect(find.text('Welcome back'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Log in'), findsOneWidget);
-    expect(find.text('English'), findsOneWidget);
-    expect(find.text('ไทย'), findsOneWidget);
 
-    await tester.tap(find.text('ไทย'));
+    final toggleFinder = find.byWidgetPredicate(
+      (w) => w is RichText && (w.text as TextSpan).toPlainText().contains('ไทย'),
+    );
+    expect(toggleFinder, findsOneWidget);
+    final toggleSpan = tester.widget<RichText>(toggleFinder).text as TextSpan;
+    expect(toggleSpan.toPlainText(), 'English | ไทย');
+
+    final thaiSpan = _findSpan(toggleSpan, (s) => s.text == 'ไทย');
+    expect(thaiSpan, isNotNull);
+    (thaiSpan!.recognizer! as TapGestureRecognizer).onTap!();
     await tester.pumpAndSettle();
 
     expect(find.text('ยินดีต้อนรับกลับ'), findsOneWidget);
