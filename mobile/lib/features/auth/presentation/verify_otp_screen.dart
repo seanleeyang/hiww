@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../l10n/app_localizations.dart';
 import '../application/auth_controller.dart';
 import 'auth_form_field.dart';
 import 'auth_scaffold.dart';
@@ -15,10 +16,11 @@ class VerifyOtpScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return AuthScaffold(
-      title: 'Verify your account',
-      subtitle: "We've sent a 6-digit code to your email and phone number.",
+      title: l10n.verifyTitle,
+      subtitle: l10n.verifySubtitle,
       form: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -33,10 +35,10 @@ class VerifyOtpScreen extends ConsumerWidget {
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          const Text('Wrong details?'),
+          Text(l10n.verifyWrongDetails),
           TextButton(
             onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-            child: const Text('Start over'),
+            child: Text(l10n.actionStartOver),
           ),
         ],
       ),
@@ -80,7 +82,7 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
 
   Future<void> _verify() async {
     if (_code.text.trim().length != 6) {
-      setState(() => _error = 'Enter the 6-digit code');
+      setState(() => _error = AppLocalizations.of(context)!.errorEnterOtpCode);
       return;
     }
     setState(() {
@@ -112,7 +114,7 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
       setState(() {
         _devCode = devCode;
         if (devCode != null) _code.text = devCode;
-        if (showSentMessage && devCode == null) _info = 'A new code was sent.';
+        if (showSentMessage && devCode == null) _info = AppLocalizations.of(context)!.infoNewCodeSent;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -124,7 +126,8 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
 
   @override
   Widget build(BuildContext context) {
-    final label = widget.channel == 'email' ? 'Email' : 'Phone';
+    final l10n = AppLocalizations.of(context)!;
+    final label = widget.channel == 'email' ? l10n.fieldEmail : l10n.labelPhone;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +159,7 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'No SMS/email provider is set up yet — dev code $_devCode has been filled in for you.',
+                l10n.devCodeNotice(_devCode!),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
@@ -166,7 +169,7 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
           const SizedBox(height: 8),
           AuthFormField(
             controller: _code,
-            label: '6-digit code',
+            label: l10n.fieldOtpCode,
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 8),
@@ -176,14 +179,14 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
               onPressed: _busy ? null : _verify,
               child: _busy
                   ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Verify'),
+                  : Text(l10n.actionVerify),
             ),
           ),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: _resending ? null : _resend,
-              child: Text(_resending ? 'Sending…' : 'Resend code'),
+              child: Text(_resending ? l10n.actionSending : l10n.actionResendCode),
             ),
           ),
           if (_error != null)

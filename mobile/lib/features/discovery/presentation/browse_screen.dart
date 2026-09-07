@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/country_chips.dart';
@@ -19,14 +20,14 @@ enum TripSort { newest, departingSoon }
 
 enum WantSort { newest, neededSoon }
 
-const _tripSortLabels = {
-  TripSort.newest: 'Newest posted',
-  TripSort.departingSoon: 'Departing soonest',
+Map<TripSort, String> _tripSortLabels(AppLocalizations l10n) => {
+  TripSort.newest: l10n.sortNewestPosted,
+  TripSort.departingSoon: l10n.sortDepartingSoonest,
 };
 
-const _wantSortLabels = {
-  WantSort.newest: 'Newest posted',
-  WantSort.neededSoon: 'Needed soonest',
+Map<WantSort, String> _wantSortLabels(AppLocalizations l10n) => {
+  WantSort.newest: l10n.sortNewestPosted,
+  WantSort.neededSoon: l10n.sortNeededSoonest,
 };
 
 final tripSortProvider = StateProvider<TripSort>((_) => TripSort.newest);
@@ -71,7 +72,7 @@ class _SortButton<T> extends StatelessWidget {
     return PopupMenuButton<T>(
       initialValue: value,
       onSelected: onChanged,
-      tooltip: 'Sort',
+      tooltip: AppLocalizations.of(context)!.tooltipSort,
       icon: const Icon(Icons.sort),
       itemBuilder: (context) => [
         for (final entry in labels.entries)
@@ -124,26 +125,27 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
   @override
   Widget build(BuildContext context) {
     final onTripsTab = _tabController.index == 0;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       floatingActionButton: onTripsTab
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/trips/new'),
               icon: const Icon(Icons.add),
-              label: const Text('Post a trip'),
+              label: Text(l10n.actionPostATrip),
             )
           : FloatingActionButton.extended(
               onPressed: () => showPostWantSheet(context),
               icon: const Icon(Icons.add),
-              label: const Text('Post a want'),
+              label: Text(l10n.actionPostAWant),
             ),
       body: Column(
         children: [
           TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(text: 'Trips'),
-              Tab(text: 'Wants'),
+            tabs: [
+              Tab(text: l10n.browseTabTrips),
+              Tab(text: l10n.browseTabWants),
             ],
           ),
           Expanded(
@@ -168,6 +170,7 @@ class _TripsBrowseTab extends ConsumerWidget {
     final sort = ref.watch(tripSortProvider);
     final query = (type: 'trips', category: null, country: country);
     final feed = ref.watch(feedProvider(query));
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -186,7 +189,7 @@ class _TripsBrowseTab extends ConsumerWidget {
             ),
             _SortButton<TripSort>(
               value: sort,
-              labels: _tripSortLabels,
+              labels: _tripSortLabels(l10n),
               onChanged: (v) => ref.read(tripSortProvider.notifier).state = v,
             ),
             const SizedBox(width: 8),
@@ -204,14 +207,12 @@ class _TripsBrowseTab extends ConsumerWidget {
                 final items = _sortedTrips(rawItems, sort);
                 if (items.isEmpty) {
                   return ListView(
-                    children: const [
-                      SizedBox(height: 80),
+                    children: [
+                      const SizedBox(height: 80),
                       EmptyState(
                         icon: Icons.flight_outlined,
-                        title: 'No trips here yet',
-                        message:
-                            'No travelers heading this way yet. Check back soon, or '
-                            'post your own trip if you\'re the one traveling.',
+                        title: l10n.emptyNoTripsTitle,
+                        message: l10n.emptyNoTripsMessage,
                       ),
                     ],
                   );
@@ -251,6 +252,7 @@ class _WantsBrowseTab extends ConsumerWidget {
     final sort = ref.watch(wantSortProvider);
     final query = (type: 'wants', category: category, country: null);
     final feed = ref.watch(feedProvider(query));
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -269,7 +271,7 @@ class _WantsBrowseTab extends ConsumerWidget {
             ),
             _SortButton<WantSort>(
               value: sort,
-              labels: _wantSortLabels,
+              labels: _wantSortLabels(l10n),
               onChanged: (v) => ref.read(wantSortProvider.notifier).state = v,
             ),
             const SizedBox(width: 8),
@@ -287,14 +289,12 @@ class _WantsBrowseTab extends ConsumerWidget {
                 final items = _sortedWants(rawItems, sort);
                 if (items.isEmpty) {
                   return ListView(
-                    children: const [
-                      SizedBox(height: 80),
+                    children: [
+                      const SizedBox(height: 80),
                       EmptyState(
                         icon: Icons.explore_off_outlined,
-                        title: 'Nothing here yet',
-                        message:
-                            'No wants match this filter. Check back soon, or post a '
-                            'want of your own.',
+                        title: l10n.emptyNoWantsTitle,
+                        message: l10n.emptyNoWantsMessage,
                       ),
                     ],
                   );

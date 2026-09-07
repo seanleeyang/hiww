@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../l10n/app_localizations.dart';
 import '../application/auth_controller.dart';
 import 'auth_form_field.dart';
 import 'auth_scaffold.dart';
@@ -30,6 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _submitting = true;
       _error = null;
@@ -44,16 +46,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = state.hasError
           ? (state.error is ApiException
               ? (state.error as ApiException).message
-              : 'Could not log in. Please try again.')
+              : l10n.errorLoginFailed)
           : null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AuthScaffold(
-      title: 'Welcome back',
-      subtitle: 'Log in to keep shopping the world.',
+      title: l10n.loginTitle,
+      subtitle: l10n.loginSubtitle,
       form: Form(
         key: _formKey,
         child: Column(
@@ -61,13 +64,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           children: [
             AuthFormField(
               controller: _email,
-              label: 'Email',
+              label: l10n.fieldEmail,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
               validator: (v) {
                 final value = v?.trim() ?? '';
                 if (!value.contains('@') || !value.contains('.')) {
-                  return 'Enter a valid email address';
+                  return l10n.errorInvalidEmail;
                 }
                 return null;
               },
@@ -75,12 +78,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             const SizedBox(height: 14),
             AuthFormField(
               controller: _password,
-              label: 'Password',
+              label: l10n.fieldPassword,
               obscureText: true,
               autofillHints: const [AutofillHints.password],
               onFieldSubmitted: (_) => _submit(),
               validator: (v) =>
-                  (v ?? '').length < 8 ? 'At least 8 characters' : null,
+                  (v ?? '').length < 8 ? l10n.errorPasswordTooShort : null,
             ),
             if (_error != null) ...[
               const SizedBox(height: 14),
@@ -95,7 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Log in'),
+                  : Text(l10n.actionLogIn),
             ),
           ],
         ),
@@ -104,10 +107,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          const Text('New to Hiww?'),
+          Text(l10n.loginNewToHiww),
           TextButton(
             onPressed: _submitting ? null : () => context.go('/register'),
-            child: const Text('Create an account'),
+            child: Text(l10n.actionCreateAccount),
           ),
         ],
       ),

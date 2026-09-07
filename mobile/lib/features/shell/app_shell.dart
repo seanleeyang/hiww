@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../ui/brand_mark.dart';
 import '../../ui/initials_avatar.dart';
 import '../auth/application/auth_controller.dart';
@@ -10,19 +11,27 @@ import '../chat/data/chat_repository.dart';
 import '../notifications/data/notifications_repository.dart';
 
 enum ShellTab {
-  browse('/browse', 'Browse', Icons.travel_explore_outlined, Icons.travel_explore),
-  trips('/my-trips', 'My Trips', Icons.flight_outlined, Icons.flight),
-  wants('/my-wants', 'My Wants', Icons.favorite_outline, Icons.favorite),
-  offers('/offers', 'Offers', Icons.handshake_outlined, Icons.handshake),
-  orders('/my-orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long),
-  inbox('/inbox', 'Inbox', Icons.forum_outlined, Icons.forum);
+  browse('/browse', Icons.travel_explore_outlined, Icons.travel_explore),
+  trips('/my-trips', Icons.flight_outlined, Icons.flight),
+  wants('/my-wants', Icons.favorite_outline, Icons.favorite),
+  offers('/offers', Icons.handshake_outlined, Icons.handshake),
+  orders('/my-orders', Icons.receipt_long_outlined, Icons.receipt_long),
+  inbox('/inbox', Icons.forum_outlined, Icons.forum);
 
-  const ShellTab(this.path, this.label, this.icon, this.activeIcon);
+  const ShellTab(this.path, this.icon, this.activeIcon);
 
   final String path;
-  final String label;
   final IconData icon;
   final IconData activeIcon;
+
+  String labelFor(AppLocalizations l10n) => switch (this) {
+        ShellTab.browse => l10n.tabBrowse,
+        ShellTab.trips => l10n.tabMyTrips,
+        ShellTab.wants => l10n.tabMyWants,
+        ShellTab.offers => l10n.tabOffers,
+        ShellTab.orders => l10n.tabOrders,
+        ShellTab.inbox => l10n.tabInbox,
+      };
 
   bool visibleTo(UserType type) => switch (this) {
         ShellTab.trips => type.isTraveler,
@@ -62,13 +71,14 @@ class AppShell extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= 760;
 
     final notifUnread = ref.watch(notificationUnreadProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     final appBar = AppBar(
       title: const BrandMark(),
       titleSpacing: 16,
       actions: [
         Tooltip(
-          message: 'Notifications',
+          message: l10n.tooltipNotifications,
           child: IconButton(
             onPressed: () => context.push('/notifications'),
             icon: notifUnread > 0
@@ -82,13 +92,13 @@ class AppShell extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: Tooltip(
-            message: 'Account',
+            message: l10n.tooltipAccount,
             child: InkWell(
               borderRadius: BorderRadius.circular(999),
               onTap: () => context.go('/account'),
               child: Semantics(
                 button: true,
-                label: 'Account',
+                label: l10n.tooltipAccount,
                 child: InitialsAvatar(
                   name: user?.fullName ?? 'Hiww',
                   url: user?.avatarUrl,
@@ -115,7 +125,7 @@ class AppShell extends ConsumerWidget {
                   NavigationRailDestination(
                     icon: tabIcon(t, selected: false),
                     selectedIcon: tabIcon(t, selected: true),
-                    label: Text(t.label),
+                    label: Text(t.labelFor(l10n)),
                   ),
               ],
             ),
@@ -144,7 +154,7 @@ class AppShell extends ConsumerWidget {
             NavigationDestination(
               icon: tabIcon(t, selected: false),
               selectedIcon: tabIcon(t, selected: true),
-              label: t.label,
+              label: t.labelFor(l10n),
             ),
         ],
       ),

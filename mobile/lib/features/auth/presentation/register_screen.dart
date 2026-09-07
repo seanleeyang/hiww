@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/phone_field.dart';
 import '../application/auth_controller.dart';
 import '../domain/auth_user.dart';
@@ -38,8 +39,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
     if (_phone.trim().isEmpty) {
-      setState(() => _error = 'Enter your phone number');
+      setState(() => _error = l10n.errorEnterPhone);
       return;
     }
     setState(() {
@@ -57,25 +59,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final state = ref.read(authControllerProvider);
     setState(() {
       _submitting = false;
-      _error = state.hasError ? _messageFor(state.error) : null;
+      _error = state.hasError ? _messageFor(state.error, l10n) : null;
     });
   }
 
-  String _messageFor(Object? error) {
+  String _messageFor(Object? error, AppLocalizations l10n) {
     if (error is ApiException) {
       if (error.code == 'USER_EXISTS') {
-        return 'An account with that email already exists.';
+        return l10n.errorUserExists;
       }
       return error.message;
     }
-    return 'Could not create your account. Please try again.';
+    return l10n.errorRegisterFailed;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AuthScaffold(
-      title: 'Create your account',
-      subtitle: 'Shop from travelers, or earn on trips you already take.',
+      title: l10n.registerTitle,
+      subtitle: l10n.registerSubtitle,
       form: Form(
         key: _formKey,
         child: Column(
@@ -83,21 +86,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           children: [
             AuthFormField(
               controller: _name,
-              label: 'Full name',
+              label: l10n.fieldFullName,
               autofillHints: const [AutofillHints.name],
               validator: (v) =>
-                  (v?.trim() ?? '').length < 2 ? 'Enter your full name' : null,
+                  (v?.trim() ?? '').length < 2 ? l10n.errorEnterFullName : null,
             ),
             const SizedBox(height: 14),
             AuthFormField(
               controller: _email,
-              label: 'Email',
+              label: l10n.fieldEmail,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
               validator: (v) {
                 final value = v?.trim() ?? '';
                 if (!value.contains('@') || !value.contains('.')) {
-                  return 'Enter a valid email address';
+                  return l10n.errorInvalidEmail;
                 }
                 return null;
               },
@@ -107,30 +110,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             const SizedBox(height: 14),
             AuthFormField(
               controller: _password,
-              label: 'Password',
+              label: l10n.fieldPassword,
               obscureText: true,
               autofillHints: const [AutofillHints.newPassword],
               validator: (v) =>
-                  (v ?? '').length < 8 ? 'At least 8 characters' : null,
+                  (v ?? '').length < 8 ? l10n.errorPasswordTooShort : null,
             ),
             const SizedBox(height: 14),
             AuthFormField(
               controller: _confirmPassword,
-              label: 'Confirm password',
+              label: l10n.fieldConfirmPassword,
               obscureText: true,
               autofillHints: const [AutofillHints.newPassword],
               validator: (v) =>
-                  v != _password.text ? 'Passwords don\'t match' : null,
+                  v != _password.text ? l10n.errorPasswordsDontMatch : null,
             ),
             const SizedBox(height: 16),
-            Text('I want to…',
+            Text(l10n.registerIWantTo,
                 style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
             SegmentedButton<UserType>(
-              segments: const [
-                ButtonSegment(value: UserType.shopper, label: Text('Shop')),
-                ButtonSegment(value: UserType.traveler, label: Text('Travel')),
-                ButtonSegment(value: UserType.both, label: Text('Both')),
+              segments: [
+                ButtonSegment(value: UserType.shopper, label: Text(l10n.userTypeShop)),
+                ButtonSegment(value: UserType.traveler, label: Text(l10n.userTypeTravel)),
+                ButtonSegment(value: UserType.both, label: Text(l10n.userTypeBoth)),
               ],
               selected: {_userType},
               onSelectionChanged: (s) => setState(() => _userType = s.first),
@@ -149,7 +152,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Create account'),
+                  : Text(l10n.actionCreateAccountButton),
             ),
           ],
         ),
@@ -158,10 +161,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          const Text('Already have an account?'),
+          Text(l10n.registerAlreadyHaveAccount),
           TextButton(
             onPressed: _submitting ? null : () => context.go('/login'),
-            child: const Text('Log in'),
+            child: Text(l10n.actionLogIn),
           ),
         ],
       ),

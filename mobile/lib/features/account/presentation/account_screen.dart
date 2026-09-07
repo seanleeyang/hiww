@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/world_countries.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 import '../../../ui/country_picker_field.dart';
 import '../../../ui/image_picker_field.dart';
@@ -15,6 +16,7 @@ import '../../../ui/star_rating.dart';
 import '../../../ui/status_pill.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
+import '../../settings/locale_controller.dart';
 import '../data/account_repository.dart';
 
 void _showEditProfile(BuildContext context, WidgetRef ref, AuthUser user) {
@@ -34,16 +36,17 @@ class AccountScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Account'),
+        title: Text(l10n.accountTitle),
         leading: BackButton(onPressed: () => context.go('/browse')),
         actions: [
           if (user != null)
             TextButton(
               onPressed: () => _showEditProfile(context, ref, user),
-              child: const Text('Edit'),
+              child: Text(l10n.actionEdit),
             ),
         ],
       ),
@@ -84,7 +87,7 @@ class AccountScreen extends ConsumerWidget {
                           StarRatingDisplay(
                             rating: user.ratingAvg,
                             trailing: user.deliveredCount > 0
-                                ? '${user.deliveredCount} delivered'
+                                ? l10n.deliveredCount(user.deliveredCount)
                                 : null,
                           ),
                         ],
@@ -106,12 +109,14 @@ class AccountScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _PilotCard(instructions: user.pilot!.paymentInstructions),
                 ],
+                const SizedBox(height: 16),
+                const _LanguageCard(),
                 const SizedBox(height: 24),
                 OutlinedButton.icon(
                   onPressed: () =>
                       ref.read(authControllerProvider.notifier).logout(),
                   icon: const Icon(Icons.logout),
-                  label: const Text('Log out'),
+                  label: Text(l10n.actionLogOut),
                 ),
               ],
             ),
@@ -125,6 +130,7 @@ class _IncompleteProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SoftCard(
       color: context.hiww.infoSurface,
       child: Column(
@@ -136,19 +142,50 @@ class _IncompleteProfileCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Complete your profile',
+                  l10n.accountCompleteProfile,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            "Add your phone number and delivery address — you'll need them "
-            'before you can accept or make your first offer.',
-          ),
+          Text(l10n.accountCompleteProfileBody),
           const SizedBox(height: 12),
-          FilledButton.tonal(onPressed: onTap, child: const Text('Add details')),
+          FilledButton.tonal(onPressed: onTap, child: Text(l10n.actionAddDetails)),
+        ],
+      ),
+    );
+  }
+}
+
+/// English/Thai switcher. `null` selection means "follow the system locale",
+/// but once someone picks one explicitly it's persisted via
+/// [localeControllerProvider] and used regardless of device language.
+class _LanguageCard extends ConsumerWidget {
+  const _LanguageCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final chosen = ref.watch(localeControllerProvider).valueOrNull;
+    final current = chosen?.languageCode ?? Localizations.localeOf(context).languageCode;
+
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(l10n.settingsLanguage),
+          const SizedBox(height: 8),
+          SegmentedButton<String>(
+            segments: [
+              ButtonSegment(value: 'en', label: Text(l10n.languageEnglish)),
+              ButtonSegment(value: 'th', label: Text(l10n.languageThai)),
+            ],
+            selected: {current == 'th' ? 'th' : 'en'},
+            onSelectionChanged: (s) =>
+                ref.read(localeControllerProvider.notifier).setLocale(Locale(s.first)),
+            showSelectedIcon: false,
+          ),
         ],
       ),
     );
@@ -161,6 +198,7 @@ class _ContactDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final addressParts = [
       user.addressStreet,
       user.addressCity,
@@ -172,15 +210,15 @@ class _ContactDetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader('Contact & delivery'),
+          SectionHeader(l10n.sectionContactDelivery),
           _ContactRow(
             icon: Icons.phone_outlined,
-            label: (user.phone ?? '').trim().isEmpty ? 'Add a phone number' : user.phone!,
+            label: (user.phone ?? '').trim().isEmpty ? l10n.accountAddPhone : user.phone!,
           ),
           const SizedBox(height: 8),
           _ContactRow(
             icon: Icons.location_on_outlined,
-            label: addressParts.isEmpty ? 'Add a delivery address' : addressParts,
+            label: addressParts.isEmpty ? l10n.accountAddAddress : addressParts,
           ),
         ],
       ),
@@ -246,7 +284,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   Future<void> _save() async {
     if (_name.text.trim().length < 2) {
-      setState(() => _error = 'Enter your name');
+      setState(() => _error = AppLocalizations.of(context)!.errorEnterName);
       return;
     }
     setState(() {
@@ -280,6 +318,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -288,34 +327,33 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Edit profile', style: Theme.of(context).textTheme.titleLarge),
+              Text(l10n.editProfileTitle, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               ImagePickerField(
                 value: _avatarUrl,
                 onChanged: (url) => setState(() => _avatarUrl = url),
-                label: 'Profile photo',
+                label: l10n.fieldProfilePhoto,
                 circle: true,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _name,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Full name'),
+                decoration: InputDecoration(labelText: l10n.fieldFullName),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _city,
-                decoration: const InputDecoration(
-                  labelText: 'Home city (optional)',
+                decoration: InputDecoration(
+                  labelText: l10n.fieldHomeCity,
                   hintText: 'Bangkok',
                 ),
               ),
               const Divider(height: 24),
-              Text('Contact & delivery', style: Theme.of(context).textTheme.titleSmall),
+              Text(l10n.sectionContactDelivery, style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 4),
               Text(
-                "Required before your first order. Only visible to Hiww and the "
-                "other person on an order — never shown publicly.",
+                l10n.contactDeliveryNote,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -329,7 +367,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
               const SizedBox(height: 12),
               TextField(
                 controller: _addressStreet,
-                decoration: const InputDecoration(labelText: 'Street address'),
+                decoration: InputDecoration(labelText: l10n.fieldStreetAddress),
               ),
               const SizedBox(height: 12),
               Row(
@@ -338,14 +376,14 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                     flex: 2,
                     child: TextField(
                       controller: _addressCity,
-                      decoration: const InputDecoration(labelText: 'City'),
+                      decoration: InputDecoration(labelText: l10n.fieldCity),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
                       controller: _addressPostalCode,
-                      decoration: const InputDecoration(labelText: 'Postal code'),
+                      decoration: InputDecoration(labelText: l10n.fieldPostalCode),
                     ),
                   ),
                 ],
@@ -371,7 +409,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save'),
+                    : Text(l10n.actionSave),
               ),
             ],
           ),
@@ -387,6 +425,7 @@ class _PilotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SoftCard(
       color: context.hiww.infoSurface,
       child: Column(
@@ -397,16 +436,13 @@ class _PilotCard extends StatelessWidget {
               const Icon(Icons.info_outline, size: 18),
               const SizedBox(width: 8),
               Text(
-                'Manual-money pilot',
+                l10n.pilotTitle,
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Card payments are off during the pilot. You pay by bank transfer and '
-            'the Hiww team confirms once the money lands.',
-          ),
+          Text(l10n.pilotBody),
           if (instructions.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
@@ -442,7 +478,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
 
   Future<void> _submit() async {
     if (_docId.text.trim().length < 3) {
-      setState(() => _error = 'Enter your document number');
+      setState(() => _error = AppLocalizations.of(context)!.errorEnterDocumentNumber);
       return;
     }
     setState(() {
@@ -460,8 +496,9 @@ class _KycCardState extends ConsumerState<_KycCard> {
         _expanded = false;
         _docId.clear();
       });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Submitted for review')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.infoSubmittedForReview)),
+      );
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -474,6 +511,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider)!;
+    final l10n = AppLocalizations.of(context)!;
 
     return SoftCard(
       child: Column(
@@ -481,15 +519,12 @@ class _KycCardState extends ConsumerState<_KycCard> {
         children: [
           Row(
             children: [
-              Expanded(child: SectionHeader('ID check')),
+              Expanded(child: SectionHeader(l10n.kycSectionTitle)),
               StatusPill(user.kycStatus),
             ],
           ),
           Text(
-            user.isKycApproved
-                ? 'Your identity has been verified.'
-                : 'Verify your identity before completing an order. The Hiww '
-                      'team reviews submissions manually during the pilot.',
+            user.isKycApproved ? l10n.kycVerified : l10n.kycUnverified,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -501,23 +536,23 @@ class _KycCardState extends ConsumerState<_KycCard> {
                 onPressed: () => setState(() => _expanded = true),
                 child: Text(
                   user.kycStatus == 'pending'
-                      ? 'Update ID details'
-                      : 'Submit ID details',
+                      ? l10n.actionUpdateIdDetails
+                      : l10n.actionSubmitIdDetails,
                 ),
               )
             else ...[
               DropdownButtonFormField<String>(
                 initialValue: _docType,
-                decoration: const InputDecoration(labelText: 'Document type'),
-                items: const [
-                  DropdownMenuItem(value: 'passport', child: Text('Passport')),
+                decoration: InputDecoration(labelText: l10n.fieldDocumentType),
+                items: [
+                  DropdownMenuItem(value: 'passport', child: Text(l10n.docPassport)),
                   DropdownMenuItem(
                     value: 'id_card',
-                    child: Text('National ID card'),
+                    child: Text(l10n.docIdCard),
                   ),
                   DropdownMenuItem(
                     value: 'drivers_license',
-                    child: Text("Driver's licence"),
+                    child: Text(l10n.docDriversLicense),
                   ),
                 ],
                 onChanged: (v) => setState(() => _docType = v ?? 'passport'),
@@ -525,7 +560,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
               const SizedBox(height: 12),
               TextField(
                 controller: _docId,
-                decoration: const InputDecoration(labelText: 'Document number'),
+                decoration: InputDecoration(labelText: l10n.fieldDocumentNumber),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 8),
@@ -543,7 +578,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Submit for review'),
+                    : Text(l10n.actionSubmitForReview),
               ),
             ],
           ],
