@@ -29,38 +29,41 @@ class AuthScaffold extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 12),
+                  const Center(child: BrandMark(fontSize: 30)),
+                  const SizedBox(height: 32),
+                  Text(title, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 6),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 40),
-                      const Center(child: BrandMark(fontSize: 30)),
-                      const SizedBox(height: 32),
-                      Text(title, style: Theme.of(context).textTheme.headlineSmall),
-                      const SizedBox(height: 6),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                      Expanded(
+                        child: Text(
+                          subtitle,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      form,
-                      const SizedBox(height: 8),
-                      footer,
+                      const _LanguageToggle(),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  form,
+                  const SizedBox(height: 8),
+                  footer,
+                ],
               ),
             ),
-            const Positioned(top: 4, right: 8, child: _LanguageToggle()),
-          ],
+          ),
         ),
       ),
     );
