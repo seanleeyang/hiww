@@ -1,14 +1,16 @@
 /**
  * The public-facing slice of a user shown on cards and detail screens:
- * name, avatar, bio and reputation. Never includes contact details
- * (phone, address) or the email — those stay in the `/api/me` self-view.
+ * name, avatar and reputation. Never includes contact details (phone,
+ * address) or the email — those stay in the `/api/me` self-view. There is
+ * intentionally no free-text public field (e.g. a bio) here — it would be
+ * an unmoderated way to slip contact info past the platform, unlike order
+ * chat which has regex + AI leakage checks.
  */
 export interface UserSummary {
   id: string;
   full_name: string;
   avatar_url: string | null;
   home_city: string | null;
-  bio: string | null;
   rating_avg: number;
   rating_count: number;
   delivered_count: number;
@@ -19,7 +21,6 @@ export interface UserSummaryRow {
   full_name: string;
   avatar_url?: string | null;
   home_city?: string | null;
-  bio?: string | null;
   rating_sum?: number | string | null;
   rating_count?: number | string | null;
   delivered_count?: number | string | null;
@@ -33,7 +34,6 @@ export function toUserSummary(row: UserSummaryRow): UserSummary {
     full_name: row.full_name,
     avatar_url: row.avatar_url ?? null,
     home_city: row.home_city ?? null,
-    bio: row.bio ?? null,
     rating_avg: count > 0 ? Math.round((sum / count) * 10) / 10 : 0,
     rating_count: count,
     delivered_count: Number(row.delivered_count ?? 0),
@@ -46,7 +46,6 @@ export const USER_SUMMARY_COLUMNS = [
   'full_name',
   'avatar_url',
   'home_city',
-  'bio',
   'rating_sum',
   'rating_count',
   'delivered_count',

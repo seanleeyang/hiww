@@ -42,7 +42,6 @@ class AuthUser {
     this.ratingCount = 0,
     this.deliveredCount = 0,
     this.pilot,
-    this.bio,
     this.phone,
     this.addressStreet,
     this.addressCity,
@@ -67,8 +66,7 @@ class AuthUser {
 
   final PilotInfo? pilot;
 
-  /// Public bio + private contact/delivery details (phase: contact details).
-  final String? bio;
+  /// Private contact/delivery details.
   final String? phone;
   final String? addressStreet;
   final String? addressCity;
@@ -109,7 +107,6 @@ class AuthUser {
         pilot: json['pilot'] is Map
             ? PilotInfo.fromJson(Map<String, dynamic>.from(json['pilot'] as Map))
             : null,
-        bio: json['bio'] as String?,
         phone: json['phone'] as String?,
         addressStreet: json['address_street'] as String?,
         addressCity: json['address_city'] as String?,

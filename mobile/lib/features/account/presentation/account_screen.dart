@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/world_countries.dart';
 import '../../../theme/app_colors.dart';
+import '../../../ui/country_picker_field.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/initials_avatar.dart';
 import '../../../ui/section_header.dart';
@@ -162,7 +164,7 @@ class _ContactDetailsCard extends StatelessWidget {
       user.addressStreet,
       user.addressCity,
       user.addressPostalCode,
-      user.addressCountry,
+      worldCountryName(user.addressCountry),
     ].where((p) => (p ?? '').trim().isNotEmpty).join(', ');
 
     return SoftCard(
@@ -170,10 +172,6 @@ class _ContactDetailsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SectionHeader('Contact & delivery'),
-          if ((user.bio ?? '').trim().isNotEmpty) ...[
-            Text(user.bio!),
-            const SizedBox(height: 12),
-          ],
           _ContactRow(
             icon: Icons.phone_outlined,
             label: (user.phone ?? '').trim().isEmpty ? 'Add a phone number' : user.phone!,
@@ -225,13 +223,12 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late final _name = TextEditingController(text: widget.user.fullName);
   late final _city = TextEditingController(text: widget.user.homeCity ?? '');
-  late final _bio = TextEditingController(text: widget.user.bio ?? '');
   late final _phone = TextEditingController(text: widget.user.phone ?? '');
   late final _addressStreet = TextEditingController(text: widget.user.addressStreet ?? '');
   late final _addressCity = TextEditingController(text: widget.user.addressCity ?? '');
   late final _addressPostalCode =
       TextEditingController(text: widget.user.addressPostalCode ?? '');
-  late final _addressCountry = TextEditingController(text: widget.user.addressCountry ?? '');
+  late String? _addressCountry = widget.user.addressCountry;
   late String? _avatarUrl = widget.user.avatarUrl;
   bool _busy = false;
   String? _error;
@@ -240,12 +237,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void dispose() {
     _name.dispose();
     _city.dispose();
-    _bio.dispose();
     _phone.dispose();
     _addressStreet.dispose();
     _addressCity.dispose();
     _addressPostalCode.dispose();
-    _addressCountry.dispose();
     super.dispose();
   }
 
@@ -265,12 +260,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             fullName: _name.text.trim(),
             homeCity: _city.text.trim(),
             avatarUrl: _avatarUrl ?? '',
-            bio: _bio.text.trim(),
             phone: _phone.text.trim(),
             addressStreet: _addressStreet.text.trim(),
             addressCity: _addressCity.text.trim(),
             addressPostalCode: _addressPostalCode.text.trim(),
-            addressCountry: _addressCountry.text.trim(),
+            addressCountry: _addressCountry ?? '',
           );
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
@@ -314,16 +308,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 decoration: const InputDecoration(
                   labelText: 'Home city (optional)',
                   hintText: 'Bangkok',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _bio,
-                maxLength: 500,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Bio (optional)',
-                  hintText: 'A short line about you — shown on your public profile',
                 ),
               ),
               const Divider(height: 24),
@@ -370,9 +354,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 ],
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _addressCountry,
-                decoration: const InputDecoration(labelText: 'Country'),
+              CountryPickerField(
+                value: _addressCountry,
+                onChanged: (v) => setState(() => _addressCountry = v),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),

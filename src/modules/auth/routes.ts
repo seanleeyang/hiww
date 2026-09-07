@@ -111,7 +111,6 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     'rating_count',
     'delivered_count',
     'phone',
-    'bio',
     'address_street',
     'address_city',
     'address_postal_code',
@@ -148,7 +147,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     reply.send({ success: true, data: meResponse(me), code: 'ME' });
   });
 
-  // Edit your own profile (name, home city, avatar URL, bio, phone, address).
+  // Edit your own profile (name, home city, avatar URL, phone, address).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.patch('/api/me', async (request: any, reply: any) => {
     const parsed = profileUpdateSchema.safeParse(request.body);
@@ -161,7 +160,6 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (parsed.data.full_name !== undefined) patch.full_name = parsed.data.full_name;
     if (parsed.data.home_city !== undefined) patch.home_city = parsed.data.home_city;
     if (parsed.data.avatar_url !== undefined) patch.avatar_url = parsed.data.avatar_url;
-    if (parsed.data.bio !== undefined) patch.bio = parsed.data.bio;
     if (parsed.data.phone !== undefined) patch.phone = parsed.data.phone;
     if (parsed.data.address_street !== undefined) patch.address_street = parsed.data.address_street;
     if (parsed.data.address_city !== undefined) patch.address_city = parsed.data.address_city;

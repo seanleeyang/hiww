@@ -109,7 +109,6 @@ export const profileUpdateSchema = z
     full_name: z.string().trim().min(2).max(120).optional(),
     home_city: z.string().trim().max(120).nullable().optional(),
     avatar_url: z.string().trim().url().max(2048).nullable().optional(),
-    bio: optionalContactText(500),
     phone: z
       .string()
       .trim()

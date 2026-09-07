@@ -12,7 +12,7 @@ describe('profile contact details + completeness gate', () => {
     await closeTestApp(ctx);
   });
 
-  it('lets a user set phone, address and bio via PATCH /api/me, and returns them from GET /api/me', async () => {
+  it('lets a user set phone and address via PATCH /api/me, and returns them from GET /api/me', async () => {
     const user = await createUser(ctx, { user_type: 'shopper' });
 
     const patch = await ctx.app.inject({
@@ -21,7 +21,6 @@ describe('profile contact details + completeness gate', () => {
       headers: authHeader(user),
       payload: {
         phone: '+1 555 0100',
-        bio: 'I travel often between BKK and NYC.',
         address_street: '1 Market St',
         address_city: 'Springfield',
         address_postal_code: '12345',
@@ -33,7 +32,6 @@ describe('profile contact details + completeness gate', () => {
     expect(patch.json().data.address_city).toBe('Springfield');
 
     const me = await ctx.app.inject({ method: 'GET', url: '/api/me', headers: authHeader(user) });
-    expect(me.json().data.bio).toBe('I travel often between BKK and NYC.');
     expect(me.json().data.address_country).toBe('US');
   });
 
@@ -163,7 +161,7 @@ describe('profile contact details + completeness gate', () => {
       method: 'PATCH',
       url: '/api/me',
       headers: authHeader(shopper),
-      payload: { phone: '+1 555 0100', bio: 'Hi there' },
+      payload: { phone: '+1 555 0100', address_city: 'Springfield' },
     });
     const requestId = await createRequest(ctx, shopper);
     const viewer = await createUser(ctx, { user_type: 'traveler' });
@@ -174,8 +172,8 @@ describe('profile contact details + completeness gate', () => {
       headers: authHeader(viewer),
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json().data.shopper.bio).toBe('Hi there');
     expect(res.json().data.shopper.phone).toBeUndefined();
     expect(res.json().data.shopper.address_street).toBeUndefined();
+    expect(res.json().data.shopper.address_city).toBeUndefined();
   });
 });

@@ -15,9 +15,8 @@ export interface UsersTable {
   rating_sum: Generated<number>;
   rating_count: Generated<number>;
   delivered_count: Generated<number>;
-  /** Contact + delivery details (migration 018). Phone/address are private; bio is public. */
+  /** Contact + delivery details (migration 018), all private (self-view only). */
   phone?: string | null;
-  bio?: string | null;
   address_street?: string | null;
   address_city?: string | null;
   address_postal_code?: string | null;

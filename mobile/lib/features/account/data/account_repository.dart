@@ -21,7 +21,6 @@ class AccountRepository {
     String? fullName,
     String? homeCity,
     String? avatarUrl,
-    String? bio,
     String? phone,
     String? addressStreet,
     String? addressCity,
@@ -32,7 +31,6 @@ class AccountRepository {
     if (fullName != null) body['full_name'] = fullName;
     if (homeCity != null) body['home_city'] = homeCity.isEmpty ? null : homeCity;
     if (avatarUrl != null) body['avatar_url'] = avatarUrl.isEmpty ? null : avatarUrl;
-    if (bio != null) body['bio'] = bio.isEmpty ? null : bio;
     if (phone != null) body['phone'] = phone.isEmpty ? null : phone;
     if (addressStreet != null) body['address_street'] = addressStreet.isEmpty ? null : addressStreet;
     if (addressCity != null) body['address_city'] = addressCity.isEmpty ? null : addressCity;
