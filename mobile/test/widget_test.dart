@@ -51,5 +51,12 @@ void main() {
 
     expect(find.text('Welcome back'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Log in'), findsOneWidget);
+    expect(find.text('English'), findsOneWidget);
+    expect(find.text('ไทย'), findsOneWidget);
+
+    await tester.tap(find.text('ไทย'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ยินดีต้อนรับกลับ'), findsOneWidget);
   });
 }
