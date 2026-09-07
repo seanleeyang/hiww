@@ -154,6 +154,34 @@ describe('offer negotiation: counter-offers capped at 2 rounds', () => {
     expect(res.statusCode).toBe(409);
   });
 
+  it('lists a negotiation for both sides via GET /api/offers/negotiations, role-aware', async () => {
+    const { shopper, traveler, offerId } = await setup(ctx);
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/offers/${offerId}/counter`,
+      headers: authHeader(shopper),
+      payload: { quoted_price: '90.00' },
+    });
+
+    const asTraveler = await ctx.app.inject({ method: 'GET', url: '/api/offers/negotiations', headers: authHeader(traveler) });
+    expect(asTraveler.statusCode).toBe(200);
+    const travelerView = asTraveler.json().data.items.find((o: { id: string }) => o.id === offerId);
+    expect(travelerView.my_role).toBe('traveler');
+    expect(travelerView.my_turn).toBe(true);
+    expect(travelerView.counterparty_name).toBeTruthy();
+
+    const asShopper = await ctx.app.inject({ method: 'GET', url: '/api/offers/negotiations', headers: authHeader(shopper) });
+    const shopperView = asShopper.json().data.items.find((o: { id: string }) => o.id === offerId);
+    expect(shopperView.my_role).toBe('shopper');
+    expect(shopperView.my_turn).toBe(false);
+    expect(shopperView.counterparty_name).toBeTruthy();
+
+    // A stranger sees neither side of it.
+    const stranger = await createUser(ctx, { user_type: 'both' });
+    const asStranger = await ctx.app.inject({ method: 'GET', url: '/api/offers/negotiations', headers: authHeader(stranger) });
+    expect(asStranger.json().data.items.some((o: { id: string }) => o.id === offerId)).toBe(false);
+  });
+
   it('auto-expires an offer nobody responded to in time', async () => {
     const { shopper, traveler, offerId } = await setup(ctx);
     await ctx.db

@@ -28,6 +28,14 @@ class OffersRepository {
     return items.map((e) => Offer.fromJson(Map<String, dynamic>.from(e as Map))).toList();
   }
 
+  /// Every negotiation the caller is part of, on either side — as the
+  /// traveler who made an offer, or the shopper who owns the want it's on.
+  Future<List<Offer>> negotiations() async {
+    final data = await _api.get('/api/offers/negotiations');
+    final items = ((data as Map)['items'] as List?) ?? [];
+    return items.map((e) => Offer.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+  }
+
   /// Returns the created order id.
   Future<String> accept(String offerId) async {
     final data = await _api.post('/api/offers/$offerId/accept');
@@ -52,3 +60,6 @@ final offersRepositoryProvider = Provider<OffersRepository>(
 
 final myOffersProvider =
     FutureProvider<List<Offer>>((ref) => ref.watch(offersRepositoryProvider).mine());
+
+final negotiationsProvider =
+    FutureProvider<List<Offer>>((ref) => ref.watch(offersRepositoryProvider).negotiations());

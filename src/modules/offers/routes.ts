@@ -153,6 +153,65 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
     }
   );
 
+  // Every negotiation the caller is part of, on either side — as the
+  // traveler who made an offer, or the shopper who owns the want it's on.
+  // One unified list instead of digging through My Trips and each want's
+  // own detail page separately.
+  app.get(
+    '/api/offers/negotiations',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      await expireOverdueOffers(request.db);
+
+      const columns = [
+        'offers.id',
+        'offers.quoted_price',
+        'offers.delivery_date',
+        'offers.status',
+        'offers.round',
+        'offers.last_actor',
+        'offers.respond_by',
+        'offers.price_history',
+        'offers.created_at',
+        'offers.updated_at',
+        'offers.request_id',
+        'offers.trip_id',
+        'requests.item_description as request_item',
+        'requests.status as request_status',
+      ] as const;
+
+      const asTraveler = await request.db
+        .selectFrom('offers')
+        .innerJoin('requests', 'requests.id', 'offers.request_id')
+        .innerJoin('users', 'users.id', 'requests.shopper_id')
+        .select([...columns, 'users.full_name as counterparty_name'])
+        .where('offers.traveler_id', '=', request.userId)
+        .execute();
+
+      const asShopper = await request.db
+        .selectFrom('offers')
+        .innerJoin('requests', 'requests.id', 'offers.request_id')
+        .innerJoin('users', 'users.id', 'offers.traveler_id')
+        .select([...columns, 'users.full_name as counterparty_name'])
+        .where('requests.shopper_id', '=', request.userId)
+        .execute();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const merged = [
+        ...asTraveler.map((o: any) => ({ ...o, my_role: 'traveler' })),
+        ...asShopper.map((o: any) => ({ ...o, my_role: 'shopper' })),
+      ];
+      merged.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+
+      const enriched = merged.map((o) => {
+        const myTurn = o.status === 'pending' && o.last_actor !== o.my_role;
+        return { ...o, my_turn: myTurn, can_counter: myTurn && o.round < config.maxOfferCounters };
+      });
+
+      reply.send({ success: true, data: { items: enriched }, code: 'OFFER_NEGOTIATIONS' });
+    }
+  );
+
   // Offers on a request. The request owner (and admin) see all offers with the
   // traveler's name; anyone else sees only their own offer.
   app.get<{ Params: { id: string } }>(

@@ -26,9 +26,11 @@ import '../features/trips/domain/trip.dart';
 import '../features/trips/presentation/my_trips_screen.dart';
 import '../features/trips/presentation/new_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
+import '../features/wants/data/offers_repository.dart';
 import '../features/wants/data/wants_repository.dart';
 import '../features/wants/presentation/make_offer_screen.dart';
 import '../features/wants/presentation/my_wants_screen.dart';
+import '../features/wants/presentation/offers_screen.dart';
 import '../features/wants/presentation/want_detail_screen.dart';
 
 /// Bridges Riverpod changes into a [Listenable] that go_router can refresh on.
@@ -54,6 +56,8 @@ class _AuthRefresh extends ChangeNotifier {
         ref.invalidate(feedProvider);
         ref.invalidate(routeMatchProvider);
         ref.invalidate(userReviewsProvider);
+        ref.invalidate(myOffersProvider);
+        ref.invalidate(negotiationsProvider);
       }
       notifyListeners();
     });
@@ -140,6 +144,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/browse', builder: (_, _) => const BrowseScreen()),
           GoRoute(path: '/my-trips', builder: (_, _) => const MyTripsScreen()),
           GoRoute(path: '/my-wants', builder: (_, _) => const MyWantsScreen()),
+          GoRoute(path: '/offers', builder: (_, _) => const OffersScreen()),
           GoRoute(
             path: '/my-orders',
             builder: (_, _) => const MyOrdersScreen(),

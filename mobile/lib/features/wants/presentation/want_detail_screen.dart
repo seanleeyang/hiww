@@ -268,6 +268,7 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
   Future<void> _refreshAfterAction() async {
     ref.invalidate(wantDetailProvider(widget.wantId));
     ref.invalidate(wantOffersProvider(widget.wantId));
+    ref.invalidate(negotiationsProvider);
   }
 
   Future<void> _accept() async {

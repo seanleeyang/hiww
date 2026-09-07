@@ -58,6 +58,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
           );
       ref.invalidate(wantOffersProvider(widget.wantId));
       ref.invalidate(myOffersProvider);
+      ref.invalidate(negotiationsProvider);
       if (!mounted) return;
       context.pop();
       ScaffoldMessenger.of(context)

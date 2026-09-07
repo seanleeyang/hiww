@@ -33,6 +33,8 @@ class Offer {
     this.myTurn = false,
     this.canCounter = false,
     this.priceHistory = const [],
+    this.myRole,
+    this.counterpartyName,
   });
 
   final String id;
@@ -61,6 +63,11 @@ class Offer {
   final bool canCounter;
   final List<PriceHistoryEntry> priceHistory;
 
+  // Present on `GET /api/offers/negotiations` — the unified view merges
+  // both roles, so each item says which one the caller is playing here.
+  final String? myRole;
+  final String? counterpartyName;
+
   String get priceLabel => money(quotedPrice);
   String? get deliveryLabel =>
       deliveryDate == null ? null : 'Deliver by ${shortDate(deliveryDate)}';
@@ -87,5 +94,7 @@ class Offer {
                 ?.map((e) => PriceHistoryEntry.fromJson(Map<String, dynamic>.from(e as Map)))
                 .toList() ??
             const [],
+        myRole: j['my_role']?.toString(),
+        counterpartyName: j['counterparty_name']?.toString(),
       );
 }
