@@ -1,4 +1,4 @@
-import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
+import { makeTestApp, closeTestApp, createUser, completeProfile, authHeader, type TestContext } from '../helpers/test-app';
 import { createTrip, createRequest, createAcceptedOrder } from '../helpers/flows';
 
 describe('trip/want edit, cancel, and admin removal', () => {
@@ -93,6 +93,7 @@ describe('trip/want edit, cancel, and admin removal', () => {
   it('blocks deleting a trip that already has a pending (not yet accepted) offer', async () => {
     const traveler = await createUser(ctx, { user_type: 'traveler' });
     const shopper = await createUser(ctx, { user_type: 'shopper' });
+    await completeProfile(ctx, traveler);
     const tripId = await createTrip(ctx, traveler);
     const requestId = await createRequest(ctx, shopper);
 

@@ -5,6 +5,7 @@ import { AppError, generateId } from '@/utils/helpers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification } from '@/services/notify';
+import { requireCompleteProfile } from '@/utils/profile-guard';
 
 const PLATFORM_FEE_RATE = 0.08;
 
@@ -26,6 +27,9 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'Invalid offer data');
       }
+
+      // An accepted offer becomes an order — the traveler needs to be reachable first.
+      await requireCompleteProfile(request.db, request.userId);
 
       const requestRow = await request.db
         .selectFrom('requests')
@@ -178,6 +182,9 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       if (requestRow.status !== 'open') {
         throw new AppError('INVALID_STATUS', 409, 'This request already has an accepted offer');
       }
+
+      // Accepting creates the order — the shopper needs to be reachable first.
+      await requireCompleteProfile(request.db, request.userId);
 
       const total = new Decimal(offer.quoted_price);
       const fees = total.mul(PLATFORM_FEE_RATE).toDecimalPlaces(2).toString();

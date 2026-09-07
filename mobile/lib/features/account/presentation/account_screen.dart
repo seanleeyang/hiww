@@ -89,7 +89,15 @@ class AccountScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                if (!user.hasCompleteProfile) ...[
+                  const SizedBox(height: 16),
+                  _IncompleteProfileCard(
+                    onTap: () => _showEditProfile(context, ref, user),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                _ContactDetailsCard(user: user),
+                const SizedBox(height: 16),
                 const _KycCard(),
                 if (user.pilot?.manualMoney ?? false) ...[
                   const SizedBox(height: 12),
@@ -108,6 +116,104 @@ class AccountScreen extends ConsumerWidget {
   }
 }
 
+class _IncompleteProfileCard extends StatelessWidget {
+  const _IncompleteProfileCard({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      color: context.hiww.infoSurface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.info_outline, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Complete your profile',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Add your phone number and delivery address — you'll need them "
+            'before you can accept or make your first offer.',
+          ),
+          const SizedBox(height: 12),
+          FilledButton.tonal(onPressed: onTap, child: const Text('Add details')),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactDetailsCard extends StatelessWidget {
+  const _ContactDetailsCard({required this.user});
+  final AuthUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    final addressParts = [
+      user.addressStreet,
+      user.addressCity,
+      user.addressPostalCode,
+      user.addressCountry,
+    ].where((p) => (p ?? '').trim().isNotEmpty).join(', ');
+
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader('Contact & delivery'),
+          if ((user.bio ?? '').trim().isNotEmpty) ...[
+            Text(user.bio!),
+            const SizedBox(height: 12),
+          ],
+          _ContactRow(
+            icon: Icons.phone_outlined,
+            label: (user.phone ?? '').trim().isEmpty ? 'Add a phone number' : user.phone!,
+          ),
+          const SizedBox(height: 8),
+          _ContactRow(
+            icon: Icons.location_on_outlined,
+            label: addressParts.isEmpty ? 'Add a delivery address' : addressParts,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactRow extends StatelessWidget {
+  const _ContactRow({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _EditProfileSheet extends ConsumerStatefulWidget {
   const _EditProfileSheet({required this.user});
   final AuthUser user;
@@ -119,6 +225,13 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late final _name = TextEditingController(text: widget.user.fullName);
   late final _city = TextEditingController(text: widget.user.homeCity ?? '');
+  late final _bio = TextEditingController(text: widget.user.bio ?? '');
+  late final _phone = TextEditingController(text: widget.user.phone ?? '');
+  late final _addressStreet = TextEditingController(text: widget.user.addressStreet ?? '');
+  late final _addressCity = TextEditingController(text: widget.user.addressCity ?? '');
+  late final _addressPostalCode =
+      TextEditingController(text: widget.user.addressPostalCode ?? '');
+  late final _addressCountry = TextEditingController(text: widget.user.addressCountry ?? '');
   late String? _avatarUrl = widget.user.avatarUrl;
   bool _busy = false;
   String? _error;
@@ -127,6 +240,12 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void dispose() {
     _name.dispose();
     _city.dispose();
+    _bio.dispose();
+    _phone.dispose();
+    _addressStreet.dispose();
+    _addressCity.dispose();
+    _addressPostalCode.dispose();
+    _addressCountry.dispose();
     super.dispose();
   }
 
@@ -146,6 +265,12 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             fullName: _name.text.trim(),
             homeCity: _city.text.trim(),
             avatarUrl: _avatarUrl ?? '',
+            bio: _bio.text.trim(),
+            phone: _phone.text.trim(),
+            addressStreet: _addressStreet.text.trim(),
+            addressCity: _addressCity.text.trim(),
+            addressPostalCode: _addressPostalCode.text.trim(),
+            addressCountry: _addressCountry.text.trim(),
           );
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
@@ -164,51 +289,111 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Edit profile', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            ImagePickerField(
-              value: _avatarUrl,
-              onChanged: (url) => setState(() => _avatarUrl = url),
-              label: 'Profile photo',
-              circle: true,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _name,
-              textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(labelText: 'Full name'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _city,
-              decoration: const InputDecoration(
-                labelText: 'Home city (optional)',
-                hintText: 'Bangkok',
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Edit profile', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              ImagePickerField(
+                value: _avatarUrl,
+                onChanged: (url) => setState(() => _avatarUrl = url),
+                label: 'Profile photo',
+                circle: true,
               ),
-            ),
-            if (_error != null) ...[
+              const SizedBox(height: 16),
+              TextField(
+                controller: _name,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(labelText: 'Full name'),
+              ),
               const SizedBox(height: 12),
+              TextField(
+                controller: _city,
+                decoration: const InputDecoration(
+                  labelText: 'Home city (optional)',
+                  hintText: 'Bangkok',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _bio,
+                maxLength: 500,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Bio (optional)',
+                  hintText: 'A short line about you — shown on your public profile',
+                ),
+              ),
+              const Divider(height: 24),
+              Text('Contact & delivery', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 4),
               Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                "Required before your first order. Only visible to Hiww and the "
+                "other person on an order — never shown publicly.",
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Phone number',
+                  hintText: '+66 81 234 5678',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _addressStreet,
+                decoration: const InputDecoration(labelText: 'Street address'),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: _addressCity,
+                      decoration: const InputDecoration(labelText: 'City'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _addressPostalCode,
+                      decoration: const InputDecoration(labelText: 'Postal code'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _addressCountry,
+                decoration: const InputDecoration(labelText: 'Country'),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: _busy ? null : _save,
+                child: _busy
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Save'),
               ),
             ],
-            const SizedBox(height: 18),
-            FilledButton(
-              onPressed: _busy ? null : _save,
-              child: _busy
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Save'),
-            ),
-          ],
+          ),
         ),
       ),
     );

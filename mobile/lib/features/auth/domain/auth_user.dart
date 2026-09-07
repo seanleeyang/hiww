@@ -42,6 +42,12 @@ class AuthUser {
     this.ratingCount = 0,
     this.deliveredCount = 0,
     this.pilot,
+    this.bio,
+    this.phone,
+    this.addressStreet,
+    this.addressCity,
+    this.addressPostalCode,
+    this.addressCountry,
   });
 
   final String id;
@@ -61,8 +67,24 @@ class AuthUser {
 
   final PilotInfo? pilot;
 
+  /// Public bio + private contact/delivery details (phase: contact details).
+  final String? bio;
+  final String? phone;
+  final String? addressStreet;
+  final String? addressCity;
+  final String? addressPostalCode;
+  final String? addressCountry;
+
   bool get isAdmin => role == 'admin';
   bool get isKycApproved => kycStatus == 'approved';
+
+  /// Phone + full address are required before a user's first order.
+  bool get hasCompleteProfile =>
+      (phone ?? '').trim().isNotEmpty &&
+      (addressStreet ?? '').trim().isNotEmpty &&
+      (addressCity ?? '').trim().isNotEmpty &&
+      (addressPostalCode ?? '').trim().isNotEmpty &&
+      (addressCountry ?? '').trim().isNotEmpty;
 
   String get firstName {
     final parts = fullName.trim().split(RegExp(r'\s+'));
@@ -87,5 +109,11 @@ class AuthUser {
         pilot: json['pilot'] is Map
             ? PilotInfo.fromJson(Map<String, dynamic>.from(json['pilot'] as Map))
             : null,
+        bio: json['bio'] as String?,
+        phone: json['phone'] as String?,
+        addressStreet: json['address_street'] as String?,
+        addressCity: json['address_city'] as String?,
+        addressPostalCode: json['address_postal_code'] as String?,
+        addressCountry: json['address_country'] as String?,
       );
 }

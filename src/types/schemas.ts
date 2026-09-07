@@ -101,11 +101,25 @@ export const messageSchema = z
     message: 'Provide a message or a photo',
   });
 
+const optionalContactText = (max: number): z.ZodOptional<z.ZodNullable<z.ZodString>> =>
+  z.string().trim().max(max).nullable().optional();
+
 export const profileUpdateSchema = z
   .object({
     full_name: z.string().trim().min(2).max(120).optional(),
     home_city: z.string().trim().max(120).nullable().optional(),
     avatar_url: z.string().trim().url().max(2048).nullable().optional(),
+    bio: optionalContactText(500),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^\+?[0-9 ()-]{6,20}$/, 'Enter a valid phone number')
+      .nullable()
+      .optional(),
+    address_street: optionalContactText(200),
+    address_city: optionalContactText(120),
+    address_postal_code: optionalContactText(20),
+    address_country: optionalContactText(120),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'No fields to update',

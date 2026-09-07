@@ -68,6 +68,12 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
         _submitting = false;
         _error = e.message;
       });
+      if (e.code == 'PROFILE_INCOMPLETE') {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message),
+          action: SnackBarAction(label: 'Update profile', onPressed: () => context.push('/account')),
+        ));
+      }
     }
   }
 

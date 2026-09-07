@@ -284,8 +284,12 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.message),
+        action: e.code == 'PROFILE_INCOMPLETE'
+            ? SnackBarAction(label: 'Update profile', onPressed: () => context.push('/account'))
+            : null,
+      ));
     }
   }
 

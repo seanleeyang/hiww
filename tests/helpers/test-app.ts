@@ -70,3 +70,23 @@ export async function createUser(
 export function authHeader(user: TestUser): { authorization: string } {
   return { authorization: `Bearer ${user.token}` };
 }
+
+/**
+ * Fill in the phone + address fields an offer/accept requires (see
+ * `src/utils/profile-guard.ts`). Writes straight to the DB — tests that
+ * specifically exercise the profile-completeness gate should go through
+ * `PATCH /api/me` instead.
+ */
+export async function completeProfile(ctx: TestContext, user: TestUser): Promise<void> {
+  await ctx.db
+    .updateTable('users')
+    .set({
+      phone: '+1 555 0100',
+      address_street: '1 Market St',
+      address_city: 'Springfield',
+      address_postal_code: '12345',
+      address_country: 'US',
+    })
+    .where('id', '=', user.userId)
+    .execute();
+}

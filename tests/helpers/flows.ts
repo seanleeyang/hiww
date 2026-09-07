@@ -1,4 +1,4 @@
-import { createUser, authHeader, type TestContext, type TestUser } from './test-app';
+import { createUser, completeProfile, authHeader, type TestContext, type TestUser } from './test-app';
 
 /**
  * Helpers that drive the real HTTP routes to build up marketplace state for
@@ -56,6 +56,8 @@ export interface MarketplaceOrder {
 export async function createAcceptedOrder(ctx: TestContext): Promise<MarketplaceOrder> {
   const shopper = await createUser(ctx, { user_type: 'shopper' });
   const traveler = await createUser(ctx, { user_type: 'traveler' });
+  await completeProfile(ctx, shopper);
+  await completeProfile(ctx, traveler);
 
   const requestId = await createRequest(ctx, shopper);
   const tripId = await createTrip(ctx, traveler);

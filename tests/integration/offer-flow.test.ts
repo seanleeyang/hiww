@@ -1,4 +1,4 @@
-import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
+import { makeTestApp, closeTestApp, createUser, completeProfile, authHeader, type TestContext } from '../helpers/test-app';
 import { createRequest, createTrip } from '../helpers/flows';
 
 describe('offer flow', () => {
@@ -24,6 +24,8 @@ describe('offer flow', () => {
   it('creates an offer and accepts it into an order derived from the request', async () => {
     const shopper = await createUser(ctx, { user_type: 'shopper' });
     const traveler = await createUser(ctx, { user_type: 'traveler' });
+    await completeProfile(ctx, shopper);
+    await completeProfile(ctx, traveler);
     const requestId = await createRequest(ctx, shopper);
     const tripId = await createTrip(ctx, traveler);
 
@@ -54,6 +56,9 @@ describe('offer flow', () => {
     const shopper = await createUser(ctx, { user_type: 'shopper' });
     const t1 = await createUser(ctx, { user_type: 'traveler' });
     const t2 = await createUser(ctx, { user_type: 'traveler' });
+    await completeProfile(ctx, shopper);
+    await completeProfile(ctx, t1);
+    await completeProfile(ctx, t2);
     const requestId = await createRequest(ctx, shopper);
     const trip1 = await createTrip(ctx, t1);
     const trip2 = await createTrip(ctx, t2);
@@ -70,6 +75,8 @@ describe('offer flow', () => {
   it('does not let a traveler offer on their own request, or use a trip that is not theirs', async () => {
     const shopper = await createUser(ctx, { user_type: 'both' });
     const traveler = await createUser(ctx, { user_type: 'traveler' });
+    await completeProfile(ctx, shopper);
+    await completeProfile(ctx, traveler);
     const requestId = await createRequest(ctx, shopper);
     const shopperTrip = await createTrip(ctx, shopper);
     const travelerTrip = await createTrip(ctx, traveler);
@@ -91,6 +98,7 @@ describe('offer flow', () => {
     const shopper = await createUser(ctx, { user_type: 'shopper' });
     const traveler = await createUser(ctx, { user_type: 'traveler' });
     const outsider = await createUser(ctx, { user_type: 'shopper' });
+    await completeProfile(ctx, traveler);
     const requestId = await createRequest(ctx, shopper);
     const tripId = await createTrip(ctx, traveler);
 
@@ -109,6 +117,8 @@ describe('offer flow', () => {
     const shopper = await createUser(ctx, { user_type: 'shopper' });
     const t1 = await createUser(ctx, { user_type: 'traveler' });
     const t2 = await createUser(ctx, { user_type: 'traveler' });
+    await completeProfile(ctx, t1);
+    await completeProfile(ctx, t2);
     const requestId = await createRequest(ctx, shopper);
     const trip1 = await createTrip(ctx, t1);
     const trip2 = await createTrip(ctx, t2);

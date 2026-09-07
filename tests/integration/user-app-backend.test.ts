@@ -1,4 +1,4 @@
-import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
+import { makeTestApp, closeTestApp, createUser, completeProfile, authHeader, type TestContext } from '../helpers/test-app';
 import { createAcceptedOrder, createRequest, createTrip } from '../helpers/flows';
 
 describe('user-app backend: privacy + listings', () => {
@@ -79,6 +79,7 @@ describe('user-app backend: privacy + listings', () => {
   it('a traveler lists their own offers via /api/offers/mine', async () => {
     const shopper = await createUser(ctx, { user_type: 'shopper' });
     const traveler = await createUser(ctx, { user_type: 'traveler' });
+    await completeProfile(ctx, traveler);
     const requestId = await createRequest(ctx, shopper);
     const tripId = await createTrip(ctx, traveler);
     await ctx.app.inject({
