@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
@@ -11,6 +12,31 @@ import '../../../ui/status_pill.dart';
 import '../../orders/data/orders_repository.dart';
 import '../data/wants_repository.dart';
 import 'post_want_sheet.dart';
+
+const _archivableStatuses = {'cancelled', 'completed'};
+
+Future<void> _archiveWant(BuildContext context, WidgetRef ref, String wantId) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Remove this want?'),
+      content: const Text('It disappears from your list. This does not affect its history.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Remove')),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  try {
+    await ref.read(wantsRepositoryProvider).archive(wantId);
+    ref.invalidate(myWantsProvider);
+  } on ApiException catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+}
 
 class MyWantsScreen extends ConsumerWidget {
   const MyWantsScreen({super.key});
@@ -71,6 +97,14 @@ class MyWantsScreen extends ConsumerWidget {
                                     fontWeight: FontWeight.w700, fontSize: 15)),
                           ),
                           StatusPill(w.status),
+                          if (_archivableStatuses.contains(w.status)) ...[
+                            const SizedBox(width: 4),
+                            IconButton(
+                              tooltip: 'Remove from your list',
+                              onPressed: () => _archiveWant(context, ref, w.id),
+                              icon: const Icon(Icons.close, size: 18),
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 8),

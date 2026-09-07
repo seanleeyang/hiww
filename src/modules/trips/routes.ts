@@ -50,6 +50,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .selectFrom('trips')
         .selectAll()
         .where('traveler_id', '=', request.userId)
+        .where('archived_at', 'is', null)
         .orderBy('created_at', 'desc')
         .execute();
       reply.send({ success: true, data: { items }, code: 'TRIPS_MINE' });
@@ -265,6 +266,47 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
       });
 
       reply.send({ success: true, data: { id: trip.id }, code: 'TRIP_DELETED' });
+    }
+  );
+
+  // Clears a trip from the owner's own My Trips list — doesn't touch the
+  // row, any offer/order tied to it, or its audit history, just hides it
+  // from `GET /api/trips/mine`. Only for trips that are already done with
+  // (cancelled/completed) — anything still live should be cancelled first.
+  app.post<{ Params: { id: string } }>(
+    '/api/trips/:id/archive',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const trip = await request.db
+        .selectFrom('trips')
+        .select(['id', 'traveler_id', 'status'])
+        .where('id', '=', request.params.id)
+        .executeTakeFirst();
+      if (!trip) {
+        throw new AppError('NOT_FOUND', 404, 'Trip not found');
+      }
+      if (trip.traveler_id !== request.userId) {
+        throw new AppError('FORBIDDEN', 403, 'Not your trip');
+      }
+      if (trip.status !== 'cancelled' && trip.status !== 'completed') {
+        throw new AppError('INVALID_STATE', 400, 'Only a cancelled or completed trip can be cleared from your list');
+      }
+
+      await request.db
+        .updateTable('trips')
+        .set({ archived_at: new Date(), updated_at: new Date() })
+        .where('id', '=', trip.id)
+        .execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'trip.archive',
+        targetType: 'trip',
+        targetId: trip.id,
+        summary: `Traveler cleared trip ${trip.id} from their list`,
+        metadata: {},
+      });
+
+      reply.send({ success: true, data: { id: trip.id }, code: 'TRIP_ARCHIVED' });
     }
   );
 }

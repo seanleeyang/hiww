@@ -120,6 +120,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         .selectFrom('requests')
         .selectAll()
         .where('shopper_id', '=', request.userId)
+        .where('archived_at', 'is', null)
         .orderBy('created_at', 'desc')
         .execute();
       reply.send({ success: true, data: { items }, code: 'REQUESTS_MINE' });
@@ -273,6 +274,48 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         data: { id: itemRequest.id, status: 'cancelled' },
         code: 'REQUEST_CANCELLED',
       });
+    }
+  );
+
+  // Clears a want from the owner's own My Wants list — doesn't touch the
+  // row, any offer/order tied to it, or its audit history, just hides it
+  // from `GET /api/requests/mine`. Only for wants that are already done
+  // with (cancelled/completed) — anything still open should be cancelled
+  // first.
+  app.post<{ Params: { id: string } }>(
+    '/api/requests/:id/archive',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const itemRequest = await request.db
+        .selectFrom('requests')
+        .select(['id', 'shopper_id', 'status'])
+        .where('id', '=', request.params.id)
+        .executeTakeFirst();
+      if (!itemRequest) {
+        throw new AppError('NOT_FOUND', 404, 'Request not found');
+      }
+      if (itemRequest.shopper_id !== request.userId) {
+        throw new AppError('FORBIDDEN', 403, 'Not your want');
+      }
+      if (itemRequest.status !== 'cancelled' && itemRequest.status !== 'completed') {
+        throw new AppError('INVALID_STATE', 400, 'Only a cancelled or completed want can be cleared from your list');
+      }
+
+      await request.db
+        .updateTable('requests')
+        .set({ archived_at: new Date(), updated_at: new Date() })
+        .where('id', '=', itemRequest.id)
+        .execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'request.archive',
+        targetType: 'request',
+        targetId: itemRequest.id,
+        summary: `Shopper cleared want ${itemRequest.id} from their list`,
+        metadata: {},
+      });
+
+      reply.send({ success: true, data: { id: itemRequest.id }, code: 'REQUEST_ARCHIVED' });
     }
   );
 }

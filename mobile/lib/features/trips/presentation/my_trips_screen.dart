@@ -2,12 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/api_exception.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/status_pill.dart';
 import '../data/trips_repository.dart';
+
+const _archivableStatuses = {'cancelled', 'completed'};
+
+Future<void> _archiveTrip(BuildContext context, WidgetRef ref, String tripId) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Remove this trip?'),
+      content: const Text('It disappears from your list. This does not affect its history.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Remove')),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  try {
+    await ref.read(tripsRepositoryProvider).archive(tripId);
+    ref.invalidate(myTripsProvider);
+  } on ApiException catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+}
 
 /// Negotiations on a traveler's offers live in the unified Offers tab
 /// (`offers_screen.dart`), not nested here — this is trips only.
@@ -66,6 +92,14 @@ class MyTripsScreen extends ConsumerWidget {
                         ),
                       ),
                       StatusPill(t.status),
+                      if (_archivableStatuses.contains(t.status)) ...[
+                        const SizedBox(width: 4),
+                        IconButton(
+                          tooltip: 'Remove from your list',
+                          onPressed: () => _archiveTrip(context, ref, t.id),
+                          icon: const Icon(Icons.close, size: 18),
+                        ),
+                      ],
                     ],
                   ),
                 );

@@ -31,9 +31,11 @@ export type AuditAction =
   | 'trip.update'
   | 'trip.cancel'
   | 'trip.delete'
+  | 'trip.archive'
   | 'trip.remove_by_admin'
   | 'request.update'
   | 'request.cancel'
+  | 'request.archive'
   | 'request.remove_by_admin';
 
 export interface AuditActor {

@@ -321,4 +321,54 @@ describe('trip/want edit, cancel, and admin removal', () => {
     const wantsRes = await ctx.app.inject({ method: 'POST', url: '/api/admin/requests/remove-all', headers: authHeader(nonAdmin) });
     expect(wantsRes.statusCode).toBe(403);
   });
+
+  it('lets the owner clear a cancelled trip/want from their own list, without touching its history', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const shopper = await createUser(ctx, { user_type: 'shopper' });
+    const tripId = await createTrip(ctx, traveler);
+    const requestId = await createRequest(ctx, shopper);
+
+    await ctx.app.inject({ method: 'POST', url: `/api/trips/${tripId}/cancel`, headers: authHeader(traveler) });
+    await ctx.app.inject({ method: 'POST', url: `/api/requests/${requestId}/cancel`, headers: authHeader(shopper) });
+
+    const tripArchive = await ctx.app.inject({ method: 'POST', url: `/api/trips/${tripId}/archive`, headers: authHeader(traveler) });
+    expect(tripArchive.statusCode).toBe(200);
+    const wantArchive = await ctx.app.inject({ method: 'POST', url: `/api/requests/${requestId}/archive`, headers: authHeader(shopper) });
+    expect(wantArchive.statusCode).toBe(200);
+
+    const trips = await ctx.app.inject({ method: 'GET', url: '/api/trips/mine', headers: authHeader(traveler) });
+    expect(trips.json().data.items.some((t: { id: string }) => t.id === tripId)).toBe(false);
+    const wants = await ctx.app.inject({ method: 'GET', url: '/api/requests/mine', headers: authHeader(shopper) });
+    expect(wants.json().data.items.some((w: { id: string }) => w.id === requestId)).toBe(false);
+
+    // The rows themselves — and their status — are untouched.
+    const trip = await ctx.db.selectFrom('trips').select(['status', 'archived_at']).where('id', '=', tripId).executeTakeFirst();
+    expect(trip?.status).toBe('cancelled');
+    expect(trip?.archived_at).toBeTruthy();
+    const want = await ctx.db.selectFrom('requests').select(['status', 'archived_at']).where('id', '=', requestId).executeTakeFirst();
+    expect(want?.status).toBe('cancelled');
+    expect(want?.archived_at).toBeTruthy();
+  });
+
+  it('blocks archiving a still-active trip or want', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const shopper = await createUser(ctx, { user_type: 'shopper' });
+    const tripId = await createTrip(ctx, traveler);
+    const requestId = await createRequest(ctx, shopper);
+
+    const tripRes = await ctx.app.inject({ method: 'POST', url: `/api/trips/${tripId}/archive`, headers: authHeader(traveler) });
+    expect(tripRes.statusCode).toBe(400);
+    const wantRes = await ctx.app.inject({ method: 'POST', url: `/api/requests/${requestId}/archive`, headers: authHeader(shopper) });
+    expect(wantRes.statusCode).toBe(400);
+  });
+
+  it('blocks archiving someone else\'s trip or want', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const stranger = await createUser(ctx, { user_type: 'traveler' });
+    const tripId = await createTrip(ctx, traveler);
+    await ctx.app.inject({ method: 'POST', url: `/api/trips/${tripId}/cancel`, headers: authHeader(traveler) });
+
+    const res = await ctx.app.inject({ method: 'POST', url: `/api/trips/${tripId}/archive`, headers: authHeader(stranger) });
+    expect(res.statusCode).toBe(403);
+  });
 });

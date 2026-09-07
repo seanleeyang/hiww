@@ -78,6 +78,10 @@ class TripsRepository {
   /// A real delete — only allowed while the trip has zero offers, even
   /// pending ones. Use [cancel] once there's any activity on it.
   Future<void> delete(String id) => _api.delete('/api/trips/$id');
+
+  /// Clears a cancelled/completed trip from My Trips — doesn't touch the
+  /// row or its history, just hides it from [mine].
+  Future<void> archive(String id) => _api.post('/api/trips/$id/archive');
 }
 
 final tripsRepositoryProvider = Provider<TripsRepository>(

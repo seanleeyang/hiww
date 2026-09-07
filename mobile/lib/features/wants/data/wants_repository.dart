@@ -90,6 +90,10 @@ class WantsRepository {
   }
 
   Future<void> cancel(String id) => _api.post('/api/requests/$id/cancel');
+
+  /// Clears a cancelled/completed want from My Wants — doesn't touch the
+  /// row or its history, just hides it from [mine].
+  Future<void> archive(String id) => _api.post('/api/requests/$id/archive');
 }
 
 final wantsRepositoryProvider = Provider<WantsRepository>(

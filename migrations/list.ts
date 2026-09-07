@@ -23,6 +23,7 @@ import * as m020 from './020_otp_verification';
 import * as m021 from './021_payment_timeout';
 import * as m022 from './022_offer_negotiation';
 import * as m023 from './023_request_target_trip';
+import * as m024 from './024_archive_trips_requests';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -49,4 +50,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '021_payment_timeout', up: m021.up },
   { name: '022_offer_negotiation', up: m022.up },
   { name: '023_request_target_trip', up: m023.up },
+  { name: '024_archive_trips_requests', up: m024.up },
 ];

@@ -48,6 +48,8 @@ export interface TripsTable {
   arrival_city?: string | null;
   note?: string | null;
   cover_image_url?: string | null;
+  /** Cleared from the owner's own My Trips list (migration 024) — history untouched. */
+  archived_at?: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -74,6 +76,8 @@ export interface RequestsTable {
    * (the public browse feed); see `src/modules/requests/routes.ts`.
    */
   target_trip_id?: string | null;
+  /** Cleared from the owner's own My Wants list (migration 024) — history untouched. */
+  archived_at?: Date | null;
   created_at: Date;
   updated_at: Date;
 }
