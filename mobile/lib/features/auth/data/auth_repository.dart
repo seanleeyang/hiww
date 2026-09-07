@@ -16,15 +16,28 @@ class AuthRepository {
     required String email,
     required String password,
     required UserType userType,
+    required String phone,
   }) async {
     final data = await _api.post('/api/auth/register', body: {
       'full_name': fullName,
       'email': email,
       'password': password,
       'user_type': userType.name,
+      'phone': phone,
     });
     await _storeToken(data);
     return me();
+  }
+
+  /// Confirms a code sent to one channel at registration (or via [resendOtp]).
+  Future<AuthUser> verifyOtp({required String channel, required String code}) async {
+    await _api.post('/api/auth/verify-otp', body: {'channel': channel, 'code': code});
+    return me();
+  }
+
+  /// Issues a fresh code for one channel; the old one stops working.
+  Future<void> resendOtp({required String channel}) async {
+    await _api.post('/api/auth/resend-otp', body: {'channel': channel});
   }
 
   Future<AuthUser> login({

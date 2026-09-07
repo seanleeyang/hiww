@@ -12,7 +12,7 @@ describe('auth and protected route flow', () => {
     await closeTestApp(ctx);
   });
 
-  it('registers a user and allows a bearer token to create a trip', async () => {
+  it('registers a user and allows a bearer token to create a trip once verified', async () => {
     const email = `alice-auth-${randomUUID()}@example.com`;
     const registerResponse = await ctx.app.inject({
       method: 'POST',
@@ -21,6 +21,7 @@ describe('auth and protected route flow', () => {
         email,
         full_name: 'Alice Traveler',
         user_type: 'traveler',
+        phone: '+1 555 0100',
         password: 'SecurePass123!',
       },
     });
@@ -29,23 +30,42 @@ describe('auth and protected route flow', () => {
     const registerBody = registerResponse.json();
     expect(registerBody.success).toBe(true);
     expect(registerBody.data.token).toBeTruthy();
+    expect(registerBody.data.debug_otp.email).toMatch(/^\d{6}$/);
+    expect(registerBody.data.debug_otp.phone).toMatch(/^\d{6}$/);
 
     const token = registerBody.data.token as string;
+    const headers = { authorization: `Bearer ${token}` };
+    const tripPayload = {
+      departure_country: 'US',
+      arrival_country: 'FR',
+      departure_date: '2026-10-15T08:00:00.000Z',
+      return_date: '2026-10-22T08:00:00.000Z',
+      max_weight_kg: 25,
+      max_items: 3,
+    };
 
-    const tripResponse = await ctx.app.inject({
+    const blocked = await ctx.app.inject({ method: 'POST', url: '/api/trips', headers, payload: tripPayload });
+    expect(blocked.statusCode).toBe(403);
+    expect(blocked.json().code).toBe('VERIFICATION_REQUIRED');
+
+    await ctx.app.inject({
       method: 'POST',
-      url: '/api/trips',
-      headers: { authorization: `Bearer ${token}` },
-      payload: {
-        departure_country: 'US',
-        arrival_country: 'FR',
-        departure_date: '2026-10-15T08:00:00.000Z',
-        return_date: '2026-10-22T08:00:00.000Z',
-        max_weight_kg: 25,
-        max_items: 3,
-      },
+      url: '/api/auth/verify-otp',
+      headers,
+      payload: { channel: 'email', code: registerBody.data.debug_otp.email },
+    });
+    // Phone still unverified — still blocked.
+    const stillBlocked = await ctx.app.inject({ method: 'POST', url: '/api/trips', headers, payload: tripPayload });
+    expect(stillBlocked.statusCode).toBe(403);
+
+    await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/verify-otp',
+      headers,
+      payload: { channel: 'phone', code: registerBody.data.debug_otp.phone },
     });
 
+    const tripResponse = await ctx.app.inject({ method: 'POST', url: '/api/trips', headers, payload: tripPayload });
     expect(tripResponse.statusCode).toBe(201);
 
     const user = await ctx.db
@@ -55,6 +75,8 @@ describe('auth and protected route flow', () => {
       .executeTakeFirst();
 
     expect(user?.full_name).toBe('Alice Traveler');
+    expect(user?.email_verified_at).toBeTruthy();
+    expect(user?.phone_verified_at).toBeTruthy();
   });
 
   it('rejects a protected route with no token', async () => {

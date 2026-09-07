@@ -44,10 +44,17 @@ class _FakeAuthRepository implements AuthRepository {
     required String email,
     required String password,
     required UserType userType,
+    required String phone,
   }) async {
     token = 'tok';
     return _user;
   }
+
+  @override
+  Future<AuthUser> verifyOtp({required String channel, required String code}) async => _user;
+
+  @override
+  Future<void> resendOtp({required String channel}) async {}
 
   @override
   Future<void> logout() async {

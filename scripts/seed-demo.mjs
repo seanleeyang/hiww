@@ -25,10 +25,25 @@ async function api(method, path, { token, body } = {}) {
   return json.data ?? json;
 }
 
-const reg = (email, name, type) =>
-  api('POST', '/api/auth/register', {
-    body: { email, full_name: name, user_type: type, password: 'demo1234' },
+async function reg(email, name, type) {
+  const user = await api('POST', '/api/auth/register', {
+    body: { email, full_name: name, user_type: type, phone: '+1 555 0100', password: 'demo1234' },
   });
+  // Registration leaves the account unverified (see src/services/otp/); the
+  // mock sender echoes the codes back as debug_otp so this script can finish
+  // verification without a real inbox/SMS.
+  if (user.debug_otp) {
+    await api('POST', '/api/auth/verify-otp', {
+      token: user.token,
+      body: { channel: 'email', code: user.debug_otp.email },
+    });
+    await api('POST', '/api/auth/verify-otp', {
+      token: user.token,
+      body: { channel: 'phone', code: user.debug_otp.phone },
+    });
+  }
+  return user;
+}
 
 const days = (n) => new Date(Date.now() + n * 864e5).toISOString();
 

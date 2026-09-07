@@ -21,6 +21,13 @@ export interface UsersTable {
   address_city?: string | null;
   address_postal_code?: string | null;
   address_country?: string | null;
+  /**
+   * Set once the matching OTP is confirmed (migration 020). Null on a fresh
+   * registration; existing rows were grandfathered to `created_at` when this
+   * shipped. See `src/services/otp/`.
+   */
+  email_verified_at?: Date | null;
+  phone_verified_at?: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -211,6 +218,17 @@ export interface AuditLogTable {
   created_at: Generated<Date>;
 }
 
+/** One-time codes for email/phone verification (migration 020). */
+export interface OtpCodesTable {
+  id: string;
+  user_id: string;
+  channel: 'email' | 'phone';
+  code: string;
+  expires_at: Date;
+  consumed_at?: Date | null;
+  created_at: Generated<Date>;
+}
+
 export interface PayoutsTable {
   id: string;
   order_id: string;
@@ -237,4 +255,5 @@ export interface Database {
   messages: MessagesTable;
   audit_log: AuditLogTable;
   payouts: PayoutsTable;
+  otp_codes: OtpCodesTable;
 }

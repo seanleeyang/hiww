@@ -59,6 +59,10 @@ async function main(): Promise<void> {
           role: 'admin',
           kyc_status: 'approved',
           password_hash: hashPassword(password),
+          // Bypasses the register route's OTP flow — grandfather this
+          // account in as already-verified, same as every pre-existing user.
+          email_verified_at: new Date(),
+          phone_verified_at: new Date(),
           created_at: new Date(),
           updated_at: new Date(),
         })

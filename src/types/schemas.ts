@@ -104,17 +104,18 @@ export const messageSchema = z
 const optionalContactText = (max: number): z.ZodOptional<z.ZodNullable<z.ZodString>> =>
   z.string().trim().max(max).nullable().optional();
 
+const PHONE_REGEX = /^\+?[0-9 ()-]{6,20}$/;
+
+/** Required phone, for registration — validated the same way as the
+ * optional one in `profileUpdateSchema` below. */
+export const phoneSchema = z.string().trim().regex(PHONE_REGEX, 'Enter a valid phone number');
+
 export const profileUpdateSchema = z
   .object({
     full_name: z.string().trim().min(2).max(120).optional(),
     home_city: z.string().trim().max(120).nullable().optional(),
     avatar_url: z.string().trim().url().max(2048).nullable().optional(),
-    phone: z
-      .string()
-      .trim()
-      .regex(/^\+?[0-9 ()-]{6,20}$/, 'Enter a valid phone number')
-      .nullable()
-      .optional(),
+    phone: phoneSchema.nullable().optional(),
     address_street: optionalContactText(200),
     address_city: optionalContactText(120),
     address_postal_code: optionalContactText(20),

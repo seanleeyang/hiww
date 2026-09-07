@@ -39,7 +39,12 @@ export interface TestUser {
  */
 export async function createUser(
   ctx: TestContext,
-  opts: { user_type?: 'shopper' | 'traveler' | 'both'; admin?: boolean; email?: string } = {}
+  opts: {
+    user_type?: 'shopper' | 'traveler' | 'both';
+    admin?: boolean;
+    email?: string;
+    phone?: string;
+  } = {}
 ): Promise<TestUser> {
   const email = opts.email ?? `user-${randomUUID()}@example.com`;
 
@@ -50,6 +55,7 @@ export async function createUser(
       email,
       full_name: 'Test User',
       user_type: opts.user_type ?? 'both',
+      phone: opts.phone ?? '+1 555 0100',
       password: 'SecurePass123!',
     },
   });
@@ -59,6 +65,16 @@ export async function createUser(
   }
 
   const { userId, token } = res.json().data as { userId: string; token: string };
+
+  // Registration leaves the account pending email+phone verification (see
+  // src/services/otp/). Auto-verify here so the rest of the suite can focus
+  // on its own flow rather than re-proving the OTP mechanics every time —
+  // that gets its own coverage in otp-verification-flow.test.ts.
+  await ctx.db
+    .updateTable('users')
+    .set({ email_verified_at: new Date(), phone_verified_at: new Date() })
+    .where('id', '=', userId)
+    .execute();
 
   if (opts.admin) {
     await ctx.db.updateTable('users').set({ role: 'admin' }).where('id', '=', userId).execute();

@@ -19,6 +19,18 @@ const PUBLIC_ROUTES = new Set<string>([
 ]);
 
 /**
+ * Reachable by a logged-in but not-yet-verified user, so they can see their
+ * status, verify, or ask for a new code. Everything else needs both
+ * `email_verified_at` and `phone_verified_at` set (see the register route,
+ * `src/services/otp/`).
+ */
+const VERIFICATION_EXEMPT_ROUTES = new Set<string>([
+  '/api/me',
+  '/api/auth/verify-otp',
+  '/api/auth/resend-otp',
+]);
+
+/**
  * Routes that require `users.role = 'admin'`. These are the staff-only controls:
  * moving money, reviewing KYC, resolving disputes, flagging accounts and
  * reading operational dashboards.
@@ -86,13 +98,17 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
     // vs admin decisions without another lookup.
     const actor = await req.db
       .selectFrom('users')
-      .select(['id', 'role'])
+      .select(['id', 'role', 'email_verified_at', 'phone_verified_at'])
       .where('id', '=', req.userId)
       .executeTakeFirst();
     req.userRole = actor?.role ?? undefined;
 
     if (ADMIN_ROUTES.has(routeUrl) && req.userRole !== 'admin') {
       throw new AppError('ADMIN_REQUIRED', 403, 'Administrator access required');
+    }
+
+    if (!VERIFICATION_EXEMPT_ROUTES.has(routeUrl) && (!actor?.email_verified_at || !actor?.phone_verified_at)) {
+      throw new AppError('VERIFICATION_REQUIRED', 403, 'Verify your email and phone to continue');
     }
   });
 }

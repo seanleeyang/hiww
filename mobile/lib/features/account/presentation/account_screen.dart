@@ -8,6 +8,7 @@ import '../../../theme/app_colors.dart';
 import '../../../ui/country_picker_field.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/initials_avatar.dart';
+import '../../../ui/phone_field.dart';
 import '../../../ui/section_header.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
@@ -223,7 +224,7 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late final _name = TextEditingController(text: widget.user.fullName);
   late final _city = TextEditingController(text: widget.user.homeCity ?? '');
-  late final _phone = TextEditingController(text: widget.user.phone ?? '');
+  late String _phone = widget.user.phone ?? '';
   late final _addressStreet = TextEditingController(text: widget.user.addressStreet ?? '');
   late final _addressCity = TextEditingController(text: widget.user.addressCity ?? '');
   late final _addressPostalCode =
@@ -237,7 +238,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void dispose() {
     _name.dispose();
     _city.dispose();
-    _phone.dispose();
     _addressStreet.dispose();
     _addressCity.dispose();
     _addressPostalCode.dispose();
@@ -260,7 +260,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             fullName: _name.text.trim(),
             homeCity: _city.text.trim(),
             avatarUrl: _avatarUrl ?? '',
-            phone: _phone.text.trim(),
+            phone: _phone.trim(),
             addressStreet: _addressStreet.text.trim(),
             addressCity: _addressCity.text.trim(),
             addressPostalCode: _addressPostalCode.text.trim(),
@@ -321,13 +321,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _phone,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone number',
-                  hintText: '+66 81 234 5678',
-                ),
+              PhoneField(
+                value: _phone,
+                defaultCountryCode: _addressCountry,
+                onChanged: (v) => _phone = v,
               ),
               const SizedBox(height: 12),
               TextField(

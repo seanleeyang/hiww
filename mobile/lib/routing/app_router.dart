@@ -6,6 +6,7 @@ import '../features/account/presentation/account_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
+import '../features/auth/presentation/verify_otp_screen.dart';
 import '../features/chat/data/chat_repository.dart';
 import '../features/chat/presentation/inbox_screen.dart';
 import '../features/chat/presentation/order_chat_screen.dart';
@@ -80,15 +81,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         return loc == '/splash' ? null : '/splash';
       }
 
-      final signedIn = auth.valueOrNull is AuthSignedIn;
-      if (!signedIn) return onAuthPage ? null : '/login';
-      if (onAuthPage || loc == '/splash') return '/browse';
+      final signedInState = auth.valueOrNull;
+      if (signedInState is! AuthSignedIn) return onAuthPage ? null : '/login';
+
+      final onVerifyPage = loc == '/verify';
+      if (signedInState.user.needsVerification) {
+        return onVerifyPage ? null : '/verify';
+      }
+      if (onAuthPage || loc == '/splash' || onVerifyPage) return '/browse';
       return null;
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(path: '/verify', builder: (_, _) => const VerifyOtpScreen()),
       GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
       GoRoute(
         path: '/notifications',

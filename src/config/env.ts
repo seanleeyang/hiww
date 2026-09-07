@@ -133,4 +133,15 @@ export const config = {
    */
   aiChatModeration: process.env.AI_CHAT_MODERATION || 'mock',
   aiChatModel: process.env.AI_CHAT_MODEL || 'claude-haiku-4-5',
+  /**
+   * Email/phone verification at registration (see `src/services/otp/`).
+   * `mock` (default) logs the code server-side instead of sending it, and
+   * the register/resend-otp responses echo it back as `debug_otp` so local
+   * dev and scripts can complete verification without a real inbox/SMS —
+   * that echo is skipped the moment a real provider is wired in here.
+   * No real provider is implemented yet; wire one in `src/services/otp/`
+   * (e.g. Twilio for SMS, any transactional-email API) and read its
+   * credentials from new env vars the same way ANTHROPIC_API_KEY is read.
+   */
+  otpProvider: process.env.OTP_PROVIDER || 'mock',
 };

@@ -37,9 +37,24 @@ Write-Host "== Health ==" -ForegroundColor Cyan
 (api GET /health).status
 
 Write-Host "`n== Register admin / shopper / traveler ==" -ForegroundColor Cyan
-$adminReg    = api POST /api/auth/register @{ email = "admin$sfx@smoke.local";    full_name = 'Smoke Admin';    user_type = 'both';    password = 'SmokePass123!' }
-$shopperReg  = api POST /api/auth/register @{ email = "shopper$sfx@smoke.local";  full_name = 'Smoke Shopper';  user_type = 'shopper'; password = 'SmokePass123!' }
-$travelerReg = api POST /api/auth/register @{ email = "traveler$sfx@smoke.local"; full_name = 'Smoke Traveler'; user_type = 'traveler'; password = 'SmokePass123!' }
+$adminReg    = api POST /api/auth/register @{ email = "admin$sfx@smoke.local";    full_name = 'Smoke Admin';    user_type = 'both';    phone = '+1 555 0100'; password = 'SmokePass123!' }
+$shopperReg  = api POST /api/auth/register @{ email = "shopper$sfx@smoke.local";  full_name = 'Smoke Shopper';  user_type = 'shopper'; phone = '+1 555 0101'; password = 'SmokePass123!' }
+$travelerReg = api POST /api/auth/register @{ email = "traveler$sfx@smoke.local"; full_name = 'Smoke Traveler'; user_type = 'traveler'; phone = '+1 555 0102'; password = 'SmokePass123!' }
+
+# Registration leaves the account unverified (src/services/otp/); the mock
+# sender echoes the codes back as debug_otp so this script can finish
+# verification without a real inbox/SMS.
+function verifyAccount($reg) {
+  $headers = @{ Authorization = "Bearer $($reg.data.token)" }
+  if ($reg.data.debug_otp) {
+    api POST /api/auth/verify-otp @{ channel = 'email'; code = $reg.data.debug_otp.email } $headers | Out-Null
+    api POST /api/auth/verify-otp @{ channel = 'phone'; code = $reg.data.debug_otp.phone } $headers | Out-Null
+  }
+}
+verifyAccount $adminReg
+verifyAccount $shopperReg
+verifyAccount $travelerReg
+Write-Host "  email + phone verified for all three accounts"
 
 Write-Host "   promoting admin (needs shell access)..." -ForegroundColor DarkGray
 npm run --silent make-admin "admin$sfx@smoke.local" | Out-Null

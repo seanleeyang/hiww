@@ -47,6 +47,8 @@ class AuthUser {
     this.addressCity,
     this.addressPostalCode,
     this.addressCountry,
+    this.emailVerified = false,
+    this.phoneVerified = false,
   });
 
   final String id;
@@ -73,8 +75,16 @@ class AuthUser {
   final String? addressPostalCode;
   final String? addressCountry;
 
+  /// Set once the matching OTP is confirmed at registration.
+  final bool emailVerified;
+  final bool phoneVerified;
+
   bool get isAdmin => role == 'admin';
   bool get isKycApproved => kycStatus == 'approved';
+
+  /// The backend blocks every route but /api/me and the OTP endpoints until
+  /// both are true — the app should route to the verify screen instead.
+  bool get needsVerification => !emailVerified || !phoneVerified;
 
   /// Phone + full address are required before a user's first order.
   bool get hasCompleteProfile =>
@@ -112,5 +122,7 @@ class AuthUser {
         addressCity: json['address_city'] as String?,
         addressPostalCode: json['address_postal_code'] as String?,
         addressCountry: json['address_country'] as String?,
+        emailVerified: json['email_verified_at'] != null,
+        phoneVerified: json['phone_verified_at'] != null,
       );
 }

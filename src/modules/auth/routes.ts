@@ -3,8 +3,9 @@ import { z } from 'zod';
 import { AppError, generateId } from '@/utils/helpers';
 import { hashPassword, signToken, verifyPassword } from '@/utils/auth';
 import { config } from '@/config/env';
-import { profileUpdateSchema } from '@/types/schemas';
+import { profileUpdateSchema, phoneSchema } from '@/types/schemas';
 import { toUserSummary } from '@/utils/user-summary';
+import { issueOtp, verifyOtp, isMockOtp } from '@/services/otp';
 
 // Tighter abuse protection on the credential endpoints than the global default.
 const authRouteConfig = {
@@ -15,7 +16,17 @@ const registerSchema = z.object({
   email: z.string().email(),
   full_name: z.string().min(2),
   user_type: z.enum(['shopper', 'traveler', 'both']),
+  phone: phoneSchema,
   password: z.string().min(8),
+});
+
+const verifyOtpSchema = z.object({
+  channel: z.enum(['email', 'phone']),
+  code: z.string().trim().length(6),
+});
+
+const resendOtpSchema = z.object({
+  channel: z.enum(['email', 'phone']),
 });
 
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
@@ -43,12 +54,22 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         email: parsed.data.email,
         full_name: parsed.data.full_name,
         user_type: parsed.data.user_type,
+        phone: parsed.data.phone,
         kyc_status: 'pending',
         password_hash: hashPassword(parsed.data.password),
+        // Explicitly unverified — every route but /api/me and the OTP
+        // endpoints is blocked until both codes below are confirmed.
+        email_verified_at: null,
+        phone_verified_at: null,
         created_at: new Date(),
         updated_at: new Date(),
       })
       .execute();
+
+    const [emailCode, phoneCode] = await Promise.all([
+      issueOtp(request.db, userId, 'email', parsed.data.email),
+      issueOtp(request.db, userId, 'phone', parsed.data.phone),
+    ]);
 
     const token = signToken({
       userId,
@@ -58,7 +79,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
     reply.status(201).send({
       success: true,
-      data: { userId, email: parsed.data.email, token },
+      data: {
+        userId,
+        email: parsed.data.email,
+        token,
+        ...(isMockOtp() ? { debug_otp: { email: emailCode, phone: phoneCode } } : {}),
+      },
       code: 'USER_REGISTERED',
     });
   });
@@ -115,6 +141,8 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     'address_city',
     'address_postal_code',
     'address_country',
+    'email_verified_at',
+    'phone_verified_at',
     'created_at',
   ] as const;
 
@@ -176,4 +204,67 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
     reply.send({ success: true, data: meResponse(me), code: 'ME_UPDATED' });
   });
+
+  // Confirm a code sent at registration (or via resend, below). Every route
+  // but /api/me and these two is blocked until both channels are verified —
+  // see the auth guard's VERIFICATION_EXEMPT_ROUTES.
+  app.post<{ Body: unknown }>(
+    '/api/auth/verify-otp',
+    { config: authRouteConfig },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const parsed = verifyOtpSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'Invalid verification code');
+      }
+
+      const ok = await verifyOtp(request.db, request.userId, parsed.data.channel, parsed.data.code);
+      if (!ok) {
+        throw new AppError('INVALID_OTP', 400, 'That code is wrong or has expired');
+      }
+
+      const me = await request.db
+        .selectFrom('users')
+        .select([...meColumns])
+        .where('id', '=', request.userId)
+        .executeTakeFirst();
+
+      reply.send({ success: true, data: meResponse(me), code: 'OTP_VERIFIED' });
+    }
+  );
+
+  // Issues a fresh code for one channel (the old one, if any, stops working).
+  app.post<{ Body: unknown }>(
+    '/api/auth/resend-otp',
+    { config: authRouteConfig },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const parsed = resendOtpSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'Invalid channel');
+      }
+
+      const me = await request.db
+        .selectFrom('users')
+        .select(['email', 'phone'])
+        .where('id', '=', request.userId)
+        .executeTakeFirst();
+      if (!me) {
+        throw new AppError('NOT_FOUND', 404, 'User not found');
+      }
+
+      const destination = parsed.data.channel === 'email' ? me.email : me.phone;
+      if (!destination) {
+        throw new AppError('VALIDATION_ERROR', 400, 'No phone number on file yet');
+      }
+
+      const code = await issueOtp(request.db, request.userId, parsed.data.channel, destination);
+
+      reply.send({
+        success: true,
+        data: { sent: true, ...(isMockOtp() ? { debug_otp: code } : {}) },
+        code: 'OTP_RESENT',
+      });
+    }
+  );
 }

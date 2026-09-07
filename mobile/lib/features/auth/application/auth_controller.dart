@@ -45,6 +45,7 @@ class AuthController extends AsyncNotifier<AuthState> {
     required String email,
     required String password,
     required UserType userType,
+    required String phone,
   }) async {
     state = await AsyncValue.guard<AuthState>(
       () async => AuthSignedIn(
@@ -53,10 +54,20 @@ class AuthController extends AsyncNotifier<AuthState> {
           email: email,
           password: password,
           userType: userType,
+          phone: phone,
         ),
       ),
     );
   }
+
+  /// Throws [ApiException] on a wrong/expired code — callers show it inline
+  /// rather than losing the signed-in state over it.
+  Future<void> verifyOtp({required String channel, required String code}) async {
+    final user = await _repo.verifyOtp(channel: channel, code: code);
+    state = AsyncData(AuthSignedIn(user));
+  }
+
+  Future<void> resendOtp({required String channel}) => _repo.resendOtp(channel: channel);
 
   Future<void> logout() async {
     await _repo.logout();

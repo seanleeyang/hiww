@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../ui/phone_field.dart';
 import '../application/auth_controller.dart';
 import '../domain/auth_user.dart';
 import 'auth_form_field.dart';
@@ -20,6 +21,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  String _phone = '';
   UserType _userType = UserType.both;
   bool _submitting = false;
   String? _error;
@@ -34,6 +36,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_phone.trim().isEmpty) {
+      setState(() => _error = 'Enter your phone number');
+      return;
+    }
     setState(() {
       _submitting = true;
       _error = null;
@@ -43,6 +49,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           email: _email.text.trim(),
           password: _password.text,
           userType: _userType,
+          phone: _phone.trim(),
         );
     if (!mounted) return;
     final state = ref.read(authControllerProvider);
@@ -93,6 +100,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: 14),
+            PhoneField(value: _phone, onChanged: (v) => _phone = v),
             const SizedBox(height: 14),
             AuthFormField(
               controller: _password,
