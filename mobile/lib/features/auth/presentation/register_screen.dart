@@ -21,6 +21,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
   String _phone = '';
   UserType _userType = UserType.both;
   bool _submitting = false;
@@ -31,6 +32,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _name.dispose();
     _email.dispose();
     _password.dispose();
+    _confirmPassword.dispose();
     super.dispose();
   }
 
@@ -110,6 +112,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               autofillHints: const [AutofillHints.newPassword],
               validator: (v) =>
                   (v ?? '').length < 8 ? 'At least 8 characters' : null,
+            ),
+            const SizedBox(height: 14),
+            AuthFormField(
+              controller: _confirmPassword,
+              label: 'Confirm password',
+              obscureText: true,
+              autofillHints: const [AutofillHints.newPassword],
+              validator: (v) =>
+                  v != _password.text ? 'Passwords don\'t match' : null,
             ),
             const SizedBox(height: 16),
             Text('I want to…',
