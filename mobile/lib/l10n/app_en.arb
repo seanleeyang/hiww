@@ -27,7 +27,7 @@
   "loginSubtitle": "Log in to keep shopping the world.",
   "errorLoginFailed": "Could not log in. Please try again.",
   "loginNewToHiww": "New to Hiww?",
-  "actionCreateAccount": "Create an account",
+  "actionCreateAccount": "Sign up",
   "actionForgotPassword": "Forgot password?",
 
   "forgotPasswordTitle": "Reset your password",
@@ -52,7 +52,7 @@
   "userTypeShop": "Shop",
   "userTypeTravel": "Travel",
   "userTypeBoth": "Both",
-  "actionCreateAccountButton": "Create account",
+  "actionCreateAccountButton": "Sign up",
   "registerAlreadyHaveAccount": "Already have an account?",
 
   "verifyTitle": "Verify your account",
@@ -445,5 +445,9 @@
   "@errorSocialNotConfigured": {
     "placeholders": { "provider": { "type": "String" } }
   },
-  "infoLogInToContinue": "Log in to continue"
+  "infoLogInToContinue": "Log in to continue",
+  "landingTermsPrefix": "By using Hiww, I agree to Hiww's",
+  "actionTermsOfUse": "Terms of Use",
+  "landingTermsAnd": "and",
+  "actionPrivacyPolicy": "Privacy Policy"
 }

@@ -82,7 +82,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginNewToHiww => 'New to Hiww?';
 
   @override
-  String get actionCreateAccount => 'Create an account';
+  String get actionCreateAccount => 'Sign up';
 
   @override
   String get actionForgotPassword => 'Forgot password?';
@@ -149,7 +149,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userTypeBoth => 'Both';
 
   @override
-  String get actionCreateAccountButton => 'Create account';
+  String get actionCreateAccountButton => 'Sign up';
 
   @override
   String get registerAlreadyHaveAccount => 'Already have an account?';
@@ -1101,4 +1101,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get infoLogInToContinue => 'Log in to continue';
+
+  @override
+  String get landingTermsPrefix => 'By using Hiww, I agree to Hiww\'s';
+
+  @override
+  String get actionTermsOfUse => 'Terms of Use';
+
+  @override
+  String get landingTermsAnd => 'and';
+
+  @override
+  String get actionPrivacyPolicy => 'Privacy Policy';
 }

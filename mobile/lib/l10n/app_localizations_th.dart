@@ -82,7 +82,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get loginNewToHiww => 'เพิ่งรู้จัก Hiww ใช่ไหม?';
 
   @override
-  String get actionCreateAccount => 'สร้างบัญชี';
+  String get actionCreateAccount => 'สมัครสมาชิก';
 
   @override
   String get actionForgotPassword => 'ลืมรหัสผ่าน?';
@@ -148,7 +148,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get userTypeBoth => 'ทั้งสองอย่าง';
 
   @override
-  String get actionCreateAccountButton => 'สร้างบัญชี';
+  String get actionCreateAccountButton => 'สมัครสมาชิก';
 
   @override
   String get registerAlreadyHaveAccount => 'มีบัญชีอยู่แล้ว?';
@@ -1081,4 +1081,16 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get infoLogInToContinue => 'เข้าสู่ระบบเพื่อดำเนินการต่อ';
+
+  @override
+  String get landingTermsPrefix => 'การใช้งาน Hiww ถือว่าคุณยอมรับ';
+
+  @override
+  String get actionTermsOfUse => 'ข้อกำหนดการใช้งาน';
+
+  @override
+  String get landingTermsAnd => 'และ';
+
+  @override
+  String get actionPrivacyPolicy => 'นโยบายความเป็นส่วนตัว';
 }

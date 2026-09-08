@@ -63,12 +63,42 @@ class LandingScreen extends StatelessWidget {
                       child: Text(l10n.actionExploreGuest),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  _TermsFooter(l10n: l10n, scheme: scheme),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "By using Hiww, I agree to Hiww's Terms of Use and Privacy Policy." —
+/// styled to look like a link, but there's no real page to send it to yet,
+/// so it's plain text rather than a dead tap target.
+class _TermsFooter extends StatelessWidget {
+  const _TermsFooter({required this.l10n, required this.scheme});
+  final AppLocalizations l10n;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = TextStyle(fontSize: 12, color: scheme.onSurfaceVariant);
+    final link = muted.copyWith(color: scheme.primary, fontWeight: FontWeight.w600);
+    return Text.rich(
+      TextSpan(
+        style: muted,
+        children: [
+          TextSpan(text: '${l10n.landingTermsPrefix} '),
+          TextSpan(text: l10n.actionTermsOfUse, style: link),
+          TextSpan(text: ' ${l10n.landingTermsAnd} '),
+          TextSpan(text: l10n.actionPrivacyPolicy, style: link),
+          const TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: TextAlign.center,
     );
   }
 }

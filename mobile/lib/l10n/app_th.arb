@@ -27,7 +27,7 @@
   "loginSubtitle": "เข้าสู่ระบบเพื่อช้อปทั่วโลก",
   "errorLoginFailed": "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
   "loginNewToHiww": "เพิ่งรู้จัก Hiww ใช่ไหม?",
-  "actionCreateAccount": "สร้างบัญชี",
+  "actionCreateAccount": "สมัครสมาชิก",
   "actionForgotPassword": "ลืมรหัสผ่าน?",
 
   "forgotPasswordTitle": "รีเซ็ตรหัสผ่านของคุณ",
@@ -49,7 +49,7 @@
   "userTypeShop": "ช้อป",
   "userTypeTravel": "เดินทาง",
   "userTypeBoth": "ทั้งสองอย่าง",
-  "actionCreateAccountButton": "สร้างบัญชี",
+  "actionCreateAccountButton": "สมัครสมาชิก",
   "registerAlreadyHaveAccount": "มีบัญชีอยู่แล้ว?",
 
   "verifyTitle": "ยืนยันบัญชีของคุณ",
@@ -349,5 +349,9 @@
   "providerFacebook": "Facebook",
   "providerGoogle": "Google",
   "errorSocialNotConfigured": "ยังไม่ได้ตั้งค่าการเข้าสู่ระบบด้วย {provider}",
-  "infoLogInToContinue": "เข้าสู่ระบบเพื่อดำเนินการต่อ"
+  "infoLogInToContinue": "เข้าสู่ระบบเพื่อดำเนินการต่อ",
+  "landingTermsPrefix": "การใช้งาน Hiww ถือว่าคุณยอมรับ",
+  "actionTermsOfUse": "ข้อกำหนดการใช้งาน",
+  "landingTermsAnd": "และ",
+  "actionPrivacyPolicy": "นโยบายความเป็นส่วนตัว"
 }

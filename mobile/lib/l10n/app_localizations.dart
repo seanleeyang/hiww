@@ -245,7 +245,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionCreateAccount.
   ///
   /// In en, this message translates to:
-  /// **'Create an account'**
+  /// **'Sign up'**
   String get actionCreateAccount;
 
   /// No description provided for @actionForgotPassword.
@@ -365,7 +365,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionCreateAccountButton.
   ///
   /// In en, this message translates to:
-  /// **'Create account'**
+  /// **'Sign up'**
   String get actionCreateAccountButton;
 
   /// No description provided for @registerAlreadyHaveAccount.
@@ -2029,6 +2029,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log in to continue'**
   String get infoLogInToContinue;
+
+  /// No description provided for @landingTermsPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'By using Hiww, I agree to Hiww\'s'**
+  String get landingTermsPrefix;
+
+  /// No description provided for @actionTermsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use'**
+  String get actionTermsOfUse;
+
+  /// No description provided for @landingTermsAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'and'**
+  String get landingTermsAnd;
+
+  /// No description provided for @actionPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get actionPrivacyPolicy;
 }
 
 class _AppLocalizationsDelegate
