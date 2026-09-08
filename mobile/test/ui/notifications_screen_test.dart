@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/features/notifications/data/notifications_repository.dart';
 import 'package:hiww_mobile/features/notifications/domain/app_notification.dart';
 import 'package:hiww_mobile/features/notifications/presentation/notifications_screen.dart';
+import 'package:hiww_mobile/l10n/app_localizations.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
 
 AppNotification _n({
@@ -28,7 +29,12 @@ Widget _wrap(NotificationsFeed feed) => ProviderScope(
       ],
       child: MaterialApp(
         theme: hiwwTheme(Brightness.light),
-        home: const NotificationsScreen(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        // NotificationsScreen is always embedded inside a Scaffold in
+        // production (the Inbox tab's TabBarView, itself inside AppShell's
+        // Scaffold) — its Expanded needs that bounded-height ancestor.
+        home: const Scaffold(body: NotificationsScreen()),
       ),
     );
 

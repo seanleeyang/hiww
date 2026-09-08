@@ -10,10 +10,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get tabBrowse => 'Browse';
+  String get tabBrowse => 'Home';
 
   @override
-  String get tabMyTrips => 'My Trips';
+  String get tabMyTrips => 'Trips';
 
   @override
   String get tabMyWants => 'My Wants';
@@ -28,7 +28,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabInbox => 'Inbox';
 
   @override
-  String get tooltipNotifications => 'Notifications';
+  String ordersTabRequested(int count) {
+    return '$count requested';
+  }
+
+  @override
+  String ordersTabInTransit(int count) {
+    return '$count in transit';
+  }
+
+  @override
+  String ordersTabReceived(int count) {
+    return '$count received';
+  }
+
+  @override
+  String ordersTabInactive(int count) {
+    return '$count inactive';
+  }
+
+  @override
+  String get emptyOrdersBucketTitle => 'Nothing here yet';
+
+  @override
+  String get emptyOrdersBucketMessage =>
+      'Orders at this stage will show up here.';
+
+  @override
+  String get tripsTabActive => 'Active';
+
+  @override
+  String get tripsTabPast => 'Past';
+
+  @override
+  String get emptyTripsPastTitle => 'No past trips';
+
+  @override
+  String get emptyTripsPastMessage =>
+      'Trips that have ended or been cancelled show up here.';
+
+  @override
+  String get inboxTabMessages => 'Messages';
+
+  @override
+  String get inboxTabNotifications => 'Notifications';
+
+  @override
+  String get notificationsEmptyTitle => 'Nothing yet';
+
+  @override
+  String get notificationsEmptyMessage =>
+      'Updates on your orders — payments, shipping, delivery — show up here.';
+
+  @override
+  String get actionMarkAllRead => 'Mark all read';
 
   @override
   String get tooltipSettings => 'Settings';

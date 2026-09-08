@@ -10,10 +10,10 @@ class AppLocalizationsTh extends AppLocalizations {
   AppLocalizationsTh([String locale = 'th']) : super(locale);
 
   @override
-  String get tabBrowse => 'สำรวจ';
+  String get tabBrowse => 'หน้าแรก';
 
   @override
-  String get tabMyTrips => 'ทริปของฉัน';
+  String get tabMyTrips => 'ทริป';
 
   @override
   String get tabMyWants => 'รายการต้องการ';
@@ -28,7 +28,59 @@ class AppLocalizationsTh extends AppLocalizations {
   String get tabInbox => 'กล่องข้อความ';
 
   @override
-  String get tooltipNotifications => 'การแจ้งเตือน';
+  String ordersTabRequested(int count) {
+    return 'ขอไว้ $count';
+  }
+
+  @override
+  String ordersTabInTransit(int count) {
+    return 'กำลังส่ง $count';
+  }
+
+  @override
+  String ordersTabReceived(int count) {
+    return 'ได้รับแล้ว $count';
+  }
+
+  @override
+  String ordersTabInactive(int count) {
+    return 'ไม่ใช้งาน $count';
+  }
+
+  @override
+  String get emptyOrdersBucketTitle => 'ยังไม่มีรายการ';
+
+  @override
+  String get emptyOrdersBucketMessage => 'คำสั่งซื้อในขั้นตอนนี้จะแสดงที่นี่';
+
+  @override
+  String get tripsTabActive => 'กำลังดำเนินการ';
+
+  @override
+  String get tripsTabPast => 'ที่ผ่านมา';
+
+  @override
+  String get emptyTripsPastTitle => 'ยังไม่มีทริปที่ผ่านมา';
+
+  @override
+  String get emptyTripsPastMessage =>
+      'ทริปที่สิ้นสุดหรือยกเลิกแล้วจะแสดงที่นี่';
+
+  @override
+  String get inboxTabMessages => 'ข้อความ';
+
+  @override
+  String get inboxTabNotifications => 'การแจ้งเตือน';
+
+  @override
+  String get notificationsEmptyTitle => 'ยังไม่มีรายการ';
+
+  @override
+  String get notificationsEmptyMessage =>
+      'ความคืบหน้าคำสั่งซื้อของคุณ — การชำระเงิน การจัดส่ง การรับสินค้า — จะแสดงที่นี่';
+
+  @override
+  String get actionMarkAllRead => 'อ่านทั้งหมดแล้ว';
 
   @override
   String get tooltipSettings => 'ตั้งค่า';

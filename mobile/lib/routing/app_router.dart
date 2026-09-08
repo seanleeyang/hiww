@@ -16,7 +16,6 @@ import '../features/chat/presentation/order_chat_screen.dart';
 import '../features/auth/presentation/landing_screen.dart';
 import '../features/discovery/data/discovery_repository.dart';
 import '../features/notifications/data/notifications_repository.dart';
-import '../features/notifications/presentation/notifications_screen.dart';
 import '../features/discovery/presentation/browse_screen.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
@@ -36,8 +35,6 @@ import '../features/trips/presentation/trip_detail_screen.dart';
 import '../features/wants/data/offers_repository.dart';
 import '../features/wants/data/wants_repository.dart';
 import '../features/wants/presentation/make_offer_screen.dart';
-import '../features/wants/presentation/my_wants_screen.dart';
-import '../features/wants/presentation/offers_screen.dart';
 import '../features/wants/presentation/want_detail_screen.dart';
 
 /// Bridges Riverpod changes into a [Listenable] that go_router can refresh on.
@@ -165,10 +162,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/verify', builder: (_, _) => const VerifyOtpScreen()),
       GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
-      GoRoute(
-        path: '/notifications',
-        builder: (_, _) => const NotificationsScreen(),
-      ),
       GoRoute(path: '/trips/new', builder: (_, _) => const NewTripScreen()),
       GoRoute(
         path: '/trips/:id/edit',
@@ -207,8 +200,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: '/browse', builder: (_, _) => const BrowseScreen()),
           GoRoute(path: '/my-trips', builder: (_, _) => const MyTripsScreen()),
-          GoRoute(path: '/my-wants', builder: (_, _) => const MyWantsScreen()),
-          GoRoute(path: '/offers', builder: (_, _) => const OffersScreen()),
           GoRoute(
             path: '/my-orders',
             builder: (_, _) => const MyOrdersScreen(),

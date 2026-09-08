@@ -1,13 +1,39 @@
 {
   "@@locale": "en",
 
-  "tabBrowse": "Browse",
-  "tabMyTrips": "My Trips",
+  "tabBrowse": "Home",
+  "tabMyTrips": "Trips",
   "tabMyWants": "My Wants",
   "tabOffers": "Offers",
   "tabOrders": "Orders",
   "tabInbox": "Inbox",
-  "tooltipNotifications": "Notifications",
+  "ordersTabRequested": "{count} requested",
+  "@ordersTabRequested": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ordersTabInTransit": "{count} in transit",
+  "@ordersTabInTransit": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ordersTabReceived": "{count} received",
+  "@ordersTabReceived": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ordersTabInactive": "{count} inactive",
+  "@ordersTabInactive": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "emptyOrdersBucketTitle": "Nothing here yet",
+  "emptyOrdersBucketMessage": "Orders at this stage will show up here.",
+  "tripsTabActive": "Active",
+  "tripsTabPast": "Past",
+  "emptyTripsPastTitle": "No past trips",
+  "emptyTripsPastMessage": "Trips that have ended or been cancelled show up here.",
+  "inboxTabMessages": "Messages",
+  "inboxTabNotifications": "Notifications",
+  "notificationsEmptyTitle": "Nothing yet",
+  "notificationsEmptyMessage": "Updates on your orders — payments, shipping, delivery — show up here.",
+  "actionMarkAllRead": "Mark all read",
   "tooltipSettings": "Settings",
   "tooltipAccount": "Account",
   "settingsTitle": "Settings",

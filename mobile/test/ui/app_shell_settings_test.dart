@@ -70,7 +70,7 @@ class _SignedInRepository implements AuthRepository {
 }
 
 void main() {
-  testWidgets('app bar shows notifications, settings and profile; settings holds the language toggle',
+  testWidgets('app bar shows settings and profile; settings holds the language toggle',
       (tester) async {
     // The browse screen's feed/notification streams hit a real (unreachable)
     // network in this test, so their AsyncValueView stays in a spinning
@@ -89,8 +89,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    // Signed-in launch lands on Browse, inside the shell app bar.
-    expect(find.byIcon(Icons.notifications_none), findsOneWidget);
+    // Signed-in launch lands on Browse, inside the shell app bar. The bell
+    // is gone — notifications now live inside the Inbox tab instead.
+    expect(find.byIcon(Icons.notifications_none), findsNothing);
     expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
     expect(find.byTooltip('Account'), findsOneWidget);
 

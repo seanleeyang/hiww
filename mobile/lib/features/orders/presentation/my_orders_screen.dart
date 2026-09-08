@@ -2,74 +2,416 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/api_exception.dart';
+import '../../../core/countries.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/hero_image.dart';
+import '../../../ui/marketplace_bits.dart';
+import '../../../ui/skeleton.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/status_pill.dart';
 import '../../../ui/stock_images.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../auth/domain/auth_user.dart';
+import '../../wants/data/offers_repository.dart';
+import '../../wants/data/wants_repository.dart';
+import '../../wants/domain/offer.dart';
+import '../../wants/domain/want.dart';
+import '../../wants/presentation/offer_negotiation_actions.dart';
+import '../../wants/presentation/post_want_sheet.dart';
 import '../data/orders_repository.dart';
 import '../domain/order.dart';
 
+/// Either side of a "Requested"/"Inactive" bucket entry — a want that hasn't
+/// become an order yet, or an order itself. Both render in the same list,
+/// sorted together by recency.
+sealed class _Entry {
+  DateTime get sortKey;
+}
+
+class _WantEntry extends _Entry {
+  _WantEntry(this.want, this.pendingOffer);
+  final Want want;
+  final Offer? pendingOffer;
+  @override
+  DateTime get sortKey => want.createdAt ?? DateTime(0);
+}
+
+class _OrderEntry extends _Entry {
+  _OrderEntry(this.order);
+  final Order order;
+  @override
+  DateTime get sortKey => order.createdAt ?? DateTime(0);
+}
+
+typedef _Buckets = ({
+  List<_Entry> requested,
+  List<Order> inTransit,
+  List<Order> received,
+  List<_Entry> inactive,
+});
+
 /// One place to see every order the signed-in user is part of — as a shopper
-/// buying, or a traveler delivering — with the current stage and what happens
-/// next. Tapping opens the full order tracker.
-class MyOrdersScreen extends ConsumerWidget {
+/// buying, or a traveler delivering — plus their own wants that haven't
+/// turned into an order yet, grouped by stage (Requested / In Transit /
+/// Received / Inactive), matching how far along the item actually is.
+class MyOrdersScreen extends ConsumerStatefulWidget {
   const MyOrdersScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final orders = ref.watch(myOrdersProvider);
-    final me = ref.watch(currentUserProvider);
+  ConsumerState<MyOrdersScreen> createState() => _MyOrdersScreenState();
+}
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () => ref.pullToRefresh(myOrdersProvider.future),
-        child: AsyncValueView(
-          value: orders,
-          onRetry: () => ref.invalidate(myOrdersProvider),
-          data: (list) {
-            if (list.isEmpty) {
-              return ListView(children: [
-                const SizedBox(height: 80),
-                EmptyState(
-                  icon: Icons.receipt_long_outlined,
-                  title: l10n.emptyOrdersTitle,
-                  message: l10n.emptyOrdersMessage,
-                ),
-              ]);
-            }
+class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController = TabController(length: 4, vsync: this);
 
-            final sorted = [...list]..sort((a, b) {
-              final byActive = _rank(a).compareTo(_rank(b));
-              if (byActive != 0) return byActive;
-              final ad = a.createdAt ?? DateTime(0);
-              final bd = b.createdAt ?? DateTime(0);
-              return bd.compareTo(ad);
-            });
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
-              itemCount: sorted.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final o = sorted[i];
-                final isShopper = me?.id == o.shopperId;
-                return _OrderCard(order: o, isShopper: isShopper);
-              },
-            );
-          },
-        ),
-      ),
+  static _Buckets _bucket(
+    List<Want> wants,
+    List<Order> orders,
+    List<Offer> negotiations,
+    Map<String, String> orderIdByRequest,
+  ) {
+    final pendingByRequest = {
+      for (final o in negotiations)
+        if (o.myRole == 'shopper' && o.status == 'pending' && o.requestId != null)
+          o.requestId!: o,
+    };
+
+    final requested = <_Entry>[];
+    final inactive = <_Entry>[];
+    final inTransit = <Order>[];
+    final received = <Order>[];
+
+    for (final w in wants) {
+      if (w.status == 'cancelled') {
+        inactive.add(_WantEntry(w, null));
+      } else if (w.status == 'open' && orderIdByRequest[w.id] == null) {
+        requested.add(_WantEntry(w, pendingByRequest[w.id]));
+      }
+      // 'accepted' wants are represented by their linked order below instead.
+    }
+
+    for (final o in orders) {
+      switch (o.status) {
+        case 'pending_payment':
+        case 'confirmed':
+        case 'purchased':
+          requested.add(_OrderEntry(o));
+        case 'in_transit':
+          inTransit.add(o);
+        case 'delivered':
+          received.add(o);
+        case 'cancelled':
+          inactive.add(_OrderEntry(o));
+      }
+    }
+
+    int byRecency(_Entry a, _Entry b) => b.sortKey.compareTo(a.sortKey);
+    int orderByRecency(Order a, Order b) =>
+        (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0));
+    requested.sort(byRecency);
+    inactive.sort(byRecency);
+    inTransit.sort(orderByRecency);
+    received.sort(orderByRecency);
+
+    return (
+      requested: requested,
+      inTransit: inTransit,
+      received: received,
+      inactive: inactive,
     );
   }
 
-  /// Active orders first, finished ones last.
-  static int _rank(Order o) =>
-      (o.status == 'delivered' || o.status == 'cancelled') ? 1 : 0;
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final wantsAsync = ref.watch(myWantsProvider);
+    final ordersAsync = ref.watch(myOrdersProvider);
+    final negotiationsAsync = ref.watch(negotiationsProvider);
+    final orderMapAsync = ref.watch(orderIdByRequestProvider);
+    final me = ref.watch(currentUserProvider);
+
+    final wants = wantsAsync.valueOrNull;
+    final orders = ordersAsync.valueOrNull;
+    final negotiations = negotiationsAsync.valueOrNull;
+    final orderMap = orderMapAsync.valueOrNull;
+
+    void refreshAll() {
+      ref.invalidate(myWantsProvider);
+      ref.invalidate(myOrdersProvider);
+      ref.invalidate(negotiationsProvider);
+      ref.invalidate(orderIdByRequestProvider);
+    }
+
+    Widget body;
+    _Buckets? buckets;
+    if (wants == null || orders == null || negotiations == null || orderMap == null) {
+      final err = wantsAsync.error ?? ordersAsync.error;
+      body = err != null
+          ? EmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Something went wrong',
+              message: err is ApiException ? err.message : 'Please try again.',
+              action: FilledButton.tonal(onPressed: refreshAll, child: const Text('Retry')),
+            )
+          // FeedSkeleton is a plain Column (not a ListView) — it needs a
+          // scrollable ancestor of its own here, unlike its other use inside
+          // a CustomScrollView's SliverToBoxAdapter on the Home screen.
+          : const SingleChildScrollView(child: FeedSkeleton());
+    } else {
+      buckets = _bucket(wants, orders, negotiations, orderMap);
+      body = TabBarView(
+        controller: _tabController,
+        children: [
+          _EntryList(
+            entries: buckets.requested,
+            me: me,
+            emptyIcon: Icons.receipt_long_outlined,
+            emptyTitle: l10n.emptyMyWantsTitle,
+            emptyMessage: l10n.emptyMyWantsMessage,
+            emptyAction: FilledButton(
+              onPressed: () => showPostWantSheet(context),
+              child: Text(l10n.actionPostAWant),
+            ),
+          ),
+          _OrderList(orders: buckets.inTransit, me: me),
+          _OrderList(orders: buckets.received, me: me),
+          _EntryList(
+            entries: buckets.inactive,
+            me: me,
+            emptyIcon: Icons.inventory_2_outlined,
+            emptyTitle: l10n.emptyOrdersBucketTitle,
+            emptyMessage: l10n.emptyOrdersBucketMessage,
+          ),
+        ],
+      );
+    }
+
+    return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showPostWantSheet(context),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.actionPostAWant),
+      ),
+      body: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              Tab(text: l10n.ordersTabRequested(buckets?.requested.length ?? 0)),
+              Tab(text: l10n.ordersTabInTransit(buckets?.inTransit.length ?? 0)),
+              Tab(text: l10n.ordersTabReceived(buckets?.received.length ?? 0)),
+              Tab(text: l10n.ordersTabInactive(buckets?.inactive.length ?? 0)),
+            ],
+          ),
+          Expanded(
+            child: RefreshIndicator(onRefresh: () async => refreshAll(), child: body),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EntryList extends StatelessWidget {
+  const _EntryList({
+    required this.entries,
+    required this.me,
+    required this.emptyIcon,
+    required this.emptyTitle,
+    required this.emptyMessage,
+    this.emptyAction,
+  });
+
+  final List<_Entry> entries;
+  final AuthUser? me;
+  final IconData emptyIcon;
+  final String emptyTitle;
+  final String emptyMessage;
+  final Widget? emptyAction;
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return ListView(children: [
+        const SizedBox(height: 80),
+        EmptyState(icon: emptyIcon, title: emptyTitle, message: emptyMessage, action: emptyAction),
+      ]);
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+      itemCount: entries.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (context, i) {
+        final e = entries[i];
+        return switch (e) {
+          _WantEntry() => _WantCard(want: e.want, pendingOffer: e.pendingOffer),
+          _OrderEntry() => _OrderCard(order: e.order, isShopper: me?.id == e.order.shopperId),
+        };
+      },
+    );
+  }
+}
+
+class _OrderList extends StatelessWidget {
+  const _OrderList({required this.orders, required this.me});
+  final List<Order> orders;
+  final AuthUser? me;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    if (orders.isEmpty) {
+      return ListView(children: [
+        const SizedBox(height: 80),
+        EmptyState(
+          icon: Icons.local_shipping_outlined,
+          title: l10n.emptyOrdersBucketTitle,
+          message: l10n.emptyOrdersBucketMessage,
+        ),
+      ]);
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+      itemCount: orders.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (context, i) {
+        final o = orders[i];
+        return _OrderCard(order: o, isShopper: me?.id == o.shopperId);
+      },
+    );
+  }
+}
+
+const _archivableWantStatuses = {'cancelled', 'completed'};
+
+class _WantCard extends ConsumerStatefulWidget {
+  const _WantCard({required this.want, this.pendingOffer});
+  final Want want;
+  final Offer? pendingOffer;
+
+  @override
+  ConsumerState<_WantCard> createState() => _WantCardState();
+}
+
+class _WantCardState extends ConsumerState<_WantCard> {
+  Future<void> _archive(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+      context: context,
+      // Shadow `context` with the dialog's own — this screen lives inside
+      // the bottom-tab shell, not the root navigator.
+      builder: (context) => AlertDialog(
+        title: Text(l10n.dialogRemoveWantTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.dialogRemoveFromListBody),
+            const SizedBox(height: 20),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              onPressed: () => context.pop(true),
+              child: Text(l10n.actionRemove),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(onPressed: () => context.pop(false), child: Text(l10n.actionCancel)),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(wantsRepositoryProvider).archive(widget.want.id);
+      ref.invalidate(myWantsProvider);
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(negotiationsProvider);
+    ref.invalidate(myWantsProvider);
+  }
+
+  Future<void> _accept() async {
+    final orderId = await ref.read(offersRepositoryProvider).accept(widget.pendingOffer!.id);
+    await _refresh();
+    ref.invalidate(myOrdersProvider);
+    ref.invalidate(orderIdByRequestProvider);
+    if (mounted) context.push('/orders/$orderId');
+  }
+
+  Future<void> _counter(String price) async {
+    await ref.read(offersRepositoryProvider).counter(widget.pendingOffer!.id, price);
+    await _refresh();
+  }
+
+  Future<void> _reject() async {
+    await ref.read(offersRepositoryProvider).reject(widget.pendingOffer!.id);
+    await _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final w = widget.want;
+    return SoftCard(
+      onTap: () => context.push('/wants/${w.id}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(w.displayTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              ),
+              StatusPill(w.status),
+              if (_archivableWantStatuses.contains(w.status)) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  tooltip: l10n.tooltipRemoveFromList,
+                  onPressed: () => _archive(context),
+                  icon: const Icon(Icons.close, size: 18),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(spacing: 12, runSpacing: 4, children: [
+            IconLine(Icons.sell_outlined, l10n.wantBudgetLine(w.budgetLabel)),
+            IconLine(Icons.public, l10n.wantBuyInLine(w.sourceCity ?? countryName(w.sourceCountry))),
+            if (w.needByLabel != null) IconLine(Icons.event_outlined, w.needByLabel!),
+          ]),
+          if (widget.pendingOffer != null) ...[
+            const SizedBox(height: 12),
+            OfferNegotiationActions(
+              offer: widget.pendingOffer!,
+              enabled: w.status == 'open',
+              onAccept: _accept,
+              onCounter: _counter,
+              onReject: _reject,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _OrderCard extends StatelessWidget {
@@ -123,8 +465,7 @@ class _OrderCard extends StatelessWidget {
                 Row(children: [
                   StatusPill(o.status),
                   const SizedBox(width: 8),
-                  Text(o.totalLabel,
-                      style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                  Text(o.totalLabel, style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
                 ]),
                 if (next != null) ...[
                   const SizedBox(height: 8),
@@ -134,9 +475,7 @@ class _OrderCard extends StatelessWidget {
                     Expanded(
                       child: Text(next,
                           style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: scheme.primary)),
+                              fontSize: 12.5, fontWeight: FontWeight.w600, color: scheme.primary)),
                     ),
                   ]),
                 ],
@@ -150,18 +489,11 @@ class _OrderCard extends StatelessWidget {
 
   /// Plain-language "what happens next", from this user's point of view.
   static String? _nextStep(AppLocalizations l10n, String status, bool isShopper) => switch (status) {
-        'pending_payment' => isShopper
-            ? l10n.nextStepPayToStart
-            : l10n.nextStepWaitingForPayment,
-        'confirmed' => isShopper
-            ? l10n.nextStepTravelerBuying
-            : l10n.nextStepBuyThenUpload,
-        'purchased' => isShopper
-            ? l10n.nextStepBoughtWaitShip
-            : l10n.nextStepPostThenShip,
-        'in_transit' => isShopper
-            ? l10n.nextStepOnWayConfirm
-            : l10n.nextStepShippedWaiting,
+        'pending_payment' =>
+          isShopper ? l10n.nextStepPayToStart : l10n.nextStepWaitingForPayment,
+        'confirmed' => isShopper ? l10n.nextStepTravelerBuying : l10n.nextStepBuyThenUpload,
+        'purchased' => isShopper ? l10n.nextStepBoughtWaitShip : l10n.nextStepPostThenShip,
+        'in_transit' => isShopper ? l10n.nextStepOnWayConfirm : l10n.nextStepShippedWaiting,
         'delivered' => null,
         'cancelled' => null,
         _ => null,

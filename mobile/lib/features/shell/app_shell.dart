@@ -6,16 +6,17 @@ import '../../l10n/app_localizations.dart';
 import '../../ui/brand_mark.dart';
 import '../../ui/initials_avatar.dart';
 import '../auth/application/auth_controller.dart';
-import '../auth/domain/auth_user.dart';
 import '../chat/data/chat_repository.dart';
 import '../notifications/data/notifications_repository.dart';
 
+/// Four tabs, always shown to everyone regardless of shopper/traveler role
+/// (unlike the old 6-tab layout, where "My Trips"/"My Wants" only appeared
+/// for the matching role) — a pure shopper still sees an empty Trips tab
+/// with an "Add trip" prompt, in case they want to try traveling too.
 enum ShellTab {
-  browse('/browse', Icons.travel_explore_outlined, Icons.travel_explore),
+  home('/browse', Icons.home_outlined, Icons.home),
+  orders('/my-orders', Icons.shopping_bag_outlined, Icons.shopping_bag),
   trips('/my-trips', Icons.flight_outlined, Icons.flight),
-  wants('/my-wants', Icons.favorite_outline, Icons.favorite),
-  offers('/offers', Icons.handshake_outlined, Icons.handshake),
-  orders('/my-orders', Icons.receipt_long_outlined, Icons.receipt_long),
   inbox('/inbox', Icons.forum_outlined, Icons.forum);
 
   const ShellTab(this.path, this.icon, this.activeIcon);
@@ -25,18 +26,10 @@ enum ShellTab {
   final IconData activeIcon;
 
   String labelFor(AppLocalizations l10n) => switch (this) {
-        ShellTab.browse => l10n.tabBrowse,
-        ShellTab.trips => l10n.tabMyTrips,
-        ShellTab.wants => l10n.tabMyWants,
-        ShellTab.offers => l10n.tabOffers,
+        ShellTab.home => l10n.tabBrowse,
         ShellTab.orders => l10n.tabOrders,
+        ShellTab.trips => l10n.tabMyTrips,
         ShellTab.inbox => l10n.tabInbox,
-      };
-
-  bool visibleTo(UserType type) => switch (this) {
-        ShellTab.trips => type.isTraveler,
-        ShellTab.wants => type.isShopper,
-        _ => true,
       };
 }
 
@@ -51,15 +44,17 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final type = user?.userType ?? UserType.both;
-    final tabs = ShellTab.values.where((t) => t.visibleTo(type)).toList();
+    const tabs = ShellTab.values;
 
     var index = tabs.indexWhere((t) => location.startsWith(t.path));
     if (index < 0) index = 0;
 
     void go(int i) => context.go(tabs[i].path);
 
-    final unread = ref.watch(unreadTotalProvider);
+    // Inbox's badge now covers both sub-tabs it hosts (Messages +
+    // Notifications) — the app bar no longer has its own separate bell, so
+    // this is the only place either kind of unread count surfaces.
+    final unread = ref.watch(unreadTotalProvider) + ref.watch(notificationUnreadProvider);
     Widget tabIcon(ShellTab t, {required bool selected}) {
       final icon = Icon(selected ? t.activeIcon : t.icon);
       if (t == ShellTab.inbox && unread > 0) {
@@ -70,7 +65,6 @@ class AppShell extends ConsumerWidget {
 
     final wide = MediaQuery.sizeOf(context).width >= 760;
 
-    final notifUnread = ref.watch(notificationUnreadProvider);
     final l10n = AppLocalizations.of(context)!;
     final signedIn = user != null;
 
@@ -78,19 +72,6 @@ class AppShell extends ConsumerWidget {
       title: const BrandMark(),
       titleSpacing: 16,
       actions: [
-        if (signedIn)
-          Tooltip(
-            message: l10n.tooltipNotifications,
-            child: IconButton(
-              onPressed: () => context.push('/notifications'),
-              icon: notifUnread > 0
-                  ? Badge(
-                      label: Text('$notifUnread'),
-                      child: const Icon(Icons.notifications_none),
-                    )
-                  : const Icon(Icons.notifications_none),
-            ),
-          ),
         Tooltip(
           message: l10n.tooltipSettings,
           child: IconButton(

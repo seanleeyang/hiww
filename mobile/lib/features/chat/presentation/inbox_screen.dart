@@ -7,10 +7,52 @@ import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/initials_avatar.dart';
+import '../../notifications/presentation/notifications_screen.dart';
 import '../data/chat_repository.dart';
 
-class InboxScreen extends ConsumerWidget {
+/// Two sub-tabs: order-scoped chat threads, and account notifications —
+/// previously two separate bottom-nav destinations, now one.
+class InboxScreen extends StatefulWidget {
   const InboxScreen({super.key});
+
+  @override
+  State<InboxScreen> createState() => _InboxScreenState();
+}
+
+class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStateMixin {
+  late final TabController _tabController = TabController(length: 2, vsync: this);
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: l10n.inboxTabMessages),
+            Tab(text: l10n.inboxTabNotifications),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: const [_MessagesTab(), NotificationsScreen()],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MessagesTab extends ConsumerWidget {
+  const _MessagesTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

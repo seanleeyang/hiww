@@ -101,13 +101,13 @@ abstract class AppLocalizations {
   /// No description provided for @tabBrowse.
   ///
   /// In en, this message translates to:
-  /// **'Browse'**
+  /// **'Home'**
   String get tabBrowse;
 
   /// No description provided for @tabMyTrips.
   ///
   /// In en, this message translates to:
-  /// **'My Trips'**
+  /// **'Trips'**
   String get tabMyTrips;
 
   /// No description provided for @tabMyWants.
@@ -134,11 +134,95 @@ abstract class AppLocalizations {
   /// **'Inbox'**
   String get tabInbox;
 
-  /// No description provided for @tooltipNotifications.
+  /// No description provided for @ordersTabRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} requested'**
+  String ordersTabRequested(int count);
+
+  /// No description provided for @ordersTabInTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in transit'**
+  String ordersTabInTransit(int count);
+
+  /// No description provided for @ordersTabReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} received'**
+  String ordersTabReceived(int count);
+
+  /// No description provided for @ordersTabInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} inactive'**
+  String ordersTabInactive(int count);
+
+  /// No description provided for @emptyOrdersBucketTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet'**
+  String get emptyOrdersBucketTitle;
+
+  /// No description provided for @emptyOrdersBucketMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders at this stage will show up here.'**
+  String get emptyOrdersBucketMessage;
+
+  /// No description provided for @tripsTabActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get tripsTabActive;
+
+  /// No description provided for @tripsTabPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get tripsTabPast;
+
+  /// No description provided for @emptyTripsPastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No past trips'**
+  String get emptyTripsPastTitle;
+
+  /// No description provided for @emptyTripsPastMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Trips that have ended or been cancelled show up here.'**
+  String get emptyTripsPastMessage;
+
+  /// No description provided for @inboxTabMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get inboxTabMessages;
+
+  /// No description provided for @inboxTabNotifications.
   ///
   /// In en, this message translates to:
   /// **'Notifications'**
-  String get tooltipNotifications;
+  String get inboxTabNotifications;
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates on your orders — payments, shipping, delivery — show up here.'**
+  String get notificationsEmptyMessage;
+
+  /// No description provided for @actionMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get actionMarkAllRead;
 
   /// No description provided for @tooltipSettings.
   ///

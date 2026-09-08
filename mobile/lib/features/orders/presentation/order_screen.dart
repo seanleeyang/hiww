@@ -38,7 +38,7 @@ class OrderScreen extends ConsumerWidget {
         title: Text(l10n.orderHashTitle(orderId.substring(0, 8).toUpperCase())),
         leading: BackButton(
           onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/my-wants'),
+              context.canPop() ? context.pop() : context.go('/my-orders'),
         ),
       ),
       body: ResponsiveBody(

@@ -7,6 +7,10 @@ import 'package:hiww_mobile/features/orders/data/orders_repository.dart';
 import 'package:hiww_mobile/features/orders/domain/order.dart';
 import 'package:hiww_mobile/features/orders/presentation/my_orders_screen.dart';
 import 'package:hiww_mobile/features/shared/domain/user_summary.dart';
+import 'package:hiww_mobile/features/wants/data/offers_repository.dart';
+import 'package:hiww_mobile/features/wants/data/wants_repository.dart';
+import 'package:hiww_mobile/features/wants/domain/offer.dart';
+import 'package:hiww_mobile/features/wants/domain/want.dart';
 import 'package:hiww_mobile/l10n/app_localizations.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
 
@@ -37,10 +41,17 @@ Order _order({
       createdAt: DateTime(2026, 9, 1),
     );
 
-Widget _wrap(List<Order> orders) => ProviderScope(
+Widget _wrap(
+  List<Order> orders, {
+  List<Want> wants = const [],
+  List<Offer> negotiations = const [],
+}) =>
+    ProviderScope(
       overrides: [
         currentUserProvider.overrideWithValue(_me),
         myOrdersProvider.overrideWith((ref) async => orders),
+        myWantsProvider.overrideWith((ref) async => wants),
+        negotiationsProvider.overrideWith((ref) async => negotiations),
       ],
       child: MaterialApp(
         theme: hiwwTheme(Brightness.light),
@@ -50,18 +61,26 @@ Widget _wrap(List<Order> orders) => ProviderScope(
       ),
     );
 
+/// Tabs are labelled with a live count (e.g. "1 in transit"), so tests tap
+/// by ordinal position rather than exact text.
+Future<void> _tapTab(WidgetTester tester, int index) async {
+  await tester.tap(find.byType(Tab).at(index));
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  testWidgets('empty state when there are no orders', (tester) async {
+  testWidgets('empty state when there is nothing requested', (tester) async {
     await tester.pumpWidget(_wrap([]));
     await tester.pumpAndSettle();
 
-    expect(find.text('No orders yet'), findsOneWidget);
+    expect(find.text('No wants yet'), findsOneWidget);
   });
 
   testWidgets('shows the shopper-side next step for an unpaid order', (tester) async {
     await tester.pumpWidget(_wrap([_order(status: 'pending_payment')]));
     await tester.pumpAndSettle();
 
+    // pending_payment sits in the default (Requested) tab, no tab switch needed.
     expect(find.text('Nike Dunk Low Panda'), findsOneWidget);
     expect(find.text('Buying from Nuch S'), findsOneWidget);
     expect(find.text('Pay to get things moving'), findsOneWidget);
@@ -81,15 +100,53 @@ void main() {
     expect(find.text('Post the item, then mark it shipped'), findsOneWidget);
   });
 
-  testWidgets('finished orders sink below active ones', (tester) async {
+  testWidgets('in_transit and delivered orders sort into separate tabs', (tester) async {
     await tester.pumpWidget(_wrap([
       _order(status: 'delivered', item: 'Done Item'),
       _order(status: 'in_transit', item: 'Active Item'),
     ]));
     await tester.pumpAndSettle();
 
-    final active = tester.getTopLeft(find.text('Active Item')).dy;
-    final done = tester.getTopLeft(find.text('Done Item')).dy;
-    expect(active, lessThan(done));
+    // Requested (default): neither has shipped/arrived yet at this stage, so
+    // neither in_transit nor delivered orders belong here.
+    expect(find.text('Done Item'), findsNothing);
+    expect(find.text('Active Item'), findsNothing);
+
+    await _tapTab(tester, 1); // In Transit
+    expect(find.text('Active Item'), findsOneWidget);
+    expect(find.text('Done Item'), findsNothing);
+
+    await _tapTab(tester, 2); // Received
+    expect(find.text('Done Item'), findsOneWidget);
+    expect(find.text('Active Item'), findsNothing);
+  });
+
+  testWidgets('a cancelled order shows under Inactive', (tester) async {
+    await tester.pumpWidget(_wrap([_order(status: 'cancelled', item: 'Cancelled Item')]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cancelled Item'), findsNothing);
+    await _tapTab(tester, 3); // Inactive
+    expect(find.text('Cancelled Item'), findsOneWidget);
+  });
+
+  testWidgets('an unaccepted want shows under Requested', (tester) async {
+    await tester.pumpWidget(_wrap(
+      [],
+      wants: [
+        Want(
+          id: 'want-1',
+          shopperId: 'me',
+          itemDescription: 'Nike Dunk Low Panda',
+          sourceCountry: 'JP',
+          category: 'sneakers',
+          budget: '5000.00',
+          status: 'open',
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nike Dunk Low Panda'), findsOneWidget);
   });
 }
