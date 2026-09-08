@@ -64,11 +64,21 @@ class SocialAuthButtons extends ConsumerWidget {
         if (kIsWeb)
           // The GIS SDK requires web sign-in to be triggered from a button
           // it renders itself — a custom OutlinedButton can't call
-          // authenticate() interactively on this platform.
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: renderGoogleButton(),
+          // authenticate() interactively on this platform. GIS won't stretch
+          // to fill a container on its own (unlike the FilledButtons above),
+          // so its width is measured and passed in explicitly to match them;
+          // its locale defaults to the browser/Google-account's own
+          // language, so it's pinned to the app's chosen one instead — left
+          // alone, a Thai phone shows an English app with a Thai Google
+          // button.
+          LayoutBuilder(
+            builder: (context, constraints) => SizedBox(
+              height: 44,
+              child: renderGoogleButton(
+                width: constraints.maxWidth.clamp(1, 400),
+                locale: Localizations.localeOf(context).languageCode,
+              ),
+            ),
           )
         else
           OutlinedButton.icon(
