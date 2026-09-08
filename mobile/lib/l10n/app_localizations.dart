@@ -1970,11 +1970,11 @@ abstract class AppLocalizations {
   /// **'Shop the world, delivered by travelers.'**
   String get landingTagline;
 
-  /// No description provided for @actionSignInApple.
+  /// No description provided for @actionSignInLine.
   ///
   /// In en, this message translates to:
-  /// **'Sign in with Apple'**
-  String get actionSignInApple;
+  /// **'Sign in with LINE'**
+  String get actionSignInLine;
 
   /// No description provided for @actionContinueFacebook.
   ///
@@ -2000,11 +2000,11 @@ abstract class AppLocalizations {
   /// **'Explore Hiww — create an account later'**
   String get actionExploreGuest;
 
-  /// No description provided for @providerApple.
+  /// No description provided for @providerLine.
   ///
   /// In en, this message translates to:
-  /// **'Apple'**
-  String get providerApple;
+  /// **'LINE'**
+  String get providerLine;
 
   /// No description provided for @providerFacebook.
   ///
@@ -2023,6 +2023,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{provider} sign-in isn\'t set up yet'**
   String errorSocialNotConfigured(String provider);
+
+  /// No description provided for @errorSocialSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in didn\'t go through. Please try again.'**
+  String get errorSocialSignInFailed;
 
   /// No description provided for @infoLogInToContinue.
   ///

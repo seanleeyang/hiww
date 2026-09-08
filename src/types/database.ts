@@ -28,6 +28,13 @@ export interface UsersTable {
    */
   email_verified_at?: Date | null;
   phone_verified_at?: Date | null;
+  /**
+   * Social sign-in (migration 026). Null for a plain email/password account.
+   * `provider_user_id` is that provider's stable subject id (e.g. Google's
+   * `sub` claim) — never the email, since an email can change or be reused.
+   */
+  auth_provider?: 'google' | 'apple' | 'facebook' | 'line' | null;
+  provider_user_id?: string | null;
   created_at: Date;
   updated_at: Date;
 }

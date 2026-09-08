@@ -1,12 +1,18 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/google_web_button.dart';
+import '../../../core/line_auth.dart';
+import '../../../core/social_auth_config.dart';
 import '../../../l10n/app_localizations.dart';
+import '../application/google_auth_controller.dart';
 
-/// Apple/Facebook/Google sign-in buttons, shared by the landing, login and
-/// register screens. None of the three providers are wired up to a real
-/// OAuth flow yet (that needs credentials only the project owner can obtain
-/// — see the go-live plan), so every button currently just explains that.
-class SocialAuthButtons extends StatelessWidget {
+/// LINE/Facebook/Google sign-in buttons, shared by the landing, login and
+/// register screens. Google and LINE are wired to real sign-in flows;
+/// Facebook isn't yet — that needs credentials only the project owner can
+/// obtain (see the go-live plan), so its button just explains that.
+class SocialAuthButtons extends ConsumerWidget {
   const SocialAuthButtons({super.key});
 
   void _notConfigured(BuildContext context, String provider) {
@@ -17,19 +23,32 @@ class SocialAuthButtons extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+
+    // Instantiates GoogleAuthController (if not already alive) so it starts
+    // listening for sign-in events as soon as one of these screens is on
+    // screen — needed even on web, where the button below is Google's own.
+    ref.watch(googleAuthControllerProvider);
+    ref.listen(googleAuthErrorProvider, (previous, next) {
+      if (next == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(next)));
+      ref.read(googleAuthErrorProvider.notifier).state = null;
+    });
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         FilledButton.icon(
-          onPressed: () => _notConfigured(context, l10n.providerApple),
+          onPressed: kIsWeb
+              ? () => startLineLogin(lineChannelId)
+              : () => _notConfigured(context, l10n.providerLine),
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.black,
+            backgroundColor: const Color(0xFF06C755),
             foregroundColor: Colors.white,
           ),
-          icon: const Icon(Icons.apple),
-          label: Text(l10n.actionSignInApple),
+          icon: const Icon(Icons.chat_bubble_rounded, size: 18),
+          label: Text(l10n.actionSignInLine),
         ),
         const SizedBox(height: 10),
         FilledButton.icon(
@@ -42,22 +61,33 @@ class SocialAuthButtons extends StatelessWidget {
           label: Text(l10n.actionContinueFacebook),
         ),
         const SizedBox(height: 10),
-        OutlinedButton.icon(
-          onPressed: () => _notConfigured(context, l10n.providerGoogle),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.onSurface,
-            side: BorderSide(color: Theme.of(context).colorScheme.outline),
+        if (kIsWeb)
+          // The GIS SDK requires web sign-in to be triggered from a button
+          // it renders itself — a custom OutlinedButton can't call
+          // authenticate() interactively on this platform.
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: renderGoogleButton(),
+          )
+        else
+          OutlinedButton.icon(
+            onPressed: () => ref.read(googleAuthControllerProvider).signInWithCustomButton(),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
+            ),
+            icon: const _GoogleMark(),
+            label: Text(l10n.actionSignInGoogle),
           ),
-          icon: const _GoogleMark(),
-          label: Text(l10n.actionSignInGoogle),
-        ),
       ],
     );
   }
 }
 
 /// Flutter's Material icon set has no Google logo glyph — a simple lettermark
-/// in Google's blue stands in until real branding assets are added.
+/// in Google's blue stands in on the non-web (custom-button) path until real
+/// branding assets are added.
 class _GoogleMark extends StatelessWidget {
   const _GoogleMark();
 

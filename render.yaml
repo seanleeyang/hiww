@@ -79,3 +79,14 @@ services:
         sync: false
       - key: R2_PUBLIC_BASE_URL
         sync: false
+
+      # Social sign-in. Each is independently optional — the app returns a
+      # clear "not configured" error for any provider whose value is unset,
+      # so they can go live one at a time. Client IDs are safe as plain
+      # values (they're meant to be public); secrets are `sync: false`.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: LINE_CHANNEL_ID
+        sync: false
+      - key: LINE_CHANNEL_SECRET
+        sync: false

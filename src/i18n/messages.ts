@@ -64,6 +64,19 @@ const MESSAGES: Record<string, Entry> = {
   'auth.invalidVerificationCode': { en: 'Invalid verification code', th: 'รหัสยืนยันไม่ถูกต้อง' },
   'auth.invalidChannel': { en: 'Invalid channel', th: 'ช่องทางไม่ถูกต้อง' },
   'auth.noPhoneOnFile': { en: 'No phone number on file yet', th: 'ยังไม่มีเบอร์โทรศัพท์ในระบบ' },
+  'auth.invalidSocialPayload': { en: 'Invalid sign-in request', th: 'คำขอเข้าสู่ระบบไม่ถูกต้อง' },
+  'auth.socialProviderNotConfigured': {
+    en: 'That sign-in method isn’t set up yet',
+    th: 'ยังไม่ได้ตั้งค่าการเข้าสู่ระบบวิธีนี้',
+  },
+  'auth.invalidSocialToken': {
+    en: 'Could not verify that sign-in. Please try again.',
+    th: 'ไม่สามารถยืนยันการเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง',
+  },
+  'auth.socialEmailRequired': {
+    en: 'Hiww needs an email address to create your account, and this sign-in didn’t share one. Please try another sign-in method.',
+    th: 'Hiww ต้องใช้อีเมลเพื่อสร้างบัญชีของคุณ แต่การเข้าสู่ระบบนี้ไม่ได้แชร์อีเมลมาให้ กรุณาลองใช้วิธีอื่น',
+  },
 
   // modules/compliance/routes.ts
   'compliance.invalidKycSubmission': { en: 'Invalid KYC submission', th: 'ข้อมูลยืนยันตัวตนไม่ถูกต้อง' },

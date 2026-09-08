@@ -39,6 +39,17 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<AuthUser> socialLogin({
+    required String provider,
+    required String idToken,
+    UserType? userType,
+    String? redirectUri,
+  }) async {
+    token = 'tok';
+    return _user;
+  }
+
+  @override
   Future<AuthUser> register({
     required String fullName,
     required String email,

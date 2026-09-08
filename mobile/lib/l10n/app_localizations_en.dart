@@ -1071,7 +1071,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get landingTagline => 'Shop the world, delivered by travelers.';
 
   @override
-  String get actionSignInApple => 'Sign in with Apple';
+  String get actionSignInLine => 'Sign in with LINE';
 
   @override
   String get actionContinueFacebook => 'Continue with Facebook';
@@ -1086,7 +1086,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionExploreGuest => 'Explore Hiww — create an account later';
 
   @override
-  String get providerApple => 'Apple';
+  String get providerLine => 'LINE';
 
   @override
   String get providerFacebook => 'Facebook';
@@ -1098,6 +1098,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorSocialNotConfigured(String provider) {
     return '$provider sign-in isn\'t set up yet';
   }
+
+  @override
+  String get errorSocialSignInFailed =>
+      'Sign-in didn\'t go through. Please try again.';
 
   @override
   String get infoLogInToContinue => 'Log in to continue';

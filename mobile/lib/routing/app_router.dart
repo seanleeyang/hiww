@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../features/account/presentation/account_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
+import '../features/auth/presentation/line_callback_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/auth/presentation/reset_password_screen.dart';
@@ -94,6 +95,7 @@ const _preAuthRoutes = {
   '/register',
   '/forgot-password',
   '/reset-password',
+  '/line-callback',
 };
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -141,6 +143,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/landing', builder: (_, _) => const LandingScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(
+        path: '/line-callback',
+        builder: (_, s) => LineCallbackScreen(
+          code: s.uri.queryParameters['code'],
+          state: s.uri.queryParameters['state'],
+          error: s.uri.queryParameters['error'],
+        ),
+      ),
       GoRoute(
         path: '/forgot-password',
         builder: (_, _) => const ForgotPasswordScreen(),

@@ -40,6 +40,24 @@ class AuthController extends AsyncNotifier<AuthState> {
     );
   }
 
+  Future<void> socialLogin({
+    required String provider,
+    required String idToken,
+    UserType? userType,
+    String? redirectUri,
+  }) async {
+    state = await AsyncValue.guard<AuthState>(
+      () async => AuthSignedIn(
+        await _repo.socialLogin(
+          provider: provider,
+          idToken: idToken,
+          userType: userType,
+          redirectUri: redirectUri,
+        ),
+      ),
+    );
+  }
+
   Future<void> register({
     required String fullName,
     required String email,

@@ -433,18 +433,19 @@
   "onboardingSlide3Body": "Carry a few extra items on your next trip and get paid for it.",
 
   "landingTagline": "Shop the world, delivered by travelers.",
-  "actionSignInApple": "Sign in with Apple",
+  "actionSignInLine": "Sign in with LINE",
   "actionContinueFacebook": "Continue with Facebook",
   "actionSignInGoogle": "Sign in with Google",
   "dividerOrUseEmail": "or use your email",
   "actionExploreGuest": "Explore Hiww — create an account later",
-  "providerApple": "Apple",
+  "providerLine": "LINE",
   "providerFacebook": "Facebook",
   "providerGoogle": "Google",
   "errorSocialNotConfigured": "{provider} sign-in isn't set up yet",
   "@errorSocialNotConfigured": {
     "placeholders": { "provider": { "type": "String" } }
   },
+  "errorSocialSignInFailed": "Sign-in didn't go through. Please try again.",
   "infoLogInToContinue": "Log in to continue",
   "landingTermsPrefix": "By using Hiww, I agree to Hiww's",
   "actionTermsOfUse": "Terms of Use",

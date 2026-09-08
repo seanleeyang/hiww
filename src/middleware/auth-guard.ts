@@ -11,6 +11,7 @@ const PUBLIC_ROUTES = new Set<string>([
   '/health',
   '/api/auth/register',
   '/api/auth/login',
+  '/api/auth/social',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/',

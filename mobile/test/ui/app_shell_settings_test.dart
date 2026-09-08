@@ -29,6 +29,15 @@ class _SignedInRepository implements AuthRepository {
       throw UnimplementedError();
 
   @override
+  Future<AuthUser> socialLogin({
+    required String provider,
+    required String idToken,
+    UserType? userType,
+    String? redirectUri,
+  }) =>
+      throw UnimplementedError();
+
+  @override
   Future<AuthUser> register({
     required String fullName,
     required String email,

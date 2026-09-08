@@ -56,6 +56,29 @@ class AuthRepository {
     return me();
   }
 
+  /// One flow for both sign-up and sign-in with a third-party identity
+  /// provider — the backend finds-or-creates the account from the verified
+  /// token, so there's no separate register step. [userType] only matters
+  /// the first time (a brand new account); ignored for a returning user.
+  Future<AuthUser> socialLogin({
+    required String provider,
+    required String idToken,
+    UserType? userType,
+    // LINE only: the redirect_uri its authorize request used — the
+    // backend's own call to LINE to exchange the code needs the identical
+    // value or LINE rejects it as a mismatch. Ignored by other providers.
+    String? redirectUri,
+  }) async {
+    final data = await _api.post('/api/auth/social', body: {
+      'provider': provider,
+      'token': idToken,
+      if (userType != null) 'user_type': userType.name,
+      if (redirectUri != null) 'redirect_uri': redirectUri,
+    });
+    await _storeToken(data);
+    return me();
+  }
+
   /// Requests a reset code for [email]. Always resolves the same way whether
   /// or not the address is registered, so it can't be used to enumerate
   /// accounts. Returns the code itself only while there's no real email

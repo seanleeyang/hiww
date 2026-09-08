@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { OAuth2Client } from 'google-auth-library';
 import { AppError, generateId } from '@/utils/helpers';
 import { hashPassword, signToken, verifyPassword } from '@/utils/auth';
 import { config } from '@/config/env';
@@ -39,6 +40,116 @@ const resetPasswordSchema = z.object({
   code: z.string().trim().length(6),
   new_password: z.string().min(8),
 });
+
+const socialLoginSchema = z.object({
+  provider: z.enum(['google', 'apple', 'facebook', 'line']),
+  token: z.string().min(1),
+  // LINE only: the exact redirect_uri the client used to start the
+  // authorize request, so the backend's token exchange (a second call to
+  // LINE using the same value) doesn't get rejected as a mismatch. Unused by
+  // the other providers, whose flows don't involve a redirect.
+  redirect_uri: z.string().url().optional(),
+  user_type: z.enum(['shopper', 'traveler', 'both']).optional(),
+});
+
+interface VerifiedIdentity {
+  providerId: string;
+  email: string;
+  emailVerified: boolean;
+  fullName: string | null;
+}
+
+async function verifyGoogleToken(token: string): Promise<VerifiedIdentity> {
+  if (!config.googleClientId) {
+    throw new AppError('NOT_IMPLEMENTED', 501, 'auth.socialProviderNotConfigured');
+  }
+  try {
+    const client = new OAuth2Client(config.googleClientId);
+    const ticket = await client.verifyIdToken({ idToken: token, audience: config.googleClientId });
+    const payload = ticket.getPayload();
+    if (!payload?.sub || !payload.email) {
+      throw new Error('missing sub/email in token payload');
+    }
+    return {
+      providerId: payload.sub,
+      email: payload.email,
+      emailVerified: payload.email_verified === true,
+      fullName: payload.name ?? null,
+    };
+  } catch {
+    throw new AppError('AUTH_ERROR', 401, 'auth.invalidSocialToken');
+  }
+}
+
+// LINE's ID tokens are HS256-signed with the channel secret, not
+// RS256-against-a-JWKS like Google/Apple — rather than reimplement HMAC
+// verification, this uses LINE's own /oauth2/v2.1/verify endpoint, which
+// checks the signature and expiry server-side and hands back the claims.
+async function verifyLineToken(code: string, redirectUri: string | undefined): Promise<VerifiedIdentity> {
+  if (!config.lineChannelId || !config.lineChannelSecret) {
+    throw new AppError('NOT_IMPLEMENTED', 501, 'auth.socialProviderNotConfigured');
+  }
+  if (!redirectUri) {
+    throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidSocialPayload');
+  }
+
+  try {
+    const tokenRes = await fetch('https://api.line.me/oauth2/v2.1/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+        client_id: config.lineChannelId,
+        client_secret: config.lineChannelSecret,
+      }),
+    });
+    if (!tokenRes.ok) throw new Error(`line token exchange failed: ${tokenRes.status}`);
+    const tokenBody = (await tokenRes.json()) as { id_token?: string };
+    if (!tokenBody.id_token) throw new Error('missing id_token in line token response');
+
+    const verifyRes = await fetch('https://api.line.me/oauth2/v2.1/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ id_token: tokenBody.id_token, client_id: config.lineChannelId }),
+    });
+    if (!verifyRes.ok) throw new Error(`line id_token verify failed: ${verifyRes.status}`);
+    const claims = (await verifyRes.json()) as { sub?: string; email?: string; name?: string };
+    if (!claims.sub) throw new Error('missing sub in verified line claims');
+
+    // LINE only includes `email` if the channel has been granted the
+    // "Email address permission" in the LINE Developers Console (a separate
+    // application, reviewed by LINE) *and* the user consented to share it.
+    // Without it there's nothing to key a `users.email` row on.
+    if (!claims.email) {
+      throw new AppError('VALIDATION_ERROR', 400, 'auth.socialEmailRequired');
+    }
+
+    return {
+      providerId: claims.sub,
+      email: claims.email,
+      emailVerified: true,
+      fullName: claims.name ?? null,
+    };
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    throw new AppError('AUTH_ERROR', 401, 'auth.invalidSocialToken');
+  }
+}
+
+/** Verifies a provider's token server-side and returns the identity it
+ * actually attests to — the client's own claims about who it is are never
+ * trusted. Throws AppError on anything that doesn't check out. */
+async function verifySocialToken(
+  provider: 'google' | 'apple' | 'facebook' | 'line',
+  token: string,
+  redirectUri: string | undefined
+): Promise<VerifiedIdentity> {
+  if (provider === 'google') return verifyGoogleToken(token);
+  if (provider === 'line') return verifyLineToken(token, redirectUri);
+  throw new AppError('NOT_IMPLEMENTED', 501, 'auth.socialProviderNotConfigured');
+}
 
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: unknown }>('/api/auth/register', { config: authRouteConfig }, async (request: any, reply: any) => {
@@ -133,6 +244,91 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       code: 'USER_LOGGED_IN',
     });
   });
+
+  // One flow for both sign-up and sign-in: the provider's token is the only
+  // proof of identity needed either way, so there's no separate "register
+  // with Google" endpoint. `user_type` only matters the first time (a brand
+  // new account) — a returning user's existing value is left alone.
+  app.post<{ Body: unknown }>(
+    '/api/auth/social',
+    { config: authRouteConfig },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const parsed = socialLoginSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidSocialPayload');
+      }
+
+      const identity = await verifySocialToken(parsed.data.provider, parsed.data.token, parsed.data.redirect_uri);
+
+      let user = await request.db
+        .selectFrom('users')
+        .selectAll()
+        .where('auth_provider', '=', parsed.data.provider)
+        .where('provider_user_id', '=', identity.providerId)
+        .executeTakeFirst();
+
+      if (!user) {
+        // Not linked yet — if a verified email matches an existing
+        // email/password account, link this provider to it instead of
+        // creating a duplicate. An unverified provider email can't be used
+        // to claim someone else's account this way.
+        const existing = identity.emailVerified
+          ? await request.db
+              .selectFrom('users')
+              .selectAll()
+              .where('email', '=', identity.email)
+              .executeTakeFirst()
+          : undefined;
+
+        if (existing) {
+          await request.db
+            .updateTable('users')
+            .set({
+              auth_provider: parsed.data.provider,
+              provider_user_id: identity.providerId,
+              email_verified_at: existing.email_verified_at ?? new Date(),
+              updated_at: new Date(),
+            })
+            .where('id', '=', existing.id)
+            .execute();
+          user = { ...existing, auth_provider: parsed.data.provider, provider_user_id: identity.providerId };
+        } else {
+          const userId = generateId();
+          const now = new Date();
+          await request.db
+            .insertInto('users')
+            .values({
+              id: userId,
+              email: identity.email,
+              full_name: identity.fullName || identity.email.split('@')[0],
+              user_type: parsed.data.user_type ?? 'both',
+              kyc_status: 'pending',
+              auth_provider: parsed.data.provider,
+              provider_user_id: identity.providerId,
+              email_verified_at: identity.emailVerified ? now : null,
+              phone_verified_at: null,
+              created_at: now,
+              updated_at: now,
+            })
+            .execute();
+          user = await request.db.selectFrom('users').selectAll().where('id', '=', userId).executeTakeFirstOrThrow();
+        }
+      }
+
+      const token = signToken({
+        userId: user.id,
+        email: user.email,
+        exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+      });
+
+      reply.send({
+        success: true,
+        data: { userId: user.id, email: user.email, token },
+        code: 'SOCIAL_LOGIN',
+      });
+    }
+  );
 
   // Reuses the email OTP channel — "prove you control this address" is the
   // same check whether it's for verifying registration or for resetting a

@@ -1051,7 +1051,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get landingTagline => 'ช้อปทั่วโลก จัดส่งโดยนักเดินทาง';
 
   @override
-  String get actionSignInApple => 'เข้าสู่ระบบด้วย Apple';
+  String get actionSignInLine => 'เข้าสู่ระบบด้วย LINE';
 
   @override
   String get actionContinueFacebook => 'ดำเนินการต่อด้วย Facebook';
@@ -1066,7 +1066,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionExploreGuest => 'สำรวจ Hiww — สร้างบัญชีภายหลัง';
 
   @override
-  String get providerApple => 'Apple';
+  String get providerLine => 'LINE';
 
   @override
   String get providerFacebook => 'Facebook';
@@ -1078,6 +1078,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String errorSocialNotConfigured(String provider) {
     return 'ยังไม่ได้ตั้งค่าการเข้าสู่ระบบด้วย $provider';
   }
+
+  @override
+  String get errorSocialSignInFailed =>
+      'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
 
   @override
   String get infoLogInToContinue => 'เข้าสู่ระบบเพื่อดำเนินการต่อ';

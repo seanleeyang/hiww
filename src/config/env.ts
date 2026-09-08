@@ -161,4 +161,27 @@ export const config = {
    * credentials from new env vars the same way ANTHROPIC_API_KEY is read.
    */
   otpProvider: process.env.OTP_PROVIDER || 'mock',
+  /**
+   * Social sign-in. Each provider is independently optional — `POST
+   * /api/auth/social` 501s with a clear "not configured" error for a
+   * provider whose value is empty here, so providers go live one at a time
+   * as credentials arrive. `googleClientId` is the Google Cloud OAuth 2.0
+   * Web application Client ID; the mobile app sends an ID token whose `aud`
+   * claim must match this value (verified server-side, never trusted from
+   * the client).
+   */
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+  /**
+   * LINE Login. Unlike Google's ID-token flow, LINE uses an OAuth
+   * authorization-code redirect — the mobile app sends the `code` it got
+   * back from LINE, and the backend exchanges it for an id_token using the
+   * channel secret (never exposed to the client) before verifying it with
+   * LINE's own /oauth2/v2.1/verify endpoint. `lineCallbackUrl` must exactly
+   * match a Callback URL registered on the channel (LINE Developers Console
+   * → your channel → LINE Login → Callback URL) — including the one used
+   * for local dev, since the redirect_uri sent in the token exchange must
+   * match whichever origin the client was actually redirected from.
+   */
+  lineChannelId: process.env.LINE_CHANNEL_ID || '',
+  lineChannelSecret: process.env.LINE_CHANNEL_SECRET || '',
 };
