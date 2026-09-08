@@ -1,6 +1,9 @@
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/settings/locale_controller.dart';
 import '../env.dart';
 import '../storage/token_storage.dart';
 import 'api_exception.dart';
@@ -11,8 +14,11 @@ import 'api_exception.dart';
 ///  - unwraps the backend envelope `{ success, data, code }` down to `data`
 ///  - turns every failure into an [ApiException]
 class ApiClient {
-  ApiClient({required String baseUrl, required TokenStorage tokenStorage})
-    : _tokens = tokenStorage,
+  ApiClient({
+    required String baseUrl,
+    required TokenStorage tokenStorage,
+    String locale = 'en',
+  }) : _tokens = tokenStorage,
       _dio = Dio(
         BaseOptions(
           baseUrl: baseUrl,
@@ -25,6 +31,9 @@ class ApiClient {
           headers: {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-store',
+            // The backend renders AppError/notification text per-locale from
+            // this — see src/i18n/locale.ts.
+            'Accept-Language': locale,
           },
         ),
       ) {
@@ -128,8 +137,11 @@ class ApiClient {
 }
 
 final apiClientProvider = Provider<ApiClient>((ref) {
+  final chosen = ref.watch(localeControllerProvider).valueOrNull;
+  final locale = chosen?.languageCode ?? PlatformDispatcher.instance.locale.languageCode;
   return ApiClient(
     baseUrl: resolveApiBaseUrl(),
     tokenStorage: ref.watch(tokenStorageProvider),
+    locale: locale,
   );
 });

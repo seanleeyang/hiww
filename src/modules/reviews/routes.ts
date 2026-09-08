@@ -17,7 +17,7 @@ export async function registerReviewsRoutes(app: FastifyInstance): Promise<void>
     async (request: any, reply: any) => {
       const parsed = reviewSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid review');
+        throw new AppError('VALIDATION_ERROR', 400, 'reviews.invalidReview');
       }
 
       const order = await request.db
@@ -27,16 +27,16 @@ export async function registerReviewsRoutes(app: FastifyInstance): Promise<void>
         .executeTakeFirst();
 
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
 
       const isShopper = order.shopper_id === request.userId;
       const isTraveler = order.traveler_id === request.userId;
       if (!isShopper && !isTraveler) {
-        throw new AppError('FORBIDDEN', 403, 'You are not part of this order');
+        throw new AppError('FORBIDDEN', 403, 'common.notPartOfOrder');
       }
       if (order.status !== 'delivered') {
-        throw new AppError('INVALID_STATUS', 409, 'You can review once the order is delivered');
+        throw new AppError('INVALID_STATUS', 409, 'reviews.onlyAfterDelivered');
       }
 
       const revieweeId = isShopper ? order.traveler_id : order.shopper_id;
@@ -48,7 +48,7 @@ export async function registerReviewsRoutes(app: FastifyInstance): Promise<void>
         .where('reviewer_id', '=', request.userId)
         .executeTakeFirst();
       if (existing) {
-        throw new AppError('ALREADY_REVIEWED', 409, 'You have already reviewed this order');
+        throw new AppError('ALREADY_REVIEWED', 409, 'reviews.alreadyReviewed');
       }
 
       const reviewId = generateId();
@@ -93,7 +93,7 @@ export async function registerReviewsRoutes(app: FastifyInstance): Promise<void>
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!user) {
-        throw new AppError('NOT_FOUND', 404, 'User not found');
+        throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
       }
 
       const items = await request.db

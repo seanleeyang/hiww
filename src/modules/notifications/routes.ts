@@ -1,6 +1,9 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
+import { renderNotification } from '@/i18n/notifications';
+import type { NotificationType } from '@/services/notify';
+import type { AppRequest } from '@/types/api';
 
 const readSchema = z.object({
   // Omit to mark everything read; pass an id to mark just that one.
@@ -21,16 +24,24 @@ export async function registerNotificationsRoutes(app: FastifyInstance): Promise
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
       if (!request.userId) {
-        throw new AppError('AUTH_ERROR', 401, 'Authentication required');
+        throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
       }
 
-      const items = await request.db
+      const rows = await request.db
         .selectFrom('notifications')
-        .select(['id', 'type', 'subject', 'body', 'order_id', 'link', 'read_at', 'created_at'])
+        .select(['id', 'type', 'subject', 'body', 'params', 'order_id', 'link', 'read_at', 'created_at'])
         .where('user_id', '=', request.userId)
         .orderBy('created_at', 'desc')
         .limit(50)
         .execute();
+
+      const locale = (request as AppRequest).locale ?? 'en';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items = rows.map(({ params, ...row }: any) => {
+        if (!params) return row; // pre-migration row — keep its stored (English) text.
+        const { subject, body } = renderNotification(locale, row.type as NotificationType, params);
+        return { ...row, subject, body };
+      });
 
       const unread = await request.db
         .selectFrom('notifications')
@@ -54,11 +65,11 @@ export async function registerNotificationsRoutes(app: FastifyInstance): Promise
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
       if (!request.userId) {
-        throw new AppError('AUTH_ERROR', 401, 'Authentication required');
+        throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
       }
       const parsed = readSchema.safeParse(request.body ?? {});
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid read payload');
+        throw new AppError('VALIDATION_ERROR', 400, 'notifications.invalidReadPayload');
       }
 
       let q = request.db

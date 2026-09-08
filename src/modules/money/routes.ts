@@ -60,7 +60,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
     async (request: any, reply: any) => {
       const body = request.body as { order_id?: string };
       if (!body.order_id) {
-        throw new AppError('VALIDATION_ERROR', 400, 'order_id is required');
+        throw new AppError('VALIDATION_ERROR', 400, 'common.orderIdRequired');
       }
 
       const order = await request.db
@@ -70,7 +70,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         .executeTakeFirst();
 
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
 
       const paymentProvider = getPaymentProvider();
@@ -93,7 +93,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
     async (request: any, reply: any) => {
       const body = request.body as { order_id?: string; payment_id?: string };
       if (!body.order_id) {
-        throw new AppError('VALIDATION_ERROR', 400, 'order_id is required');
+        throw new AppError('VALIDATION_ERROR', 400, 'common.orderIdRequired');
       }
 
       await expireOverduePayments(request.db);
@@ -105,7 +105,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         .executeTakeFirst();
 
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
 
       // Idempotent: only the first confirm transitions the order. Repeats are a
@@ -122,7 +122,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
       if (!config.manualMoneyPilot) {
         // Placeholder for the future automated path: verify with the provider,
         // hold funds in escrow, write double-entry ledger rows.
-        throw new AppError('NOT_IMPLEMENTED', 501, 'Automated payment capture is not implemented yet');
+        throw new AppError('NOT_IMPLEMENTED', 501, 'money.notImplemented');
       }
 
       const now = new Date();
@@ -151,15 +151,13 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         {
           userId: order.shopper_id,
           type: 'payment_confirmed',
-          subject: 'Payment confirmed',
-          body: `Your payment for "${order.item_description}" is confirmed. The traveler can buy and ship it now.`,
+          params: { _variant: 'shopper', item: order.item_description },
           orderId: order.id,
         },
         {
           userId: order.traveler_id,
           type: 'payment_confirmed',
-          subject: 'Payment received — you can ship',
-          body: `Hiww confirmed the shopper's payment for "${order.item_description}". Go ahead and buy the item, then mark it shipped.`,
+          params: { _variant: 'traveler', item: order.item_description },
           orderId: order.id,
         },
       ]);
@@ -181,7 +179,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
     async (request: any, reply: any) => {
       const parsed = payoutSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid payout payload');
+        throw new AppError('VALIDATION_ERROR', 400, 'money.invalidPayoutPayload');
       }
 
       const order = await request.db
@@ -190,10 +188,10 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         .where('id', '=', parsed.data.order_id)
         .executeTakeFirst();
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
       if (order.status !== 'delivered') {
-        throw new AppError('INVALID_STATUS', 409, 'Only a delivered order can be paid out');
+        throw new AppError('INVALID_STATUS', 409, 'money.onlyDeliveredCanPayout');
       }
 
       const existing = await request.db
@@ -202,7 +200,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         .where('order_id', '=', order.id)
         .executeTakeFirst();
       if (existing) {
-        throw new AppError('ALREADY_DONE', 409, 'This order has already been paid out');
+        throw new AppError('ALREADY_DONE', 409, 'money.alreadyPaidOut');
       }
 
       const payoutId = generateId();
@@ -238,8 +236,12 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
       await recordNotification(request.db, {
         userId: order.traveler_id,
         type: 'payout_sent',
-        subject: 'You’ve been paid',
-        body: `Hiww sent your payout of ${parsed.data.amount} for "${order.item_description}" via ${parsed.data.method} (ref ${parsed.data.reference}).`,
+        params: {
+          amount: parsed.data.amount,
+          item: order.item_description,
+          method: parsed.data.method,
+          reference: parsed.data.reference,
+        },
         orderId: order.id,
       });
 

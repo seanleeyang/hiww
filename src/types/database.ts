@@ -208,6 +208,10 @@ export interface NotificationsTable {
   sent_at?: Date | null;
   read_at?: Date | null;
   created_at: Generated<Date>;
+  /** Structured data used to re-render subject/body in the reader's locale.
+   * Null on rows written before this existed — those keep their stored
+   * (English) subject/body. */
+  params?: Record<string, string | number> | null;
 }
 
 export interface ReviewsTable {

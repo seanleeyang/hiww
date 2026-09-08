@@ -1,6 +1,7 @@
 import type { Kysely } from 'kysely';
 import type { Database } from '@/types/database';
 import { generateId } from '@/utils/helpers';
+import { renderNotification } from '@/i18n/notifications';
 
 /**
  * Canonical notification event kinds. The mobile app switches on these for the
@@ -26,8 +27,11 @@ export type NotificationType =
 export interface NotificationInput {
   userId: string;
   type: NotificationType;
-  subject: string;
-  body: string;
+  /** Rendered into `subject`/`body` (English, for the stored columns) and
+   * re-rendered per-reader locale at `GET /api/notifications` time — see
+   * `src/i18n/notifications.ts`. Include `_variant` when this `type` has more
+   * than one distinct wording (e.g. who the recipient is). */
+  params: Record<string, string | number | boolean>;
   /** Order this is about; also used to build the deep link when `link` is omitted. */
   orderId?: string | null;
   link?: string | null;
@@ -48,14 +52,16 @@ export async function recordNotification(
 ): Promise<void> {
   try {
     const link = input.link ?? (input.orderId ? `/orders/${input.orderId}` : null);
+    const { subject, body } = renderNotification('en', input.type, input.params);
     await db
       .insertInto('notifications')
       .values({
         id: generateId(),
         user_id: input.userId,
         type: input.type,
-        subject: input.subject,
-        body: input.body,
+        subject,
+        body,
+        params: JSON.stringify(input.params),
         order_id: input.orderId ?? null,
         link,
         created_at: new Date(),

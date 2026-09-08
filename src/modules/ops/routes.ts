@@ -68,7 +68,7 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
       });
     } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError('DB_ERROR', 500, 'Failed to load ops overview');
+      throw new AppError('DB_ERROR', 500, 'ops.dbErrorOverview');
     }
   });
 
@@ -146,7 +146,7 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
       });
     } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError('DB_ERROR', 500, 'Failed to load reconciliation');
+      throw new AppError('DB_ERROR', 500, 'ops.dbErrorReconciliation');
     }
   });
 }

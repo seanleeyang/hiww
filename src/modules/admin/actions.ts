@@ -22,7 +22,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
   app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/disputes/:id/resolve', async (request: any, reply: any) => {
     const parsed = resolveDisputeSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid dispute resolution payload');
+      throw new AppError('VALIDATION_ERROR', 400, 'adminActions.invalidDisputeResolution');
     }
 
     const dispute = await request.db
@@ -32,7 +32,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       .executeTakeFirst();
 
     if (!dispute) {
-      throw new AppError('NOT_FOUND', 404, 'Dispute not found');
+      throw new AppError('NOT_FOUND', 404, 'common.disputeNotFound');
     }
 
     await request.db
@@ -68,7 +68,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
   app.post<{ Params: { userId: string }; Body: unknown }>('/api/admin/users/:userId/kyc-review', async (request: any, reply: any) => {
     const parsed = reviewKycSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid KYC review payload');
+      throw new AppError('VALIDATION_ERROR', 400, 'common.invalidKycReviewPayload');
     }
 
     const user = await request.db
@@ -78,7 +78,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       .executeTakeFirst();
 
     if (!user) {
-      throw new AppError('NOT_FOUND', 404, 'User not found');
+      throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
     }
 
     await request.db
@@ -112,7 +112,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
   app.post<{ Params: { userId: string }; Body: unknown }>('/api/admin/users/:userId/flag', async (request: any, reply: any) => {
     const parsed = flagUserSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid risk flag payload');
+      throw new AppError('VALIDATION_ERROR', 400, 'adminActions.invalidRiskFlag');
     }
 
     const user = await request.db
@@ -122,7 +122,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       .executeTakeFirst();
 
     if (!user) {
-      throw new AppError('NOT_FOUND', 404, 'User not found');
+      throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
     }
 
     await request.db

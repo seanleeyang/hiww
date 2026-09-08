@@ -1,9 +1,11 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { DB } from '@/db/connection';
+import type { SupportedLocale } from '@/i18n/locale';
 
 export interface AppRequest extends FastifyRequest {
   db: DB;
   userId?: string;
+  locale: SupportedLocale;
 }
 
 export interface AppReply extends FastifyReply {}

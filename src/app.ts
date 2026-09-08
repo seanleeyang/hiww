@@ -13,6 +13,7 @@ import type { Database } from '@/types/database';
 import { registerErrorHandler } from '@/middleware/error-handler';
 import { registerAuthGuard } from '@/middleware/auth-guard';
 import { getHealthSummary } from '@/config/health';
+import { resolveLocale } from '@/i18n/locale';
 import { registerAuthRoutes } from '@/modules/auth/routes';
 import { registerTripsRoutes } from '@/modules/trips/routes';
 import { registerRequestsRoutes } from '@/modules/requests/routes';
@@ -103,6 +104,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   app.addHook('preHandler', async (request) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (request as any).db = db;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (request as any).locale = resolveLocale(request.headers['accept-language'] as string | undefined);
   });
 
   await registerErrorHandler(app);

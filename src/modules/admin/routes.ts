@@ -117,7 +117,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       });
     } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError('DB_ERROR', 500, 'Failed to load admin review queue');
+      throw new AppError('DB_ERROR', 500, 'admin.dbErrorReviewQueue');
     }
   });
 
@@ -130,7 +130,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       .where('id', '=', request.params.id)
       .executeTakeFirst();
     if (!order) {
-      throw new AppError('NOT_FOUND', 404, 'Order not found');
+      throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
     }
 
     await request.db
@@ -159,7 +159,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       .where('id', '=', request.params.id)
       .executeTakeFirst();
     if (!message) {
-      throw new AppError('NOT_FOUND', 404, 'Message not found');
+      throw new AppError('NOT_FOUND', 404, 'admin.messageNotFound');
     }
 
     // Clearing means "I looked at this, it's fine" — restores a message the
@@ -222,7 +222,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       .where('id', '=', request.params.id)
       .executeTakeFirst();
     if (!trip) {
-      throw new AppError('NOT_FOUND', 404, 'Trip not found');
+      throw new AppError('NOT_FOUND', 404, 'common.tripNotFound');
     }
 
     const reason = typeof (request.body as any)?.reason === 'string' ? (request.body as any).reason.trim() : '';
@@ -304,7 +304,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       .where('id', '=', request.params.id)
       .executeTakeFirst();
     if (!itemRequest) {
-      throw new AppError('NOT_FOUND', 404, 'Request not found');
+      throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
     }
 
     const reason = typeof (request.body as any)?.reason === 'string' ? (request.body as any).reason.trim() : '';

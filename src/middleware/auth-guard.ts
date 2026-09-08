@@ -95,7 +95,7 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
     }
 
     if (!req.userId) {
-      throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
+      throw new AppError('AUTH_REQUIRED', 401, 'common.authRequired');
     }
 
     // Resolve the caller's role once so downstream handlers can make ownership
@@ -108,11 +108,11 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
     req.userRole = actor?.role ?? undefined;
 
     if (ADMIN_ROUTES.has(routeUrl) && req.userRole !== 'admin') {
-      throw new AppError('ADMIN_REQUIRED', 403, 'Administrator access required');
+      throw new AppError('ADMIN_REQUIRED', 403, 'authGuard.adminRequired');
     }
 
     if (!VERIFICATION_EXEMPT_ROUTES.has(routeUrl) && (!actor?.email_verified_at || !actor?.phone_verified_at)) {
-      throw new AppError('VERIFICATION_REQUIRED', 403, 'Verify your email and phone to continue');
+      throw new AppError('VERIFICATION_REQUIRED', 403, 'authGuard.verificationRequired');
     }
   });
 }

@@ -12,7 +12,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
     async (request: any, reply: any) => {
       const parsed = createTripSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid trip data');
+        throw new AppError('VALIDATION_ERROR', 400, 'trips.invalidTripData');
       }
 
       const tripId = generateId();
@@ -90,7 +90,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .executeTakeFirst();
 
       if (!trip) {
-        throw new AppError('NOT_FOUND', 404, 'Trip not found');
+        throw new AppError('NOT_FOUND', 404, 'common.tripNotFound');
       }
 
       const traveler = await request.db
@@ -117,18 +117,18 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!trip) {
-        throw new AppError('NOT_FOUND', 404, 'Trip not found');
+        throw new AppError('NOT_FOUND', 404, 'common.tripNotFound');
       }
       if (trip.traveler_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Not your trip');
+        throw new AppError('FORBIDDEN', 403, 'common.notYourTrip');
       }
       if (trip.status !== 'published') {
-        throw new AppError('INVALID_STATE', 400, 'Only a published trip can be edited');
+        throw new AppError('INVALID_STATE', 400, 'trips.onlyPublishedCanBeEdited');
       }
 
       const parsed = updateTripSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid trip update');
+        throw new AppError('VALIDATION_ERROR', 400, 'trips.invalidTripUpdate');
       }
       const d = parsed.data;
 
@@ -147,7 +147,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
       const effectiveDeparture = new Date(patch.departure_date ?? trip.departure_date);
       const effectiveReturn = new Date(patch.return_date ?? trip.return_date);
       if (effectiveReturn <= effectiveDeparture) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Return date must be after departure');
+        throw new AppError('VALIDATION_ERROR', 400, 'trips.returnAfterDeparture');
       }
 
       await request.db.updateTable('trips').set(patch).where('id', '=', trip.id).execute();
@@ -174,13 +174,13 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!trip) {
-        throw new AppError('NOT_FOUND', 404, 'Trip not found');
+        throw new AppError('NOT_FOUND', 404, 'common.tripNotFound');
       }
       if (trip.traveler_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Not your trip');
+        throw new AppError('FORBIDDEN', 403, 'common.notYourTrip');
       }
       if (trip.status !== 'published') {
-        throw new AppError('INVALID_STATE', 400, 'Trip is not active');
+        throw new AppError('INVALID_STATE', 400, 'trips.notActive');
       }
 
       // A trip can carry many shoppers' orders at once — block cancellation
@@ -192,11 +192,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .where('status', '!=', 'delivered')
         .executeTakeFirst();
       if (activeOrder) {
-        throw new AppError(
-          'TRIP_HAS_ACTIVE_ORDERS',
-          400,
-          'This trip has an order still in progress — it must be delivered first'
-        );
+        throw new AppError('TRIP_HAS_ACTIVE_ORDERS', 400, 'trips.hasActiveOrders');
       }
 
       await request.db
@@ -233,13 +229,13 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!trip) {
-        throw new AppError('NOT_FOUND', 404, 'Trip not found');
+        throw new AppError('NOT_FOUND', 404, 'common.tripNotFound');
       }
       if (trip.traveler_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Not your trip');
+        throw new AppError('FORBIDDEN', 403, 'common.notYourTrip');
       }
       if (trip.status !== 'published') {
-        throw new AppError('INVALID_STATE', 400, 'Trip is not active');
+        throw new AppError('INVALID_STATE', 400, 'trips.notActive');
       }
 
       const anyOffer = await request.db
@@ -248,11 +244,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .where('trip_id', '=', trip.id)
         .executeTakeFirst();
       if (anyOffer) {
-        throw new AppError(
-          'TRIP_HAS_OFFERS',
-          400,
-          'This trip already has an offer on it — cancel it instead of deleting'
-        );
+        throw new AppError('TRIP_HAS_OFFERS', 400, 'trips.hasOffers');
       }
 
       await request.db.deleteFrom('trips').where('id', '=', trip.id).execute();
@@ -283,13 +275,13 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!trip) {
-        throw new AppError('NOT_FOUND', 404, 'Trip not found');
+        throw new AppError('NOT_FOUND', 404, 'common.tripNotFound');
       }
       if (trip.traveler_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Not your trip');
+        throw new AppError('FORBIDDEN', 403, 'common.notYourTrip');
       }
       if (trip.status !== 'cancelled' && trip.status !== 'completed') {
-        throw new AppError('INVALID_STATE', 400, 'Only a cancelled or completed trip can be cleared from your list');
+        throw new AppError('INVALID_STATE', 400, 'trips.onlyCancelledOrCompletedCanBeCleared');
       }
 
       await request.db

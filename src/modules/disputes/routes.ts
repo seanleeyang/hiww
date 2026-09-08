@@ -18,7 +18,7 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
   app.post<{ Body: unknown }>('/api/disputes', async (request: any, reply: any) => {
     const parsed = disputeSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid dispute payload');
+      throw new AppError('VALIDATION_ERROR', 400, 'disputes.invalidPayload');
     }
 
     const order = await request.db
@@ -28,12 +28,12 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
       .executeTakeFirst();
 
     if (!order) {
-      throw new AppError('NOT_FOUND', 404, 'Order not found');
+      throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
     }
 
     const initiatorId = request.userId;
     if (order.shopper_id !== initiatorId && order.traveler_id !== initiatorId) {
-      throw new AppError('FORBIDDEN', 403, 'Only order participants can open disputes');
+      throw new AppError('FORBIDDEN', 403, 'disputes.onlyParticipantsCanOpen');
     }
 
     const disputeId = generateId();
@@ -68,8 +68,7 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
     await recordNotification(request.db, {
       userId: otherParty,
       type: 'dispute_opened',
-      subject: 'A dispute was opened on your order',
-      body: `The other party opened a dispute on "${order.item_description}". Hiww will review it and be in touch.`,
+      params: { item: order.item_description },
       orderId: order.id,
     });
 
@@ -83,7 +82,7 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string }; Body: unknown }>('/api/disputes/:id/resolve', async (request: any, reply: any) => {
     const parsed = resolveSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid dispute resolution payload');
+      throw new AppError('VALIDATION_ERROR', 400, 'common.invalidDisputeResolutionPayload');
     }
 
     const dispute = await request.db
@@ -93,11 +92,11 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
       .executeTakeFirst();
 
     if (!dispute) {
-      throw new AppError('NOT_FOUND', 404, 'Dispute not found');
+      throw new AppError('NOT_FOUND', 404, 'common.disputeNotFound');
     }
 
     if (dispute.status !== 'open') {
-      throw new AppError('INVALID_STATUS', 409, 'Dispute is not open');
+      throw new AppError('INVALID_STATUS', 409, 'disputes.notOpen');
     }
 
     await request.db
@@ -134,8 +133,11 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
         [disputedOrder.shopper_id, disputedOrder.traveler_id].map((userId: string) => ({
           userId,
           type: 'dispute_resolved' as const,
-          subject: `Dispute ${parsed.data.status}`,
-          body: `Hiww ${parsed.data.status} the dispute on "${disputedOrder.item_description}": ${parsed.data.resolution}`,
+          params: {
+            status: parsed.data.status,
+            item: disputedOrder.item_description,
+            resolution: parsed.data.resolution,
+          },
           orderId: disputedOrder.id,
         }))
       );

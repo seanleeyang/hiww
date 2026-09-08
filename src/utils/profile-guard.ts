@@ -41,10 +41,6 @@ export async function requireCompleteProfile(
     .executeTakeFirst();
 
   if (!user || !isProfileComplete(user)) {
-    throw new AppError(
-      'PROFILE_INCOMPLETE',
-      403,
-      'Add your phone number and delivery address before your first order'
-    );
+    throw new AppError('PROFILE_INCOMPLETE', 403, 'profileGuard.incomplete');
   }
 }

@@ -46,15 +46,13 @@ export async function expireOverdueOffers(db: Kysely<Database>): Promise<void> {
       await recordNotification(trx, {
         userId: offer.traveler_id,
         type: 'offer_expired',
-        subject: 'Negotiation timed out',
-        body: `Nobody responded in time on "${requestRow.item_description}", so the offer expired. You can make a fresh offer if you're still interested.`,
+        params: { _variant: 'traveler', item: requestRow.item_description },
         link: `/wants/${offer.request_id}`,
       });
       await recordNotification(trx, {
         userId: requestRow.shopper_id,
         type: 'offer_expired',
-        subject: 'Negotiation timed out',
-        body: `An offer on "${requestRow.item_description}" expired with no response in time.`,
+        params: { _variant: 'shopper', item: requestRow.item_description },
         link: `/wants/${offer.request_id}`,
       });
     }

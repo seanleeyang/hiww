@@ -15,7 +15,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
     async (request: any, reply: any) => {
       const parsed = createRequestSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid request data');
+        throw new AppError('VALIDATION_ERROR', 400, 'requests.invalidRequestData');
       }
 
       // "Request from this trip": validate the target up front so we don't
@@ -28,13 +28,13 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
           .where('id', '=', parsed.data.target_trip_id)
           .executeTakeFirst();
         if (!trip) {
-          throw new AppError('NOT_FOUND', 404, 'Trip not found');
+          throw new AppError('NOT_FOUND', 404, 'common.tripNotFound');
         }
         if (trip.traveler_id === request.userId) {
-          throw new AppError('FORBIDDEN', 403, 'You cannot request from your own trip');
+          throw new AppError('FORBIDDEN', 403, 'requests.cannotRequestOwnTrip');
         }
         if (trip.status !== 'published' && trip.status !== 'in_progress') {
-          throw new AppError('INVALID_STATUS', 409, 'This trip is no longer accepting requests');
+          throw new AppError('INVALID_STATUS', 409, 'requests.tripNotAcceptingRequests');
         }
         // A direct request can turn straight into an order if the traveler
         // accepts it as-is, so the shopper needs to be reachable already.
@@ -97,8 +97,12 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         await recordNotification(request.db, {
           userId: targetTrip.traveler_id,
           type: 'offer_received',
-          subject: 'Someone requested an item from your trip',
-          body: `A shopper wants "${parsed.data.item_description}" from your trip for ${parsed.data.budget}. Accept, counter, or decline within ${config.offerResponseTimeoutHours}h.`,
+          params: {
+            _variant: 'from_shopper',
+            item: parsed.data.item_description,
+            price: parsed.data.budget,
+            hours: config.offerResponseTimeoutHours,
+          },
           link: `/wants/${requestId}`,
         });
       }
@@ -168,7 +172,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         .executeTakeFirst();
 
       if (!itemRequest) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
 
       const shopper = await request.db
@@ -195,18 +199,18 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!itemRequest) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
       if (itemRequest.shopper_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Not your want');
+        throw new AppError('FORBIDDEN', 403, 'common.notYourWant');
       }
       if (itemRequest.status !== 'open') {
-        throw new AppError('INVALID_STATE', 400, 'Only an open want can be edited');
+        throw new AppError('INVALID_STATE', 400, 'requests.onlyOpenCanBeEdited');
       }
 
       const parsed = updateRequestSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid want update');
+        throw new AppError('VALIDATION_ERROR', 400, 'requests.invalidWantUpdate');
       }
       const d = parsed.data;
 
@@ -246,13 +250,13 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!itemRequest) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
       if (itemRequest.shopper_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Not your want');
+        throw new AppError('FORBIDDEN', 403, 'common.notYourWant');
       }
       if (itemRequest.status !== 'open') {
-        throw new AppError('INVALID_STATE', 400, 'Want is not open');
+        throw new AppError('INVALID_STATE', 400, 'requests.wantNotOpen');
       }
 
       await request.db
@@ -292,13 +296,13 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!itemRequest) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
       if (itemRequest.shopper_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Not your want');
+        throw new AppError('FORBIDDEN', 403, 'common.notYourWant');
       }
       if (itemRequest.status !== 'cancelled' && itemRequest.status !== 'completed') {
-        throw new AppError('INVALID_STATE', 400, 'Only a cancelled or completed want can be cleared from your list');
+        throw new AppError('INVALID_STATE', 400, 'requests.onlyCancelledOrCompletedCanBeCleared');
       }
 
       await request.db

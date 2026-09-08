@@ -29,7 +29,7 @@ type NegotiationRole = 'traveler' | 'shopper';
 function roleFor(offer: any, requestRow: any, userId: string): NegotiationRole {
   if (offer.traveler_id === userId) return 'traveler';
   if (requestRow.shopper_id === userId) return 'shopper';
-  throw new AppError('FORBIDDEN', 403, 'You are not part of this offer');
+  throw new AppError('FORBIDDEN', 403, 'offers.notPartOfOffer');
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,7 +41,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
     async (request: any, reply: any) => {
       const parsed = createOfferSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid offer data');
+        throw new AppError('VALIDATION_ERROR', 400, 'offers.invalidOfferData');
       }
 
       // An accepted offer becomes an order — the traveler needs to be reachable first.
@@ -53,20 +53,20 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', parsed.data.request_id)
         .executeTakeFirst();
       if (!requestRow) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
       if (requestRow.shopper_id === request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'You cannot make an offer on your own request');
+        throw new AppError('FORBIDDEN', 403, 'offers.cannotOfferOwnRequest');
       }
       if (requestRow.status !== 'open') {
-        throw new AppError('INVALID_STATUS', 409, 'This request is no longer open');
+        throw new AppError('INVALID_STATUS', 409, 'offers.requestNotOpen');
       }
       // A want sent via "Request from this trip" is private between the
       // shopper and that one trip's traveler — nobody else can offer on it,
       // even if they somehow know its id (it's already excluded from every
       // browse/feed query).
       if (requestRow.target_trip_id && requestRow.target_trip_id !== parsed.data.trip_id) {
-        throw new AppError('FORBIDDEN', 403, 'This want was sent directly to a different trip');
+        throw new AppError('FORBIDDEN', 403, 'offers.wantSentToDifferentTrip');
       }
 
       const trip = await request.db
@@ -75,7 +75,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', parsed.data.trip_id)
         .executeTakeFirst();
       if (!trip || trip.traveler_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'That trip is not yours');
+        throw new AppError('FORBIDDEN', 403, 'offers.tripNotYours');
       }
 
       const offerId = generateId();
@@ -106,8 +106,12 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       await recordNotification(request.db, {
         userId: requestRow.shopper_id,
         type: 'offer_received',
-        subject: 'New offer on your want',
-        body: `A traveler offered to bring "${requestRow.item_description}" for ${parsed.data.quoted_price}. Accept, counter, or decline within ${config.offerResponseTimeoutHours}h.`,
+        params: {
+          _variant: 'from_traveler',
+          item: requestRow.item_description,
+          price: parsed.data.quoted_price,
+          hours: config.offerResponseTimeoutHours,
+        },
         link: `/wants/${requestRow.id}`,
       });
 
@@ -226,7 +230,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!requestRow) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
 
       const owns = requestRow.shopper_id === request.userId || request.userRole === 'admin';
@@ -287,10 +291,10 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!offer) {
-        throw new AppError('NOT_FOUND', 404, 'Offer not found');
+        throw new AppError('NOT_FOUND', 404, 'common.offerNotFound');
       }
       if (offer.status !== 'pending') {
-        throw new AppError('INVALID_STATUS', 409, 'This offer can no longer be accepted');
+        throw new AppError('INVALID_STATUS', 409, 'offers.offerCannotBeAccepted');
       }
 
       const requestRow = await request.db
@@ -299,15 +303,15 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', offer.request_id)
         .executeTakeFirst();
       if (!requestRow) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
 
       const callerRole = roleFor(offer, requestRow, request.userId);
       if (offer.last_actor === callerRole) {
-        throw new AppError('INVALID_STATUS', 409, "You made the current offer — waiting on the other side to respond");
+        throw new AppError('INVALID_STATUS', 409, 'common.waitingOnOtherSide');
       }
       if (requestRow.status !== 'open') {
-        throw new AppError('INVALID_STATUS', 409, 'This request already has an accepted offer');
+        throw new AppError('INVALID_STATUS', 409, 'offers.requestAlreadyAccepted');
       }
 
       // Accepting creates the order — the shopper needs to be reachable,
@@ -376,16 +380,18 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
           await recordNotification(trx, {
             userId: offer.traveler_id,
             type: 'offer_accepted',
-            subject: 'Your offer was accepted',
-            body: `The shopper accepted your offer on "${requestRow.item_description}". They'll pay next — you'll get a heads-up when it's confirmed.`,
+            params: { _variant: 'by_shopper', item: requestRow.item_description },
             orderId,
           });
         } else {
           await recordNotification(trx, {
             userId: requestRow.shopper_id,
             type: 'offer_accepted',
-            subject: 'Your counter-offer was accepted',
-            body: `The traveler accepted your price on "${requestRow.item_description}". Pay within ${config.paymentTimeoutMinutes} minutes or the order is cancelled.`,
+            params: {
+              _variant: 'by_traveler',
+              item: requestRow.item_description,
+              minutes: config.paymentTimeoutMinutes,
+            },
             orderId,
           });
         }
@@ -407,7 +413,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
     async (request: any, reply: any) => {
       const parsed = counterOfferSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid counter-offer price');
+        throw new AppError('VALIDATION_ERROR', 400, 'offers.invalidCounterPrice');
       }
 
       await expireOverdueOffers(request.db);
@@ -418,10 +424,10 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!offer) {
-        throw new AppError('NOT_FOUND', 404, 'Offer not found');
+        throw new AppError('NOT_FOUND', 404, 'common.offerNotFound');
       }
       if (offer.status !== 'pending') {
-        throw new AppError('INVALID_STATUS', 409, 'This offer is no longer open for negotiation');
+        throw new AppError('INVALID_STATUS', 409, 'offers.offerNoLongerNegotiable');
       }
 
       const requestRow = await request.db
@@ -430,22 +436,18 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', offer.request_id)
         .executeTakeFirst();
       if (!requestRow) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
       if (requestRow.status !== 'open') {
-        throw new AppError('INVALID_STATUS', 409, 'This want is no longer open');
+        throw new AppError('INVALID_STATUS', 409, 'offers.wantNoLongerOpen');
       }
 
       const callerRole = roleFor(offer, requestRow, request.userId);
       if (offer.last_actor === callerRole) {
-        throw new AppError('INVALID_STATUS', 409, "You made the current offer — waiting on the other side to respond");
+        throw new AppError('INVALID_STATUS', 409, 'common.waitingOnOtherSide');
       }
       if (offer.round >= config.maxOfferCounters) {
-        throw new AppError(
-          'INVALID_STATUS',
-          409,
-          "You've reached the counter-offer limit — accept the current price or decline"
-        );
+        throw new AppError('INVALID_STATUS', 409, 'offers.counterLimitReached');
       }
 
       const now = new Date();
@@ -482,10 +484,13 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       await recordNotification(request.db, {
         userId: otherPartyId,
         type: 'offer_countered',
-        subject: 'New counter-offer',
-        body: `${callerRole === 'traveler' ? 'The traveler' : 'The shopper'} countered at ${parsed.data.quoted_price} on "${requestRow.item_description}". ${
-          canStillCounter ? `Accept, counter, or decline` : `Accept or decline`
-        } within ${config.offerResponseTimeoutHours}h.`,
+        params: {
+          role: callerRole,
+          price: parsed.data.quoted_price,
+          item: requestRow.item_description,
+          canStillCounter,
+          hours: config.offerResponseTimeoutHours,
+        },
         link: `/wants/${offer.request_id}`,
       });
 
@@ -512,10 +517,10 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', request.params.id)
         .executeTakeFirst();
       if (!offer) {
-        throw new AppError('NOT_FOUND', 404, 'Offer not found');
+        throw new AppError('NOT_FOUND', 404, 'common.offerNotFound');
       }
       if (offer.status !== 'pending') {
-        throw new AppError('INVALID_STATUS', 409, 'This offer is no longer open');
+        throw new AppError('INVALID_STATUS', 409, 'offers.offerNoLongerOpen');
       }
 
       const requestRow = await request.db
@@ -524,12 +529,12 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .where('id', '=', offer.request_id)
         .executeTakeFirst();
       if (!requestRow) {
-        throw new AppError('NOT_FOUND', 404, 'Request not found');
+        throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
 
       const callerRole = roleFor(offer, requestRow, request.userId);
       if (offer.last_actor === callerRole) {
-        throw new AppError('INVALID_STATUS', 409, "You made the current offer — waiting on the other side to respond");
+        throw new AppError('INVALID_STATUS', 409, 'common.waitingOnOtherSide');
       }
 
       const now = new Date();
@@ -547,8 +552,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       await recordNotification(request.db, {
         userId: otherPartyId,
         type: 'offer_declined',
-        subject: 'Offer declined',
-        body: `${callerRole === 'traveler' ? 'The traveler' : 'The shopper'} declined on "${requestRow.item_description}".`,
+        params: { role: callerRole, item: requestRow.item_description },
         link: `/wants/${offer.request_id}`,
       });
 

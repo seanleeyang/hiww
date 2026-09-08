@@ -32,7 +32,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
     async (request: any, reply: any) => {
       const parsed = purchaseProofSchema.safeParse(request.body || {});
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'A receipt photo URL is required');
+        throw new AppError('VALIDATION_ERROR', 400, 'delivery.receiptUrlRequired');
       }
 
       const order = await request.db
@@ -42,17 +42,17 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         .executeTakeFirst();
 
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
       if (order.traveler_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Only the traveler can upload a purchase receipt');
+        throw new AppError('FORBIDDEN', 403, 'delivery.onlyTravelerCanUploadReceipt');
       }
       if (order.status === 'purchased') {
         reply.send({ success: true, data: { order_id: order.id, status: 'purchased' }, code: 'PURCHASE_RECORDED' });
         return;
       }
       if (order.status !== 'confirmed') {
-        throw new AppError('INVALID_STATUS', 409, 'Payment must be confirmed before recording a purchase');
+        throw new AppError('INVALID_STATUS', 409, 'delivery.paymentMustBeConfirmed');
       }
 
       const now = new Date();
@@ -83,8 +83,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       await recordNotification(request.db, {
         userId: order.shopper_id,
         type: 'purchase_proof',
-        subject: 'The traveler bought your item',
-        body: `The traveler bought "${order.item_description}" and attached the shop receipt. They'll ship it once they're back.`,
+        params: { item: order.item_description },
         orderId: order.id,
       });
 
@@ -113,7 +112,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
     async (request: any, reply: any) => {
       const parsed = noteSchema.safeParse(request.body || {});
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid delivery payload');
+        throw new AppError('VALIDATION_ERROR', 400, 'delivery.invalidDeliveryPayload');
       }
 
       const order = await request.db
@@ -123,11 +122,11 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         .executeTakeFirst();
 
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
 
       if (order.traveler_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Only the traveler can mark an order delivered');
+        throw new AppError('FORBIDDEN', 403, 'delivery.onlyTravelerCanMarkDelivered');
       }
 
       if (order.status === 'in_transit') {
@@ -136,11 +135,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       }
 
       if (order.status !== 'purchased') {
-        throw new AppError(
-          'INVALID_STATUS',
-          409,
-          'Upload the purchase receipt before marking the order shipped'
-        );
+        throw new AppError('INVALID_STATUS', 409, 'delivery.uploadReceiptFirst');
       }
 
       const now = new Date();
@@ -161,8 +156,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       await recordNotification(request.db, {
         userId: order.shopper_id,
         type: 'shipped',
-        subject: 'Your item is on the way',
-        body: `The traveler marked "${order.item_description}" as shipped. Confirm receipt in the app once it arrives.`,
+        params: { item: order.item_description },
         orderId: order.id,
       });
 
@@ -180,7 +174,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
     async (request: any, reply: any) => {
       const parsed = noteSchema.safeParse(request.body || {});
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid release payload');
+        throw new AppError('VALIDATION_ERROR', 400, 'delivery.invalidReleasePayload');
       }
 
       const order = await request.db
@@ -190,11 +184,11 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         .executeTakeFirst();
 
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
 
       if (order.shopper_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Only the shopper can confirm receipt');
+        throw new AppError('FORBIDDEN', 403, 'delivery.onlyShopperCanConfirmReceipt');
       }
 
       if (order.status === 'delivered') {
@@ -203,7 +197,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       }
 
       if (order.status !== 'in_transit') {
-        throw new AppError('INVALID_STATUS', 409, 'Order must be in transit before release');
+        throw new AppError('INVALID_STATUS', 409, 'delivery.mustBeInTransit');
       }
 
       const now = new Date();
@@ -237,15 +231,13 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
           {
             userId: order.traveler_id,
             type: 'delivered',
-            subject: 'Order complete — payout on the way',
-            body: `The shopper confirmed they received "${order.item_description}". Hiww will send your payout shortly.`,
+            params: { _variant: 'traveler', item: order.item_description },
             orderId: order.id,
           },
           {
             userId: order.shopper_id,
             type: 'delivered',
-            subject: 'Order complete',
-            body: `You confirmed receipt of "${order.item_description}". Tap to leave the traveler a review.`,
+            params: { _variant: 'shopper', item: order.item_description },
             orderId: order.id,
           },
         ]);

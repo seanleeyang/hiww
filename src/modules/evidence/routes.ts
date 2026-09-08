@@ -11,7 +11,7 @@ export async function registerEvidenceRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string }; Body: unknown }>('/api/orders/:id/evidence', async (request: any, reply: any) => {
     const parsed = evidenceSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid evidence payload');
+      throw new AppError('VALIDATION_ERROR', 400, 'evidence.invalidPayload');
     }
 
     const order = await request.db
@@ -21,12 +21,12 @@ export async function registerEvidenceRoutes(app: FastifyInstance): Promise<void
       .executeTakeFirst();
 
     if (!order) {
-      throw new AppError('NOT_FOUND', 404, 'Order not found');
+      throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
     }
 
     const userId = request.userId;
     if (order.shopper_id !== userId && order.traveler_id !== userId) {
-      throw new AppError('FORBIDDEN', 403, 'Only order participants can upload evidence');
+      throw new AppError('FORBIDDEN', 403, 'evidence.onlyParticipantsUpload');
     }
 
     const evidenceId = generateId();
@@ -57,12 +57,12 @@ export async function registerEvidenceRoutes(app: FastifyInstance): Promise<void
       .executeTakeFirst();
 
     if (!order) {
-      throw new AppError('NOT_FOUND', 404, 'Order not found');
+      throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
     }
 
     const userId = request.userId;
     if (order.shopper_id !== userId && order.traveler_id !== userId) {
-      throw new AppError('FORBIDDEN', 403, 'Only order participants can view evidence');
+      throw new AppError('FORBIDDEN', 403, 'evidence.onlyParticipantsView');
     }
 
     const items = await request.db

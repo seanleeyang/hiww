@@ -69,15 +69,13 @@ export async function expireOverduePayments(db: Kysely<Database>): Promise<void>
       await recordNotification(trx, {
         userId: order.shopper_id,
         type: 'payment_timeout',
-        subject: 'Your order was cancelled',
-        body: `You didn't pay in time for "${order.item_description}", so the order was cancelled. Your want is open again if you'd still like it.`,
+        params: { _variant: 'shopper', item: order.item_description },
         orderId: order.id,
       });
       await recordNotification(trx, {
         userId: order.traveler_id,
         type: 'payment_timeout',
-        subject: "Order cancelled — payment wasn't made in time",
-        body: `The shopper didn't pay in time for "${order.item_description}", so the order was cancelled.`,
+        params: { _variant: 'traveler', item: order.item_description },
         orderId: order.id,
       });
     }

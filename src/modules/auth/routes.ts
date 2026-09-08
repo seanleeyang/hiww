@@ -44,7 +44,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: unknown }>('/api/auth/register', { config: authRouteConfig }, async (request: any, reply: any) => {
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid registration data');
+      throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidRegistration');
     }
 
     const existingUser = await request.db
@@ -54,7 +54,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       .executeTakeFirst();
 
     if (existingUser) {
-      throw new AppError('USER_EXISTS', 409, 'User already exists');
+      throw new AppError('USER_EXISTS', 409, 'auth.userExists');
     }
 
     const userId = generateId();
@@ -108,7 +108,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid login data');
+      throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidLogin');
     }
 
     const user = await request.db
@@ -118,7 +118,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       .executeTakeFirst();
 
     if (!user || !verifyPassword(parsed.data.password, user.password_hash)) {
-      throw new AppError('AUTH_ERROR', 401, 'Invalid email or password');
+      throw new AppError('AUTH_ERROR', 401, 'auth.invalidCredentials');
     }
 
     const token = signToken({
@@ -145,7 +145,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     async (request: any, reply: any) => {
       const parsed = forgotPasswordSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid email');
+        throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidEmail');
       }
 
       const user = await request.db
@@ -171,7 +171,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     async (request: any, reply: any) => {
       const parsed = resetPasswordSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid reset details');
+        throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidResetDetails');
       }
 
       const user = await request.db
@@ -182,7 +182,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
       const ok = user ? await verifyOtp(request.db, user.id, 'email', parsed.data.code) : false;
       if (!user || !ok) {
-        throw new AppError('INVALID_OTP', 400, 'That code is wrong or has expired');
+        throw new AppError('INVALID_OTP', 400, 'common.otpInvalid');
       }
 
       await request.db
@@ -258,7 +258,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       .executeTakeFirst();
 
     if (!me) {
-      throw new AppError('NOT_FOUND', 404, 'User not found');
+      throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
     }
 
     reply.send({ success: true, data: meResponse(me), code: 'ME' });
@@ -269,7 +269,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.patch('/api/me', async (request: any, reply: any) => {
     const parsed = profileUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid profile update');
+      throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidProfileUpdate');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -304,12 +304,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     async (request: any, reply: any) => {
       const parsed = verifyOtpSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid verification code');
+        throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidVerificationCode');
       }
 
       const ok = await verifyOtp(request.db, request.userId, parsed.data.channel, parsed.data.code);
       if (!ok) {
-        throw new AppError('INVALID_OTP', 400, 'That code is wrong or has expired');
+        throw new AppError('INVALID_OTP', 400, 'common.otpInvalid');
       }
 
       const me = await request.db
@@ -330,7 +330,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     async (request: any, reply: any) => {
       const parsed = resendOtpSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Invalid channel');
+        throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidChannel');
       }
 
       const me = await request.db
@@ -339,12 +339,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         .where('id', '=', request.userId)
         .executeTakeFirst();
       if (!me) {
-        throw new AppError('NOT_FOUND', 404, 'User not found');
+        throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
       }
 
       const destination = parsed.data.channel === 'email' ? me.email : me.phone;
       if (!destination) {
-        throw new AppError('VALIDATION_ERROR', 400, 'No phone number on file yet');
+        throw new AppError('VALIDATION_ERROR', 400, 'auth.noPhoneOnFile');
       }
 
       const code = await issueOtp(request.db, request.userId, parsed.data.channel, destination);

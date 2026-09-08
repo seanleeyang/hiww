@@ -16,12 +16,12 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
   app.post<{ Body: unknown }>('/api/compliance/kyc/submit', async (request: any, reply: any) => {
     const parsed = kycSubmitSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid KYC submission');
+      throw new AppError('VALIDATION_ERROR', 400, 'compliance.invalidKycSubmission');
     }
 
     const userId = request.userId;
     if (!userId) {
-      throw new AppError('AUTH_ERROR', 401, 'Authentication required');
+      throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
     }
 
     const user = await request.db
@@ -31,7 +31,7 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
       .executeTakeFirst();
 
     if (!user) {
-      throw new AppError('NOT_FOUND', 404, 'User not found');
+      throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
     }
 
     await request.db
@@ -50,7 +50,7 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
   app.post<{ Body: unknown }>('/api/compliance/kyc/approve', async (request: any, reply: any) => {
     const parsed = kycReviewSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid KYC review payload');
+      throw new AppError('VALIDATION_ERROR', 400, 'common.invalidKycReviewPayload');
     }
 
     const user = await request.db
@@ -60,7 +60,7 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
       .executeTakeFirst();
 
     if (!user) {
-      throw new AppError('NOT_FOUND', 404, 'User not found');
+      throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
     }
 
     await request.db

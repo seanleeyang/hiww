@@ -23,10 +23,10 @@ async function loadOrderForParticipant(request: any, orderId: string): Promise<a
     .executeTakeFirst();
 
   if (!order) {
-    throw new AppError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
   }
   if (order.shopper_id !== request.userId && order.traveler_id !== request.userId) {
-    throw new AppError('FORBIDDEN', 403, 'You are not part of this order');
+    throw new AppError('FORBIDDEN', 403, 'common.notPartOfOrder');
   }
   return order;
 }
@@ -84,7 +84,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
     async (request: any, reply: any) => {
       const parsed = messageSchema.safeParse(request.body);
       if (!parsed.success) {
-        throw new AppError('VALIDATION_ERROR', 400, 'Provide a message or a photo');
+        throw new AppError('VALIDATION_ERROR', 400, 'messages.invalidBody');
       }
       await loadOrderForParticipant(request, request.params.id);
 

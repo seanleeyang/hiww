@@ -12,12 +12,12 @@ export async function registerExternalRoutes(app: FastifyInstance): Promise<void
   app.post<{ Body: unknown }>('/api/identity/verify', async (request: any, reply: any) => {
     const parsed = identityVerifySchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION_ERROR', 400, 'Invalid identity verification payload');
+      throw new AppError('VALIDATION_ERROR', 400, 'external.invalidPayload');
     }
 
     const userId = request.userId;
     if (!userId) {
-      throw new AppError('AUTH_ERROR', 401, 'Authentication required');
+      throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
     }
 
     const user = await request.db
@@ -27,7 +27,7 @@ export async function registerExternalRoutes(app: FastifyInstance): Promise<void
       .executeTakeFirst();
 
     if (!user) {
-      throw new AppError('NOT_FOUND', 404, 'User not found');
+      throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
     }
 
     const identityProvider = getIdentityProvider();

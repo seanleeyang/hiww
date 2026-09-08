@@ -202,8 +202,7 @@ export async function runChatModerationCheck(
       await recordNotification(db, {
         userId: message.sender_id,
         type: 'message_flagged',
-        subject: 'A message was removed',
-        body: "One of your chat messages didn't meet Hiww's chat guidelines and was removed. It's under review.",
+        params: {},
         orderId: message.order_id,
         link: `/orders/${message.order_id}/chat`,
       });

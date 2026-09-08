@@ -70,13 +70,13 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         .executeTakeFirst();
 
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
 
       const isShopper = order.shopper_id === request.userId;
       const isTraveler = order.traveler_id === request.userId;
       if (!isShopper && !isTraveler && request.userRole !== 'admin') {
-        throw new AppError('FORBIDDEN', 403, 'You are not part of this order');
+        throw new AppError('FORBIDDEN', 403, 'common.notPartOfOrder');
       }
 
       // The other party, for the order tracker header.
@@ -140,18 +140,16 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         .executeTakeFirst();
 
       if (!order) {
-        throw new AppError('NOT_FOUND', 404, 'Order not found');
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
       }
       if (order.shopper_id !== request.userId) {
-        throw new AppError('FORBIDDEN', 403, 'Only the shopper can report a payment');
+        throw new AppError('FORBIDDEN', 403, 'orders.onlyShopperCanReportPayment');
       }
       if (order.status !== 'pending_payment') {
         throw new AppError(
           'INVALID_STATUS',
           409,
-          order.status === 'cancelled'
-            ? 'This order was cancelled because payment was not made in time'
-            : 'This order is not awaiting payment'
+          order.status === 'cancelled' ? 'orders.cancelledPaymentNotMadeInTime' : 'orders.notAwaitingPayment'
         );
       }
 
@@ -172,8 +170,7 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
       await recordNotification(request.db, {
         userId: order.traveler_id,
         type: 'payment_claimed',
-        subject: 'Shopper says the payment is sent',
-        body: `The shopper marked payment as sent for "${order.item_description}". Wait for Hiww to confirm it before you buy anything.`,
+        params: { item: order.item_description },
         orderId: order.id,
       });
 
