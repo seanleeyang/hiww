@@ -8,7 +8,9 @@
   "tabOrders": "Orders",
   "tabInbox": "Inbox",
   "tooltipNotifications": "Notifications",
+  "tooltipSettings": "Settings",
   "tooltipAccount": "Account",
+  "settingsTitle": "Settings",
 
   "fieldEmail": "Email",
   "fieldPassword": "Password",

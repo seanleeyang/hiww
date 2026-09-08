@@ -31,7 +31,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get tooltipNotifications => 'การแจ้งเตือน';
 
   @override
+  String get tooltipSettings => 'ตั้งค่า';
+
+  @override
   String get tooltipAccount => 'บัญชี';
+
+  @override
+  String get settingsTitle => 'ตั้งค่า';
 
   @override
   String get fieldEmail => 'อีเมล';

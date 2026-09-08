@@ -89,6 +89,13 @@ class AppShell extends ConsumerWidget {
                 : const Icon(Icons.notifications_none),
           ),
         ),
+        Tooltip(
+          message: l10n.tooltipSettings,
+          child: IconButton(
+            onPressed: () => context.push('/settings'),
+            icon: const Icon(Icons.settings_outlined),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: Tooltip(

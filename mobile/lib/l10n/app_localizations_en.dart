@@ -31,7 +31,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipNotifications => 'Notifications';
 
   @override
+  String get tooltipSettings => 'Settings';
+
+  @override
   String get tooltipAccount => 'Account';
+
+  @override
+  String get settingsTitle => 'Settings';
 
   @override
   String get fieldEmail => 'Email';

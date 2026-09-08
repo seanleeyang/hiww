@@ -8,7 +8,9 @@
   "tabOrders": "คำสั่งซื้อ",
   "tabInbox": "กล่องข้อความ",
   "tooltipNotifications": "การแจ้งเตือน",
+  "tooltipSettings": "ตั้งค่า",
   "tooltipAccount": "บัญชี",
+  "settingsTitle": "ตั้งค่า",
 
   "fieldEmail": "อีเมล",
   "fieldPassword": "รหัสผ่าน",

@@ -140,11 +140,23 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get tooltipNotifications;
 
+  /// No description provided for @tooltipSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get tooltipSettings;
+
   /// No description provided for @tooltipAccount.
   ///
   /// In en, this message translates to:
   /// **'Account'**
   String get tooltipAccount;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
 
   /// No description provided for @fieldEmail.
   ///

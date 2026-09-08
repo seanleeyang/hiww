@@ -16,7 +16,6 @@ import '../../../ui/star_rating.dart';
 import '../../../ui/status_pill.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
-import '../../settings/locale_controller.dart';
 import '../data/account_repository.dart';
 
 void _showEditProfile(BuildContext context, WidgetRef ref, AuthUser user) {
@@ -109,8 +108,6 @@ class AccountScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _PilotCard(instructions: user.pilot!.paymentInstructions),
                 ],
-                const SizedBox(height: 16),
-                const _LanguageCard(),
                 const SizedBox(height: 24),
                 OutlinedButton.icon(
                   onPressed: () =>
@@ -152,40 +149,6 @@ class _IncompleteProfileCard extends StatelessWidget {
           Text(l10n.accountCompleteProfileBody),
           const SizedBox(height: 12),
           FilledButton.tonal(onPressed: onTap, child: Text(l10n.actionAddDetails)),
-        ],
-      ),
-    );
-  }
-}
-
-/// English/Thai switcher. `null` selection means "follow the system locale",
-/// but once someone picks one explicitly it's persisted via
-/// [localeControllerProvider] and used regardless of device language.
-class _LanguageCard extends ConsumerWidget {
-  const _LanguageCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final chosen = ref.watch(localeControllerProvider).valueOrNull;
-    final current = chosen?.languageCode ?? Localizations.localeOf(context).languageCode;
-
-    return SoftCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeader(l10n.settingsLanguage),
-          const SizedBox(height: 8),
-          SegmentedButton<String>(
-            segments: [
-              ButtonSegment(value: 'en', label: Text(l10n.languageEnglish)),
-              ButtonSegment(value: 'th', label: Text(l10n.languageThai)),
-            ],
-            selected: {current == 'th' ? 'th' : 'en'},
-            onSelectionChanged: (s) =>
-                ref.read(localeControllerProvider.notifier).setLocale(Locale(s.first)),
-            showSelectedIcon: false,
-          ),
         ],
       ),
     );
