@@ -98,14 +98,13 @@ class _SortButton<T> extends StatelessWidget {
   }
 }
 
-/// Two tabs, organized around what the *viewer* wants to do rather than
-/// content type: **Order** browses trips (find a traveler to request from —
-/// what a shopper cares about) with a country filter, and its action posts
-/// a want (start your own order); **Travel** browses wants (find an offer
-/// opportunity — what a traveler cares about) with a category filter, and
-/// its action posts a trip. Either role can still check the other tab —
-/// posting isn't role-gated server-side — the tab just decides which filter
-/// and action are in front by default.
+/// Two tabs, each pairing its content with the matching action: **Order**
+/// browses wants (what shoppers are asking for) with a category filter, and
+/// its action posts a want (start your own order); **Travel** browses trips
+/// (travelers heading somewhere) with a country filter, and its action
+/// posts a trip. Either role can still check the other tab — posting isn't
+/// role-gated server-side — the tab just decides which filter and action
+/// are in front by default.
 class BrowseScreen extends ConsumerStatefulWidget {
   const BrowseScreen({super.key});
 
@@ -163,8 +162,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
               controller: _tabController,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                _TripsBrowseTab(onPostWant: _postWant),
-                _WantsBrowseTab(onPostTrip: _postTrip),
+                _WantsBrowseTab(onPostWant: _postWant),
+                _TripsBrowseTab(onPostTrip: _postTrip),
               ],
             ),
           ),
@@ -175,9 +174,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
 }
 
 class _TripsBrowseTab extends ConsumerWidget {
-  const _TripsBrowseTab({required this.onPostWant});
+  const _TripsBrowseTab({required this.onPostTrip});
 
-  final VoidCallback onPostWant;
+  final VoidCallback onPostTrip;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -196,13 +195,13 @@ class _TripsBrowseTab extends ConsumerWidget {
           SliverToBoxAdapter(
             child: BrowseHero(
               greeting: name != null
-                  ? l10n.heroOrderGreetingNamed(name)
-                  : l10n.heroOrderGreetingGuest,
-              tagline: l10n.heroOrderTagline,
-              ctaLabel: l10n.heroOrderCta,
-              onCta: onPostWant,
-              background: scheme.primary,
-              foreground: scheme.onPrimary,
+                  ? l10n.heroTravelGreetingNamed(name)
+                  : l10n.heroTravelGreetingGuest,
+              tagline: l10n.heroTravelTagline,
+              ctaLabel: l10n.heroTravelCta,
+              onCta: onPostTrip,
+              background: scheme.secondary,
+              foreground: scheme.onSecondary,
             ),
           ),
           SliverToBoxAdapter(
@@ -257,9 +256,9 @@ class _TripsBrowseTab extends ConsumerWidget {
 }
 
 class _WantsBrowseTab extends ConsumerWidget {
-  const _WantsBrowseTab({required this.onPostTrip});
+  const _WantsBrowseTab({required this.onPostWant});
 
-  final VoidCallback onPostTrip;
+  final VoidCallback onPostWant;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -278,13 +277,13 @@ class _WantsBrowseTab extends ConsumerWidget {
           SliverToBoxAdapter(
             child: BrowseHero(
               greeting: name != null
-                  ? l10n.heroTravelGreetingNamed(name)
-                  : l10n.heroTravelGreetingGuest,
-              tagline: l10n.heroTravelTagline,
-              ctaLabel: l10n.heroTravelCta,
-              onCta: onPostTrip,
-              background: scheme.secondary,
-              foreground: scheme.onSecondary,
+                  ? l10n.heroOrderGreetingNamed(name)
+                  : l10n.heroOrderGreetingGuest,
+              tagline: l10n.heroOrderTagline,
+              ctaLabel: l10n.heroOrderCta,
+              onCta: onPostWant,
+              background: scheme.primary,
+              foreground: scheme.onPrimary,
             ),
           ),
           SliverToBoxAdapter(
