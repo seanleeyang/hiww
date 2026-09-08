@@ -26,6 +26,15 @@ class GoogleAuthController {
   late final Future<void> _initFuture;
   StreamSubscription<GoogleSignInAuthenticationEvent>? _sub;
 
+  /// Resolves once [GoogleSignIn.initialize] has finished (or failed). The
+  /// web button must not be rendered before this — GIS briefly ignores a
+  /// button's `locale`/config on the very first `renderButton()` call made
+  /// before its own client-side init completes, falling back to an
+  /// auto-detected locale for a moment before correcting itself, which
+  /// showed up as a visible flash (e.g. Thai text swapping to English) on
+  /// every page load.
+  Future<void> get ready => _initFuture;
+
   Future<void> _init() async {
     try {
       // No serverClientId: it requests an offline server auth code, which
@@ -57,7 +66,8 @@ class GoogleAuthController {
   }
 
   void _setError(Object e) {
-    if (e is GoogleSignInException && e.code == GoogleSignInExceptionCode.canceled) {
+    if (e is GoogleSignInException &&
+        e.code == GoogleSignInExceptionCode.canceled) {
       return; // The user closed the picker — not an error worth surfacing.
     }
     _ref.read(googleAuthErrorProvider.notifier).state = e.toString();

@@ -99,15 +99,29 @@ class SocialAuthButtons extends ConsumerWidget {
               // its locale defaults to the browser/Google-account's own
               // language, so it's pinned to the app's chosen one instead — left
               // alone, a Thai phone shows an English app with a Thai Google
-              // button.
-              LayoutBuilder(
-                builder: (context, constraints) => SizedBox(
-                  height: buttonHeight,
-                  child: renderGoogleButton(
-                    width: constraints.maxWidth.clamp(1, 400),
-                    locale: Localizations.localeOf(context).languageCode,
-                  ),
-                ),
+              // button. Waits for GoogleAuthController.ready before calling
+              // renderButton() at all — calling it earlier races GIS's own
+              // client-side init and briefly ignores the config below,
+              // producing a visible flash (wrong locale for a moment) on
+              // every page load; an empty SizedBox reserves the same space
+              // in the meantime so nothing shifts once the real button pops
+              // in.
+              FutureBuilder<void>(
+                future: ref.watch(googleAuthControllerProvider).ready,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const SizedBox(height: buttonHeight);
+                  }
+                  return LayoutBuilder(
+                    builder: (context, constraints) => SizedBox(
+                      height: buttonHeight,
+                      child: renderGoogleButton(
+                        width: constraints.maxWidth.clamp(1, 400),
+                        locale: Localizations.localeOf(context).languageCode,
+                      ),
+                    ),
+                  );
+                },
               )
             else
               SizedBox(
