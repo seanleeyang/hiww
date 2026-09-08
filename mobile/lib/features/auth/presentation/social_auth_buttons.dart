@@ -46,6 +46,11 @@ class SocialAuthButtons extends ConsumerWidget {
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF06C755),
             foregroundColor: Colors.white,
+            // Matches the Google button below, which is pinned to GIS's
+            // `pill` shape — a fixed, height-relative radius Google doesn't
+            // let us match with an arbitrary corner value, so these two
+            // match themselves to it instead.
+            shape: const StadiumBorder(),
           ),
           icon: const Icon(Icons.chat_bubble_rounded, size: 18),
           label: Text(l10n.actionSignInLine),
@@ -56,6 +61,7 @@ class SocialAuthButtons extends ConsumerWidget {
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF1877F2),
             foregroundColor: Colors.white,
+            shape: const StadiumBorder(),
           ),
           icon: const Icon(Icons.facebook),
           label: Text(l10n.actionContinueFacebook),
@@ -86,6 +92,7 @@ class SocialAuthButtons extends ConsumerWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.onSurface,
               side: BorderSide(color: Theme.of(context).colorScheme.outline),
+              shape: const StadiumBorder(),
             ),
             icon: const _GoogleMark(),
             label: Text(l10n.actionSignInGoogle),
