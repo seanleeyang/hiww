@@ -121,5 +121,160 @@
   "emptyNoTripsTitle": "No trips here yet",
   "emptyNoTripsMessage": "No travelers heading this way yet. Check back soon, or post your own trip if you're the one traveling.",
   "emptyNoWantsTitle": "Nothing here yet",
-  "emptyNoWantsMessage": "No wants match this filter. Check back soon, or post a want of your own."
+  "emptyNoWantsMessage": "No wants match this filter. Check back soon, or post a want of your own.",
+
+  "actionRemove": "Remove",
+  "actionCancel": "Cancel",
+  "dialogRemoveFromListBody": "It disappears from your list. This does not affect its history.",
+  "tooltipRemoveFromList": "Remove from your list",
+
+  "dialogRemoveTripTitle": "Remove this trip?",
+  "emptyMyTripsTitle": "No trips yet",
+  "emptyMyTripsMessage": "Post a trip and shoppers can request items along your route.",
+
+  "errorPickTravelDates": "Pick your travel dates",
+  "errorEnterWeightAndItems": "Enter spare weight and item count",
+  "errorReturnAfterDeparture": "Return date must be after departure",
+  "dialogCancelTripTitle": "Cancel this trip?",
+  "dialogCancelTripBody": "Shoppers will no longer be able to find or offer against this trip. This can't be undone.",
+  "actionKeepTrip": "Keep trip",
+  "actionCancelTrip": "Cancel trip",
+  "errorTripHasActiveOrder": "This trip has an order still in progress. Use \"Report a problem\" on that order instead — cancelling the trip itself won't resolve it.",
+  "tripEditTitle": "Edit trip",
+  "labelFrom": "From",
+  "labelTo": "To",
+  "labelDeparture": "Departure",
+  "labelReturn": "Return",
+  "fieldSpareWeightKg": "Spare weight (kg)",
+  "fieldMaxItems": "Max items",
+  "fieldNoteOptional": "Note (optional)",
+  "hintNoteTrip": "What you can carry, preferences…",
+  "fieldCoverPhotoOptional": "Add a cover photo (optional)",
+  "actionSaveChanges": "Save changes",
+  "actionPostTrip": "Post trip",
+  "fieldCityOptional": "City (optional)",
+
+  "tripDetailTitle": "Trip",
+  "tripSpareCapacity": "{weightKg} kg spare · up to {maxItems} items",
+  "@tripSpareCapacity": {
+    "placeholders": { "weightKg": { "type": "String" }, "maxItems": { "type": "int" } }
+  },
+  "actionRequestFromThisTrip": "Request from this trip",
+  "tripDetailOwnerNote": "This is your trip. Shoppers can request items along this route.",
+
+  "dialogRemoveWantTitle": "Remove this want?",
+  "emptyMyWantsTitle": "No wants yet",
+  "emptyMyWantsMessage": "Post what you want bought abroad and travelers will make offers.",
+  "wantBudgetLine": "Budget {budget}",
+  "@wantBudgetLine": {
+    "placeholders": { "budget": { "type": "String" } }
+  },
+  "wantBuyInLine": "Buy in {place}",
+  "@wantBuyInLine": {
+    "placeholders": { "place": { "type": "String" } }
+  },
+  "actionViewOrder": "View order →",
+
+  "errorWantTitleTooShort": "Give your want a short name",
+  "errorWantDetailsTooShort": "Add a few details (at least 10 characters)",
+  "wantEditTitle": "Edit want",
+  "directRequestNotice": "Sent directly to {name} — not shown publicly. Your budget below is your opening price; they can accept, counter, or decline.",
+  "@directRequestNotice": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "fieldItem": "Item",
+  "hintItemExample": "e.g. Nike Dunk Panda",
+  "fieldDetails": "Details",
+  "hintDetails": "Brand, model, size, colour, links",
+  "fieldPhotoOptional": "Add a photo (optional)",
+  "labelCategory": "Category",
+  "labelBudget": "Budget",
+  "budgetTotalNote": "Total you expect to pay, for all {qty, plural, one{{qty} item} other{{qty} items}}.",
+  "@budgetTotalNote": {
+    "placeholders": { "qty": { "type": "num" } }
+  },
+  "labelQuantity": "Quantity",
+  "labelNeedBy": "Need by",
+  "anyTime": "Any time",
+  "labelBuyIn": "Buy in",
+  "hintCityExample": "Tokyo",
+  "travelersHeadingSoon": "{count, plural, one{{count} traveler} other{{count} travelers}} heading to {country} soon",
+  "@travelersHeadingSoon": {
+    "placeholders": { "count": { "type": "num" }, "country": { "type": "String" } }
+  },
+  "actionSendRequest": "Send request",
+  "actionPostMyWant": "Post my want",
+
+  "wantDetailTitle": "Want",
+  "directRequestBadge": "Sent directly to one traveler — not shown publicly",
+  "wantQuantityLine": "Quantity {qty}",
+  "@wantQuantityLine": {
+    "placeholders": { "qty": { "type": "int" } }
+  },
+  "actionMakeAnOffer": "Make an offer",
+  "wantClosedNote": "This want is no longer taking offers.",
+  "dialogCancelWantTitle": "Cancel this want?",
+  "dialogCancelWantBody": "Travelers will no longer see it or be able to offer on it. This can't be undone.",
+  "actionKeepWant": "Keep want",
+  "actionCancelWant": "Cancel want",
+  "noOffersYetMessage": "No offers yet — travelers on this route will see it.",
+  "dialogAcceptOfferTitle": "Accept this offer?",
+  "dialogAcceptOfferBody": "You will pay {price} for the goods. An order is created and you'll be asked to pay.",
+  "@dialogAcceptOfferBody": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "actionAccept": "Accept",
+  "offerCounteredTimes": "Countered {round, plural, one{{round} time} other{{round} times}}",
+  "@offerCounteredTimes": {
+    "placeholders": { "round": { "type": "num" } }
+  },
+  "fallbackTraveler": "Traveler",
+
+  "errorPickTripForOffer": "Pick which trip this is for",
+  "errorEnterYourPrice": "Enter your price",
+  "errorPickDeliveryDate": "Pick a delivery date",
+  "infoOfferSent": "Offer sent",
+  "makeOfferTitle": "Make an offer",
+  "emptyNeedTripTitle": "You need a trip first",
+  "emptyNeedTripMessage": "Post a trip you can carry this item on, then make your offer.",
+  "labelWhichTrip": "Which trip",
+  "fieldYourPriceForGoods": "Your price for the goods",
+  "labelDeliverBy": "Deliver by",
+  "actionPickADate": "Pick a date",
+  "actionSendOffer": "Send offer",
+
+  "emptyOffersTitle": "No offers yet",
+  "emptyOffersMessage": "Offers you make or receive — as a shopper or a traveler — show up here.",
+  "offerFromLabel": "From {name}",
+  "@offerFromLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "offerToLabel": "To {name}",
+  "@offerToLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "fallbackATraveler": "a traveler",
+  "fallbackAShopper": "a shopper",
+  "fallbackOfferTitle": "Offer",
+
+  "dialogCounterOfferTitle": "Counter-offer",
+  "fieldYourPrice": "Your price",
+  "actionSend": "Send",
+  "waitingForResponse": "Waiting for a response",
+  "waitingForResponseWithCountdown": "Waiting for a response · {countdown}",
+  "@waitingForResponseWithCountdown": {
+    "placeholders": { "countdown": { "type": "String" } }
+  },
+  "wantNoLongerOpen": "This want is no longer open",
+  "respondWithin": "Respond within {countdown}",
+  "@respondWithin": {
+    "placeholders": { "countdown": { "type": "String" } }
+  },
+  "actionAcceptPrice": "Accept {price}",
+  "@actionAcceptPrice": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "actionCounter": "Counter",
+  "actionDecline": "Decline",
+  "actionDeclineFinalOffer": "Decline (final offer)"
 }

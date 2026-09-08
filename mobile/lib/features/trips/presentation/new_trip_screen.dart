@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
@@ -52,18 +53,19 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final weight = double.tryParse(_weight.text.trim());
     final items = int.tryParse(_items.text.trim());
     if (_depart == null || _ret == null) {
-      setState(() => _error = 'Pick your travel dates');
+      setState(() => _error = l10n.errorPickTravelDates);
       return;
     }
     if (weight == null || weight <= 0 || items == null || items <= 0) {
-      setState(() => _error = 'Enter spare weight and item count');
+      setState(() => _error = l10n.errorEnterWeightAndItems);
       return;
     }
     if (!_ret!.isAfter(_depart!)) {
-      setState(() => _error = 'Return date must be after departure');
+      setState(() => _error = l10n.errorReturnAfterDeparture);
       return;
     }
     setState(() {
@@ -127,20 +129,18 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
   /// appropriate — that's resolved per-order via "Report a problem", not
   /// here, since one trip can carry many shoppers' orders.
   Future<void> _cancelTrip() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel this trip?'),
-        content: const Text(
-          'Shoppers will no longer be able to find or offer against this trip. '
-          'This can\'t be undone.',
-        ),
+        title: Text(l10n.dialogCancelTripTitle),
+        content: Text(l10n.dialogCancelTripBody),
         actions: [
-          TextButton(onPressed: () => context.pop(false), child: const Text('Keep trip')),
+          TextButton(onPressed: () => context.pop(false), child: Text(l10n.actionKeepTrip)),
           FilledButton(
             onPressed: () => context.pop(true),
             style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Cancel trip'),
+            child: Text(l10n.actionCancelTrip),
           ),
         ],
       ),
@@ -169,8 +169,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
         setState(() {
           _submitting = false;
           _error = e2.code == 'TRIP_HAS_ACTIVE_ORDERS'
-              ? 'This trip has an order still in progress. Use "Report a problem" '
-                  'on that order instead — cancelling the trip itself won\'t resolve it.'
+              ? l10n.errorTripHasActiveOrder
               : e2.message;
         });
         return;
@@ -187,14 +186,15 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_editing ? 'Edit trip' : 'Post a trip'),
+        title: Text(_editing ? l10n.tripEditTitle : l10n.actionPostATrip),
         actions: [
           if (_editing)
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Cancel trip',
+              tooltip: l10n.actionCancelTrip,
               onPressed: _submitting ? null : _cancelTrip,
             ),
         ],
@@ -203,19 +203,19 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           _countryRow(
-            'From',
+            l10n.labelFrom,
             _from,
             _fromCity,
             (v) => setState(() => _from = v),
           ),
           const SizedBox(height: 14),
-          _countryRow('To', _to, _toCity, (v) => setState(() => _to = v)),
+          _countryRow(l10n.labelTo, _to, _toCity, (v) => setState(() => _to = v)),
           const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
                 child: _dateField(
-                  'Departure',
+                  l10n.labelDeparture,
                   _depart,
                   (d) => setState(() => _depart = d),
                 ),
@@ -223,7 +223,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _dateField(
-                  'Return',
+                  l10n.labelReturn,
                   _ret,
                   (d) => setState(() => _ret = d),
                 ),
@@ -237,8 +237,8 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
                 child: TextField(
                   controller: _weight,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Spare weight (kg)',
+                  decoration: InputDecoration(
+                    labelText: l10n.fieldSpareWeightKg,
                   ),
                 ),
               ),
@@ -247,7 +247,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
                 child: TextField(
                   controller: _items,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Max items'),
+                  decoration: InputDecoration(labelText: l10n.fieldMaxItems),
                 ),
               ),
             ],
@@ -256,16 +256,16 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
           TextField(
             controller: _note,
             maxLines: 2,
-            decoration: const InputDecoration(
-              labelText: 'Note (optional)',
-              hintText: 'What you can carry, preferences…',
+            decoration: InputDecoration(
+              labelText: l10n.fieldNoteOptional,
+              hintText: l10n.hintNoteTrip,
             ),
           ),
           const SizedBox(height: 14),
           ImagePickerField(
             value: _coverUrl,
             onChanged: (url) => setState(() => _coverUrl = url),
-            label: 'Add a cover photo (optional)',
+            label: l10n.fieldCoverPhotoOptional,
           ),
           if (_error != null) ...[
             const SizedBox(height: 14),
@@ -283,7 +283,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Text(_editing ? 'Save changes' : 'Post trip'),
+                : Text(_editing ? l10n.actionSaveChanges : l10n.actionPostTrip),
           ),
         ],
       ),
@@ -296,6 +296,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     TextEditingController city,
     ValueChanged<String> onCountry,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -320,7 +321,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
         Expanded(
           child: TextField(
             controller: city,
-            decoration: const InputDecoration(labelText: 'City (optional)'),
+            decoration: InputDecoration(labelText: l10n.fieldCityOptional),
           ),
         ),
       ],

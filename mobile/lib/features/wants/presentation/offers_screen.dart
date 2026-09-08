@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/initials_avatar.dart';
@@ -21,9 +22,10 @@ class OffersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final negotiations = ref.watch(negotiationsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Offers')),
+      appBar: AppBar(title: Text(l10n.tabOffers)),
       body: RefreshIndicator(
         onRefresh: () => ref.pullToRefresh(negotiationsProvider.future),
         child: AsyncValueView(
@@ -31,12 +33,12 @@ class OffersScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(negotiationsProvider),
           data: (list) {
             if (list.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 70),
+              return ListView(children: [
+                const SizedBox(height: 70),
                 EmptyState(
                   icon: Icons.handshake_outlined,
-                  title: 'No offers yet',
-                  message: 'Offers you make or receive — as a shopper or a traveler — show up here.',
+                  title: l10n.emptyOffersTitle,
+                  message: l10n.emptyOffersMessage,
                 ),
               ]);
             }
@@ -85,6 +87,7 @@ class _NegotiationCardState extends ConsumerState<_NegotiationCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final o = widget.offer;
     final iAmShopper = o.myRole == 'shopper';
     return SoftCard(
@@ -100,12 +103,14 @@ class _NegotiationCardState extends ConsumerState<_NegotiationCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(o.requestItem ?? 'Offer',
+                    Text(o.requestItem ?? l10n.fallbackOfferTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w600)),
                     Text(
-                      iAmShopper ? 'From ${o.counterpartyName ?? 'a traveler'}' : 'To ${o.counterpartyName ?? 'a shopper'}',
+                      iAmShopper
+                          ? l10n.offerFromLabel(o.counterpartyName ?? l10n.fallbackATraveler)
+                          : l10n.offerToLabel(o.counterpartyName ?? l10n.fallbackAShopper),
                       style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ],
@@ -119,7 +124,7 @@ class _NegotiationCardState extends ConsumerState<_NegotiationCard> {
           if (o.isNegotiating) ...[
             const SizedBox(height: 4),
             Text(
-              'Countered ${o.round} time${o.round == 1 ? '' : 's'}',
+              l10n.offerCounteredTimes(o.round),
               style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
             ),
           ],

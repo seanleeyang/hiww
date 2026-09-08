@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/budget_stepper.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/image_picker_field.dart';
@@ -93,14 +94,15 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final title = _title.text.trim();
     final details = _details.text.trim();
     if (title.length < 3) {
-      setState(() => _error = 'Give your want a short name');
+      setState(() => _error = l10n.errorWantTitleTooShort);
       return;
     }
     if (details.length < 10) {
-      setState(() => _error = 'Add a few details (at least 10 characters)');
+      setState(() => _error = l10n.errorWantDetailsTooShort);
       return;
     }
     setState(() {
@@ -159,6 +161,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final routeMatch = ref.watch(routeMatchProvider(_country));
 
     return SafeArea(
@@ -169,10 +172,10 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
           children: [
             Text(
               _editing
-                  ? 'Edit want'
+                  ? l10n.wantEditTitle
                   : widget.targetTripId != null
-                      ? 'Request from this trip'
-                      : 'Post a want',
+                      ? l10n.actionRequestFromThisTrip
+                      : l10n.actionPostAWant,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             if (!_editing && widget.targetTripId != null) ...[
@@ -190,9 +193,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Sent directly to ${widget.targetTravelerName ?? 'the traveler'} — not shown '
-                        'publicly. Your budget below is your opening price; they can accept, '
-                        'counter, or decline.',
+                        l10n.directRequestNotice(widget.targetTravelerName ?? l10n.fallbackATraveler),
                         style: TextStyle(
                           fontSize: 13,
                           color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -207,28 +208,28 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
             TextField(
               controller: _title,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: 'Item',
-                hintText: 'e.g. Nike Dunk Panda',
+              decoration: InputDecoration(
+                labelText: l10n.fieldItem,
+                hintText: l10n.hintItemExample,
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _details,
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Details',
-                hintText: 'Brand, model, size, colour, links',
+              decoration: InputDecoration(
+                labelText: l10n.fieldDetails,
+                hintText: l10n.hintDetails,
               ),
             ),
             const SizedBox(height: 12),
             ImagePickerField(
               value: _photoUrl,
               onChanged: (url) => setState(() => _photoUrl = url),
-              label: 'Add a photo (optional)',
+              label: l10n.fieldPhotoOptional,
             ),
             const SizedBox(height: 18),
-            Text('Category', style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.labelCategory, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
             CategoryChips(
               includeAll: false,
@@ -236,14 +237,14 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
               onSelected: (c) => setState(() => _category = c ?? 'other'),
             ),
             const SizedBox(height: 18),
-            Text('Budget', style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.labelBudget, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
             BudgetStepper(
               value: _budget,
               onChanged: (v) => setState(() => _budget = v),
             ),
             const SizedBox(height: 4),
-            Text('Total you expect to pay, for all ${pluralize(_qty, 'item')}.',
+            Text(l10n.budgetTotalNote(_qty),
                 style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant)),
@@ -254,7 +255,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Quantity',
+                      Text(l10n.labelQuantity,
                           style: Theme.of(context).textTheme.labelLarge),
                       const SizedBox(height: 8),
                       _QtyStepper(
@@ -270,7 +271,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Need by',
+                        l10n.labelNeedBy,
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       const SizedBox(height: 8),
@@ -278,7 +279,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                         onPressed: _pickDate,
                         icon: const Icon(Icons.event_outlined, size: 18),
                         label: Text(
-                          _needBy == null ? 'Any time' : shortDate(_needBy),
+                          _needBy == null ? l10n.anyTime : shortDate(_needBy),
                         ),
                       ),
                     ],
@@ -294,12 +295,12 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                       ? TextFormField(
                           initialValue: countryName(_country),
                           enabled: false,
-                          decoration: const InputDecoration(labelText: 'Buy in'),
+                          decoration: InputDecoration(labelText: l10n.labelBuyIn),
                         )
                       : DropdownButtonFormField<String>(
                           initialValue: _country,
                           isExpanded: true,
-                          decoration: const InputDecoration(labelText: 'Buy in'),
+                          decoration: InputDecoration(labelText: l10n.labelBuyIn),
                           items: [
                             for (final c in kLiveCountries)
                               DropdownMenuItem(value: c.code, child: Text(c.name)),
@@ -311,9 +312,9 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                 Expanded(
                   child: TextField(
                     controller: _city,
-                    decoration: const InputDecoration(
-                      labelText: 'City (optional)',
-                      hintText: 'Tokyo',
+                    decoration: InputDecoration(
+                      labelText: l10n.fieldCityOptional,
+                      hintText: l10n.hintCityExample,
                     ),
                   ),
                 ),
@@ -335,8 +336,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              '${pluralize(m.count, 'traveler')} heading to '
-                              '${countryName(_country)} soon',
+                              l10n.travelersHeadingSoon(m.count, countryName(_country)),
                               style: const TextStyle(fontSize: 13),
                             ),
                           ),
@@ -362,10 +362,10 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Text(_editing
-                      ? 'Save changes'
+                      ? l10n.actionSaveChanges
                       : widget.targetTripId != null
-                          ? 'Send request'
-                          : 'Post my want'),
+                          ? l10n.actionSendRequest
+                          : l10n.actionPostMyWant),
             ),
           ],
         ),

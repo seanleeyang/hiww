@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/initials_avatar.dart';
@@ -28,11 +29,12 @@ class WantDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final detail = ref.watch(wantDetailProvider(wantId));
     final me = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Want')),
+      appBar: AppBar(title: Text(l10n.wantDetailTitle)),
       body: ResponsiveBody(
         child: AsyncValueView(
           value: detail,
@@ -79,7 +81,7 @@ class WantDetailScreen extends ConsumerWidget {
                         Icon(Icons.lock_outline, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(width: 6),
                         Text(
-                          'Sent directly to one traveler — not shown publicly',
+                          l10n.directRequestBadge,
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -95,16 +97,16 @@ class WantDetailScreen extends ConsumerWidget {
                       children: [
                         IconLine(
                           Icons.sell_outlined,
-                          'Budget ${want.budgetLabel}',
+                          l10n.wantBudgetLine(want.budgetLabel),
                         ),
                         if (want.quantity > 1) ...[
                           const SizedBox(height: 6),
-                          IconLine(Icons.numbers, 'Quantity ${want.quantity}'),
+                          IconLine(Icons.numbers, l10n.wantQuantityLine(want.quantity)),
                         ],
                         const SizedBox(height: 6),
                         IconLine(
                           Icons.public,
-                          'Buy in ${want.sourceCity ?? countryName(want.sourceCountry)}',
+                          l10n.wantBuyInLine(want.sourceCity ?? countryName(want.sourceCountry)),
                         ),
                         if (want.needByLabel != null) ...[
                           const SizedBox(height: 6),
@@ -134,7 +136,7 @@ class WantDetailScreen extends ConsumerWidget {
                               onPressed: () =>
                                   showPostWantSheet(context, existing: want),
                               icon: const Icon(Icons.edit_outlined),
-                              label: const Text('Edit'),
+                              label: Text(l10n.actionEdit),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -143,7 +145,7 @@ class WantDetailScreen extends ConsumerWidget {
                               onPressed: () => _cancelWant(context, ref, want.id),
                               icon: Icon(Icons.delete_outline,
                                   color: Theme.of(context).colorScheme.error),
-                              label: Text('Cancel',
+                              label: Text(l10n.actionCancel,
                                   style: TextStyle(
                                       color: Theme.of(context).colorScheme.error)),
                             ),
@@ -155,11 +157,11 @@ class WantDetailScreen extends ConsumerWidget {
                     FilledButton.icon(
                       onPressed: () => context.push('/wants/$wantId/offer'),
                       icon: const Icon(Icons.local_offer_outlined),
-                      label: const Text('Make an offer'),
+                      label: Text(l10n.actionMakeAnOffer),
                     )
                   else if (want.status != 'open')
                     Text(
-                      'This want is no longer taking offers.',
+                      l10n.wantClosedNote,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -175,19 +177,18 @@ class WantDetailScreen extends ConsumerWidget {
 }
 
 Future<void> _cancelWant(BuildContext context, WidgetRef ref, String wantId) async {
+  final l10n = AppLocalizations.of(context)!;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Cancel this want?'),
-      content: const Text(
-        'Travelers will no longer see it or be able to offer on it. This can\'t be undone.',
-      ),
+      title: Text(l10n.dialogCancelWantTitle),
+      content: Text(l10n.dialogCancelWantBody),
       actions: [
-        TextButton(onPressed: () => context.pop(false), child: const Text('Keep want')),
+        TextButton(onPressed: () => context.pop(false), child: Text(l10n.actionKeepWant)),
         FilledButton(
           onPressed: () => context.pop(true),
           style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-          child: const Text('Cancel want'),
+          child: Text(l10n.actionCancelWant),
         ),
       ],
     ),
@@ -213,18 +214,19 @@ class _OffersSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final offers = ref.watch(wantOffersProvider(wantId));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader('Offers'),
+        SectionHeader(l10n.tabOffers),
         AsyncValueView(
           value: offers,
           onRetry: () => ref.invalidate(wantOffersProvider(wantId)),
           data: (list) {
             if (list.isEmpty) {
               return Text(
-                'No offers yet — travelers on this route will see it.',
+                l10n.noOffersYetMessage,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -272,23 +274,21 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
   }
 
   Future<void> _accept() async {
+    final l10n = AppLocalizations.of(context)!;
     final o = widget.offer;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Accept this offer?'),
-        content: Text(
-          'You will pay ${o.priceLabel} for the goods. An order is created and '
-          "you'll be asked to pay.",
-        ),
+        title: Text(l10n.dialogAcceptOfferTitle),
+        content: Text(l10n.dialogAcceptOfferBody(o.priceLabel)),
         actions: [
           TextButton(
             onPressed: () => context.pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () => context.pop(true),
-            child: const Text('Accept'),
+            child: Text(l10n.actionAccept),
           ),
         ],
       ),
@@ -324,6 +324,7 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final o = widget.offer;
     return SoftCard(
       child: Column(
@@ -331,11 +332,11 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
         children: [
           Row(
             children: [
-              InitialsAvatar(name: o.travelerName ?? 'Traveler', radius: 16),
+              InitialsAvatar(name: o.travelerName ?? l10n.fallbackTraveler, radius: 16),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  o.travelerName ?? 'Traveler',
+                  o.travelerName ?? l10n.fallbackTraveler,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -367,7 +368,7 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
           if (o.isNegotiating) ...[
             const SizedBox(height: 4),
             Text(
-              'Countered ${o.round} time${o.round == 1 ? '' : 's'}',
+              l10n.offerCounteredTimes(o.round),
               style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
             ),
           ],

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_bits.dart';
@@ -16,6 +17,7 @@ import 'post_want_sheet.dart';
 const _archivableStatuses = {'cancelled', 'completed'};
 
 Future<void> _archiveWant(BuildContext context, WidgetRef ref, String wantId) async {
+  final l10n = AppLocalizations.of(context)!;
   final ok = await showDialog<bool>(
     context: context,
     // Shadow `context` with the dialog's own — using the caller's context to
@@ -23,22 +25,22 @@ Future<void> _archiveWant(BuildContext context, WidgetRef ref, String wantId) as
     // dismissing the dialog, since this screen lives inside the bottom-tab
     // shell, not on the root navigator.
     builder: (context) => AlertDialog(
-      title: const Text('Remove this want?'),
+      title: Text(l10n.dialogRemoveWantTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('It disappears from your list. This does not affect its history.'),
+          Text(l10n.dialogRemoveFromListBody),
           const SizedBox(height: 20),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => context.pop(true),
-            child: const Text('Remove'),
+            child: Text(l10n.actionRemove),
           ),
           const SizedBox(height: 8),
           OutlinedButton(
             onPressed: () => context.pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.actionCancel),
           ),
         ],
       ),
@@ -60,13 +62,14 @@ class MyWantsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final wants = ref.watch(myWantsProvider);
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showPostWantSheet(context),
         icon: const Icon(Icons.add),
-        label: const Text('Post a want'),
+        label: Text(l10n.actionPostAWant),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.pullToRefresh(myWantsProvider.future),
@@ -79,11 +82,11 @@ class MyWantsScreen extends ConsumerWidget {
                 const SizedBox(height: 80),
                 EmptyState(
                   icon: Icons.favorite_outline,
-                  title: 'No wants yet',
-                  message: 'Post what you want bought abroad and travelers will make offers.',
+                  title: l10n.emptyMyWantsTitle,
+                  message: l10n.emptyMyWantsMessage,
                   action: FilledButton(
                     onPressed: () => showPostWantSheet(context),
-                    child: const Text('Post a want'),
+                    child: Text(l10n.actionPostAWant),
                   ),
                 ),
               ]);
@@ -117,7 +120,7 @@ class MyWantsScreen extends ConsumerWidget {
                           if (_archivableStatuses.contains(w.status)) ...[
                             const SizedBox(width: 4),
                             IconButton(
-                              tooltip: 'Remove from your list',
+                              tooltip: l10n.tooltipRemoveFromList,
                               onPressed: () => _archiveWant(context, ref, w.id),
                               icon: const Icon(Icons.close, size: 18),
                             ),
@@ -126,9 +129,9 @@ class MyWantsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Wrap(spacing: 12, runSpacing: 4, children: [
-                        IconLine(Icons.sell_outlined, 'Budget ${w.budgetLabel}'),
+                        IconLine(Icons.sell_outlined, l10n.wantBudgetLine(w.budgetLabel)),
                         IconLine(Icons.public,
-                            'Buy in ${w.sourceCity ?? countryName(w.sourceCountry)}'),
+                            l10n.wantBuyInLine(w.sourceCity ?? countryName(w.sourceCountry))),
                         if (w.needByLabel != null)
                           IconLine(Icons.event_outlined, w.needByLabel!),
                       ]),
@@ -136,7 +139,7 @@ class MyWantsScreen extends ConsumerWidget {
                         const SizedBox(height: 8),
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: Text('View order →',
+                          child: Text(l10n.actionViewOrder,
                               style: TextStyle(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.w600,

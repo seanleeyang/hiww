@@ -727,6 +727,624 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No wants match this filter. Check back soon, or post a want of your own.'**
   String get emptyNoWantsMessage;
+
+  /// No description provided for @actionRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get actionRemove;
+
+  /// No description provided for @actionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get actionCancel;
+
+  /// No description provided for @dialogRemoveFromListBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It disappears from your list. This does not affect its history.'**
+  String get dialogRemoveFromListBody;
+
+  /// No description provided for @tooltipRemoveFromList.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from your list'**
+  String get tooltipRemoveFromList;
+
+  /// No description provided for @dialogRemoveTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this trip?'**
+  String get dialogRemoveTripTitle;
+
+  /// No description provided for @emptyMyTripsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No trips yet'**
+  String get emptyMyTripsTitle;
+
+  /// No description provided for @emptyMyTripsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Post a trip and shoppers can request items along your route.'**
+  String get emptyMyTripsMessage;
+
+  /// No description provided for @errorPickTravelDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your travel dates'**
+  String get errorPickTravelDates;
+
+  /// No description provided for @errorEnterWeightAndItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter spare weight and item count'**
+  String get errorEnterWeightAndItems;
+
+  /// No description provided for @errorReturnAfterDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Return date must be after departure'**
+  String get errorReturnAfterDeparture;
+
+  /// No description provided for @dialogCancelTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this trip?'**
+  String get dialogCancelTripTitle;
+
+  /// No description provided for @dialogCancelTripBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoppers will no longer be able to find or offer against this trip. This can\'t be undone.'**
+  String get dialogCancelTripBody;
+
+  /// No description provided for @actionKeepTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep trip'**
+  String get actionKeepTrip;
+
+  /// No description provided for @actionCancelTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel trip'**
+  String get actionCancelTrip;
+
+  /// No description provided for @errorTripHasActiveOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip has an order still in progress. Use \"Report a problem\" on that order instead — cancelling the trip itself won\'t resolve it.'**
+  String get errorTripHasActiveOrder;
+
+  /// No description provided for @tripEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit trip'**
+  String get tripEditTitle;
+
+  /// No description provided for @labelFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get labelFrom;
+
+  /// No description provided for @labelTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get labelTo;
+
+  /// No description provided for @labelDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure'**
+  String get labelDeparture;
+
+  /// No description provided for @labelReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return'**
+  String get labelReturn;
+
+  /// No description provided for @fieldSpareWeightKg.
+  ///
+  /// In en, this message translates to:
+  /// **'Spare weight (kg)'**
+  String get fieldSpareWeightKg;
+
+  /// No description provided for @fieldMaxItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Max items'**
+  String get fieldMaxItems;
+
+  /// No description provided for @fieldNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get fieldNoteOptional;
+
+  /// No description provided for @hintNoteTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'What you can carry, preferences…'**
+  String get hintNoteTrip;
+
+  /// No description provided for @fieldCoverPhotoOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a cover photo (optional)'**
+  String get fieldCoverPhotoOptional;
+
+  /// No description provided for @actionSaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get actionSaveChanges;
+
+  /// No description provided for @actionPostTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Post trip'**
+  String get actionPostTrip;
+
+  /// No description provided for @fieldCityOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'City (optional)'**
+  String get fieldCityOptional;
+
+  /// No description provided for @tripDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get tripDetailTitle;
+
+  /// No description provided for @tripSpareCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'{weightKg} kg spare · up to {maxItems} items'**
+  String tripSpareCapacity(String weightKg, int maxItems);
+
+  /// No description provided for @actionRequestFromThisTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Request from this trip'**
+  String get actionRequestFromThisTrip;
+
+  /// No description provided for @tripDetailOwnerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your trip. Shoppers can request items along this route.'**
+  String get tripDetailOwnerNote;
+
+  /// No description provided for @dialogRemoveWantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this want?'**
+  String get dialogRemoveWantTitle;
+
+  /// No description provided for @emptyMyWantsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No wants yet'**
+  String get emptyMyWantsTitle;
+
+  /// No description provided for @emptyMyWantsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Post what you want bought abroad and travelers will make offers.'**
+  String get emptyMyWantsMessage;
+
+  /// No description provided for @wantBudgetLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget {budget}'**
+  String wantBudgetLine(String budget);
+
+  /// No description provided for @wantBuyInLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy in {place}'**
+  String wantBuyInLine(String place);
+
+  /// No description provided for @actionViewOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'View order →'**
+  String get actionViewOrder;
+
+  /// No description provided for @errorWantTitleTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Give your want a short name'**
+  String get errorWantTitleTooShort;
+
+  /// No description provided for @errorWantDetailsTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a few details (at least 10 characters)'**
+  String get errorWantDetailsTooShort;
+
+  /// No description provided for @wantEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit want'**
+  String get wantEditTitle;
+
+  /// No description provided for @directRequestNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent directly to {name} — not shown publicly. Your budget below is your opening price; they can accept, counter, or decline.'**
+  String directRequestNotice(String name);
+
+  /// No description provided for @fieldItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get fieldItem;
+
+  /// No description provided for @hintItemExample.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Nike Dunk Panda'**
+  String get hintItemExample;
+
+  /// No description provided for @fieldDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get fieldDetails;
+
+  /// No description provided for @hintDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand, model, size, colour, links'**
+  String get hintDetails;
+
+  /// No description provided for @fieldPhotoOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo (optional)'**
+  String get fieldPhotoOptional;
+
+  /// No description provided for @labelCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get labelCategory;
+
+  /// No description provided for @labelBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget'**
+  String get labelBudget;
+
+  /// No description provided for @budgetTotalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Total you expect to pay, for all {qty, plural, one{{qty} item} other{{qty} items}}.'**
+  String budgetTotalNote(num qty);
+
+  /// No description provided for @labelQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get labelQuantity;
+
+  /// No description provided for @labelNeedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Need by'**
+  String get labelNeedBy;
+
+  /// No description provided for @anyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Any time'**
+  String get anyTime;
+
+  /// No description provided for @labelBuyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy in'**
+  String get labelBuyIn;
+
+  /// No description provided for @hintCityExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokyo'**
+  String get hintCityExample;
+
+  /// No description provided for @travelersHeadingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} traveler} other{{count} travelers}} heading to {country} soon'**
+  String travelersHeadingSoon(num count, String country);
+
+  /// No description provided for @actionSendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get actionSendRequest;
+
+  /// No description provided for @actionPostMyWant.
+  ///
+  /// In en, this message translates to:
+  /// **'Post my want'**
+  String get actionPostMyWant;
+
+  /// No description provided for @wantDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Want'**
+  String get wantDetailTitle;
+
+  /// No description provided for @directRequestBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent directly to one traveler — not shown publicly'**
+  String get directRequestBadge;
+
+  /// No description provided for @wantQuantityLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity {qty}'**
+  String wantQuantityLine(int qty);
+
+  /// No description provided for @actionMakeAnOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Make an offer'**
+  String get actionMakeAnOffer;
+
+  /// No description provided for @wantClosedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This want is no longer taking offers.'**
+  String get wantClosedNote;
+
+  /// No description provided for @dialogCancelWantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this want?'**
+  String get dialogCancelWantTitle;
+
+  /// No description provided for @dialogCancelWantBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Travelers will no longer see it or be able to offer on it. This can\'t be undone.'**
+  String get dialogCancelWantBody;
+
+  /// No description provided for @actionKeepWant.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep want'**
+  String get actionKeepWant;
+
+  /// No description provided for @actionCancelWant.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel want'**
+  String get actionCancelWant;
+
+  /// No description provided for @noOffersYetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No offers yet — travelers on this route will see it.'**
+  String get noOffersYetMessage;
+
+  /// No description provided for @dialogAcceptOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept this offer?'**
+  String get dialogAcceptOfferTitle;
+
+  /// No description provided for @dialogAcceptOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You will pay {price} for the goods. An order is created and you\'ll be asked to pay.'**
+  String dialogAcceptOfferBody(String price);
+
+  /// No description provided for @actionAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get actionAccept;
+
+  /// No description provided for @offerCounteredTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Countered {round, plural, one{{round} time} other{{round} times}}'**
+  String offerCounteredTimes(num round);
+
+  /// No description provided for @fallbackTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler'**
+  String get fallbackTraveler;
+
+  /// No description provided for @errorPickTripForOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick which trip this is for'**
+  String get errorPickTripForOffer;
+
+  /// No description provided for @errorEnterYourPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your price'**
+  String get errorEnterYourPrice;
+
+  /// No description provided for @errorPickDeliveryDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a delivery date'**
+  String get errorPickDeliveryDate;
+
+  /// No description provided for @infoOfferSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent'**
+  String get infoOfferSent;
+
+  /// No description provided for @makeOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make an offer'**
+  String get makeOfferTitle;
+
+  /// No description provided for @emptyNeedTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You need a trip first'**
+  String get emptyNeedTripTitle;
+
+  /// No description provided for @emptyNeedTripMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Post a trip you can carry this item on, then make your offer.'**
+  String get emptyNeedTripMessage;
+
+  /// No description provided for @labelWhichTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Which trip'**
+  String get labelWhichTrip;
+
+  /// No description provided for @fieldYourPriceForGoods.
+  ///
+  /// In en, this message translates to:
+  /// **'Your price for the goods'**
+  String get fieldYourPriceForGoods;
+
+  /// No description provided for @labelDeliverBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver by'**
+  String get labelDeliverBy;
+
+  /// No description provided for @actionPickADate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get actionPickADate;
+
+  /// No description provided for @actionSendOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Send offer'**
+  String get actionSendOffer;
+
+  /// No description provided for @emptyOffersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No offers yet'**
+  String get emptyOffersTitle;
+
+  /// No description provided for @emptyOffersMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers you make or receive — as a shopper or a traveler — show up here.'**
+  String get emptyOffersMessage;
+
+  /// No description provided for @offerFromLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'From {name}'**
+  String offerFromLabel(String name);
+
+  /// No description provided for @offerToLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To {name}'**
+  String offerToLabel(String name);
+
+  /// No description provided for @fallbackATraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'a traveler'**
+  String get fallbackATraveler;
+
+  /// No description provided for @fallbackAShopper.
+  ///
+  /// In en, this message translates to:
+  /// **'a shopper'**
+  String get fallbackAShopper;
+
+  /// No description provided for @fallbackOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer'**
+  String get fallbackOfferTitle;
+
+  /// No description provided for @dialogCounterOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter-offer'**
+  String get dialogCounterOfferTitle;
+
+  /// No description provided for @fieldYourPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your price'**
+  String get fieldYourPrice;
+
+  /// No description provided for @actionSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get actionSend;
+
+  /// No description provided for @waitingForResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a response'**
+  String get waitingForResponse;
+
+  /// No description provided for @waitingForResponseWithCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a response · {countdown}'**
+  String waitingForResponseWithCountdown(String countdown);
+
+  /// No description provided for @wantNoLongerOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'This want is no longer open'**
+  String get wantNoLongerOpen;
+
+  /// No description provided for @respondWithin.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond within {countdown}'**
+  String respondWithin(String countdown);
+
+  /// No description provided for @actionAcceptPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept {price}'**
+  String actionAcceptPrice(String price);
+
+  /// No description provided for @actionCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter'**
+  String get actionCounter;
+
+  /// No description provided for @actionDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get actionDecline;
+
+  /// No description provided for @actionDeclineFinalOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline (final offer)'**
+  String get actionDeclineFinalOffer;
 }
 
 class _AppLocalizationsDelegate

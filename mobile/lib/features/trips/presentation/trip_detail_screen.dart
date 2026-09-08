@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/countries.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/marketplace_bits.dart';
@@ -20,11 +21,12 @@ class TripDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final detail = ref.watch(tripDetailProvider(tripId));
     final me = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Trip')),
+      appBar: AppBar(title: Text(l10n.tripDetailTitle)),
       body: ResponsiveBody(
         child: RefreshIndicator(
           onRefresh: () => ref.pullToRefresh(tripDetailProvider(tripId).future),
@@ -68,7 +70,10 @@ class TripDetailScreen extends ConsumerWidget {
                           const SizedBox(height: 6),
                           IconLine(
                             Icons.luggage_outlined,
-                            '${trip.maxWeightKg.toStringAsFixed(trip.maxWeightKg % 1 == 0 ? 0 : 1)} kg spare · up to ${trip.maxItems} items',
+                            l10n.tripSpareCapacity(
+                              trip.maxWeightKg.toStringAsFixed(trip.maxWeightKg % 1 == 0 ? 0 : 1),
+                              trip.maxItems,
+                            ),
                           ),
                         ],
                         if (trip.note != null) ...[
@@ -91,11 +96,11 @@ class TripDetailScreen extends ConsumerWidget {
                         targetTravelerName: d.traveler?.fullName,
                       ),
                       icon: const Icon(Icons.add_shopping_cart_outlined),
-                      label: const Text('Request from this trip'),
+                      label: Text(l10n.actionRequestFromThisTrip),
                     ),
                   if (isMine) ...[
                     Text(
-                      'This is your trip. Shoppers can request items along this route.',
+                      l10n.tripDetailOwnerNote,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -106,7 +111,7 @@ class TripDetailScreen extends ConsumerWidget {
                         onPressed: () =>
                             context.push('/trips/${trip.id}/edit', extra: trip),
                         icon: const Icon(Icons.edit_outlined),
-                        label: const Text('Edit trip'),
+                        label: Text(l10n.tripEditTitle),
                       ),
                     ],
                   ],

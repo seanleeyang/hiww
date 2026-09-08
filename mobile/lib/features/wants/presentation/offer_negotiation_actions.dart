@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../domain/offer.dart';
 
 /// Accept / counter / decline controls for one offer's current price, shown
@@ -50,26 +51,27 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
   }
 
   Future<void> _showCounterDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: widget.offer.quotedPrice);
     final price = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Counter-offer'),
+        title: Text(l10n.dialogCounterOfferTitle),
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(labelText: 'Your price', prefixText: '฿ '),
+          decoration: InputDecoration(labelText: l10n.fieldYourPrice, prefixText: '฿ '),
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.actionCancel)),
           FilledButton(
             onPressed: () {
               final v = double.tryParse(controller.text.trim());
               if (v == null || v <= 0) return;
               Navigator.pop(dialogContext, v.toStringAsFixed(2));
             },
-            child: const Text('Send'),
+            child: Text(l10n.actionSend),
           ),
         ],
       ),
@@ -79,6 +81,7 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final o = widget.offer;
     if (o.status != 'pending') return const SizedBox.shrink();
 
@@ -86,8 +89,10 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
 
     if (!o.myTurn || !widget.enabled) {
       final waitingLabel = widget.enabled
-          ? 'Waiting for a response${o.respondBy != null ? ' · ${countdown(o.respondBy)}' : ''}'
-          : 'This want is no longer open';
+          ? (o.respondBy != null
+              ? l10n.waitingForResponseWithCountdown(countdown(o.respondBy))
+              : l10n.waitingForResponse)
+          : l10n.wantNoLongerOpen;
       return Row(
         children: [
           Icon(Icons.hourglass_empty, size: 16, color: muted.color),
@@ -101,7 +106,7 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (o.respondBy != null) ...[
-          Text('Respond within ${countdown(o.respondBy)}', style: muted),
+          Text(l10n.respondWithin(countdown(o.respondBy)), style: muted),
           const SizedBox(height: 8),
         ],
         Row(
@@ -109,7 +114,7 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
             Expanded(
               child: FilledButton(
                 onPressed: _busy ? null : () => _run(widget.onAccept),
-                child: Text('Accept ${o.priceLabel}'),
+                child: Text(l10n.actionAcceptPrice(o.priceLabel)),
               ),
             ),
             const SizedBox(width: 8),
@@ -117,14 +122,14 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: _busy ? null : _showCounterDialog,
-                  child: const Text('Counter'),
+                  child: Text(l10n.actionCounter),
                 ),
               ),
           ],
         ),
         TextButton(
           onPressed: _busy ? null : () => _run(widget.onReject),
-          child: Text(o.canCounter ? 'Decline' : 'Decline (final offer)'),
+          child: Text(o.canCounter ? l10n.actionDecline : l10n.actionDeclineFinalOffer),
         ),
         if (_error != null)
           Padding(

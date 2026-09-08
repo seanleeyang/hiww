@@ -341,4 +341,371 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get emptyNoWantsMessage =>
       'No wants match this filter. Check back soon, or post a want of your own.';
+
+  @override
+  String get actionRemove => 'Remove';
+
+  @override
+  String get actionCancel => 'Cancel';
+
+  @override
+  String get dialogRemoveFromListBody =>
+      'It disappears from your list. This does not affect its history.';
+
+  @override
+  String get tooltipRemoveFromList => 'Remove from your list';
+
+  @override
+  String get dialogRemoveTripTitle => 'Remove this trip?';
+
+  @override
+  String get emptyMyTripsTitle => 'No trips yet';
+
+  @override
+  String get emptyMyTripsMessage =>
+      'Post a trip and shoppers can request items along your route.';
+
+  @override
+  String get errorPickTravelDates => 'Pick your travel dates';
+
+  @override
+  String get errorEnterWeightAndItems => 'Enter spare weight and item count';
+
+  @override
+  String get errorReturnAfterDeparture => 'Return date must be after departure';
+
+  @override
+  String get dialogCancelTripTitle => 'Cancel this trip?';
+
+  @override
+  String get dialogCancelTripBody =>
+      'Shoppers will no longer be able to find or offer against this trip. This can\'t be undone.';
+
+  @override
+  String get actionKeepTrip => 'Keep trip';
+
+  @override
+  String get actionCancelTrip => 'Cancel trip';
+
+  @override
+  String get errorTripHasActiveOrder =>
+      'This trip has an order still in progress. Use \"Report a problem\" on that order instead — cancelling the trip itself won\'t resolve it.';
+
+  @override
+  String get tripEditTitle => 'Edit trip';
+
+  @override
+  String get labelFrom => 'From';
+
+  @override
+  String get labelTo => 'To';
+
+  @override
+  String get labelDeparture => 'Departure';
+
+  @override
+  String get labelReturn => 'Return';
+
+  @override
+  String get fieldSpareWeightKg => 'Spare weight (kg)';
+
+  @override
+  String get fieldMaxItems => 'Max items';
+
+  @override
+  String get fieldNoteOptional => 'Note (optional)';
+
+  @override
+  String get hintNoteTrip => 'What you can carry, preferences…';
+
+  @override
+  String get fieldCoverPhotoOptional => 'Add a cover photo (optional)';
+
+  @override
+  String get actionSaveChanges => 'Save changes';
+
+  @override
+  String get actionPostTrip => 'Post trip';
+
+  @override
+  String get fieldCityOptional => 'City (optional)';
+
+  @override
+  String get tripDetailTitle => 'Trip';
+
+  @override
+  String tripSpareCapacity(String weightKg, int maxItems) {
+    return '$weightKg kg spare · up to $maxItems items';
+  }
+
+  @override
+  String get actionRequestFromThisTrip => 'Request from this trip';
+
+  @override
+  String get tripDetailOwnerNote =>
+      'This is your trip. Shoppers can request items along this route.';
+
+  @override
+  String get dialogRemoveWantTitle => 'Remove this want?';
+
+  @override
+  String get emptyMyWantsTitle => 'No wants yet';
+
+  @override
+  String get emptyMyWantsMessage =>
+      'Post what you want bought abroad and travelers will make offers.';
+
+  @override
+  String wantBudgetLine(String budget) {
+    return 'Budget $budget';
+  }
+
+  @override
+  String wantBuyInLine(String place) {
+    return 'Buy in $place';
+  }
+
+  @override
+  String get actionViewOrder => 'View order →';
+
+  @override
+  String get errorWantTitleTooShort => 'Give your want a short name';
+
+  @override
+  String get errorWantDetailsTooShort =>
+      'Add a few details (at least 10 characters)';
+
+  @override
+  String get wantEditTitle => 'Edit want';
+
+  @override
+  String directRequestNotice(String name) {
+    return 'Sent directly to $name — not shown publicly. Your budget below is your opening price; they can accept, counter, or decline.';
+  }
+
+  @override
+  String get fieldItem => 'Item';
+
+  @override
+  String get hintItemExample => 'e.g. Nike Dunk Panda';
+
+  @override
+  String get fieldDetails => 'Details';
+
+  @override
+  String get hintDetails => 'Brand, model, size, colour, links';
+
+  @override
+  String get fieldPhotoOptional => 'Add a photo (optional)';
+
+  @override
+  String get labelCategory => 'Category';
+
+  @override
+  String get labelBudget => 'Budget';
+
+  @override
+  String budgetTotalNote(num qty) {
+    String _temp0 = intl.Intl.pluralLogic(
+      qty,
+      locale: localeName,
+      other: '$qty items',
+      one: '$qty item',
+    );
+    return 'Total you expect to pay, for all $_temp0.';
+  }
+
+  @override
+  String get labelQuantity => 'Quantity';
+
+  @override
+  String get labelNeedBy => 'Need by';
+
+  @override
+  String get anyTime => 'Any time';
+
+  @override
+  String get labelBuyIn => 'Buy in';
+
+  @override
+  String get hintCityExample => 'Tokyo';
+
+  @override
+  String travelersHeadingSoon(num count, String country) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers',
+      one: '$count traveler',
+    );
+    return '$_temp0 heading to $country soon';
+  }
+
+  @override
+  String get actionSendRequest => 'Send request';
+
+  @override
+  String get actionPostMyWant => 'Post my want';
+
+  @override
+  String get wantDetailTitle => 'Want';
+
+  @override
+  String get directRequestBadge =>
+      'Sent directly to one traveler — not shown publicly';
+
+  @override
+  String wantQuantityLine(int qty) {
+    return 'Quantity $qty';
+  }
+
+  @override
+  String get actionMakeAnOffer => 'Make an offer';
+
+  @override
+  String get wantClosedNote => 'This want is no longer taking offers.';
+
+  @override
+  String get dialogCancelWantTitle => 'Cancel this want?';
+
+  @override
+  String get dialogCancelWantBody =>
+      'Travelers will no longer see it or be able to offer on it. This can\'t be undone.';
+
+  @override
+  String get actionKeepWant => 'Keep want';
+
+  @override
+  String get actionCancelWant => 'Cancel want';
+
+  @override
+  String get noOffersYetMessage =>
+      'No offers yet — travelers on this route will see it.';
+
+  @override
+  String get dialogAcceptOfferTitle => 'Accept this offer?';
+
+  @override
+  String dialogAcceptOfferBody(String price) {
+    return 'You will pay $price for the goods. An order is created and you\'ll be asked to pay.';
+  }
+
+  @override
+  String get actionAccept => 'Accept';
+
+  @override
+  String offerCounteredTimes(num round) {
+    String _temp0 = intl.Intl.pluralLogic(
+      round,
+      locale: localeName,
+      other: '$round times',
+      one: '$round time',
+    );
+    return 'Countered $_temp0';
+  }
+
+  @override
+  String get fallbackTraveler => 'Traveler';
+
+  @override
+  String get errorPickTripForOffer => 'Pick which trip this is for';
+
+  @override
+  String get errorEnterYourPrice => 'Enter your price';
+
+  @override
+  String get errorPickDeliveryDate => 'Pick a delivery date';
+
+  @override
+  String get infoOfferSent => 'Offer sent';
+
+  @override
+  String get makeOfferTitle => 'Make an offer';
+
+  @override
+  String get emptyNeedTripTitle => 'You need a trip first';
+
+  @override
+  String get emptyNeedTripMessage =>
+      'Post a trip you can carry this item on, then make your offer.';
+
+  @override
+  String get labelWhichTrip => 'Which trip';
+
+  @override
+  String get fieldYourPriceForGoods => 'Your price for the goods';
+
+  @override
+  String get labelDeliverBy => 'Deliver by';
+
+  @override
+  String get actionPickADate => 'Pick a date';
+
+  @override
+  String get actionSendOffer => 'Send offer';
+
+  @override
+  String get emptyOffersTitle => 'No offers yet';
+
+  @override
+  String get emptyOffersMessage =>
+      'Offers you make or receive — as a shopper or a traveler — show up here.';
+
+  @override
+  String offerFromLabel(String name) {
+    return 'From $name';
+  }
+
+  @override
+  String offerToLabel(String name) {
+    return 'To $name';
+  }
+
+  @override
+  String get fallbackATraveler => 'a traveler';
+
+  @override
+  String get fallbackAShopper => 'a shopper';
+
+  @override
+  String get fallbackOfferTitle => 'Offer';
+
+  @override
+  String get dialogCounterOfferTitle => 'Counter-offer';
+
+  @override
+  String get fieldYourPrice => 'Your price';
+
+  @override
+  String get actionSend => 'Send';
+
+  @override
+  String get waitingForResponse => 'Waiting for a response';
+
+  @override
+  String waitingForResponseWithCountdown(String countdown) {
+    return 'Waiting for a response · $countdown';
+  }
+
+  @override
+  String get wantNoLongerOpen => 'This want is no longer open';
+
+  @override
+  String respondWithin(String countdown) {
+    return 'Respond within $countdown';
+  }
+
+  @override
+  String actionAcceptPrice(String price) {
+    return 'Accept $price';
+  }
+
+  @override
+  String get actionCounter => 'Counter';
+
+  @override
+  String get actionDecline => 'Decline';
+
+  @override
+  String get actionDeclineFinalOffer => 'Decline (final offer)';
 }

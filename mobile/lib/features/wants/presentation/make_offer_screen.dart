@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../trips/data/trips_repository.dart';
@@ -32,17 +33,18 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final priceNum = double.tryParse(_price.text.trim());
     if (_tripId == null) {
-      setState(() => _error = 'Pick which trip this is for');
+      setState(() => _error = l10n.errorPickTripForOffer);
       return;
     }
     if (priceNum == null || priceNum <= 0) {
-      setState(() => _error = 'Enter your price');
+      setState(() => _error = l10n.errorEnterYourPrice);
       return;
     }
     if (_deliverBy == null) {
-      setState(() => _error = 'Pick a delivery date');
+      setState(() => _error = l10n.errorPickDeliveryDate);
       return;
     }
     setState(() {
@@ -62,7 +64,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
       if (!mounted) return;
       context.pop();
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Offer sent')));
+          .showSnackBar(SnackBar(content: Text(l10n.infoOfferSent)));
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -72,7 +74,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
       if (e.code == 'PROFILE_INCOMPLETE') {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(e.message),
-          action: SnackBarAction(label: 'Update profile', onPressed: () => context.push('/account')),
+          action: SnackBarAction(label: l10n.actionAddDetails, onPressed: () => context.push('/account')),
         ));
       }
     }
@@ -80,10 +82,11 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final trips = ref.watch(myPublishedTripsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Make an offer')),
+      appBar: AppBar(title: Text(l10n.makeOfferTitle)),
       body: AsyncValueView(
         value: trips,
         onRetry: () => ref.invalidate(myPublishedTripsProvider),
@@ -91,11 +94,11 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
           if (list.isEmpty) {
             return EmptyState(
               icon: Icons.flight_outlined,
-              title: 'You need a trip first',
-              message: 'Post a trip you can carry this item on, then make your offer.',
+              title: l10n.emptyNeedTripTitle,
+              message: l10n.emptyNeedTripMessage,
               action: FilledButton(
                 onPressed: () => context.push('/trips/new'),
-                child: const Text('Post a trip'),
+                child: Text(l10n.actionPostATrip),
               ),
             );
           }
@@ -103,7 +106,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text('Which trip', style: Theme.of(context).textTheme.labelLarge),
+              Text(l10n.labelWhichTrip, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _tripId,
@@ -121,13 +124,13 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
               TextField(
                 controller: _price,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Your price for the goods',
+                decoration: InputDecoration(
+                  labelText: l10n.fieldYourPriceForGoods,
                   prefixText: '฿ ',
                 ),
               ),
               const SizedBox(height: 16),
-              Text('Deliver by', style: Theme.of(context).textTheme.labelLarge),
+              Text(l10n.labelDeliverBy, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: () async {
@@ -141,7 +144,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
                   if (picked != null) setState(() => _deliverBy = picked);
                 },
                 icon: const Icon(Icons.event_outlined, size: 18),
-                label: Text(_deliverBy == null ? 'Pick a date' : shortDate(_deliverBy)),
+                label: Text(_deliverBy == null ? l10n.actionPickADate : shortDate(_deliverBy)),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 14),
@@ -156,7 +159,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Send offer'),
+                    : Text(l10n.actionSendOffer),
               ),
             ],
           );

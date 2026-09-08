@@ -340,4 +340,354 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get emptyNoWantsMessage =>
       'ไม่มีรายการต้องการที่ตรงกับตัวกรองนี้ ลองกลับมาดูใหม่ภายหลัง หรือลงรายการต้องการของคุณเอง';
+
+  @override
+  String get actionRemove => 'ลบ';
+
+  @override
+  String get actionCancel => 'ยกเลิก';
+
+  @override
+  String get dialogRemoveFromListBody =>
+      'รายการนี้จะหายไปจากลิสต์ของคุณ ไม่กระทบประวัติของรายการ';
+
+  @override
+  String get tooltipRemoveFromList => 'ลบออกจากลิสต์ของคุณ';
+
+  @override
+  String get dialogRemoveTripTitle => 'ลบทริปนี้ใช่ไหม?';
+
+  @override
+  String get emptyMyTripsTitle => 'ยังไม่มีทริป';
+
+  @override
+  String get emptyMyTripsMessage =>
+      'ลงทริปแล้วผู้ซื้อจะสามารถขอให้คุณซื้อของระหว่างทางได้';
+
+  @override
+  String get errorPickTravelDates => 'เลือกวันเดินทางของคุณ';
+
+  @override
+  String get errorEnterWeightAndItems => 'กรอกน้ำหนักและจำนวนสินค้าที่รับได้';
+
+  @override
+  String get errorReturnAfterDeparture =>
+      'วันเดินทางกลับต้องอยู่หลังวันออกเดินทาง';
+
+  @override
+  String get dialogCancelTripTitle => 'ยกเลิกทริปนี้ใช่ไหม?';
+
+  @override
+  String get dialogCancelTripBody =>
+      'ผู้ซื้อจะไม่สามารถค้นหาหรือเสนอราคาสำหรับทริปนี้ได้อีก และไม่สามารถย้อนกลับได้';
+
+  @override
+  String get actionKeepTrip => 'เก็บทริปไว้';
+
+  @override
+  String get actionCancelTrip => 'ยกเลิกทริป';
+
+  @override
+  String get errorTripHasActiveOrder =>
+      'ทริปนี้มีคำสั่งซื้อที่กำลังดำเนินการอยู่ กรุณาใช้ \"แจ้งปัญหา\" ในคำสั่งซื้อนั้นแทน — การยกเลิกทริปจะไม่ช่วยแก้ปัญหานี้';
+
+  @override
+  String get tripEditTitle => 'แก้ไขทริป';
+
+  @override
+  String get labelFrom => 'จาก';
+
+  @override
+  String get labelTo => 'ไปยัง';
+
+  @override
+  String get labelDeparture => 'วันออกเดินทาง';
+
+  @override
+  String get labelReturn => 'วันเดินทางกลับ';
+
+  @override
+  String get fieldSpareWeightKg => 'น้ำหนักที่รับได้ (กก.)';
+
+  @override
+  String get fieldMaxItems => 'จำนวนสินค้าสูงสุด';
+
+  @override
+  String get fieldNoteOptional => 'หมายเหตุ (ไม่บังคับ)';
+
+  @override
+  String get hintNoteTrip => 'สิ่งที่คุณรับฝากได้ ความชอบส่วนตัว…';
+
+  @override
+  String get fieldCoverPhotoOptional => 'เพิ่มรูปปก (ไม่บังคับ)';
+
+  @override
+  String get actionSaveChanges => 'บันทึกการเปลี่ยนแปลง';
+
+  @override
+  String get actionPostTrip => 'ลงทริป';
+
+  @override
+  String get fieldCityOptional => 'เมือง (ไม่บังคับ)';
+
+  @override
+  String get tripDetailTitle => 'ทริป';
+
+  @override
+  String tripSpareCapacity(String weightKg, int maxItems) {
+    return 'รับได้ $weightKg กก. · สูงสุด $maxItems ชิ้น';
+  }
+
+  @override
+  String get actionRequestFromThisTrip => 'ขอจากทริปนี้';
+
+  @override
+  String get tripDetailOwnerNote =>
+      'นี่คือทริปของคุณ ผู้ซื้อสามารถขอให้คุณซื้อของระหว่างเส้นทางนี้ได้';
+
+  @override
+  String get dialogRemoveWantTitle => 'ลบรายการต้องการนี้ใช่ไหม?';
+
+  @override
+  String get emptyMyWantsTitle => 'ยังไม่มีรายการต้องการ';
+
+  @override
+  String get emptyMyWantsMessage =>
+      'ลงสิ่งที่คุณอยากให้ซื้อจากต่างประเทศ แล้วนักเดินทางจะเสนอราคาให้';
+
+  @override
+  String wantBudgetLine(String budget) {
+    return 'งบประมาณ $budget';
+  }
+
+  @override
+  String wantBuyInLine(String place) {
+    return 'ซื้อที่ $place';
+  }
+
+  @override
+  String get actionViewOrder => 'ดูคำสั่งซื้อ →';
+
+  @override
+  String get errorWantTitleTooShort => 'ตั้งชื่อรายการต้องการของคุณสั้นๆ';
+
+  @override
+  String get errorWantDetailsTooShort =>
+      'เพิ่มรายละเอียด (อย่างน้อย 10 ตัวอักษร)';
+
+  @override
+  String get wantEditTitle => 'แก้ไขรายการต้องการ';
+
+  @override
+  String directRequestNotice(String name) {
+    return 'ส่งตรงถึง $name — ไม่แสดงต่อสาธารณะ งบประมาณด้านล่างคือราคาเริ่มต้นของคุณ อีกฝ่ายสามารถรับ ต่อรอง หรือปฏิเสธได้';
+  }
+
+  @override
+  String get fieldItem => 'สินค้า';
+
+  @override
+  String get hintItemExample => 'เช่น Nike Dunk Panda';
+
+  @override
+  String get fieldDetails => 'รายละเอียด';
+
+  @override
+  String get hintDetails => 'แบรนด์ รุ่น ไซซ์ สี ลิงก์';
+
+  @override
+  String get fieldPhotoOptional => 'เพิ่มรูปภาพ (ไม่บังคับ)';
+
+  @override
+  String get labelCategory => 'หมวดหมู่';
+
+  @override
+  String get labelBudget => 'งบประมาณ';
+
+  @override
+  String budgetTotalNote(num qty) {
+    return 'ยอดรวมที่คุณคาดว่าจะจ่ายสำหรับทั้งหมด $qty ชิ้น';
+  }
+
+  @override
+  String get labelQuantity => 'จำนวน';
+
+  @override
+  String get labelNeedBy => 'ต้องการภายใน';
+
+  @override
+  String get anyTime => 'เมื่อไหร่ก็ได้';
+
+  @override
+  String get labelBuyIn => 'ซื้อที่';
+
+  @override
+  String get hintCityExample => 'โตเกียว';
+
+  @override
+  String travelersHeadingSoon(num count, String country) {
+    return 'มีนักเดินทาง $count คนกำลังจะไป $country เร็วๆ นี้';
+  }
+
+  @override
+  String get actionSendRequest => 'ส่งคำขอ';
+
+  @override
+  String get actionPostMyWant => 'ลงรายการต้องการของฉัน';
+
+  @override
+  String get wantDetailTitle => 'รายการต้องการ';
+
+  @override
+  String get directRequestBadge =>
+      'ส่งตรงถึงนักเดินทางคนเดียว — ไม่แสดงต่อสาธารณะ';
+
+  @override
+  String wantQuantityLine(int qty) {
+    return 'จำนวน $qty';
+  }
+
+  @override
+  String get actionMakeAnOffer => 'เสนอราคา';
+
+  @override
+  String get wantClosedNote => 'รายการต้องการนี้ไม่รับข้อเสนอแล้ว';
+
+  @override
+  String get dialogCancelWantTitle => 'ยกเลิกรายการต้องการนี้ใช่ไหม?';
+
+  @override
+  String get dialogCancelWantBody =>
+      'นักเดินทางจะไม่เห็นหรือเสนอราคาให้ได้อีก และไม่สามารถย้อนกลับได้';
+
+  @override
+  String get actionKeepWant => 'เก็บรายการไว้';
+
+  @override
+  String get actionCancelWant => 'ยกเลิกรายการต้องการ';
+
+  @override
+  String get noOffersYetMessage =>
+      'ยังไม่มีข้อเสนอ — นักเดินทางบนเส้นทางนี้จะเห็นรายการของคุณ';
+
+  @override
+  String get dialogAcceptOfferTitle => 'รับข้อเสนอนี้ใช่ไหม?';
+
+  @override
+  String dialogAcceptOfferBody(String price) {
+    return 'คุณจะจ่าย $price สำหรับสินค้านี้ ระบบจะสร้างคำสั่งซื้อและให้คุณชำระเงิน';
+  }
+
+  @override
+  String get actionAccept => 'รับข้อเสนอ';
+
+  @override
+  String offerCounteredTimes(num round) {
+    return 'ต่อราคาแล้ว $round ครั้ง';
+  }
+
+  @override
+  String get fallbackTraveler => 'นักเดินทาง';
+
+  @override
+  String get errorPickTripForOffer => 'เลือกทริปที่จะใช้เสนอราคา';
+
+  @override
+  String get errorEnterYourPrice => 'กรอกราคาของคุณ';
+
+  @override
+  String get errorPickDeliveryDate => 'เลือกวันที่จะส่งของ';
+
+  @override
+  String get infoOfferSent => 'ส่งข้อเสนอแล้ว';
+
+  @override
+  String get makeOfferTitle => 'เสนอราคา';
+
+  @override
+  String get emptyNeedTripTitle => 'คุณต้องมีทริปก่อน';
+
+  @override
+  String get emptyNeedTripMessage =>
+      'ลงทริปที่คุณสามารถนำสินค้านี้ติดตัวไปได้ แล้วจึงเสนอราคา';
+
+  @override
+  String get labelWhichTrip => 'ทริปไหน';
+
+  @override
+  String get fieldYourPriceForGoods => 'ราคาของคุณสำหรับสินค้านี้';
+
+  @override
+  String get labelDeliverBy => 'ส่งภายใน';
+
+  @override
+  String get actionPickADate => 'เลือกวันที่';
+
+  @override
+  String get actionSendOffer => 'ส่งข้อเสนอ';
+
+  @override
+  String get emptyOffersTitle => 'ยังไม่มีข้อเสนอ';
+
+  @override
+  String get emptyOffersMessage =>
+      'ข้อเสนอที่คุณส่งหรือได้รับ — ทั้งในฐานะผู้ซื้อหรือนักเดินทาง — จะแสดงที่นี่';
+
+  @override
+  String offerFromLabel(String name) {
+    return 'จาก $name';
+  }
+
+  @override
+  String offerToLabel(String name) {
+    return 'ถึง $name';
+  }
+
+  @override
+  String get fallbackATraveler => 'นักเดินทาง';
+
+  @override
+  String get fallbackAShopper => 'ผู้ซื้อ';
+
+  @override
+  String get fallbackOfferTitle => 'ข้อเสนอ';
+
+  @override
+  String get dialogCounterOfferTitle => 'ต่อรองราคา';
+
+  @override
+  String get fieldYourPrice => 'ราคาของคุณ';
+
+  @override
+  String get actionSend => 'ส่ง';
+
+  @override
+  String get waitingForResponse => 'รอการตอบกลับ';
+
+  @override
+  String waitingForResponseWithCountdown(String countdown) {
+    return 'รอการตอบกลับ · $countdown';
+  }
+
+  @override
+  String get wantNoLongerOpen => 'รายการต้องการนี้ปิดรับข้อเสนอแล้ว';
+
+  @override
+  String respondWithin(String countdown) {
+    return 'ตอบกลับภายใน $countdown';
+  }
+
+  @override
+  String actionAcceptPrice(String price) {
+    return 'รับราคา $price';
+  }
+
+  @override
+  String get actionCounter => 'ต่อรอง';
+
+  @override
+  String get actionDecline => 'ปฏิเสธ';
+
+  @override
+  String get actionDeclineFinalOffer => 'ปฏิเสธ (ข้อเสนอสุดท้าย)';
 }

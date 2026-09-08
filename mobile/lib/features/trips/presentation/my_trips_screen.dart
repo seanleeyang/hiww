@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_bits.dart';
@@ -13,6 +14,7 @@ import '../data/trips_repository.dart';
 const _archivableStatuses = {'cancelled', 'completed'};
 
 Future<void> _archiveTrip(BuildContext context, WidgetRef ref, String tripId) async {
+  final l10n = AppLocalizations.of(context)!;
   final ok = await showDialog<bool>(
     context: context,
     // Shadow `context` with the dialog's own — using the caller's context to
@@ -20,22 +22,22 @@ Future<void> _archiveTrip(BuildContext context, WidgetRef ref, String tripId) as
     // dismissing the dialog, since this screen lives inside the bottom-tab
     // shell, not on the root navigator.
     builder: (context) => AlertDialog(
-      title: const Text('Remove this trip?'),
+      title: Text(l10n.dialogRemoveTripTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('It disappears from your list. This does not affect its history.'),
+          Text(l10n.dialogRemoveFromListBody),
           const SizedBox(height: 20),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => context.pop(true),
-            child: const Text('Remove'),
+            child: Text(l10n.actionRemove),
           ),
           const SizedBox(height: 8),
           OutlinedButton(
             onPressed: () => context.pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.actionCancel),
           ),
         ],
       ),
@@ -59,12 +61,13 @@ class MyTripsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final trips = ref.watch(myTripsProvider);
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/trips/new'),
         icon: const Icon(Icons.add),
-        label: const Text('Post a trip'),
+        label: Text(l10n.actionPostATrip),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.pullToRefresh(myTripsProvider.future),
@@ -77,11 +80,11 @@ class MyTripsScreen extends ConsumerWidget {
                 const SizedBox(height: 70),
                 EmptyState(
                   icon: Icons.flight_outlined,
-                  title: 'No trips yet',
-                  message: 'Post a trip and shoppers can request items along your route.',
+                  title: l10n.emptyMyTripsTitle,
+                  message: l10n.emptyMyTripsMessage,
                   action: FilledButton(
                     onPressed: () => context.push('/trips/new'),
-                    child: const Text('Post a trip'),
+                    child: Text(l10n.actionPostATrip),
                   ),
                 ),
               ]);
@@ -112,7 +115,7 @@ class MyTripsScreen extends ConsumerWidget {
                       if (_archivableStatuses.contains(t.status)) ...[
                         const SizedBox(width: 4),
                         IconButton(
-                          tooltip: 'Remove from your list',
+                          tooltip: l10n.tooltipRemoveFromList,
                           onPressed: () => _archiveTrip(context, ref, t.id),
                           icon: const Icon(Icons.close, size: 18),
                         ),
