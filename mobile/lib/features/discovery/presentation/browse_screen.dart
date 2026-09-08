@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/api_exception.dart';
 import '../../../core/guest_guard.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../ui/async_value_view.dart';
+import '../../../ui/async_value_view.dart' show PullToRefresh;
 import '../../../ui/category_chips.dart';
 import '../../../ui/country_chips.dart';
 import '../../../ui/empty_state.dart';
@@ -188,83 +189,69 @@ class _TripsBrowseTab extends ConsumerWidget {
     final name = ref.watch(currentUserProvider)?.firstName;
     final scheme = Theme.of(context).colorScheme;
 
-    return Column(
-      children: [
-        BrowseHero(
-          greeting: name != null
-              ? l10n.heroOrderGreetingNamed(name)
-              : l10n.heroOrderGreetingGuest,
-          tagline: l10n.heroOrderTagline,
-          ctaLabel: l10n.heroOrderCta,
-          onCta: onPostWant,
-          background: scheme.primary,
-          foreground: scheme.onPrimary,
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 44,
-                child: CountryChips(
-                  selected: country,
-                  onSelected: (c) =>
-                      ref.read(browseCountryProvider.notifier).state = c,
-                ),
-              ),
-            ),
-            _SortButton<TripSort>(
-              value: sort,
-              labels: _tripSortLabels(l10n),
-              onChanged: (v) => ref.read(tripSortProvider.notifier).state = v,
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => ref.pullToRefresh(feedProvider(query).future),
-            child: AsyncValueView(
-              value: feed,
-              onRetry: () => ref.invalidate(feedProvider(query)),
-              loading: (_) => const FeedSkeleton(),
-              data: (rawItems) {
-                final items = _sortedTrips(rawItems, sort);
-                if (items.isEmpty) {
-                  return ListView(
-                    children: [
-                      const SizedBox(height: 80),
-                      EmptyState(
-                        icon: Icons.flight_outlined,
-                        title: l10n.emptyNoTripsTitle,
-                        message: l10n.emptyNoTripsMessage,
-                      ),
-                    ],
-                  );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 14),
-                  itemBuilder: (context, i) {
-                    final item = items[i];
-                    if (item.trip == null) return const SizedBox.shrink();
-                    return TripFeedCard(
-                      trip: item.trip!,
-                      traveler: item.owner,
-                      earnMin: item.earnMin,
-                      earnMax: item.earnMax,
-                      matchCount: item.matchCount,
-                      onTap: () => context.push('/trips/${item.trip!.id}'),
-                    );
-                  },
-                );
-              },
+    return RefreshIndicator(
+      onRefresh: () => ref.pullToRefresh(feedProvider(query).future),
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: BrowseHero(
+              greeting: name != null
+                  ? l10n.heroOrderGreetingNamed(name)
+                  : l10n.heroOrderGreetingGuest,
+              tagline: l10n.heroOrderTagline,
+              ctaLabel: l10n.heroOrderCta,
+              onCta: onPostWant,
+              background: scheme.primary,
+              foreground: scheme.onPrimary,
             ),
           ),
-        ),
-      ],
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: CountryChips(
+                        selected: country,
+                        onSelected: (c) =>
+                            ref.read(browseCountryProvider.notifier).state = c,
+                      ),
+                    ),
+                  ),
+                  _SortButton<TripSort>(
+                    value: sort,
+                    labels: _tripSortLabels(l10n),
+                    onChanged: (v) =>
+                        ref.read(tripSortProvider.notifier).state = v,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
+            ),
+          ),
+          ..._feedSlivers(
+            feed: feed,
+            onRetry: () => ref.invalidate(feedProvider(query)),
+            emptyIcon: Icons.flight_outlined,
+            emptyTitle: l10n.emptyNoTripsTitle,
+            emptyMessage: l10n.emptyNoTripsMessage,
+            sort: (rawItems) => _sortedTrips(rawItems, sort),
+            itemBuilder: (context, item) {
+              if (item.trip == null) return const SizedBox.shrink();
+              return TripFeedCard(
+                trip: item.trip!,
+                traveler: item.owner,
+                earnMin: item.earnMin,
+                earnMax: item.earnMax,
+                matchCount: item.matchCount,
+                onTap: () => context.push('/trips/${item.trip!.id}'),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -284,81 +271,124 @@ class _WantsBrowseTab extends ConsumerWidget {
     final name = ref.watch(currentUserProvider)?.firstName;
     final scheme = Theme.of(context).colorScheme;
 
-    return Column(
-      children: [
-        BrowseHero(
-          greeting: name != null
-              ? l10n.heroTravelGreetingNamed(name)
-              : l10n.heroTravelGreetingGuest,
-          tagline: l10n.heroTravelTagline,
-          ctaLabel: l10n.heroTravelCta,
-          onCta: onPostTrip,
-          background: scheme.secondary,
-          foreground: scheme.onSecondary,
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 44,
-                child: CategoryChips(
-                  selected: category,
-                  onSelected: (c) =>
-                      ref.read(browseCategoryProvider.notifier).state = c,
-                ),
-              ),
-            ),
-            _SortButton<WantSort>(
-              value: sort,
-              labels: _wantSortLabels(l10n),
-              onChanged: (v) => ref.read(wantSortProvider.notifier).state = v,
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => ref.pullToRefresh(feedProvider(query).future),
-            child: AsyncValueView(
-              value: feed,
-              onRetry: () => ref.invalidate(feedProvider(query)),
-              loading: (_) => const FeedSkeleton(),
-              data: (rawItems) {
-                final items = _sortedWants(rawItems, sort);
-                if (items.isEmpty) {
-                  return ListView(
-                    children: [
-                      const SizedBox(height: 80),
-                      EmptyState(
-                        icon: Icons.explore_off_outlined,
-                        title: l10n.emptyNoWantsTitle,
-                        message: l10n.emptyNoWantsMessage,
-                      ),
-                    ],
-                  );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 14),
-                  itemBuilder: (context, i) {
-                    final item = items[i];
-                    if (item.want == null) return const SizedBox.shrink();
-                    return WantFeedCard(
-                      want: item.want!,
-                      shopper: item.owner,
-                      matchCount: item.matchCount,
-                      onTap: () => context.push('/wants/${item.want!.id}'),
-                    );
-                  },
-                );
-              },
+    return RefreshIndicator(
+      onRefresh: () => ref.pullToRefresh(feedProvider(query).future),
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: BrowseHero(
+              greeting: name != null
+                  ? l10n.heroTravelGreetingNamed(name)
+                  : l10n.heroTravelGreetingGuest,
+              tagline: l10n.heroTravelTagline,
+              ctaLabel: l10n.heroTravelCta,
+              onCta: onPostTrip,
+              background: scheme.secondary,
+              foreground: scheme.onSecondary,
             ),
           ),
-        ),
-      ],
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: CategoryChips(
+                        selected: category,
+                        onSelected: (c) =>
+                            ref.read(browseCategoryProvider.notifier).state = c,
+                      ),
+                    ),
+                  ),
+                  _SortButton<WantSort>(
+                    value: sort,
+                    labels: _wantSortLabels(l10n),
+                    onChanged: (v) =>
+                        ref.read(wantSortProvider.notifier).state = v,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
+            ),
+          ),
+          ..._feedSlivers(
+            feed: feed,
+            onRetry: () => ref.invalidate(feedProvider(query)),
+            emptyIcon: Icons.explore_off_outlined,
+            emptyTitle: l10n.emptyNoWantsTitle,
+            emptyMessage: l10n.emptyNoWantsMessage,
+            sort: (rawItems) => _sortedWants(rawItems, sort),
+            itemBuilder: (context, item) {
+              if (item.want == null) return const SizedBox.shrink();
+              return WantFeedCard(
+                want: item.want!,
+                shopper: item.owner,
+                matchCount: item.matchCount,
+                onTap: () => context.push('/wants/${item.want!.id}'),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
+}
+
+/// The shared loading/empty/error/list handling behind both browse tabs,
+/// as slivers so the [BrowseHero] and filter row above can scroll away with
+/// the feed instead of staying pinned — [AsyncValueView] can't be reused
+/// directly here since its `error` branch returns a plain (non-sliver)
+/// widget, and it's shared by screens that aren't inside a CustomScrollView.
+List<Widget> _feedSlivers({
+  required AsyncValue<List<FeedItem>> feed,
+  required VoidCallback onRetry,
+  required IconData emptyIcon,
+  required String emptyTitle,
+  required String emptyMessage,
+  required List<FeedItem> Function(List<FeedItem> rawItems) sort,
+  required Widget Function(BuildContext context, FeedItem item) itemBuilder,
+}) {
+  return [
+    feed.when(
+      skipLoadingOnRefresh: true,
+      skipLoadingOnReload: true,
+      data: (rawItems) {
+        final items = sort(rawItems);
+        if (items.isEmpty) {
+          return SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 80),
+              child: EmptyState(
+                icon: emptyIcon,
+                title: emptyTitle,
+                message: emptyMessage,
+              ),
+            ),
+          );
+        }
+        return SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          sliver: SliverList.separated(
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 14),
+            itemBuilder: (context, i) => itemBuilder(context, items[i]),
+          ),
+        );
+      },
+      loading: () => const SliverToBoxAdapter(child: FeedSkeleton()),
+      error: (err, _) => SliverToBoxAdapter(
+        child: EmptyState(
+          icon: Icons.cloud_off_outlined,
+          title: 'Something went wrong',
+          message: err is ApiException ? err.message : 'Please try again.',
+          action: FilledButton.tonal(
+            onPressed: onRetry,
+            child: const Text('Retry'),
+          ),
+        ),
+      ),
+    ),
+  ];
 }
