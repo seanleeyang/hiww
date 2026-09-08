@@ -42,78 +42,94 @@ class SocialAuthButtons extends ConsumerWidget {
     // than the reverse, for the same reason the shape is matched to
     // Google's fixed `pill` below instead of the other way around.
     const buttonHeight = 40.0;
+    // Google's GIS button also has a hard 400px *width* ceiling (the same
+    // reason `.clamp(1, 400)` appears below) — invisible on a phone, where
+    // the form's own 420px max-width is never actually reached, but real on
+    // a desktop-width screen: the form happily stretches LINE/Facebook to
+    // 420px while Google refuses to go past 400, a visible 20px gap. This
+    // caps all three together so they never disagree.
+    const buttonRowMaxWidth = 400.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: buttonHeight,
-          child: FilledButton.icon(
-            onPressed: kIsWeb
-                ? () => startLineLogin(lineChannelId)
-                : () => _notConfigured(context, l10n.providerLine),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF06C755),
-              foregroundColor: Colors.white,
-              // Matches the Google button below, which is pinned to GIS's
-              // `pill` shape — a fixed, height-relative radius Google
-              // doesn't let us match with an arbitrary corner value, so
-              // these two match themselves to it instead.
-              shape: const StadiumBorder(),
-            ),
-            icon: const Icon(Icons.chat_bubble_rounded, size: 18),
-            label: Text(l10n.actionSignInLine),
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: buttonHeight,
-          child: FilledButton.icon(
-            onPressed: () => _notConfigured(context, l10n.providerFacebook),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF1877F2),
-              foregroundColor: Colors.white,
-              shape: const StadiumBorder(),
-            ),
-            icon: const Icon(Icons.facebook),
-            label: Text(l10n.actionContinueFacebook),
-          ),
-        ),
-        const SizedBox(height: 10),
-        if (kIsWeb)
-          // The GIS SDK requires web sign-in to be triggered from a button
-          // it renders itself — a custom OutlinedButton can't call
-          // authenticate() interactively on this platform. GIS won't stretch
-          // to fill a container on its own (unlike the FilledButtons above),
-          // so its width is measured and passed in explicitly to match them;
-          // its locale defaults to the browser/Google-account's own
-          // language, so it's pinned to the app's chosen one instead — left
-          // alone, a Thai phone shows an English app with a Thai Google
-          // button.
-          LayoutBuilder(
-            builder: (context, constraints) => SizedBox(
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: buttonRowMaxWidth),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
               height: buttonHeight,
-              child: renderGoogleButton(
-                width: constraints.maxWidth.clamp(1, 400),
-                locale: Localizations.localeOf(context).languageCode,
+              child: FilledButton.icon(
+                onPressed: kIsWeb
+                    ? () => startLineLogin(lineChannelId)
+                    : () => _notConfigured(context, l10n.providerLine),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF06C755),
+                  foregroundColor: Colors.white,
+                  // Matches the Google button below, which is pinned to GIS's
+                  // `pill` shape — a fixed, height-relative radius Google
+                  // doesn't let us match with an arbitrary corner value, so
+                  // these two match themselves to it instead.
+                  shape: const StadiumBorder(),
+                ),
+                icon: const Icon(Icons.chat_bubble_rounded, size: 18),
+                label: Text(l10n.actionSignInLine),
               ),
             ),
-          )
-        else
-          SizedBox(
-            height: buttonHeight,
-            child: OutlinedButton.icon(
-              onPressed: () => ref.read(googleAuthControllerProvider).signInWithCustomButton(),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.onSurface,
-                side: BorderSide(color: Theme.of(context).colorScheme.outline),
-                shape: const StadiumBorder(),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: buttonHeight,
+              child: FilledButton.icon(
+                onPressed: () => _notConfigured(context, l10n.providerFacebook),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF1877F2),
+                  foregroundColor: Colors.white,
+                  shape: const StadiumBorder(),
+                ),
+                icon: const Icon(Icons.facebook),
+                label: Text(l10n.actionContinueFacebook),
               ),
-              icon: const _GoogleMark(),
-              label: Text(l10n.actionSignInGoogle),
             ),
-          ),
-      ],
+            const SizedBox(height: 10),
+            if (kIsWeb)
+              // The GIS SDK requires web sign-in to be triggered from a button
+              // it renders itself — a custom OutlinedButton can't call
+              // authenticate() interactively on this platform. GIS won't stretch
+              // to fill a container on its own (unlike the FilledButtons above),
+              // so its width is measured and passed in explicitly to match them;
+              // its locale defaults to the browser/Google-account's own
+              // language, so it's pinned to the app's chosen one instead — left
+              // alone, a Thai phone shows an English app with a Thai Google
+              // button.
+              LayoutBuilder(
+                builder: (context, constraints) => SizedBox(
+                  height: buttonHeight,
+                  child: renderGoogleButton(
+                    width: constraints.maxWidth.clamp(1, 400),
+                    locale: Localizations.localeOf(context).languageCode,
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                height: buttonHeight,
+                child: OutlinedButton.icon(
+                  onPressed: () => ref
+                      .read(googleAuthControllerProvider)
+                      .signInWithCustomButton(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    shape: const StadiumBorder(),
+                  ),
+                  icon: const _GoogleMark(),
+                  label: Text(l10n.actionSignInGoogle),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
