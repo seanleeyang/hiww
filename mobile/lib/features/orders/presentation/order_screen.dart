@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/image_picker_field.dart';
@@ -28,12 +29,13 @@ class OrderScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final order = ref.watch(orderProvider(orderId));
     final me = ref.watch(currentUserProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Order #${orderId.substring(0, 8).toUpperCase()}'),
+        title: Text(l10n.orderHashTitle(orderId.substring(0, 8).toUpperCase())),
         leading: BackButton(
           onPressed: () =>
               context.canPop() ? context.pop() : context.go('/my-wants'),
@@ -83,7 +85,7 @@ class OrderScreen extends ConsumerWidget {
                                 StatusPill(o.status),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '${o.totalLabel} · ${o.feesLabel} fee',
+                                  l10n.orderTotalWithFee(o.totalLabel, o.feesLabel),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Theme.of(context)
@@ -105,7 +107,7 @@ class OrderScreen extends ConsumerWidget {
                         children: [
                           Expanded(child: AvatarRating(user: o.counterparty!)),
                           Text(
-                            isShopper ? 'Carrier' : 'Shopper',
+                            isShopper ? l10n.roleCarrier : l10n.roleShopper,
                             style: TextStyle(
                               fontSize: 12,
                               color: Theme.of(context)
@@ -132,7 +134,7 @@ class OrderScreen extends ConsumerWidget {
                           onPressed: () =>
                               context.push('/orders/$orderId/chat'),
                           icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                          label: const Text('Open chat'),
+                          label: Text(l10n.actionOpenChat),
                         ),
                       ),
                       if (active) ...[
@@ -142,7 +144,7 @@ class OrderScreen extends ConsumerWidget {
                             onPressed: () =>
                                 showReportProblemSheet(context, orderId),
                             icon: const Icon(Icons.flag_outlined, size: 18),
-                            label: const Text('Report'),
+                            label: Text(l10n.actionReport),
                           ),
                         ),
                       ],
@@ -190,6 +192,7 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final o = widget.order;
     final repo = ref.read(ordersRepositoryProvider);
     final me = ref.read(currentUserProvider);
@@ -220,7 +223,7 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
                 _PaymentCountdownBanner(orderId: o.id, deadline: o.paymentDeadlineAt!, forShopper: false),
                 const SizedBox(height: 12),
               ],
-              note('Waiting for the shopper to pay.'),
+              note(l10n.noteWaitingForShopperToPay),
             ],
           );
         }
@@ -236,17 +239,17 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'How to pay',
+                    l10n.howToPayTitle,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 6),
                   Text(
                     me?.pilot?.paymentInstructions ??
-                        'Contact the Hiww team to arrange payment.',
+                        l10n.contactHiwwForPayment,
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Amount ${o.totalLabel}  ·  reference ${o.id}',
+                    l10n.amountReference(o.totalLabel, o.id),
                     style: muted,
                   ),
                 ],
@@ -254,32 +257,26 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
             ),
             const SizedBox(height: 12),
             if (o.paymentClaimedAt != null)
-              note("You've told us you paid. We'll confirm once it lands.")
+              note(l10n.noteToldUsPaid)
             else
               primary(
-                "I've sent the payment",
+                l10n.actionSentPayment,
                 () => _run(() => repo.claimPayment(o.id)),
               ),
           ],
         );
       case 'confirmed':
         if (widget.isShopper) {
-          return note(
-            'Payment confirmed. Waiting for the traveler to buy the item.',
-          );
+          return note(l10n.notePaymentConfirmedWaitingBuy);
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            note(
-              'Payment confirmed. Buy the item, then upload a photo of the shop '
-              'receipt — clear date and the item in frame. That unlocks the '
-              'shipping step.',
-            ),
+            note(l10n.notePaymentConfirmedUploadReceipt),
             const SizedBox(height: 12),
             ImagePickerField(
               value: null,
-              label: _busy ? 'Uploading…' : 'Upload purchase receipt',
+              label: _busy ? l10n.actionUploading : l10n.actionUploadReceipt,
               onChanged: (url) {
                 if (url != null) {
                   _run(() => repo.submitPurchaseProof(o.id, url));
@@ -290,35 +287,30 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
         );
       case 'purchased':
         if (widget.isShopper) {
-          return note(
-            'The traveler bought your item. They’ll ship it once '
-            'they’re back in the origin country.',
-          );
+          return note(l10n.noteTravelerBoughtWillShip);
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            note(
-              'Receipt uploaded. Post the item when you’re home, then mark it shipped.',
-            ),
+            note(l10n.noteReceiptUploadedPostShip),
             const SizedBox(height: 12),
             primary(
-              'Mark as shipped',
+              l10n.actionMarkShipped,
               () => _run(() => repo.markShipped(o.id)),
             ),
           ],
         );
       case 'in_transit':
         if (!widget.isShopper) {
-          return note('Shipped. Waiting for the shopper to confirm receipt.');
+          return note(l10n.noteShippedWaitingConfirm);
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            note('On the way. Confirm once you have it in hand.'),
+            note(l10n.noteOnWayConfirm),
             const SizedBox(height: 12),
             primary(
-              'Confirm & release ${o.totalLabel}',
+              l10n.actionConfirmRelease(o.totalLabel),
               () => context.push('/orders/${o.id}/confirm'),
             ),
           ],
@@ -327,7 +319,7 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
         if (o.myReview != null) {
           return Row(
             children: [
-              Text('You rated ', style: muted),
+              Text('${l10n.ratedLabel} ', style: muted),
               StarRatingDisplay(
                 rating: o.myReview!.rating.toDouble(),
                 size: 13,
@@ -337,13 +329,13 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
         }
         if (o.canReview) {
           return primary(
-            'Rate ${o.counterparty?.fullName ?? 'the other party'}',
+            l10n.actionRateCounterparty(o.counterparty?.fullName ?? l10n.fallbackTheOtherParty),
             () => context.push('/orders/${o.id}/confirm?review=1'),
           );
         }
-        return note('Completed. Thanks for using Hiww!');
+        return note(l10n.noteCompletedThanks);
       default:
-        return note('This order is ${o.status.replaceAll('_', ' ')}.');
+        return note(l10n.orderStatusFallback(o.status.replaceAll('_', ' ')));
     }
   }
 }
@@ -391,12 +383,13 @@ class _PaymentCountdownBannerState extends ConsumerState<_PaymentCountdownBanner
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final urgent = widget.deadline.difference(DateTime.now()).inMinutes < 15;
     final scheme = Theme.of(context).colorScheme;
     final fg = urgent ? scheme.onErrorContainer : scheme.onPrimaryContainer;
     final label = widget.forShopper
-        ? 'Pay within ${countdown(widget.deadline)} or the order is cancelled automatically.'
-        : 'Shopper has ${countdown(widget.deadline)} to pay before the order auto-cancels.';
+        ? l10n.payWithinOrCancel(countdown(widget.deadline))
+        : l10n.shopperHasTimeToPay(countdown(widget.deadline));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -424,6 +417,7 @@ class _ReceiptCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     return SoftCard(
       child: Column(
@@ -438,7 +432,7 @@ class _ReceiptCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Purchase receipt',
+                l10n.purchaseReceiptTitle,
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const Spacer(),

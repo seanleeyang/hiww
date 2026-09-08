@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/hero_image.dart';
@@ -20,6 +21,7 @@ class MyOrdersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final orders = ref.watch(myOrdersProvider);
     final me = ref.watch(currentUserProvider);
 
@@ -31,14 +33,12 @@ class MyOrdersScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(myOrdersProvider),
           data: (list) {
             if (list.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 80),
+              return ListView(children: [
+                const SizedBox(height: 80),
                 EmptyState(
                   icon: Icons.receipt_long_outlined,
-                  title: 'No orders yet',
-                  message:
-                      'When you accept an offer or one of your offers is accepted, '
-                      'the order shows up here so you can track every step.',
+                  title: l10n.emptyOrdersTitle,
+                  message: l10n.emptyOrdersMessage,
                 ),
               ]);
             }
@@ -80,11 +80,12 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final o = order;
-    final who = o.counterparty?.fullName ?? (isShopper ? 'a traveler' : 'a shopper');
-    final relation = isShopper ? 'Buying from $who' : 'Delivering for $who';
-    final next = _nextStep(o.status, isShopper);
+    final who = o.counterparty?.fullName ?? (isShopper ? l10n.fallbackATraveler : l10n.fallbackAShopper);
+    final relation = isShopper ? l10n.orderRelationBuying(who) : l10n.orderRelationDelivering(who);
+    final next = _nextStep(l10n, o.status, isShopper);
 
     return SoftCard(
       onTap: () => context.push('/orders/${o.id}'),
@@ -148,19 +149,19 @@ class _OrderCard extends StatelessWidget {
   }
 
   /// Plain-language "what happens next", from this user's point of view.
-  static String? _nextStep(String status, bool isShopper) => switch (status) {
+  static String? _nextStep(AppLocalizations l10n, String status, bool isShopper) => switch (status) {
         'pending_payment' => isShopper
-            ? 'Pay to get things moving'
-            : 'Waiting for the shopper to pay',
+            ? l10n.nextStepPayToStart
+            : l10n.nextStepWaitingForPayment,
         'confirmed' => isShopper
-            ? 'Traveler is buying your item'
-            : 'Buy the item, then upload the receipt',
+            ? l10n.nextStepTravelerBuying
+            : l10n.nextStepBuyThenUpload,
         'purchased' => isShopper
-            ? 'Bought — traveler will ship once they’re back'
-            : 'Post the item, then mark it shipped',
+            ? l10n.nextStepBoughtWaitShip
+            : l10n.nextStepPostThenShip,
         'in_transit' => isShopper
-            ? 'On its way — confirm when it arrives'
-            : 'Shipped — waiting for the shopper to confirm receipt',
+            ? l10n.nextStepOnWayConfirm
+            : l10n.nextStepShippedWaiting,
         'delivered' => null,
         'cancelled' => null,
         _ => null,

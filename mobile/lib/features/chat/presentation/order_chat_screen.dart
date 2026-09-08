@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/fullscreen_image_viewer.dart';
 import '../../auth/application/auth_controller.dart';
@@ -67,6 +68,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   }
 
   Future<void> _attachPhoto() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _attaching = true);
     try {
       final file = await ImagePicker().pickImage(
@@ -94,8 +96,8 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
       if (mounted) {
         setState(() => _pendingImageBytes = null);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not attach that photo. Try another.'),
+          SnackBar(
+            content: Text(l10n.errorAttachPhoto),
           ),
         );
       }
@@ -140,6 +142,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final me = ref.watch(currentUserProvider);
     final order = ref.watch(orderProvider(widget.orderId));
     final feed = ref.watch(orderMessagesProvider(widget.orderId));
@@ -156,7 +159,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
       }
     });
 
-    final title = order.valueOrNull?.counterparty?.fullName ?? 'Chat';
+    final title = order.valueOrNull?.counterparty?.fullName ?? l10n.chatFallbackTitle;
     final subtitle = order.valueOrNull?.itemDescription;
 
     return Scaffold(
@@ -190,7 +193,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
                 if (list.isEmpty) {
                   return Center(
                     child: Text(
-                      'Say hello 👋',
+                      l10n.sayHello,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -256,6 +259,7 @@ class _Bubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -337,7 +341,7 @@ class _Bubble extends StatelessWidget {
                     ),
                     const SizedBox(width: 2),
                     Text(
-                      message.readAt != null ? 'Read' : 'Sent',
+                      message.readAt != null ? l10n.statusRead : l10n.statusSent,
                       style: TextStyle(
                         fontSize: 10,
                         color: scheme.onPrimary.withValues(alpha: 0.9),
@@ -377,6 +381,7 @@ class _Composer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final busy = sending || attaching;
     return SafeArea(
       top: false,
@@ -433,8 +438,8 @@ class _Composer extends StatelessWidget {
                     Expanded(
                       child: Text(
                         attaching
-                            ? 'Uploading photo…'
-                            : 'Photo attached. Tap send to share it.',
+                            ? l10n.uploadingPhoto
+                            : l10n.photoAttachedTapSend,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
@@ -445,7 +450,7 @@ class _Composer extends StatelessWidget {
                     IconButton(
                       onPressed: onRemoveAttachment,
                       icon: const Icon(Icons.close, size: 18),
-                      tooltip: 'Remove photo',
+                      tooltip: l10n.tooltipRemovePhoto,
                       visualDensity: VisualDensity.compact,
                     ),
                   ],
@@ -457,7 +462,7 @@ class _Composer extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: busy ? null : onAttach,
-                  tooltip: 'Attach a photo',
+                  tooltip: l10n.tooltipAttachPhoto,
                   icon: attaching
                       ? const SizedBox(
                           height: 18,
@@ -474,9 +479,9 @@ class _Composer extends StatelessWidget {
                     textInputAction: TextInputAction.send,
                     onChanged: onTextChanged,
                     onSubmitted: (_) => onSend(),
-                    decoration: const InputDecoration(
-                      hintText: 'Message',
-                      contentPadding: EdgeInsets.symmetric(
+                    decoration: InputDecoration(
+                      hintText: l10n.hintMessage,
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 10,
                       ),
@@ -486,7 +491,7 @@ class _Composer extends StatelessWidget {
                 const SizedBox(width: 8),
                 IconButton.filled(
                   onPressed: busy ? null : onSend,
-                  tooltip: 'Send',
+                  tooltip: l10n.tooltipSend,
                   icon: sending
                       ? const SizedBox(
                           height: 18,

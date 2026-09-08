@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/responsive_body.dart';
@@ -43,8 +44,9 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
   }
 
   Future<void> _submit(String counterpartyId) async {
+    final l10n = AppLocalizations.of(context)!;
     if (_rating < 1) {
-      setState(() => _error = 'Tap a star to rate');
+      setState(() => _error = l10n.errorTapStarToRate);
       return;
     }
     setState(() {
@@ -73,8 +75,8 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
         SnackBar(
           content: Text(
             widget.reviewOnly
-                ? 'Thanks for the review'
-                : 'Payment released — thank you!',
+                ? l10n.infoThanksForReview
+                : l10n.infoPaymentReleased,
           ),
         ),
       );
@@ -89,18 +91,19 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final order = ref.watch(orderProvider(widget.orderId));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.reviewOnly ? 'Leave a review' : 'Confirm & review'),
+        title: Text(widget.reviewOnly ? l10n.leaveReviewTitle : l10n.confirmAndReviewTitle),
       ),
       body: ResponsiveBody(
         child: AsyncValueView(
           value: order,
           onRetry: () => ref.invalidate(orderProvider(widget.orderId)),
           data: (o) {
-            final name = o.counterparty?.fullName ?? 'the traveler';
+            final name = o.counterparty?.fullName ?? l10n.fallbackTheTraveler;
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
@@ -125,7 +128,7 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'How was $name?',
+                  l10n.howWasName(name),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
@@ -138,8 +141,8 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
                 TextField(
                   controller: _comment,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: 'Share how the handover went (optional)',
+                  decoration: InputDecoration(
+                    hintText: l10n.hintShareHandover,
                   ),
                 ),
                 if (_error != null) ...[
@@ -164,14 +167,14 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
                         )
                       : Text(
                           widget.reviewOnly
-                              ? 'Submit review'
-                              : 'Confirm & release ${o.totalLabel}',
+                              ? l10n.actionSubmitReview
+                              : l10n.actionConfirmRelease(o.totalLabel),
                         ),
                 ),
                 if (!widget.reviewOnly) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'This releases the held payment to $name.',
+                    l10n.releaseNoteToName(name),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,

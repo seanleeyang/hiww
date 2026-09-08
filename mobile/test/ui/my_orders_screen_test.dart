@@ -7,6 +7,7 @@ import 'package:hiww_mobile/features/orders/data/orders_repository.dart';
 import 'package:hiww_mobile/features/orders/domain/order.dart';
 import 'package:hiww_mobile/features/orders/presentation/my_orders_screen.dart';
 import 'package:hiww_mobile/features/shared/domain/user_summary.dart';
+import 'package:hiww_mobile/l10n/app_localizations.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
 
 const _me = AuthUser(
@@ -43,6 +44,8 @@ Widget _wrap(List<Order> orders) => ProviderScope(
       ],
       child: MaterialApp(
         theme: hiwwTheme(Brightness.light),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: const MyOrdersScreen(),
       ),
     );

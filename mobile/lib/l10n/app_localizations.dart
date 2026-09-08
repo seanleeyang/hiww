@@ -1345,6 +1345,558 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decline (final offer)'**
   String get actionDeclineFinalOffer;
+
+  /// No description provided for @emptyOrdersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders yet'**
+  String get emptyOrdersTitle;
+
+  /// No description provided for @emptyOrdersMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'When you accept an offer or one of your offers is accepted, the order shows up here so you can track every step.'**
+  String get emptyOrdersMessage;
+
+  /// No description provided for @orderRelationBuying.
+  ///
+  /// In en, this message translates to:
+  /// **'Buying from {name}'**
+  String orderRelationBuying(String name);
+
+  /// No description provided for @orderRelationDelivering.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivering for {name}'**
+  String orderRelationDelivering(String name);
+
+  /// No description provided for @nextStepPayToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay to get things moving'**
+  String get nextStepPayToStart;
+
+  /// No description provided for @nextStepWaitingForPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the shopper to pay'**
+  String get nextStepWaitingForPayment;
+
+  /// No description provided for @nextStepTravelerBuying.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler is buying your item'**
+  String get nextStepTravelerBuying;
+
+  /// No description provided for @nextStepBuyThenUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy the item, then upload the receipt'**
+  String get nextStepBuyThenUpload;
+
+  /// No description provided for @nextStepBoughtWaitShip.
+  ///
+  /// In en, this message translates to:
+  /// **'Bought — traveler will ship once they’re back'**
+  String get nextStepBoughtWaitShip;
+
+  /// No description provided for @nextStepPostThenShip.
+  ///
+  /// In en, this message translates to:
+  /// **'Post the item, then mark it shipped'**
+  String get nextStepPostThenShip;
+
+  /// No description provided for @nextStepOnWayConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'On its way — confirm when it arrives'**
+  String get nextStepOnWayConfirm;
+
+  /// No description provided for @nextStepShippedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped — waiting for the shopper to confirm receipt'**
+  String get nextStepShippedWaiting;
+
+  /// No description provided for @orderHashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{code}'**
+  String orderHashTitle(String code);
+
+  /// No description provided for @roleCarrier.
+  ///
+  /// In en, this message translates to:
+  /// **'Carrier'**
+  String get roleCarrier;
+
+  /// No description provided for @roleShopper.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopper'**
+  String get roleShopper;
+
+  /// No description provided for @actionOpenChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get actionOpenChat;
+
+  /// No description provided for @actionReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get actionReport;
+
+  /// No description provided for @orderTotalWithFee.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} · {fee} fee'**
+  String orderTotalWithFee(String total, String fee);
+
+  /// No description provided for @noteWaitingForShopperToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the shopper to pay.'**
+  String get noteWaitingForShopperToPay;
+
+  /// No description provided for @payWithinOrCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay within {countdown} or the order is cancelled automatically.'**
+  String payWithinOrCancel(String countdown);
+
+  /// No description provided for @shopperHasTimeToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopper has {countdown} to pay before the order auto-cancels.'**
+  String shopperHasTimeToPay(String countdown);
+
+  /// No description provided for @howToPayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to pay'**
+  String get howToPayTitle;
+
+  /// No description provided for @contactHiwwForPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact the Hiww team to arrange payment.'**
+  String get contactHiwwForPayment;
+
+  /// No description provided for @amountReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount {total}  ·  reference {id}'**
+  String amountReference(String total, String id);
+
+  /// No description provided for @noteToldUsPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve told us you paid. We\'ll confirm once it lands.'**
+  String get noteToldUsPaid;
+
+  /// No description provided for @actionSentPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve sent the payment'**
+  String get actionSentPayment;
+
+  /// No description provided for @notePaymentConfirmedWaitingBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmed. Waiting for the traveler to buy the item.'**
+  String get notePaymentConfirmedWaitingBuy;
+
+  /// No description provided for @notePaymentConfirmedUploadReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmed. Buy the item, then upload a photo of the shop receipt — clear date and the item in frame. That unlocks the shipping step.'**
+  String get notePaymentConfirmedUploadReceipt;
+
+  /// No description provided for @actionUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get actionUploading;
+
+  /// No description provided for @actionUploadReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload purchase receipt'**
+  String get actionUploadReceipt;
+
+  /// No description provided for @noteTravelerBoughtWillShip.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler bought your item. They’ll ship it once they’re back in the origin country.'**
+  String get noteTravelerBoughtWillShip;
+
+  /// No description provided for @noteReceiptUploadedPostShip.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt uploaded. Post the item when you’re home, then mark it shipped.'**
+  String get noteReceiptUploadedPostShip;
+
+  /// No description provided for @actionMarkShipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as shipped'**
+  String get actionMarkShipped;
+
+  /// No description provided for @noteShippedWaitingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped. Waiting for the shopper to confirm receipt.'**
+  String get noteShippedWaitingConfirm;
+
+  /// No description provided for @noteOnWayConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way. Confirm once you have it in hand.'**
+  String get noteOnWayConfirm;
+
+  /// No description provided for @actionConfirmRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm & release {total}'**
+  String actionConfirmRelease(String total);
+
+  /// No description provided for @ratedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'You rated'**
+  String get ratedLabel;
+
+  /// No description provided for @actionRateCounterparty.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate {name}'**
+  String actionRateCounterparty(String name);
+
+  /// No description provided for @fallbackTheOtherParty.
+  ///
+  /// In en, this message translates to:
+  /// **'the other party'**
+  String get fallbackTheOtherParty;
+
+  /// No description provided for @noteCompletedThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed. Thanks for using Hiww!'**
+  String get noteCompletedThanks;
+
+  /// No description provided for @orderStatusFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'This order is {status}.'**
+  String orderStatusFallback(String status);
+
+  /// No description provided for @stageAcceptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get stageAcceptedTitle;
+
+  /// No description provided for @stageAcceptedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer accepted'**
+  String get stageAcceptedHint;
+
+  /// No description provided for @stagePaidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get stagePaidTitle;
+
+  /// No description provided for @stagePaidHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmed'**
+  String get stagePaidHint;
+
+  /// No description provided for @stageBoughtTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bought'**
+  String get stageBoughtTitle;
+
+  /// No description provided for @stageBoughtHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler bought the item'**
+  String get stageBoughtHint;
+
+  /// No description provided for @stageInTransitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'In transit'**
+  String get stageInTransitTitle;
+
+  /// No description provided for @stageInTransitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way to you'**
+  String get stageInTransitHint;
+
+  /// No description provided for @stageDeliveredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get stageDeliveredTitle;
+
+  /// No description provided for @stageDeliveredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to release payment'**
+  String get stageDeliveredHint;
+
+  /// No description provided for @errorTapStarToRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a star to rate'**
+  String get errorTapStarToRate;
+
+  /// No description provided for @infoThanksForReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for the review'**
+  String get infoThanksForReview;
+
+  /// No description provided for @infoPaymentReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment released — thank you!'**
+  String get infoPaymentReleased;
+
+  /// No description provided for @leaveReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a review'**
+  String get leaveReviewTitle;
+
+  /// No description provided for @confirmAndReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm & review'**
+  String get confirmAndReviewTitle;
+
+  /// No description provided for @fallbackTheTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'the traveler'**
+  String get fallbackTheTraveler;
+
+  /// No description provided for @howWasName.
+  ///
+  /// In en, this message translates to:
+  /// **'How was {name}?'**
+  String howWasName(String name);
+
+  /// No description provided for @hintShareHandover.
+  ///
+  /// In en, this message translates to:
+  /// **'Share how the handover went (optional)'**
+  String get hintShareHandover;
+
+  /// No description provided for @actionSubmitReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit review'**
+  String get actionSubmitReview;
+
+  /// No description provided for @releaseNoteToName.
+  ///
+  /// In en, this message translates to:
+  /// **'This releases the held payment to {name}.'**
+  String releaseNoteToName(String name);
+
+  /// No description provided for @errorDescribeProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Please describe the problem (at least 10 characters)'**
+  String get errorDescribeProblem;
+
+  /// No description provided for @infoReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported — the Hiww team will look into it'**
+  String get infoReported;
+
+  /// No description provided for @reportProblemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a problem'**
+  String get reportProblemTitle;
+
+  /// No description provided for @reportProblemSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Money stays held while the Hiww team reviews this.'**
+  String get reportProblemSubtitle;
+
+  /// No description provided for @hintWhatWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'What went wrong?'**
+  String get hintWhatWentWrong;
+
+  /// No description provided for @actionSubmitReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit report'**
+  String get actionSubmitReport;
+
+  /// No description provided for @trustReleasedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Released — {total} to the traveler'**
+  String trustReleasedTo(String total);
+
+  /// No description provided for @trustHolding.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiww is holding {total} + {fee} fee'**
+  String trustHolding(String total, String fee);
+
+  /// No description provided for @trustSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment for these goods has been settled.'**
+  String get trustSettled;
+
+  /// No description provided for @trustReleasedOnConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Released to the traveler when you confirm you have the item.'**
+  String get trustReleasedOnConfirm;
+
+  /// No description provided for @actionHowProtectionWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How payment protection works'**
+  String get actionHowProtectionWorks;
+
+  /// No description provided for @howProtectionStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay Hiww when you accept an offer.'**
+  String get howProtectionStep1;
+
+  /// No description provided for @howProtectionStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiww holds the money — the traveler is not paid yet.'**
+  String get howProtectionStep2;
+
+  /// No description provided for @howProtectionStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler buys and ships your item.'**
+  String get howProtectionStep3;
+
+  /// No description provided for @howProtectionStep4.
+  ///
+  /// In en, this message translates to:
+  /// **'You confirm you received it, and Hiww releases the payment.'**
+  String get howProtectionStep4;
+
+  /// No description provided for @howProtectionPilotNote.
+  ///
+  /// In en, this message translates to:
+  /// **'During the pilot, Hiww settles payments by hand rather than through a card processor. If something goes wrong, use \"Report a problem\" and the Hiww team will step in before any money moves.'**
+  String get howProtectionPilotNote;
+
+  /// No description provided for @emptyInboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get emptyInboxTitle;
+
+  /// No description provided for @emptyInboxMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats appear here once you have an order with a traveler or shopper.'**
+  String get emptyInboxMessage;
+
+  /// No description provided for @fallbackConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation'**
+  String get fallbackConversation;
+
+  /// No description provided for @errorAttachPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not attach that photo. Try another.'**
+  String get errorAttachPhoto;
+
+  /// No description provided for @chatFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get chatFallbackTitle;
+
+  /// No description provided for @sayHello.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hello 👋'**
+  String get sayHello;
+
+  /// No description provided for @tooltipRemovePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get tooltipRemovePhoto;
+
+  /// No description provided for @tooltipAttachPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a photo'**
+  String get tooltipAttachPhoto;
+
+  /// No description provided for @uploadingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo…'**
+  String get uploadingPhoto;
+
+  /// No description provided for @photoAttachedTapSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo attached. Tap send to share it.'**
+  String get photoAttachedTapSend;
+
+  /// No description provided for @hintMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get hintMessage;
+
+  /// No description provided for @tooltipSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get tooltipSend;
+
+  /// No description provided for @statusSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get statusSent;
+
+  /// No description provided for @statusRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get statusRead;
+
+  /// No description provided for @purchaseReceiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase receipt'**
+  String get purchaseReceiptTitle;
 }
 
 class _AppLocalizationsDelegate

@@ -276,5 +276,147 @@
   },
   "actionCounter": "Counter",
   "actionDecline": "Decline",
-  "actionDeclineFinalOffer": "Decline (final offer)"
+  "actionDeclineFinalOffer": "Decline (final offer)",
+
+  "emptyOrdersTitle": "No orders yet",
+  "emptyOrdersMessage": "When you accept an offer or one of your offers is accepted, the order shows up here so you can track every step.",
+  "orderRelationBuying": "Buying from {name}",
+  "@orderRelationBuying": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "orderRelationDelivering": "Delivering for {name}",
+  "@orderRelationDelivering": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "nextStepPayToStart": "Pay to get things moving",
+  "nextStepWaitingForPayment": "Waiting for the shopper to pay",
+  "nextStepTravelerBuying": "Traveler is buying your item",
+  "nextStepBuyThenUpload": "Buy the item, then upload the receipt",
+  "nextStepBoughtWaitShip": "Bought — traveler will ship once they’re back",
+  "nextStepPostThenShip": "Post the item, then mark it shipped",
+  "nextStepOnWayConfirm": "On its way — confirm when it arrives",
+  "nextStepShippedWaiting": "Shipped — waiting for the shopper to confirm receipt",
+
+  "orderHashTitle": "Order #{code}",
+  "@orderHashTitle": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "roleCarrier": "Carrier",
+  "roleShopper": "Shopper",
+  "actionOpenChat": "Open chat",
+  "actionReport": "Report",
+  "orderTotalWithFee": "{total} · {fee} fee",
+  "@orderTotalWithFee": {
+    "placeholders": { "total": { "type": "String" }, "fee": { "type": "String" } }
+  },
+  "noteWaitingForShopperToPay": "Waiting for the shopper to pay.",
+  "payWithinOrCancel": "Pay within {countdown} or the order is cancelled automatically.",
+  "@payWithinOrCancel": {
+    "placeholders": { "countdown": { "type": "String" } }
+  },
+  "shopperHasTimeToPay": "Shopper has {countdown} to pay before the order auto-cancels.",
+  "@shopperHasTimeToPay": {
+    "placeholders": { "countdown": { "type": "String" } }
+  },
+  "howToPayTitle": "How to pay",
+  "contactHiwwForPayment": "Contact the Hiww team to arrange payment.",
+  "amountReference": "Amount {total}  ·  reference {id}",
+  "@amountReference": {
+    "placeholders": { "total": { "type": "String" }, "id": { "type": "String" } }
+  },
+  "noteToldUsPaid": "You've told us you paid. We'll confirm once it lands.",
+  "actionSentPayment": "I've sent the payment",
+  "notePaymentConfirmedWaitingBuy": "Payment confirmed. Waiting for the traveler to buy the item.",
+  "notePaymentConfirmedUploadReceipt": "Payment confirmed. Buy the item, then upload a photo of the shop receipt — clear date and the item in frame. That unlocks the shipping step.",
+  "actionUploading": "Uploading…",
+  "actionUploadReceipt": "Upload purchase receipt",
+  "noteTravelerBoughtWillShip": "The traveler bought your item. They’ll ship it once they’re back in the origin country.",
+  "noteReceiptUploadedPostShip": "Receipt uploaded. Post the item when you’re home, then mark it shipped.",
+  "actionMarkShipped": "Mark as shipped",
+  "noteShippedWaitingConfirm": "Shipped. Waiting for the shopper to confirm receipt.",
+  "noteOnWayConfirm": "On the way. Confirm once you have it in hand.",
+  "actionConfirmRelease": "Confirm & release {total}",
+  "@actionConfirmRelease": {
+    "placeholders": { "total": { "type": "String" } }
+  },
+  "ratedLabel": "You rated",
+  "actionRateCounterparty": "Rate {name}",
+  "@actionRateCounterparty": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "fallbackTheOtherParty": "the other party",
+  "noteCompletedThanks": "Completed. Thanks for using Hiww!",
+  "orderStatusFallback": "This order is {status}.",
+  "@orderStatusFallback": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+
+  "stageAcceptedTitle": "Accepted",
+  "stageAcceptedHint": "Offer accepted",
+  "stagePaidTitle": "Paid",
+  "stagePaidHint": "Payment confirmed",
+  "stageBoughtTitle": "Bought",
+  "stageBoughtHint": "Traveler bought the item",
+  "stageInTransitTitle": "In transit",
+  "stageInTransitHint": "On the way to you",
+  "stageDeliveredTitle": "Delivered",
+  "stageDeliveredHint": "Confirm to release payment",
+
+  "errorTapStarToRate": "Tap a star to rate",
+  "infoThanksForReview": "Thanks for the review",
+  "infoPaymentReleased": "Payment released — thank you!",
+  "leaveReviewTitle": "Leave a review",
+  "confirmAndReviewTitle": "Confirm & review",
+  "fallbackTheTraveler": "the traveler",
+  "howWasName": "How was {name}?",
+  "@howWasName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "hintShareHandover": "Share how the handover went (optional)",
+  "actionSubmitReview": "Submit review",
+  "releaseNoteToName": "This releases the held payment to {name}.",
+  "@releaseNoteToName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "errorDescribeProblem": "Please describe the problem (at least 10 characters)",
+  "infoReported": "Reported — the Hiww team will look into it",
+  "reportProblemTitle": "Report a problem",
+  "reportProblemSubtitle": "Money stays held while the Hiww team reviews this.",
+  "hintWhatWentWrong": "What went wrong?",
+  "actionSubmitReport": "Submit report",
+
+  "trustReleasedTo": "Released — {total} to the traveler",
+  "@trustReleasedTo": {
+    "placeholders": { "total": { "type": "String" } }
+  },
+  "trustHolding": "Hiww is holding {total} + {fee} fee",
+  "@trustHolding": {
+    "placeholders": { "total": { "type": "String" }, "fee": { "type": "String" } }
+  },
+  "trustSettled": "Payment for these goods has been settled.",
+  "trustReleasedOnConfirm": "Released to the traveler when you confirm you have the item.",
+  "actionHowProtectionWorks": "How payment protection works",
+  "howProtectionStep1": "You pay Hiww when you accept an offer.",
+  "howProtectionStep2": "Hiww holds the money — the traveler is not paid yet.",
+  "howProtectionStep3": "The traveler buys and ships your item.",
+  "howProtectionStep4": "You confirm you received it, and Hiww releases the payment.",
+  "howProtectionPilotNote": "During the pilot, Hiww settles payments by hand rather than through a card processor. If something goes wrong, use \"Report a problem\" and the Hiww team will step in before any money moves.",
+
+  "emptyInboxTitle": "No messages yet",
+  "emptyInboxMessage": "Chats appear here once you have an order with a traveler or shopper.",
+  "fallbackConversation": "Conversation",
+
+  "errorAttachPhoto": "Could not attach that photo. Try another.",
+  "chatFallbackTitle": "Chat",
+  "sayHello": "Say hello 👋",
+  "tooltipRemovePhoto": "Remove photo",
+  "tooltipAttachPhoto": "Attach a photo",
+  "uploadingPhoto": "Uploading photo…",
+  "photoAttachedTapSend": "Photo attached. Tap send to share it.",
+  "hintMessage": "Message",
+  "tooltipSend": "Send",
+  "statusSent": "Sent",
+  "statusRead": "Read",
+  "purchaseReceiptTitle": "Purchase receipt"
 }

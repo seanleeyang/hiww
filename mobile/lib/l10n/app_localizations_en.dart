@@ -708,4 +708,326 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionDeclineFinalOffer => 'Decline (final offer)';
+
+  @override
+  String get emptyOrdersTitle => 'No orders yet';
+
+  @override
+  String get emptyOrdersMessage =>
+      'When you accept an offer or one of your offers is accepted, the order shows up here so you can track every step.';
+
+  @override
+  String orderRelationBuying(String name) {
+    return 'Buying from $name';
+  }
+
+  @override
+  String orderRelationDelivering(String name) {
+    return 'Delivering for $name';
+  }
+
+  @override
+  String get nextStepPayToStart => 'Pay to get things moving';
+
+  @override
+  String get nextStepWaitingForPayment => 'Waiting for the shopper to pay';
+
+  @override
+  String get nextStepTravelerBuying => 'Traveler is buying your item';
+
+  @override
+  String get nextStepBuyThenUpload => 'Buy the item, then upload the receipt';
+
+  @override
+  String get nextStepBoughtWaitShip =>
+      'Bought — traveler will ship once they’re back';
+
+  @override
+  String get nextStepPostThenShip => 'Post the item, then mark it shipped';
+
+  @override
+  String get nextStepOnWayConfirm => 'On its way — confirm when it arrives';
+
+  @override
+  String get nextStepShippedWaiting =>
+      'Shipped — waiting for the shopper to confirm receipt';
+
+  @override
+  String orderHashTitle(String code) {
+    return 'Order #$code';
+  }
+
+  @override
+  String get roleCarrier => 'Carrier';
+
+  @override
+  String get roleShopper => 'Shopper';
+
+  @override
+  String get actionOpenChat => 'Open chat';
+
+  @override
+  String get actionReport => 'Report';
+
+  @override
+  String orderTotalWithFee(String total, String fee) {
+    return '$total · $fee fee';
+  }
+
+  @override
+  String get noteWaitingForShopperToPay => 'Waiting for the shopper to pay.';
+
+  @override
+  String payWithinOrCancel(String countdown) {
+    return 'Pay within $countdown or the order is cancelled automatically.';
+  }
+
+  @override
+  String shopperHasTimeToPay(String countdown) {
+    return 'Shopper has $countdown to pay before the order auto-cancels.';
+  }
+
+  @override
+  String get howToPayTitle => 'How to pay';
+
+  @override
+  String get contactHiwwForPayment =>
+      'Contact the Hiww team to arrange payment.';
+
+  @override
+  String amountReference(String total, String id) {
+    return 'Amount $total  ·  reference $id';
+  }
+
+  @override
+  String get noteToldUsPaid =>
+      'You\'ve told us you paid. We\'ll confirm once it lands.';
+
+  @override
+  String get actionSentPayment => 'I\'ve sent the payment';
+
+  @override
+  String get notePaymentConfirmedWaitingBuy =>
+      'Payment confirmed. Waiting for the traveler to buy the item.';
+
+  @override
+  String get notePaymentConfirmedUploadReceipt =>
+      'Payment confirmed. Buy the item, then upload a photo of the shop receipt — clear date and the item in frame. That unlocks the shipping step.';
+
+  @override
+  String get actionUploading => 'Uploading…';
+
+  @override
+  String get actionUploadReceipt => 'Upload purchase receipt';
+
+  @override
+  String get noteTravelerBoughtWillShip =>
+      'The traveler bought your item. They’ll ship it once they’re back in the origin country.';
+
+  @override
+  String get noteReceiptUploadedPostShip =>
+      'Receipt uploaded. Post the item when you’re home, then mark it shipped.';
+
+  @override
+  String get actionMarkShipped => 'Mark as shipped';
+
+  @override
+  String get noteShippedWaitingConfirm =>
+      'Shipped. Waiting for the shopper to confirm receipt.';
+
+  @override
+  String get noteOnWayConfirm =>
+      'On the way. Confirm once you have it in hand.';
+
+  @override
+  String actionConfirmRelease(String total) {
+    return 'Confirm & release $total';
+  }
+
+  @override
+  String get ratedLabel => 'You rated';
+
+  @override
+  String actionRateCounterparty(String name) {
+    return 'Rate $name';
+  }
+
+  @override
+  String get fallbackTheOtherParty => 'the other party';
+
+  @override
+  String get noteCompletedThanks => 'Completed. Thanks for using Hiww!';
+
+  @override
+  String orderStatusFallback(String status) {
+    return 'This order is $status.';
+  }
+
+  @override
+  String get stageAcceptedTitle => 'Accepted';
+
+  @override
+  String get stageAcceptedHint => 'Offer accepted';
+
+  @override
+  String get stagePaidTitle => 'Paid';
+
+  @override
+  String get stagePaidHint => 'Payment confirmed';
+
+  @override
+  String get stageBoughtTitle => 'Bought';
+
+  @override
+  String get stageBoughtHint => 'Traveler bought the item';
+
+  @override
+  String get stageInTransitTitle => 'In transit';
+
+  @override
+  String get stageInTransitHint => 'On the way to you';
+
+  @override
+  String get stageDeliveredTitle => 'Delivered';
+
+  @override
+  String get stageDeliveredHint => 'Confirm to release payment';
+
+  @override
+  String get errorTapStarToRate => 'Tap a star to rate';
+
+  @override
+  String get infoThanksForReview => 'Thanks for the review';
+
+  @override
+  String get infoPaymentReleased => 'Payment released — thank you!';
+
+  @override
+  String get leaveReviewTitle => 'Leave a review';
+
+  @override
+  String get confirmAndReviewTitle => 'Confirm & review';
+
+  @override
+  String get fallbackTheTraveler => 'the traveler';
+
+  @override
+  String howWasName(String name) {
+    return 'How was $name?';
+  }
+
+  @override
+  String get hintShareHandover => 'Share how the handover went (optional)';
+
+  @override
+  String get actionSubmitReview => 'Submit review';
+
+  @override
+  String releaseNoteToName(String name) {
+    return 'This releases the held payment to $name.';
+  }
+
+  @override
+  String get errorDescribeProblem =>
+      'Please describe the problem (at least 10 characters)';
+
+  @override
+  String get infoReported => 'Reported — the Hiww team will look into it';
+
+  @override
+  String get reportProblemTitle => 'Report a problem';
+
+  @override
+  String get reportProblemSubtitle =>
+      'Money stays held while the Hiww team reviews this.';
+
+  @override
+  String get hintWhatWentWrong => 'What went wrong?';
+
+  @override
+  String get actionSubmitReport => 'Submit report';
+
+  @override
+  String trustReleasedTo(String total) {
+    return 'Released — $total to the traveler';
+  }
+
+  @override
+  String trustHolding(String total, String fee) {
+    return 'Hiww is holding $total + $fee fee';
+  }
+
+  @override
+  String get trustSettled => 'Payment for these goods has been settled.';
+
+  @override
+  String get trustReleasedOnConfirm =>
+      'Released to the traveler when you confirm you have the item.';
+
+  @override
+  String get actionHowProtectionWorks => 'How payment protection works';
+
+  @override
+  String get howProtectionStep1 => 'You pay Hiww when you accept an offer.';
+
+  @override
+  String get howProtectionStep2 =>
+      'Hiww holds the money — the traveler is not paid yet.';
+
+  @override
+  String get howProtectionStep3 => 'The traveler buys and ships your item.';
+
+  @override
+  String get howProtectionStep4 =>
+      'You confirm you received it, and Hiww releases the payment.';
+
+  @override
+  String get howProtectionPilotNote =>
+      'During the pilot, Hiww settles payments by hand rather than through a card processor. If something goes wrong, use \"Report a problem\" and the Hiww team will step in before any money moves.';
+
+  @override
+  String get emptyInboxTitle => 'No messages yet';
+
+  @override
+  String get emptyInboxMessage =>
+      'Chats appear here once you have an order with a traveler or shopper.';
+
+  @override
+  String get fallbackConversation => 'Conversation';
+
+  @override
+  String get errorAttachPhoto => 'Could not attach that photo. Try another.';
+
+  @override
+  String get chatFallbackTitle => 'Chat';
+
+  @override
+  String get sayHello => 'Say hello 👋';
+
+  @override
+  String get tooltipRemovePhoto => 'Remove photo';
+
+  @override
+  String get tooltipAttachPhoto => 'Attach a photo';
+
+  @override
+  String get uploadingPhoto => 'Uploading photo…';
+
+  @override
+  String get photoAttachedTapSend => 'Photo attached. Tap send to share it.';
+
+  @override
+  String get hintMessage => 'Message';
+
+  @override
+  String get tooltipSend => 'Send';
+
+  @override
+  String get statusSent => 'Sent';
+
+  @override
+  String get statusRead => 'Read';
+
+  @override
+  String get purchaseReceiptTitle => 'Purchase receipt';
 }

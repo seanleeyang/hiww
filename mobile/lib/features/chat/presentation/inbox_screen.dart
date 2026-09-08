@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/initials_avatar.dart';
@@ -13,6 +14,7 @@ class InboxScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final inbox = ref.watch(inboxProvider);
     final scheme = Theme.of(context).colorScheme;
 
@@ -23,12 +25,12 @@ class InboxScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(inboxProvider),
         data: (threads) {
           if (threads.isEmpty) {
-            return ListView(children: const [
-              SizedBox(height: 90),
+            return ListView(children: [
+              const SizedBox(height: 90),
               EmptyState(
                 icon: Icons.forum_outlined,
-                title: 'No messages yet',
-                message: 'Chats appear here once you have an order with a traveler or shopper.',
+                title: l10n.emptyInboxTitle,
+                message: l10n.emptyInboxMessage,
               ),
             ]);
           }
@@ -50,7 +52,7 @@ class InboxScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        t.counterparty?.fullName ?? 'Conversation',
+                        t.counterparty?.fullName ?? l10n.fallbackConversation,
                         style: TextStyle(
                             fontWeight: unread ? FontWeight.w700 : FontWeight.w600),
                       ),

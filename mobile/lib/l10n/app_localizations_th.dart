@@ -690,4 +690,324 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get actionDeclineFinalOffer => 'ปฏิเสธ (ข้อเสนอสุดท้าย)';
+
+  @override
+  String get emptyOrdersTitle => 'ยังไม่มีคำสั่งซื้อ';
+
+  @override
+  String get emptyOrdersMessage =>
+      'เมื่อคุณรับข้อเสนอ หรือข้อเสนอของคุณถูกรับ คำสั่งซื้อจะปรากฏที่นี่ให้คุณติดตามได้ทุกขั้นตอน';
+
+  @override
+  String orderRelationBuying(String name) {
+    return 'ซื้อจาก $name';
+  }
+
+  @override
+  String orderRelationDelivering(String name) {
+    return 'ส่งของให้ $name';
+  }
+
+  @override
+  String get nextStepPayToStart => 'ชำระเงินเพื่อเริ่มดำเนินการ';
+
+  @override
+  String get nextStepWaitingForPayment => 'รอผู้ซื้อชำระเงิน';
+
+  @override
+  String get nextStepTravelerBuying => 'นักเดินทางกำลังซื้อสินค้าให้คุณ';
+
+  @override
+  String get nextStepBuyThenUpload => 'ซื้อสินค้าแล้วอัปโหลดใบเสร็จ';
+
+  @override
+  String get nextStepBoughtWaitShip =>
+      'ซื้อแล้ว — นักเดินทางจะจัดส่งเมื่อกลับถึง';
+
+  @override
+  String get nextStepPostThenShip => 'ส่งพัสดุแล้วกดทำเครื่องหมายว่าจัดส่งแล้ว';
+
+  @override
+  String get nextStepOnWayConfirm => 'กำลังจัดส่ง — ยืนยันเมื่อได้รับสินค้า';
+
+  @override
+  String get nextStepShippedWaiting =>
+      'จัดส่งแล้ว — รอผู้ซื้อยืนยันการรับสินค้า';
+
+  @override
+  String orderHashTitle(String code) {
+    return 'คำสั่งซื้อ #$code';
+  }
+
+  @override
+  String get roleCarrier => 'ผู้ขนส่ง';
+
+  @override
+  String get roleShopper => 'ผู้ซื้อ';
+
+  @override
+  String get actionOpenChat => 'เปิดแชท';
+
+  @override
+  String get actionReport => 'แจ้งปัญหา';
+
+  @override
+  String orderTotalWithFee(String total, String fee) {
+    return '$total · ค่าธรรมเนียม $fee';
+  }
+
+  @override
+  String get noteWaitingForShopperToPay => 'รอผู้ซื้อชำระเงิน';
+
+  @override
+  String payWithinOrCancel(String countdown) {
+    return 'ชำระเงินภายใน $countdown ไม่เช่นนั้นคำสั่งซื้อจะถูกยกเลิกอัตโนมัติ';
+  }
+
+  @override
+  String shopperHasTimeToPay(String countdown) {
+    return 'ผู้ซื้อมีเวลา $countdown ในการชำระเงินก่อนคำสั่งซื้อจะถูกยกเลิกอัตโนมัติ';
+  }
+
+  @override
+  String get howToPayTitle => 'วิธีชำระเงิน';
+
+  @override
+  String get contactHiwwForPayment =>
+      'ติดต่อทีมงาน Hiww เพื่อจัดการการชำระเงิน';
+
+  @override
+  String amountReference(String total, String id) {
+    return 'จำนวนเงิน $total  ·  เลขอ้างอิง $id';
+  }
+
+  @override
+  String get noteToldUsPaid =>
+      'คุณแจ้งว่าชำระเงินแล้ว เราจะยืนยันเมื่อได้รับเงิน';
+
+  @override
+  String get actionSentPayment => 'ฉันชำระเงินแล้ว';
+
+  @override
+  String get notePaymentConfirmedWaitingBuy =>
+      'ยืนยันการชำระเงินแล้ว รอนักเดินทางซื้อสินค้า';
+
+  @override
+  String get notePaymentConfirmedUploadReceipt =>
+      'ยืนยันการชำระเงินแล้ว ซื้อสินค้าแล้วอัปโหลดรูปใบเสร็จ — ให้เห็นวันที่และสินค้าชัดเจน จะปลดล็อกขั้นตอนการจัดส่ง';
+
+  @override
+  String get actionUploading => 'กำลังอัปโหลด…';
+
+  @override
+  String get actionUploadReceipt => 'อัปโหลดใบเสร็จการซื้อ';
+
+  @override
+  String get noteTravelerBoughtWillShip =>
+      'นักเดินทางซื้อสินค้าของคุณแล้ว จะจัดส่งเมื่อกลับถึงประเทศต้นทาง';
+
+  @override
+  String get noteReceiptUploadedPostShip =>
+      'อัปโหลดใบเสร็จแล้ว ส่งพัสดุเมื่อคุณถึงบ้าน แล้วกดทำเครื่องหมายว่าจัดส่งแล้ว';
+
+  @override
+  String get actionMarkShipped => 'ทำเครื่องหมายว่าจัดส่งแล้ว';
+
+  @override
+  String get noteShippedWaitingConfirm =>
+      'จัดส่งแล้ว รอผู้ซื้อยืนยันการรับสินค้า';
+
+  @override
+  String get noteOnWayConfirm => 'กำลังจัดส่ง ยืนยันเมื่อคุณได้รับสินค้าแล้ว';
+
+  @override
+  String actionConfirmRelease(String total) {
+    return 'ยืนยันและปล่อยเงิน $total';
+  }
+
+  @override
+  String get ratedLabel => 'คุณให้คะแนน';
+
+  @override
+  String actionRateCounterparty(String name) {
+    return 'ให้คะแนน $name';
+  }
+
+  @override
+  String get fallbackTheOtherParty => 'อีกฝ่าย';
+
+  @override
+  String get noteCompletedThanks => 'เสร็จสมบูรณ์ ขอบคุณที่ใช้ Hiww!';
+
+  @override
+  String orderStatusFallback(String status) {
+    return 'คำสั่งซื้อนี้อยู่ในสถานะ $status';
+  }
+
+  @override
+  String get stageAcceptedTitle => 'รับข้อเสนอแล้ว';
+
+  @override
+  String get stageAcceptedHint => 'รับข้อเสนอแล้ว';
+
+  @override
+  String get stagePaidTitle => 'ชำระเงินแล้ว';
+
+  @override
+  String get stagePaidHint => 'ยืนยันการชำระเงินแล้ว';
+
+  @override
+  String get stageBoughtTitle => 'ซื้อแล้ว';
+
+  @override
+  String get stageBoughtHint => 'นักเดินทางซื้อสินค้าแล้ว';
+
+  @override
+  String get stageInTransitTitle => 'กำลังจัดส่ง';
+
+  @override
+  String get stageInTransitHint => 'กำลังเดินทางมาหาคุณ';
+
+  @override
+  String get stageDeliveredTitle => 'จัดส่งสำเร็จ';
+
+  @override
+  String get stageDeliveredHint => 'ยืนยันเพื่อปล่อยเงิน';
+
+  @override
+  String get errorTapStarToRate => 'แตะดาวเพื่อให้คะแนน';
+
+  @override
+  String get infoThanksForReview => 'ขอบคุณสำหรับรีวิว';
+
+  @override
+  String get infoPaymentReleased => 'ปล่อยเงินแล้ว — ขอบคุณ!';
+
+  @override
+  String get leaveReviewTitle => 'เขียนรีวิว';
+
+  @override
+  String get confirmAndReviewTitle => 'ยืนยันและรีวิว';
+
+  @override
+  String get fallbackTheTraveler => 'นักเดินทาง';
+
+  @override
+  String howWasName(String name) {
+    return '$name เป็นอย่างไรบ้าง?';
+  }
+
+  @override
+  String get hintShareHandover => 'เล่าว่าการส่งมอบเป็นอย่างไร (ไม่บังคับ)';
+
+  @override
+  String get actionSubmitReview => 'ส่งรีวิว';
+
+  @override
+  String releaseNoteToName(String name) {
+    return 'การกระทำนี้จะปล่อยเงินที่ถือไว้ให้ $name';
+  }
+
+  @override
+  String get errorDescribeProblem => 'กรุณาอธิบายปัญหา (อย่างน้อย 10 ตัวอักษร)';
+
+  @override
+  String get infoReported => 'แจ้งปัญหาแล้ว — ทีมงาน Hiww จะตรวจสอบ';
+
+  @override
+  String get reportProblemTitle => 'แจ้งปัญหา';
+
+  @override
+  String get reportProblemSubtitle =>
+      'เงินจะถูกถือไว้ระหว่างที่ทีมงาน Hiww ตรวจสอบเรื่องนี้';
+
+  @override
+  String get hintWhatWentWrong => 'เกิดอะไรขึ้น?';
+
+  @override
+  String get actionSubmitReport => 'ส่งรายงาน';
+
+  @override
+  String trustReleasedTo(String total) {
+    return 'ปล่อยเงินแล้ว — $total ให้นักเดินทาง';
+  }
+
+  @override
+  String trustHolding(String total, String fee) {
+    return 'Hiww ถือเงิน $total + ค่าธรรมเนียม $fee ไว้';
+  }
+
+  @override
+  String get trustSettled => 'การชำระเงินสำหรับสินค้านี้เสร็จสมบูรณ์แล้ว';
+
+  @override
+  String get trustReleasedOnConfirm =>
+      'จะปล่อยให้นักเดินทางเมื่อคุณยืนยันว่าได้รับสินค้าแล้ว';
+
+  @override
+  String get actionHowProtectionWorks => 'การคุ้มครองการชำระเงินทำงานอย่างไร';
+
+  @override
+  String get howProtectionStep1 => 'คุณชำระเงินให้ Hiww เมื่อรับข้อเสนอ';
+
+  @override
+  String get howProtectionStep2 =>
+      'Hiww ถือเงินไว้ — นักเดินทางยังไม่ได้รับเงิน';
+
+  @override
+  String get howProtectionStep3 => 'นักเดินทางซื้อและจัดส่งสินค้าให้คุณ';
+
+  @override
+  String get howProtectionStep4 =>
+      'คุณยืนยันว่าได้รับสินค้าแล้ว Hiww จึงปล่อยเงิน';
+
+  @override
+  String get howProtectionPilotNote =>
+      'ในช่วงนำร่อง Hiww จะดำเนินการชำระเงินด้วยตนเองแทนการใช้ผู้ให้บริการบัตร หากมีปัญหาใดๆ ให้ใช้ \"แจ้งปัญหา\" และทีมงาน Hiww จะเข้ามาช่วยก่อนที่เงินจะเคลื่อนไหว';
+
+  @override
+  String get emptyInboxTitle => 'ยังไม่มีข้อความ';
+
+  @override
+  String get emptyInboxMessage =>
+      'แชทจะปรากฏที่นี่เมื่อคุณมีคำสั่งซื้อกับนักเดินทางหรือผู้ซื้อ';
+
+  @override
+  String get fallbackConversation => 'การสนทนา';
+
+  @override
+  String get errorAttachPhoto => 'ไม่สามารถแนบรูปนี้ได้ ลองรูปอื่น';
+
+  @override
+  String get chatFallbackTitle => 'แชท';
+
+  @override
+  String get sayHello => 'ทักทายกันหน่อย 👋';
+
+  @override
+  String get tooltipRemovePhoto => 'ลบรูปภาพ';
+
+  @override
+  String get tooltipAttachPhoto => 'แนบรูปภาพ';
+
+  @override
+  String get uploadingPhoto => 'กำลังอัปโหลดรูปภาพ…';
+
+  @override
+  String get photoAttachedTapSend => 'แนบรูปภาพแล้ว กดส่งเพื่อแชร์';
+
+  @override
+  String get hintMessage => 'ข้อความ';
+
+  @override
+  String get tooltipSend => 'ส่ง';
+
+  @override
+  String get statusSent => 'ส่งแล้ว';
+
+  @override
+  String get statusRead => 'อ่านแล้ว';
+
+  @override
+  String get purchaseReceiptTitle => 'ใบเสร็จการซื้อ';
 }

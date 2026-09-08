@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 import '../../../ui/soft_card.dart';
 import '../domain/order.dart';
@@ -12,6 +13,7 @@ class TrustPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final hiww = context.hiww;
     final released = order.status == 'delivered';
@@ -29,8 +31,8 @@ class TrustPanel extends StatelessWidget {
               Expanded(
                 child: Text(
                   released
-                      ? 'Released — ${order.totalLabel} to the traveler'
-                      : 'Hiww is holding ${order.totalLabel} + ${order.feesLabel} fee',
+                      ? l10n.trustReleasedTo(order.totalLabel)
+                      : l10n.trustHolding(order.totalLabel, order.feesLabel),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
@@ -38,9 +40,7 @@ class TrustPanel extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            released
-                ? 'Payment for these goods has been settled.'
-                : 'Released to the traveler when you confirm you have the item.',
+            released ? l10n.trustSettled : l10n.trustReleasedOnConfirm,
             style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 4),
@@ -53,7 +53,7 @@ class TrustPanel extends StatelessWidget {
                 minimumSize: const Size(0, 0),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text('How payment protection works'),
+              child: Text(l10n.actionHowProtectionWorks),
             ),
           ),
         ],
@@ -62,6 +62,7 @@ class TrustPanel extends StatelessWidget {
   }
 
   void _showHowItWorks(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
       builder: (_) => SafeArea(
@@ -71,20 +72,16 @@ class TrustPanel extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('How payment protection works',
+              Text(l10n.actionHowProtectionWorks,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
-              _step(context, '1', 'You pay Hiww when you accept an offer.'),
-              _step(context, '2',
-                  'Hiww holds the money — the traveler is not paid yet.'),
-              _step(context, '3', 'The traveler buys and ships your item.'),
-              _step(context, '4',
-                  'You confirm you received it, and Hiww releases the payment.'),
+              _step(context, '1', l10n.howProtectionStep1),
+              _step(context, '2', l10n.howProtectionStep2),
+              _step(context, '3', l10n.howProtectionStep3),
+              _step(context, '4', l10n.howProtectionStep4),
               const SizedBox(height: 12),
               Text(
-                'During the pilot, Hiww settles payments by hand rather than through '
-                'a card processor. If something goes wrong, use "Report a problem" '
-                'and the Hiww team will step in before any money moves.',
+                l10n.howProtectionPilotNote,
                 style: TextStyle(
                     fontSize: 13,
                     color: Theme.of(context).colorScheme.onSurfaceVariant),

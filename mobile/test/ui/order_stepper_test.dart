@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/features/orders/domain/order.dart';
 import 'package:hiww_mobile/features/orders/presentation/order_stepper.dart';
+import 'package:hiww_mobile/l10n/app_localizations.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
 
 Order _order(String status,
@@ -23,6 +24,8 @@ Order _order(String status,
 
 Widget _wrap(Widget child) => MaterialApp(
       theme: hiwwTheme(Brightness.light),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: child),
     );
 

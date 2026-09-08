@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 import '../domain/order.dart';
 
@@ -31,15 +32,16 @@ class OrderStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final hiww = context.hiww;
 
     final stages = <_Stage>[
-      _Stage('Accepted', 'Offer accepted', order.createdAt),
-      _Stage('Paid', 'Payment confirmed', order.confirmedAt),
-      _Stage('Bought', 'Traveler bought the item', order.purchasedAt),
-      _Stage('In transit', 'On the way to you', order.shippedAt),
-      _Stage('Delivered', 'Confirm to release payment', order.deliveredAt),
+      _Stage(l10n.stageAcceptedTitle, l10n.stageAcceptedHint, order.createdAt),
+      _Stage(l10n.stagePaidTitle, l10n.stagePaidHint, order.confirmedAt),
+      _Stage(l10n.stageBoughtTitle, l10n.stageBoughtHint, order.purchasedAt),
+      _Stage(l10n.stageInTransitTitle, l10n.stageInTransitHint, order.shippedAt),
+      _Stage(l10n.stageDeliveredTitle, l10n.stageDeliveredHint, order.deliveredAt),
     ];
 
     return Column(
