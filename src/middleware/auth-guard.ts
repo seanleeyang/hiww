@@ -21,6 +21,19 @@ const PUBLIC_ROUTES = new Set<string>([
 ]);
 
 /**
+ * Read-only routes a signed-out guest can browse — see the mobile app's
+ * guest-mode routing in `app_router.dart`. Checked only for GET: several of
+ * these path patterns (`/api/trips/:id`, `/api/requests/:id`) are shared with
+ * PATCH/DELETE handlers on the same route, which must stay auth-required.
+ */
+const PUBLIC_GET_ROUTES = new Set<string>([
+  '/api/discover/feed',
+  '/api/trips/:id',
+  '/api/requests/:id',
+  '/api/users/:id/reviews',
+]);
+
+/**
  * Reachable by a logged-in but not-yet-verified user, so they can see their
  * status, verify, or ask for a new code. Everything else needs both
  * `email_verified_at` and `phone_verified_at` set (see the register route,
@@ -91,6 +104,9 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
 
     const routeUrl = matchedRoute(request);
     if (!routeUrl || PUBLIC_ROUTES.has(routeUrl)) {
+      return;
+    }
+    if (request.method === 'GET' && PUBLIC_GET_ROUTES.has(routeUrl)) {
       return;
     }
 

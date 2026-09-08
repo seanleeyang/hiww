@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/countries.dart';
+import '../../../core/guest_guard.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
@@ -88,13 +89,16 @@ class TripDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   if (!isMine)
                     FilledButton.icon(
-                      onPressed: () => showPostWantSheet(
-                        context,
-                        sourceCountry: trip.arrivalCountry,
-                        sourceCity: trip.arrivalCity,
-                        targetTripId: trip.id,
-                        targetTravelerName: d.traveler?.fullName,
-                      ),
+                      onPressed: () {
+                        if (!requireSignedIn(context, ref)) return;
+                        showPostWantSheet(
+                          context,
+                          sourceCountry: trip.arrivalCountry,
+                          sourceCity: trip.arrivalCity,
+                          targetTripId: trip.id,
+                          targetTravelerName: d.traveler?.fullName,
+                        );
+                      },
                       icon: const Icon(Icons.add_shopping_cart_outlined),
                       label: Text(l10n.actionRequestFromThisTrip),
                     ),

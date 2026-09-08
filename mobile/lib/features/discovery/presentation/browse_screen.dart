@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/guest_guard.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/category_chips.dart';
@@ -135,7 +136,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
               label: Text(l10n.actionPostATrip),
             )
           : FloatingActionButton.extended(
-              onPressed: () => showPostWantSheet(context),
+              onPressed: () {
+                if (requireSignedIn(context, ref)) showPostWantSheet(context);
+              },
               icon: const Icon(Icons.add),
               label: Text(l10n.actionPostAWant),
             ),

@@ -327,5 +327,27 @@
   "tooltipSend": "ส่ง",
   "statusSent": "ส่งแล้ว",
   "statusRead": "อ่านแล้ว",
-  "purchaseReceiptTitle": "ใบเสร็จการซื้อ"
+  "purchaseReceiptTitle": "ใบเสร็จการซื้อ",
+
+  "actionSkip": "ข้าม",
+  "actionNext": "ถัดไป",
+  "actionGetStarted": "เริ่มต้นใช้งาน",
+  "onboardingSlide1Title": "ช้อปจากทุกที่ในโลก",
+  "onboardingSlide1Body": "ได้เกือบทุกอย่างจากต่างประเทศ — นักเดินทางจะซื้อและนำมาส่งให้คุณ",
+  "onboardingSlide2Title": "จัดส่งโดยนักเดินทางตัวจริง",
+  "onboardingSlide2Body": "ไม่มีคลังสินค้า ไม่มีค่าจัดส่ง แค่คนที่กำลังเดินทางไปทางเดียวกับคุณอยู่แล้ว",
+  "onboardingSlide3Title": "สร้างรายได้จากทริปที่คุณเดินทางอยู่แล้ว",
+  "onboardingSlide3Body": "พกสินค้าเพิ่มอีกนิดในทริปหน้าของคุณ แล้วรับเงินจากมัน",
+
+  "landingTagline": "ช้อปทั่วโลก จัดส่งโดยนักเดินทาง",
+  "actionSignInApple": "เข้าสู่ระบบด้วย Apple",
+  "actionContinueFacebook": "ดำเนินการต่อด้วย Facebook",
+  "actionSignInGoogle": "เข้าสู่ระบบด้วย Google",
+  "dividerOrUseEmail": "หรือใช้อีเมลของคุณ",
+  "actionExploreGuest": "สำรวจ Hiww — สร้างบัญชีภายหลัง",
+  "providerApple": "Apple",
+  "providerFacebook": "Facebook",
+  "providerGoogle": "Google",
+  "errorSocialNotConfigured": "ยังไม่ได้ตั้งค่าการเข้าสู่ระบบด้วย {provider}",
+  "infoLogInToContinue": "เข้าสู่ระบบเพื่อดำเนินการต่อ"
 }

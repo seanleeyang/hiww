@@ -72,23 +72,25 @@ class AppShell extends ConsumerWidget {
 
     final notifUnread = ref.watch(notificationUnreadProvider);
     final l10n = AppLocalizations.of(context)!;
+    final signedIn = user != null;
 
     final appBar = AppBar(
       title: const BrandMark(),
       titleSpacing: 16,
       actions: [
-        Tooltip(
-          message: l10n.tooltipNotifications,
-          child: IconButton(
-            onPressed: () => context.push('/notifications'),
-            icon: notifUnread > 0
-                ? Badge(
-                    label: Text('$notifUnread'),
-                    child: const Icon(Icons.notifications_none),
-                  )
-                : const Icon(Icons.notifications_none),
+        if (signedIn)
+          Tooltip(
+            message: l10n.tooltipNotifications,
+            child: IconButton(
+              onPressed: () => context.push('/notifications'),
+              icon: notifUnread > 0
+                  ? Badge(
+                      label: Text('$notifUnread'),
+                      child: const Icon(Icons.notifications_none),
+                    )
+                  : const Icon(Icons.notifications_none),
+            ),
           ),
-        ),
         Tooltip(
           message: l10n.tooltipSettings,
           child: IconButton(
@@ -96,25 +98,34 @@ class AppShell extends ConsumerWidget {
             icon: const Icon(Icons.settings_outlined),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Tooltip(
-            message: l10n.tooltipAccount,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(999),
-              onTap: () => context.go('/account'),
-              child: Semantics(
-                button: true,
-                label: l10n.tooltipAccount,
-                child: InitialsAvatar(
-                  name: user?.fullName ?? 'Hiww',
-                  url: user?.avatarUrl,
-                  radius: 17,
+        if (signedIn)
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Tooltip(
+              message: l10n.tooltipAccount,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(999),
+                onTap: () => context.go('/account'),
+                child: Semantics(
+                  button: true,
+                  label: l10n.tooltipAccount,
+                  child: InitialsAvatar(
+                    name: user.fullName,
+                    url: user.avatarUrl,
+                    radius: 17,
+                  ),
                 ),
               ),
             ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: TextButton(
+              onPressed: () => context.push('/landing'),
+              child: Text(l10n.actionLogIn),
+            ),
           ),
-        ),
       ],
     );
 

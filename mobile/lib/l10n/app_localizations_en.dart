@@ -1036,4 +1036,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get purchaseReceiptTitle => 'Purchase receipt';
+
+  @override
+  String get actionSkip => 'Skip';
+
+  @override
+  String get actionNext => 'Next';
+
+  @override
+  String get actionGetStarted => 'Get started';
+
+  @override
+  String get onboardingSlide1Title => 'Shop from anywhere';
+
+  @override
+  String get onboardingSlide1Body =>
+      'Get almost anything from abroad — travelers pick it up and bring it to you.';
+
+  @override
+  String get onboardingSlide2Title => 'Delivered by real travelers';
+
+  @override
+  String get onboardingSlide2Body =>
+      'No warehouses, no shipping fees — just people already heading your way.';
+
+  @override
+  String get onboardingSlide3Title => 'Earn on trips you already take';
+
+  @override
+  String get onboardingSlide3Body =>
+      'Carry a few extra items on your next trip and get paid for it.';
+
+  @override
+  String get landingTagline => 'Shop the world, delivered by travelers.';
+
+  @override
+  String get actionSignInApple => 'Sign in with Apple';
+
+  @override
+  String get actionContinueFacebook => 'Continue with Facebook';
+
+  @override
+  String get actionSignInGoogle => 'Sign in with Google';
+
+  @override
+  String get dividerOrUseEmail => 'or use your email';
+
+  @override
+  String get actionExploreGuest => 'Explore Hiww — create an account later';
+
+  @override
+  String get providerApple => 'Apple';
+
+  @override
+  String get providerFacebook => 'Facebook';
+
+  @override
+  String get providerGoogle => 'Google';
+
+  @override
+  String errorSocialNotConfigured(String provider) {
+    return '$provider sign-in isn\'t set up yet';
+  }
+
+  @override
+  String get infoLogInToContinue => 'Log in to continue';
 }

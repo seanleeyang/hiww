@@ -1016,4 +1016,69 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get purchaseReceiptTitle => 'ใบเสร็จการซื้อ';
+
+  @override
+  String get actionSkip => 'ข้าม';
+
+  @override
+  String get actionNext => 'ถัดไป';
+
+  @override
+  String get actionGetStarted => 'เริ่มต้นใช้งาน';
+
+  @override
+  String get onboardingSlide1Title => 'ช้อปจากทุกที่ในโลก';
+
+  @override
+  String get onboardingSlide1Body =>
+      'ได้เกือบทุกอย่างจากต่างประเทศ — นักเดินทางจะซื้อและนำมาส่งให้คุณ';
+
+  @override
+  String get onboardingSlide2Title => 'จัดส่งโดยนักเดินทางตัวจริง';
+
+  @override
+  String get onboardingSlide2Body =>
+      'ไม่มีคลังสินค้า ไม่มีค่าจัดส่ง แค่คนที่กำลังเดินทางไปทางเดียวกับคุณอยู่แล้ว';
+
+  @override
+  String get onboardingSlide3Title => 'สร้างรายได้จากทริปที่คุณเดินทางอยู่แล้ว';
+
+  @override
+  String get onboardingSlide3Body =>
+      'พกสินค้าเพิ่มอีกนิดในทริปหน้าของคุณ แล้วรับเงินจากมัน';
+
+  @override
+  String get landingTagline => 'ช้อปทั่วโลก จัดส่งโดยนักเดินทาง';
+
+  @override
+  String get actionSignInApple => 'เข้าสู่ระบบด้วย Apple';
+
+  @override
+  String get actionContinueFacebook => 'ดำเนินการต่อด้วย Facebook';
+
+  @override
+  String get actionSignInGoogle => 'เข้าสู่ระบบด้วย Google';
+
+  @override
+  String get dividerOrUseEmail => 'หรือใช้อีเมลของคุณ';
+
+  @override
+  String get actionExploreGuest => 'สำรวจ Hiww — สร้างบัญชีภายหลัง';
+
+  @override
+  String get providerApple => 'Apple';
+
+  @override
+  String get providerFacebook => 'Facebook';
+
+  @override
+  String get providerGoogle => 'Google';
+
+  @override
+  String errorSocialNotConfigured(String provider) {
+    return 'ยังไม่ได้ตั้งค่าการเข้าสู่ระบบด้วย $provider';
+  }
+
+  @override
+  String get infoLogInToContinue => 'เข้าสู่ระบบเพื่อดำเนินการต่อ';
 }

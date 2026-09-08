@@ -60,7 +60,9 @@ class _SignedOutRepository implements AuthRepository {
 }
 
 void main() {
-  testWidgets('unauthenticated launch shows the login screen', (tester) async {
+  testWidgets(
+      'unauthenticated launch shows the landing screen, and Log in opens the login screen',
+      (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -69,6 +71,12 @@ void main() {
         child: const HiwwApp(),
       ),
     );
+    await tester.pumpAndSettle();
+
+    // Landing screen first — social buttons, email path, guest link.
+    expect(find.text('Explore Hiww — create an account later'), findsOneWidget);
+
+    await tester.tap(find.text('Log in'));
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome back'), findsOneWidget);
@@ -100,6 +108,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Log in'));
+    await tester.pumpAndSettle();
+
+    // The social buttons above the email form push "Forgot password?" below
+    // the fold in the test viewport — scroll it into view first.
+    await tester.ensureVisible(find.text('Forgot password?'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Forgot password?'));
     await tester.pumpAndSettle();
 

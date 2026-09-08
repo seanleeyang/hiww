@@ -1909,6 +1909,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Purchase receipt'**
   String get purchaseReceiptTitle;
+
+  /// No description provided for @actionSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get actionSkip;
+
+  /// No description provided for @actionNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get actionNext;
+
+  /// No description provided for @actionGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get actionGetStarted;
+
+  /// No description provided for @onboardingSlide1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop from anywhere'**
+  String get onboardingSlide1Title;
+
+  /// No description provided for @onboardingSlide1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Get almost anything from abroad — travelers pick it up and bring it to you.'**
+  String get onboardingSlide1Body;
+
+  /// No description provided for @onboardingSlide2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered by real travelers'**
+  String get onboardingSlide2Title;
+
+  /// No description provided for @onboardingSlide2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'No warehouses, no shipping fees — just people already heading your way.'**
+  String get onboardingSlide2Body;
+
+  /// No description provided for @onboardingSlide3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn on trips you already take'**
+  String get onboardingSlide3Title;
+
+  /// No description provided for @onboardingSlide3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry a few extra items on your next trip and get paid for it.'**
+  String get onboardingSlide3Body;
+
+  /// No description provided for @landingTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop the world, delivered by travelers.'**
+  String get landingTagline;
+
+  /// No description provided for @actionSignInApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Apple'**
+  String get actionSignInApple;
+
+  /// No description provided for @actionContinueFacebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Facebook'**
+  String get actionContinueFacebook;
+
+  /// No description provided for @actionSignInGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get actionSignInGoogle;
+
+  /// No description provided for @dividerOrUseEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'or use your email'**
+  String get dividerOrUseEmail;
+
+  /// No description provided for @actionExploreGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Hiww — create an account later'**
+  String get actionExploreGuest;
+
+  /// No description provided for @providerApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple'**
+  String get providerApple;
+
+  /// No description provided for @providerFacebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Facebook'**
+  String get providerFacebook;
+
+  /// No description provided for @providerGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google'**
+  String get providerGoogle;
+
+  /// No description provided for @errorSocialNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} sign-in isn\'t set up yet'**
+  String errorSocialNotConfigured(String provider);
+
+  /// No description provided for @infoLogInToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to continue'**
+  String get infoLogInToContinue;
 }
 
 class _AppLocalizationsDelegate

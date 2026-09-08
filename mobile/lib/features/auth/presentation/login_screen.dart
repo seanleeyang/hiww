@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../application/auth_controller.dart';
 import 'auth_form_field.dart';
 import 'auth_scaffold.dart';
+import 'social_auth_buttons.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -62,6 +63,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SocialAuthButtons(),
+            const SocialAuthDivider(),
             AuthFormField(
               controller: _email,
               label: l10n.fieldEmail,

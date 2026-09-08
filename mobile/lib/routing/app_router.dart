@@ -12,10 +12,13 @@ import '../features/auth/presentation/verify_otp_screen.dart';
 import '../features/chat/data/chat_repository.dart';
 import '../features/chat/presentation/inbox_screen.dart';
 import '../features/chat/presentation/order_chat_screen.dart';
+import '../features/auth/presentation/landing_screen.dart';
 import '../features/discovery/data/discovery_repository.dart';
 import '../features/notifications/data/notifications_repository.dart';
 import '../features/notifications/presentation/notifications_screen.dart';
 import '../features/discovery/presentation/browse_screen.dart';
+import '../features/onboarding/application/onboarding_controller.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/orders/data/orders_repository.dart';
 import '../features/orders/presentation/confirm_review_screen.dart';
 import '../features/orders/presentation/my_orders_screen.dart';
@@ -43,6 +46,7 @@ import '../features/wants/presentation/want_detail_screen.dart';
 /// wants after switching accounts in the same tab/session).
 class _AuthRefresh extends ChangeNotifier {
   _AuthRefresh(Ref ref) {
+    ref.listen(onboardingSeenProvider, (_, _) => notifyListeners());
     ref.listen(authControllerProvider, (previous, next) {
       final previousId = _userId(previous);
       final nextId = _userId(next);
@@ -72,37 +76,69 @@ class _AuthRefresh extends ChangeNotifier {
   }
 }
 
+/// A guest (signed-out, no account) may only *view* a few read-only routes —
+/// Browse, and one trip/want's detail page. Every action route (post/edit/
+/// offer/order/chat/account/…) still requires signing in. `/trips/new` looks
+/// like it could match the `/trips/:id` shape but must not — excluded
+/// explicitly.
+bool _isGuestViewableRoute(String loc) {
+  if (loc == '/browse') return true;
+  if (RegExp(r'^/trips/(?!new$)[^/]+$').hasMatch(loc)) return true;
+  if (RegExp(r'^/wants/[^/]+$').hasMatch(loc)) return true;
+  return false;
+}
+
+const _preAuthRoutes = {
+  '/landing',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+};
+
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _AuthRefresh(ref);
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
-    initialLocation: '/browse',
+    initialLocation: '/landing',
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
       final loc = state.matchedLocation;
-      final onAuthPage = loc == '/login' ||
-          loc == '/register' ||
-          loc == '/forgot-password' ||
-          loc == '/reset-password';
 
       if (auth.isLoading && auth.valueOrNull == null) {
         return loc == '/splash' ? null : '/splash';
       }
 
       final signedInState = auth.valueOrNull;
-      if (signedInState is! AuthSignedIn) return onAuthPage ? null : '/login';
-
-      final onVerifyPage = loc == '/verify';
-      if (signedInState.user.needsVerification) {
-        return onVerifyPage ? null : '/verify';
+      if (signedInState is AuthSignedIn) {
+        final onVerifyPage = loc == '/verify';
+        if (signedInState.user.needsVerification) {
+          return onVerifyPage ? null : '/verify';
+        }
+        final onPreAuthPage = _preAuthRoutes.contains(loc) || loc == '/onboarding';
+        if (onPreAuthPage || loc == '/splash' || onVerifyPage) return '/browse';
+        return null;
       }
-      if (onAuthPage || loc == '/splash' || onVerifyPage) return '/browse';
-      return null;
+
+      // Signed out. Treat an unresolved onboarding-seen read as "seen"
+      // (fail open) rather than blocking navigation on it — if it turns out
+      // to be unseen, `_AuthRefresh`'s listener re-runs this the moment it
+      // resolves and bounces to `/onboarding` a beat later.
+      final seenOnboarding = ref.read(onboardingSeenProvider).valueOrNull ?? true;
+      if (!seenOnboarding) {
+        return loc == '/onboarding' ? null : '/onboarding';
+      }
+      if (loc == '/onboarding') return '/landing'; // already seen; skip if reached directly
+      if (_preAuthRoutes.contains(loc)) return null;
+      if (_isGuestViewableRoute(loc)) return null;
+      return '/landing';
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
+      GoRoute(path: '/landing', builder: (_, _) => const LandingScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(

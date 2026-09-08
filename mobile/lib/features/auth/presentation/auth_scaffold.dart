@@ -29,6 +29,9 @@ class AuthScaffold extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      appBar: Navigator.of(context).canPop()
+          ? AppBar(backgroundColor: Colors.transparent, elevation: 0)
+          : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

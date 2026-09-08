@@ -61,8 +61,13 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
           .selectFrom('trips')
           .selectAll()
           .where('status', '=', 'published')
-          .where('traveler_id', '!=', request.userId)
           .where('return_date', '>=', new Date());
+        // A guest has no userId to exclude "my own trips" by — `!= undefined`
+        // would bind SQL NULL, and `col != NULL` is never true, filtering out
+        // every row.
+        if (request.userId) {
+          tripsQuery = tripsQuery.where('traveler_id', '!=', request.userId);
+        }
         if (country) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           tripsQuery = tripsQuery.where((eb: any) =>
@@ -104,10 +109,12 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
           .selectFrom('requests')
           .selectAll()
           .where('status', '=', 'open')
-          .where('shopper_id', '!=', request.userId)
           .where('target_trip_id', 'is', null)
           .orderBy('created_at', 'desc')
           .limit(limit);
+        if (request.userId) {
+          q = q.where('shopper_id', '!=', request.userId);
+        }
         if (category) q = q.where('category', '=', category);
         const wants = await q.execute();
         const summaries = await summariesFor(request, wants.map((w: any) => w.shopper_id));

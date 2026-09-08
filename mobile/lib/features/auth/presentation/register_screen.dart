@@ -9,6 +9,7 @@ import '../application/auth_controller.dart';
 import '../domain/auth_user.dart';
 import 'auth_form_field.dart';
 import 'auth_scaffold.dart';
+import 'social_auth_buttons.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -84,6 +85,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SocialAuthButtons(),
+            const SocialAuthDivider(),
             AuthFormField(
               controller: _name,
               label: l10n.fieldFullName,
