@@ -36,35 +36,48 @@ class SocialAuthButtons extends ConsumerWidget {
       ref.read(googleAuthErrorProvider.notifier).state = null;
     });
 
+    // GIS's `large` button renders at a fixed ~40px tall regardless of the
+    // container it's given (Google's own spec: "about 40px tall", not
+    // adjustable) — the other two are sized to match it exactly, rather
+    // than the reverse, for the same reason the shape is matched to
+    // Google's fixed `pill` below instead of the other way around.
+    const buttonHeight = 40.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FilledButton.icon(
-          onPressed: kIsWeb
-              ? () => startLineLogin(lineChannelId)
-              : () => _notConfigured(context, l10n.providerLine),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF06C755),
-            foregroundColor: Colors.white,
-            // Matches the Google button below, which is pinned to GIS's
-            // `pill` shape — a fixed, height-relative radius Google doesn't
-            // let us match with an arbitrary corner value, so these two
-            // match themselves to it instead.
-            shape: const StadiumBorder(),
+        SizedBox(
+          height: buttonHeight,
+          child: FilledButton.icon(
+            onPressed: kIsWeb
+                ? () => startLineLogin(lineChannelId)
+                : () => _notConfigured(context, l10n.providerLine),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF06C755),
+              foregroundColor: Colors.white,
+              // Matches the Google button below, which is pinned to GIS's
+              // `pill` shape — a fixed, height-relative radius Google
+              // doesn't let us match with an arbitrary corner value, so
+              // these two match themselves to it instead.
+              shape: const StadiumBorder(),
+            ),
+            icon: const Icon(Icons.chat_bubble_rounded, size: 18),
+            label: Text(l10n.actionSignInLine),
           ),
-          icon: const Icon(Icons.chat_bubble_rounded, size: 18),
-          label: Text(l10n.actionSignInLine),
         ),
         const SizedBox(height: 10),
-        FilledButton.icon(
-          onPressed: () => _notConfigured(context, l10n.providerFacebook),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF1877F2),
-            foregroundColor: Colors.white,
-            shape: const StadiumBorder(),
+        SizedBox(
+          height: buttonHeight,
+          child: FilledButton.icon(
+            onPressed: () => _notConfigured(context, l10n.providerFacebook),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF1877F2),
+              foregroundColor: Colors.white,
+              shape: const StadiumBorder(),
+            ),
+            icon: const Icon(Icons.facebook),
+            label: Text(l10n.actionContinueFacebook),
           ),
-          icon: const Icon(Icons.facebook),
-          label: Text(l10n.actionContinueFacebook),
         ),
         const SizedBox(height: 10),
         if (kIsWeb)
@@ -79,7 +92,7 @@ class SocialAuthButtons extends ConsumerWidget {
           // button.
           LayoutBuilder(
             builder: (context, constraints) => SizedBox(
-              height: 44,
+              height: buttonHeight,
               child: renderGoogleButton(
                 width: constraints.maxWidth.clamp(1, 400),
                 locale: Localizations.localeOf(context).languageCode,
@@ -87,15 +100,18 @@ class SocialAuthButtons extends ConsumerWidget {
             ),
           )
         else
-          OutlinedButton.icon(
-            onPressed: () => ref.read(googleAuthControllerProvider).signInWithCustomButton(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              side: BorderSide(color: Theme.of(context).colorScheme.outline),
-              shape: const StadiumBorder(),
+          SizedBox(
+            height: buttonHeight,
+            child: OutlinedButton.icon(
+              onPressed: () => ref.read(googleAuthControllerProvider).signInWithCustomButton(),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                side: BorderSide(color: Theme.of(context).colorScheme.outline),
+                shape: const StadiumBorder(),
+              ),
+              icon: const _GoogleMark(),
+              label: Text(l10n.actionSignInGoogle),
             ),
-            icon: const _GoogleMark(),
-            label: Text(l10n.actionSignInGoogle),
           ),
       ],
     );
