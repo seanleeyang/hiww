@@ -522,6 +522,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldCityOptional => 'City (optional)';
 
   @override
+  String get heroTravelFormHeading =>
+      'Add your trip details to start earning money';
+
+  @override
+  String get labelTravelingFrom => 'Traveling from';
+
+  @override
+  String get labelTravelingTo => 'Traveling to';
+
+  @override
+  String get labelTravelDates => 'Travel dates';
+
+  @override
+  String get actionAdd => 'Add';
+
+  @override
+  String get actionDone => 'Done';
+
+  @override
+  String get locationSearchTitle => 'Search';
+
+  @override
+  String get locationRecentSection => 'Recent locations';
+
+  @override
   String get tripDetailTitle => 'Trip';
 
   @override

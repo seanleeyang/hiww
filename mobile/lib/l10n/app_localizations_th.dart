@@ -520,6 +520,30 @@ class AppLocalizationsTh extends AppLocalizations {
   String get fieldCityOptional => 'เมือง (ไม่บังคับ)';
 
   @override
+  String get heroTravelFormHeading => 'กรอกรายละเอียดทริปเพื่อเริ่มสร้างรายได้';
+
+  @override
+  String get labelTravelingFrom => 'เดินทางจาก';
+
+  @override
+  String get labelTravelingTo => 'เดินทางไป';
+
+  @override
+  String get labelTravelDates => 'วันเดินทาง';
+
+  @override
+  String get actionAdd => 'เพิ่ม';
+
+  @override
+  String get actionDone => 'เสร็จสิ้น';
+
+  @override
+  String get locationSearchTitle => 'ค้นหา';
+
+  @override
+  String get locationRecentSection => 'สถานที่ล่าสุด';
+
+  @override
   String get tripDetailTitle => 'ทริป';
 
   @override

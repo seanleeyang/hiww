@@ -11,6 +11,7 @@ import '../../../ui/country_chips.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/skeleton.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../trips/presentation/travel_hero_form.dart';
 import '../../wants/presentation/post_want_sheet.dart';
 import '../data/discovery_repository.dart';
 import '../domain/feed_item.dart';
@@ -162,7 +163,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
               controller: _tabController,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                _TripsBrowseTab(onPostTrip: _postTrip),
+                const _TripsBrowseTab(),
                 _WantsBrowseTab(onPostWant: _postWant),
               ],
             ),
@@ -174,9 +175,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
 }
 
 class _TripsBrowseTab extends ConsumerWidget {
-  const _TripsBrowseTab({required this.onPostTrip});
-
-  final VoidCallback onPostTrip;
+  const _TripsBrowseTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -193,13 +192,10 @@ class _TripsBrowseTab extends ConsumerWidget {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
-            child: BrowseHero(
+            child: TravelHeroForm(
               greeting: name != null
                   ? l10n.heroTravelGreetingNamed(name)
                   : l10n.heroTravelGreetingGuest,
-              tagline: l10n.heroTravelTagline,
-              ctaLabel: l10n.heroTravelCta,
-              onCta: onPostTrip,
               background: scheme.secondary,
               foreground: scheme.onSecondary,
             ),

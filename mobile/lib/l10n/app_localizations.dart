@@ -1040,6 +1040,54 @@ abstract class AppLocalizations {
   /// **'City (optional)'**
   String get fieldCityOptional;
 
+  /// No description provided for @heroTravelFormHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your trip details to start earning money'**
+  String get heroTravelFormHeading;
+
+  /// No description provided for @labelTravelingFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveling from'**
+  String get labelTravelingFrom;
+
+  /// No description provided for @labelTravelingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveling to'**
+  String get labelTravelingTo;
+
+  /// No description provided for @labelTravelDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel dates'**
+  String get labelTravelDates;
+
+  /// No description provided for @actionAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get actionAdd;
+
+  /// No description provided for @actionDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get actionDone;
+
+  /// No description provided for @locationSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get locationSearchTitle;
+
+  /// No description provided for @locationRecentSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent locations'**
+  String get locationRecentSection;
+
   /// No description provided for @tripDetailTitle.
   ///
   /// In en, this message translates to:

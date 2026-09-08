@@ -11,20 +11,62 @@ import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
 import '../domain/trip.dart';
 
+/// Passed via `GoRouterState.extra` from the Home screen's quick
+/// from/to/dates card — see `TravelHeroForm`.
+class TripQuickPrefill {
+  const TripQuickPrefill({
+    required this.fromCountry,
+    this.fromCity,
+    required this.toCountry,
+    this.toCity,
+    required this.depart,
+    required this.ret,
+  });
+  final String fromCountry;
+  final String? fromCity;
+  final String toCountry;
+  final String? toCity;
+  final DateTime depart;
+  final DateTime ret;
+}
+
 /// Doubles as the edit form: pass [existing] to prefill and switch the
 /// submit action from create to update. Route (departure/arrival country)
 /// is never editable — see the schema-side comment for why.
 class NewTripScreen extends ConsumerStatefulWidget {
-  const NewTripScreen({super.key, this.existing});
+  const NewTripScreen({
+    super.key,
+    this.existing,
+    this.prefillFromCountry,
+    this.prefillFromCity,
+    this.prefillToCountry,
+    this.prefillToCity,
+    this.prefillDepart,
+    this.prefillReturn,
+  });
   final Trip? existing;
+
+  /// Lighter-weight prefill for a brand-new trip (e.g. from the Home
+  /// screen's quick from/to/dates card) — unlike [existing], this doesn't
+  /// switch the form into edit mode.
+  final String? prefillFromCountry;
+  final String? prefillFromCity;
+  final String? prefillToCountry;
+  final String? prefillToCity;
+  final DateTime? prefillDepart;
+  final DateTime? prefillReturn;
 
   @override
   ConsumerState<NewTripScreen> createState() => _NewTripScreenState();
 }
 
 class _NewTripScreenState extends ConsumerState<NewTripScreen> {
-  late final _fromCity = TextEditingController(text: widget.existing?.departureCity ?? '');
-  late final _toCity = TextEditingController(text: widget.existing?.arrivalCity ?? '');
+  late final _fromCity = TextEditingController(
+    text: widget.existing?.departureCity ?? widget.prefillFromCity ?? '',
+  );
+  late final _toCity = TextEditingController(
+    text: widget.existing?.arrivalCity ?? widget.prefillToCity ?? '',
+  );
   late final _note = TextEditingController(text: widget.existing?.note ?? '');
   late final _weight = TextEditingController(
     text: widget.existing == null ? '8' : widget.existing!.maxWeightKg.toString(),
@@ -32,11 +74,11 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
   late final _items = TextEditingController(
     text: widget.existing == null ? '5' : widget.existing!.maxItems.toString(),
   );
-  late String _from = widget.existing?.departureCountry ?? 'TH';
-  late String _to = widget.existing?.arrivalCountry ?? 'JP';
+  late String _from = widget.existing?.departureCountry ?? widget.prefillFromCountry ?? 'TH';
+  late String _to = widget.existing?.arrivalCountry ?? widget.prefillToCountry ?? 'JP';
   late String? _coverUrl = widget.existing?.coverImageUrl;
-  late DateTime? _depart = widget.existing?.departureDate;
-  late DateTime? _ret = widget.existing?.returnDate;
+  late DateTime? _depart = widget.existing?.departureDate ?? widget.prefillDepart;
+  late DateTime? _ret = widget.existing?.returnDate ?? widget.prefillReturn;
   bool _submitting = false;
   String? _error;
 

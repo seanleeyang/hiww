@@ -162,7 +162,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/verify', builder: (_, _) => const VerifyOtpScreen()),
       GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
-      GoRoute(path: '/trips/new', builder: (_, _) => const NewTripScreen()),
+      GoRoute(
+        path: '/trips/new',
+        builder: (_, s) {
+          final prefill = s.extra as TripQuickPrefill?;
+          return NewTripScreen(
+            prefillFromCountry: prefill?.fromCountry,
+            prefillFromCity: prefill?.fromCity,
+            prefillToCountry: prefill?.toCountry,
+            prefillToCity: prefill?.toCity,
+            prefillDepart: prefill?.depart,
+            prefillReturn: prefill?.ret,
+          );
+        },
+      ),
       GoRoute(
         path: '/trips/:id/edit',
         builder: (_, s) => NewTripScreen(existing: s.extra as Trip),
