@@ -133,28 +133,28 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
 
   @override
   Widget build(BuildContext context) {
-    final onOrderTab = _tabController.index == 0;
+    final onTravelTab = _tabController.index == 0;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      floatingActionButton: onOrderTab
+      floatingActionButton: onTravelTab
           ? FloatingActionButton.extended(
-              onPressed: _postWant,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.actionPostAWant),
-            )
-          : FloatingActionButton.extended(
               onPressed: _postTrip,
               icon: const Icon(Icons.add),
               label: Text(l10n.actionPostATrip),
+            )
+          : FloatingActionButton.extended(
+              onPressed: _postWant,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.actionPostAWant),
             ),
       body: Column(
         children: [
           TabBar(
             controller: _tabController,
             tabs: [
-              Tab(text: l10n.browseTabOrder),
               Tab(text: l10n.browseTabTravel),
+              Tab(text: l10n.browseTabOrder),
             ],
           ),
           Expanded(
@@ -162,8 +162,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
               controller: _tabController,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                _WantsBrowseTab(onPostWant: _postWant),
                 _TripsBrowseTab(onPostTrip: _postTrip),
+                _WantsBrowseTab(onPostWant: _postWant),
               ],
             ),
           ),
