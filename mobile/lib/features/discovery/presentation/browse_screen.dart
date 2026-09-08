@@ -196,8 +196,8 @@ class _TripsBrowseTab extends ConsumerWidget {
               greeting: name != null
                   ? l10n.heroTravelGreetingNamed(name)
                   : l10n.heroTravelGreetingGuest,
-              background: scheme.secondary,
-              foreground: scheme.onSecondary,
+              background: scheme.primary,
+              foreground: scheme.onPrimary,
             ),
           ),
           SliverToBoxAdapter(

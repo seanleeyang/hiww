@@ -229,14 +229,27 @@ class _MonthGrid extends StatelessWidget {
                       child: Stack(
                         children: [
                           if (inRange || (isEnd) || (isStart && end != null))
+                            // Matches the day circle's own height (36) —
+                            // filling the full 44-tall cell here left the
+                            // band's flat top/bottom edges poking out past
+                            // the circle's curve at the start/end days,
+                            // where the band only covers half the width.
                             Positioned.fill(
-                              child: Row(
-                                children: [
-                                  if (!isStart) Expanded(child: Container(color: scheme.primaryContainer)),
-                                  if (isStart) const Spacer(),
-                                  if (!isEnd) Expanded(child: Container(color: scheme.primaryContainer))
-                                  else const Spacer(),
-                                ],
+                              child: Center(
+                                child: SizedBox(
+                                  height: 36,
+                                  child: Row(
+                                    children: [
+                                      if (!isStart)
+                                        Expanded(child: Container(color: scheme.primaryContainer)),
+                                      if (isStart) const Spacer(),
+                                      if (!isEnd)
+                                        Expanded(child: Container(color: scheme.primaryContainer))
+                                      else
+                                        const Spacer(),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           Center(
