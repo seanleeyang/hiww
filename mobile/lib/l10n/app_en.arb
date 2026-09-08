@@ -112,10 +112,24 @@
     "placeholders": { "count": { "type": "int" } }
   },
 
-  "browseTabTrips": "Trips",
-  "browseTabWants": "Wants",
+  "browseTabOrder": "Order",
+  "browseTabTravel": "Travel",
   "actionPostATrip": "Post a trip",
   "actionPostAWant": "Post a want",
+  "heroOrderGreetingNamed": "Hi {name}, what would you like to order?",
+  "@heroOrderGreetingNamed": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "heroOrderGreetingGuest": "Hi there, what would you like to order?",
+  "heroOrderTagline": "Find travelers heading your way and get almost anything delivered.",
+  "heroOrderCta": "I'm ready to start my order",
+  "heroTravelGreetingNamed": "Hi {name}, ready to earn on your next trip?",
+  "@heroTravelGreetingNamed": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "heroTravelGreetingGuest": "Hi there, ready to earn on your next trip?",
+  "heroTravelTagline": "Carry a few extra items for shoppers on your route and get paid for it.",
+  "heroTravelCta": "Post your trip",
   "tooltipSort": "Sort",
   "sortNewestPosted": "Newest posted",
   "sortDepartingSoonest": "Departing soonest",

@@ -311,16 +311,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get browseTabTrips => 'Trips';
+  String get browseTabOrder => 'Order';
 
   @override
-  String get browseTabWants => 'Wants';
+  String get browseTabTravel => 'Travel';
 
   @override
   String get actionPostATrip => 'Post a trip';
 
   @override
   String get actionPostAWant => 'Post a want';
+
+  @override
+  String heroOrderGreetingNamed(String name) {
+    return 'Hi $name, what would you like to order?';
+  }
+
+  @override
+  String get heroOrderGreetingGuest =>
+      'Hi there, what would you like to order?';
+
+  @override
+  String get heroOrderTagline =>
+      'Find travelers heading your way and get almost anything delivered.';
+
+  @override
+  String get heroOrderCta => 'I\'m ready to start my order';
+
+  @override
+  String heroTravelGreetingNamed(String name) {
+    return 'Hi $name, ready to earn on your next trip?';
+  }
+
+  @override
+  String get heroTravelGreetingGuest =>
+      'Hi there, ready to earn on your next trip?';
+
+  @override
+  String get heroTravelTagline =>
+      'Carry a few extra items for shoppers on your route and get paid for it.';
+
+  @override
+  String get heroTravelCta => 'Post your trip';
 
   @override
   String get tooltipSort => 'Sort';

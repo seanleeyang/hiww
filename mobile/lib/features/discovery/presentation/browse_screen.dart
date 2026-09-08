@@ -9,9 +9,11 @@ import '../../../ui/category_chips.dart';
 import '../../../ui/country_chips.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/skeleton.dart';
+import '../../auth/application/auth_controller.dart';
 import '../../wants/presentation/post_want_sheet.dart';
 import '../data/discovery_repository.dart';
 import '../domain/feed_item.dart';
+import 'browse_hero.dart';
 import 'feed_cards.dart';
 
 final browseCategoryProvider = StateProvider<String?>((_) => null);
@@ -95,14 +97,14 @@ class _SortButton<T> extends StatelessWidget {
   }
 }
 
-/// Trips and wants used to share one combined feed filtered by product
-/// category — but a trip has no category, only a route, so every trip
-/// showed up under every category chip. Split into two tabs so each side's
-/// filter actually matches its content: trips by country (what a shopper
-/// browsing for a traveler cares about), wants by category (what a
-/// traveler browsing for an offer opportunity cares about). Either role can
-/// still check the other tab — posting isn't role-gated server-side — the
-/// tab just decides which filter and FAB are in front by default.
+/// Two tabs, organized around what the *viewer* wants to do rather than
+/// content type: **Order** browses trips (find a traveler to request from —
+/// what a shopper cares about) with a country filter, and its action posts
+/// a want (start your own order); **Travel** browses wants (find an offer
+/// opportunity — what a traveler cares about) with a category filter, and
+/// its action posts a trip. Either role can still check the other tab —
+/// posting isn't role-gated server-side — the tab just decides which filter
+/// and action are in front by default.
 class BrowseScreen extends ConsumerStatefulWidget {
   const BrowseScreen({super.key});
 
@@ -123,39 +125,46 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
     super.dispose();
   }
 
+  void _postWant() {
+    if (requireSignedIn(context, ref)) showPostWantSheet(context);
+  }
+
+  void _postTrip() => context.push('/trips/new');
+
   @override
   Widget build(BuildContext context) {
-    final onTripsTab = _tabController.index == 0;
+    final onOrderTab = _tabController.index == 0;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      floatingActionButton: onTripsTab
+      floatingActionButton: onOrderTab
           ? FloatingActionButton.extended(
-              onPressed: () => context.push('/trips/new'),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.actionPostATrip),
-            )
-          : FloatingActionButton.extended(
-              onPressed: () {
-                if (requireSignedIn(context, ref)) showPostWantSheet(context);
-              },
+              onPressed: _postWant,
               icon: const Icon(Icons.add),
               label: Text(l10n.actionPostAWant),
+            )
+          : FloatingActionButton.extended(
+              onPressed: _postTrip,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.actionPostATrip),
             ),
       body: Column(
         children: [
           TabBar(
             controller: _tabController,
             tabs: [
-              Tab(text: l10n.browseTabTrips),
-              Tab(text: l10n.browseTabWants),
+              Tab(text: l10n.browseTabOrder),
+              Tab(text: l10n.browseTabTravel),
             ],
           ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
               physics: const NeverScrollableScrollPhysics(),
-              children: const [_TripsBrowseTab(), _WantsBrowseTab()],
+              children: [
+                _TripsBrowseTab(onPostWant: _postWant),
+                _WantsBrowseTab(onPostTrip: _postTrip),
+              ],
             ),
           ),
         ],
@@ -165,7 +174,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
 }
 
 class _TripsBrowseTab extends ConsumerWidget {
-  const _TripsBrowseTab();
+  const _TripsBrowseTab({required this.onPostWant});
+
+  final VoidCallback onPostWant;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -174,9 +185,21 @@ class _TripsBrowseTab extends ConsumerWidget {
     final query = (type: 'trips', category: null, country: country);
     final feed = ref.watch(feedProvider(query));
     final l10n = AppLocalizations.of(context)!;
+    final name = ref.watch(currentUserProvider)?.firstName;
+    final scheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
+        BrowseHero(
+          greeting: name != null
+              ? l10n.heroOrderGreetingNamed(name)
+              : l10n.heroOrderGreetingGuest,
+          tagline: l10n.heroOrderTagline,
+          ctaLabel: l10n.heroOrderCta,
+          onCta: onPostWant,
+          background: scheme.primary,
+          foreground: scheme.onPrimary,
+        ),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -247,7 +270,9 @@ class _TripsBrowseTab extends ConsumerWidget {
 }
 
 class _WantsBrowseTab extends ConsumerWidget {
-  const _WantsBrowseTab();
+  const _WantsBrowseTab({required this.onPostTrip});
+
+  final VoidCallback onPostTrip;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -256,9 +281,21 @@ class _WantsBrowseTab extends ConsumerWidget {
     final query = (type: 'wants', category: category, country: null);
     final feed = ref.watch(feedProvider(query));
     final l10n = AppLocalizations.of(context)!;
+    final name = ref.watch(currentUserProvider)?.firstName;
+    final scheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
+        BrowseHero(
+          greeting: name != null
+              ? l10n.heroTravelGreetingNamed(name)
+              : l10n.heroTravelGreetingGuest,
+          tagline: l10n.heroTravelTagline,
+          ctaLabel: l10n.heroTravelCta,
+          onCta: onPostTrip,
+          background: scheme.secondary,
+          foreground: scheme.onSecondary,
+        ),
         const SizedBox(height: 8),
         Row(
           children: [

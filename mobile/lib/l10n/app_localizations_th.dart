@@ -310,16 +310,47 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
-  String get browseTabTrips => 'ทริป';
+  String get browseTabOrder => 'สั่งของ';
 
   @override
-  String get browseTabWants => 'รายการต้องการ';
+  String get browseTabTravel => 'เดินทาง';
 
   @override
   String get actionPostATrip => 'ลงทริป';
 
   @override
   String get actionPostAWant => 'ลงรายการต้องการ';
+
+  @override
+  String heroOrderGreetingNamed(String name) {
+    return 'สวัสดี $name วันนี้อยากสั่งอะไร?';
+  }
+
+  @override
+  String get heroOrderGreetingGuest => 'สวัสดี วันนี้อยากสั่งอะไร?';
+
+  @override
+  String get heroOrderTagline =>
+      'หานักเดินทางที่กำลังไปทางเดียวกับคุณ แล้วรับของแทบทุกอย่างมาส่งถึงมือ';
+
+  @override
+  String get heroOrderCta => 'เริ่มสั่งของเลย';
+
+  @override
+  String heroTravelGreetingNamed(String name) {
+    return 'สวัสดี $name พร้อมสร้างรายได้จากทริปหน้าหรือยัง?';
+  }
+
+  @override
+  String get heroTravelGreetingGuest =>
+      'สวัสดี พร้อมสร้างรายได้จากทริปหน้าหรือยัง?';
+
+  @override
+  String get heroTravelTagline =>
+      'พกสินค้าเพิ่มอีกนิดให้ผู้ซื้อบนเส้นทางของคุณ แล้วรับเงินจากมัน';
+
+  @override
+  String get heroTravelCta => 'ลงทริปของคุณ';
 
   @override
   String get tooltipSort => 'เรียงลำดับ';

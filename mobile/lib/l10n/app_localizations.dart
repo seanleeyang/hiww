@@ -668,17 +668,17 @@ abstract class AppLocalizations {
   /// **'{count} delivered'**
   String deliveredCount(int count);
 
-  /// No description provided for @browseTabTrips.
+  /// No description provided for @browseTabOrder.
   ///
   /// In en, this message translates to:
-  /// **'Trips'**
-  String get browseTabTrips;
+  /// **'Order'**
+  String get browseTabOrder;
 
-  /// No description provided for @browseTabWants.
+  /// No description provided for @browseTabTravel.
   ///
   /// In en, this message translates to:
-  /// **'Wants'**
-  String get browseTabWants;
+  /// **'Travel'**
+  String get browseTabTravel;
 
   /// No description provided for @actionPostATrip.
   ///
@@ -691,6 +691,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Post a want'**
   String get actionPostAWant;
+
+  /// No description provided for @heroOrderGreetingNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, what would you like to order?'**
+  String heroOrderGreetingNamed(String name);
+
+  /// No description provided for @heroOrderGreetingGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi there, what would you like to order?'**
+  String get heroOrderGreetingGuest;
+
+  /// No description provided for @heroOrderTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Find travelers heading your way and get almost anything delivered.'**
+  String get heroOrderTagline;
+
+  /// No description provided for @heroOrderCta.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m ready to start my order'**
+  String get heroOrderCta;
+
+  /// No description provided for @heroTravelGreetingNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, ready to earn on your next trip?'**
+  String heroTravelGreetingNamed(String name);
+
+  /// No description provided for @heroTravelGreetingGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi there, ready to earn on your next trip?'**
+  String get heroTravelGreetingGuest;
+
+  /// No description provided for @heroTravelTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry a few extra items for shoppers on your route and get paid for it.'**
+  String get heroTravelTagline;
+
+  /// No description provided for @heroTravelCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Post your trip'**
+  String get heroTravelCta;
 
   /// No description provided for @tooltipSort.
   ///
