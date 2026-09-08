@@ -1038,7 +1038,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get onboardingSlide2Body =>
-      'ไม่มีคลังสินค้า ไม่มีค่าจัดส่ง แค่คนที่กำลังเดินทางไปทางเดียวกับคุณอยู่แล้ว';
+      'ไม่มีคลังสินค้า — แค่นักเดินทางตัวจริงที่กำลังเดินทางไปทางเดียวกับคุณอยู่แล้ว';
 
   @override
   String get onboardingSlide3Title => 'สร้างรายได้จากทริปที่คุณเดินทางอยู่แล้ว';

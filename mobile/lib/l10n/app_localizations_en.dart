@@ -1058,7 +1058,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSlide2Body =>
-      'No warehouses, no shipping fees — just people already heading your way.';
+      'No warehouses — just real travelers already heading your way.';
 
   @override
   String get onboardingSlide3Title => 'Earn on trips you already take';

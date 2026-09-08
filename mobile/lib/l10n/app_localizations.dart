@@ -1949,7 +1949,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingSlide2Body.
   ///
   /// In en, this message translates to:
-  /// **'No warehouses, no shipping fees — just people already heading your way.'**
+  /// **'No warehouses — just real travelers already heading your way.'**
   String get onboardingSlide2Body;
 
   /// No description provided for @onboardingSlide3Title.
