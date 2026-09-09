@@ -895,7 +895,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String offerFromLabel(String name) {
-    return 'From $name';
+    return 'Offer from $name';
   }
 
   @override
@@ -977,6 +977,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String orderRelationDelivering(String name) {
     return 'Delivering for $name';
   }
+
+  @override
+  String get nextStepWaitingForOffers => 'Waiting for offers';
+
+  @override
+  String get nextStepOfferNeedsResponse => 'An offer needs your response';
+
+  @override
+  String get nextStepWaitingOnOtherSide => 'Waiting for their response';
 
   @override
   String get nextStepPayToStart => 'Pay to get things moving';

@@ -3,14 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
-import '../../../core/countries.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/empty_state.dart';
-import '../../../ui/hero_image.dart';
-import '../../../ui/marketplace_bits.dart';
+import '../../../ui/marketplace_order_card.dart';
 import '../../../ui/skeleton.dart';
-import '../../../ui/soft_card.dart';
-import '../../../ui/status_pill.dart';
 import '../../../ui/stock_images.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
@@ -363,46 +359,40 @@ class _WantCardState extends ConsumerState<_WantCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final w = widget.want;
+    final offer = widget.pendingOffer;
     // A pending offer is negotiation in progress — surface that on the
-    // pill instead of the want's own (still just "open") status. Tapping
-    // through to the want's detail page is where the actual offer/counter/
-    // decline controls live; the card itself stays a plain summary.
-    final displayStatus = widget.pendingOffer != null ? 'negotiating' : w.status;
-    return SoftCard(
+    // pill instead of the want's own (still just "open") status, and show
+    // its current price instead of the asking budget. Tapping through to
+    // the want's detail page is where the actual offer/counter/decline
+    // controls live; the card itself stays a plain summary.
+    return MarketplaceOrderCard(
+      imageUrl: w.imageUrl,
+      fallbackAsset: stockForCategory(w.category),
+      title: w.displayTitle,
+      subtitle: offer != null && offer.counterpartyName != null
+          ? l10n.offerFromLabel(offer.counterpartyName!)
+          : null,
+      status: offer != null ? 'negotiating' : w.status,
+      priceLabel: offer?.priceLabel ?? w.budgetLabel,
+      ctaIcon: offer != null ? Icons.arrow_forward : null,
+      ctaText: offer != null ? _negotiationCta(l10n, offer) : (w.status == 'open' ? l10n.nextStepWaitingForOffers : null),
       onTap: () => context.push('/wants/${w.id}'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(w.displayTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-              ),
-              StatusPill(displayStatus),
-              if (_archivableWantStatuses.contains(w.status)) ...[
-                const SizedBox(width: 4),
-                IconButton(
-                  tooltip: l10n.tooltipRemoveFromList,
-                  onPressed: () => _archive(context),
-                  icon: const Icon(Icons.close, size: 18),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(spacing: 12, runSpacing: 4, children: [
-            IconLine(Icons.sell_outlined, l10n.wantBudgetLine(w.budgetLabel)),
-            IconLine(Icons.public, l10n.wantBuyInLine(w.sourceCity ?? countryName(w.sourceCountry))),
-            if (w.needByLabel != null) IconLine(Icons.event_outlined, w.needByLabel!),
-          ]),
-        ],
-      ),
+      trailing: _archivableWantStatuses.contains(w.status)
+          ? IconButton(
+              tooltip: l10n.tooltipRemoveFromList,
+              onPressed: () => _archive(context),
+              icon: const Icon(Icons.close, size: 18),
+            )
+          : null,
     );
   }
 }
+
+/// Plain-language "what happens next" for a pending offer, from this
+/// viewer's point of view — shared by the shopper's want card (with a
+/// `pendingOffer`) and the traveler's own outgoing-offer card.
+String _negotiationCta(AppLocalizations l10n, Offer offer) =>
+    offer.myTurn ? l10n.nextStepOfferNeedsResponse : l10n.nextStepWaitingOnOtherSide;
 
 /// A traveler's own outgoing offer, still being negotiated. A plain summary
 /// card like any other — the actual offer/counter/decline controls only
@@ -415,30 +405,16 @@ class _NegotiationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final o = offer;
-    return SoftCard(
+    return MarketplaceOrderCard(
+      imageUrl: o.requestImageUrl,
+      fallbackAsset: stockForCategory(o.requestCategory),
+      title: o.requestItem ?? l10n.fallbackOfferTitle,
+      subtitle: o.counterpartyName != null ? l10n.offerToLabel(o.counterpartyName!) : null,
+      status: 'negotiating',
+      priceLabel: o.priceLabel,
+      ctaIcon: Icons.arrow_forward,
+      ctaText: _negotiationCta(l10n, o),
       onTap: () => context.push('/wants/${o.requestId}'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(o.requestItem ?? l10n.fallbackOfferTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-              ),
-              const StatusPill('negotiating'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(spacing: 12, runSpacing: 4, children: [
-            IconLine(Icons.sell_outlined, o.priceLabel),
-            if (o.counterpartyName != null)
-              IconLine(Icons.person_outline, o.counterpartyName!),
-          ]),
-        ],
-      ),
     );
   }
 }
@@ -452,67 +428,21 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
     final o = order;
     final who = o.counterparty?.fullName ?? (isShopper ? l10n.fallbackATraveler : l10n.fallbackAShopper);
     final relation = isShopper ? l10n.orderRelationBuying(who) : l10n.orderRelationDelivering(who);
     final next = _nextStep(l10n, o.status, isShopper);
 
-    return SoftCard(
+    return MarketplaceOrderCard(
+      imageUrl: o.requestImageUrl,
+      fallbackAsset: stockForCategory(o.requestCategory),
+      title: o.itemDescription,
+      subtitle: relation,
+      status: o.status,
+      priceLabel: o.totalLabel,
+      ctaIcon: next != null ? Icons.arrow_forward : null,
+      ctaText: next,
       onTap: () => context.push('/orders/${o.id}'),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: 56,
-              height: 56,
-              child: HeroImage(
-                url: o.requestImageUrl,
-                fallbackAsset: stockForCategory(o.requestCategory),
-                height: 56,
-                borderRadius: 12,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(o.itemDescription,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                const SizedBox(height: 4),
-                Text(relation,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
-                const SizedBox(height: 8),
-                Row(children: [
-                  StatusPill(o.status),
-                  const SizedBox(width: 8),
-                  Text(o.totalLabel, style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
-                ]),
-                if (next != null) ...[
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    Icon(Icons.arrow_forward, size: 13, color: scheme.primary),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(next,
-                          style: TextStyle(
-                              fontSize: 12.5, fontWeight: FontWeight.w600, color: scheme.primary)),
-                    ),
-                  ]),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

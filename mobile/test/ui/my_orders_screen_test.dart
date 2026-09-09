@@ -170,6 +170,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Onitsuka Tiger Mexico 66'), findsOneWidget);
-    expect(find.text('Nuch S'), findsOneWidget);
+    expect(find.text('To Nuch S'), findsOneWidget);
   });
 }

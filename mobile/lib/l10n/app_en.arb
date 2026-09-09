@@ -393,6 +393,17 @@
   "@orderRelationDelivering": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "offerFromLabel": "Offer from {name}",
+  "@offerFromLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "offerToLabel": "To {name}",
+  "@offerToLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "nextStepWaitingForOffers": "Waiting for offers",
+  "nextStepOfferNeedsResponse": "An offer needs your response",
+  "nextStepWaitingOnOtherSide": "Waiting for their response",
   "nextStepPayToStart": "Pay to get things moving",
   "nextStepWaitingForPayment": "Waiting for the shopper to pay",
   "nextStepTravelerBuying": "Traveler is buying your item",

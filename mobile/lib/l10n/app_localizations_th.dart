@@ -871,7 +871,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String offerFromLabel(String name) {
-    return 'จาก $name';
+    return 'ข้อเสนอจาก $name';
   }
 
   @override
@@ -953,6 +953,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String orderRelationDelivering(String name) {
     return 'ส่งของให้ $name';
   }
+
+  @override
+  String get nextStepWaitingForOffers => 'รอข้อเสนอ';
+
+  @override
+  String get nextStepOfferNeedsResponse => 'มีข้อเสนอรอการตอบกลับจากคุณ';
+
+  @override
+  String get nextStepWaitingOnOtherSide => 'รอการตอบกลับจากอีกฝ่าย';
 
   @override
   String get nextStepPayToStart => 'ชำระเงินเพื่อเริ่มดำเนินการ';

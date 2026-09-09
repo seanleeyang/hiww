@@ -40,6 +40,24 @@ describe('user-app backend: privacy + listings', () => {
     expect(asAdmin.statusCode).toBe(200);
   });
 
+  it('the orders list carries the same product photo + counterparty name as the single-order view', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await ctx.db
+      .updateTable('requests')
+      .set({ image_url: 'https://example.com/skincare.jpg' })
+      .where('id', '=', order.requestId)
+      .execute();
+
+    const list = await ctx.app.inject({ method: 'GET', url: '/api/orders', headers: authHeader(order.shopper) });
+    const item = list.json().data.items[0];
+    expect(item.request_image_url).toBe('https://example.com/skincare.jpg');
+    expect(item.counterparty.id).toBe(order.traveler.userId);
+
+    const asTraveler = await ctx.app.inject({ method: 'GET', url: '/api/orders', headers: authHeader(order.traveler) });
+    const travelerItem = asTraveler.json().data.items[0];
+    expect(travelerItem.counterparty.id).toBe(order.shopper.userId);
+  });
+
   it('request browse hides your own and non-open requests; /mine shows your own', async () => {
     const shopper = await createUser(ctx, { user_type: 'shopper' });
     const traveler = await createUser(ctx, { user_type: 'traveler' });

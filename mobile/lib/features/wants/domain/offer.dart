@@ -35,6 +35,8 @@ class Offer {
     this.priceHistory = const [],
     this.myRole,
     this.counterpartyName,
+    this.requestImageUrl,
+    this.requestCategory,
   });
 
   final String id;
@@ -67,6 +69,8 @@ class Offer {
   // both roles, so each item says which one the caller is playing here.
   final String? myRole;
   final String? counterpartyName;
+  final String? requestImageUrl;
+  final String? requestCategory;
 
   String get priceLabel => money(quotedPrice);
   String? get deliveryLabel =>
@@ -96,5 +100,9 @@ class Offer {
             const [],
         myRole: j['my_role']?.toString(),
         counterpartyName: j['counterparty_name']?.toString(),
+        requestImageUrl: (j['request_image_url'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : j['request_image_url'] as String,
+        requestCategory: j['request_category']?.toString(),
       );
 }

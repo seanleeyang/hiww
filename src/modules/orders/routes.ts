@@ -46,8 +46,51 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         .offset(offset)
         .execute();
 
+      // The list view needs the same product photo + counterparty name the
+      // single-order view already sends — batched here (one query for every
+      // source request, one for every counterparty) rather than the N+1 the
+      // single-order route can afford to do per-request.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const requestIds = [...new Set(rows.map((r: any) => r.request_id).filter(Boolean))];
+      const requestRows = requestIds.length
+        ? await request.db
+            .selectFrom('requests')
+            .select(['id', 'image_url', 'category'])
+            .where('id', 'in', requestIds)
+            .execute()
+        : [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const requestById = new Map<string, any>(requestRows.map((r: any) => [r.id, r]));
+
+      const counterpartyIds = [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...new Set(rows.map((r: any) => (r.traveler_id === request.userId ? r.shopper_id : r.traveler_id))),
+      ];
+      const counterpartyRows = counterpartyIds.length
+        ? await request.db
+            .selectFrom('users')
+            .select([...USER_SUMMARY_COLUMNS])
+            .where('id', 'in', counterpartyIds)
+            .execute()
+        : [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const counterpartyById = new Map<string, any>(counterpartyRows.map((u: any) => [u.id, u]));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const enriched = rows.map((order: any) => {
+        const sourceRequest = order.request_id ? requestById.get(order.request_id) : undefined;
+        const counterpartyId = order.traveler_id === request.userId ? order.shopper_id : order.traveler_id;
+        const counterparty = counterpartyById.get(counterpartyId);
+        return {
+          ...order,
+          request_image_url: sourceRequest?.image_url ?? null,
+          request_category: sourceRequest?.category ?? null,
+          counterparty: counterparty ? toUserSummary(counterparty) : null,
+        };
+      });
+
       // The AI receipt assessment is operator-only (the photo stays visible).
-      const items = isAdmin ? rows : rows.map(stripReceiptCheck);
+      const items = isAdmin ? enriched : enriched.map(stripReceiptCheck);
 
       reply.send({
         success: true,

@@ -1667,7 +1667,7 @@ abstract class AppLocalizations {
   /// No description provided for @offerFromLabel.
   ///
   /// In en, this message translates to:
-  /// **'From {name}'**
+  /// **'Offer from {name}'**
   String offerFromLabel(String name);
 
   /// No description provided for @offerToLabel.
@@ -1795,6 +1795,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delivering for {name}'**
   String orderRelationDelivering(String name);
+
+  /// No description provided for @nextStepWaitingForOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for offers'**
+  String get nextStepWaitingForOffers;
+
+  /// No description provided for @nextStepOfferNeedsResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'An offer needs your response'**
+  String get nextStepOfferNeedsResponse;
+
+  /// No description provided for @nextStepWaitingOnOtherSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for their response'**
+  String get nextStepWaitingOnOtherSide;
 
   /// No description provided for @nextStepPayToStart.
   ///

@@ -181,6 +181,8 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         'offers.trip_id',
         'requests.item_description as request_item',
         'requests.status as request_status',
+        'requests.image_url as request_image_url',
+        'requests.category as request_category',
       ] as const;
 
       const asTraveler = await request.db
