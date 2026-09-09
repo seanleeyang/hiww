@@ -5,6 +5,8 @@ import { AppError, generateId } from '@/utils/helpers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
+import { renderNotification } from '@/i18n/notifications';
+import { sendPush } from '@/services/push-notify';
 import { requireCompleteProfile } from '@/utils/profile-guard';
 import { expireOverdueOffers } from '@/services/offer-expiry';
 import { calculatePricing } from '@/services/pricing';
@@ -327,6 +329,11 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       const orderId = generateId();
       const now = new Date();
       const paymentDeadlineAt = new Date(now.getTime() + config.paymentTimeoutMinutes * 60_000);
+      const shopperNotificationParams = {
+        _variant: callerRole === 'shopper' ? 'shopper_self' : 'by_traveler',
+        item: requestRow.item_description,
+        minutes: config.paymentTimeoutMinutes,
+      };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await request.db.transaction().execute(async (trx: any) => {
@@ -392,11 +399,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
           {
             userId: requestRow.shopper_id,
             type: 'offer_accepted',
-            params: {
-              _variant: callerRole === 'shopper' ? 'shopper_self' : 'by_traveler',
-              item: requestRow.item_description,
-              minutes: config.paymentTimeoutMinutes,
-            },
+            params: shopperNotificationParams,
             orderId,
           },
           {
@@ -409,6 +412,18 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             orderId,
           },
         ]);
+      });
+
+      // The payment countdown starts the instant this order exists — the
+      // shopper gets a "hard" push here too, not just the in-app feed,
+      // since they need to know to pay even with the app fully closed.
+      // Done after the transaction commits: it's a network call to an
+      // external provider and shouldn't hold the DB transaction open.
+      const shopperPush = renderNotification('en', 'offer_accepted', shopperNotificationParams);
+      await sendPush(request.db, requestRow.shopper_id, {
+        title: shopperPush.subject,
+        body: shopperPush.body,
+        data: { link: `/orders/${orderId}` },
       });
 
       reply.send({ success: true, data: { order_id: orderId, offer_id: offer.id }, code: 'OFFER_ACCEPTED' });

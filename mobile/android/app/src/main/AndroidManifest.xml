@@ -2,6 +2,10 @@
     <!-- Only needed on Android 10 (API 29) and below to save a photo to the
          gallery (the `gal` package handles scoped storage on newer APIs). -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <!-- Android 13+ (API 33) requires this runtime permission before any
+         notification — including FCM push — can be shown. firebase_messaging
+         prompts for it via FirebaseMessaging.requestPermission(). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="hiww_mobile"
         android:name="${applicationName}"

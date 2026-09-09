@@ -138,6 +138,16 @@ const MESSAGES: Record<string, Entry> = {
   // modules/notifications/routes.ts
   'notifications.invalidReadPayload': { en: 'Invalid read payload', th: 'ข้อมูลการทำเครื่องหมายอ่านแล้วไม่ถูกต้อง' },
 
+  // modules/devices/routes.ts
+  'devices.invalidRegisterPayload': {
+    en: 'Invalid device registration payload',
+    th: 'ข้อมูลการลงทะเบียนอุปกรณ์ไม่ถูกต้อง',
+  },
+  'devices.invalidUnregisterPayload': {
+    en: 'Invalid device payload',
+    th: 'ข้อมูลอุปกรณ์ไม่ถูกต้อง',
+  },
+
   // modules/offers/routes.ts
   'offers.notPartOfOffer': { en: 'You are not part of this offer', th: 'คุณไม่ได้เป็นส่วนหนึ่งของข้อเสนอนี้' },
   'offers.invalidOfferData': { en: 'Invalid offer data', th: 'ข้อมูลข้อเสนอไม่ถูกต้อง' },

@@ -151,6 +151,18 @@ export const config = {
   aiChatModeration: process.env.AI_CHAT_MODERATION || 'mock',
   aiChatModel: process.env.AI_CHAT_MODEL || 'claude-haiku-4-5',
   /**
+   * Push notifications ("hard" alerts a user gets even with the app fully
+   * closed), for the two things that can't wait for the next in-app poll:
+   * the shopper's payment countdown starting, and the traveler's daily
+   * upload-photo/receipt nudge. `mock` (default) just logs instead of
+   * calling a real provider — used by tests and local dev. `fcm` sends via
+   * Firebase Cloud Messaging and needs FIREBASE_SERVICE_ACCOUNT_JSON (the
+   * full JSON key from a Firebase service account, as one env var — see
+   * mobile/lib/firebase_options.dart for the matching client-side setup).
+   */
+  pushProvider: process.env.PUSH_PROVIDER || 'mock',
+  firebaseServiceAccountJson: process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '',
+  /**
    * Email/phone verification at registration (see `src/services/otp/`).
    * `mock` (default) logs the code server-side instead of sending it, and
    * the register/resend-otp responses echo it back as `debug_otp` so local

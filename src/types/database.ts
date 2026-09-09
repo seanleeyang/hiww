@@ -329,4 +329,15 @@ export interface Database {
   audit_log: AuditLogTable;
   payouts: PayoutsTable;
   otp_codes: OtpCodesTable;
+  device_tokens: DeviceTokensTable;
+}
+
+/** One registered device for push notifications (migration 032). */
+export interface DeviceTokensTable {
+  id: string;
+  user_id: string;
+  token: string;
+  platform: string;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
 }

@@ -47,3 +47,10 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// Applied only once you've added the real google-services.json from your
+// Firebase project (see mobile/lib/firebase_options.dart) — guarded so a
+// local Android build doesn't fail before that file exists.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}

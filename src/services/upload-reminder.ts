@@ -1,6 +1,8 @@
 import type { Kysely } from 'kysely';
 import type { Database } from '@/types/database';
 import { recordNotification } from '@/services/notify';
+import { sendPush } from '@/services/push-notify';
+import { renderNotification } from '@/i18n/notifications';
 
 /** Re-fire at most about once a day — a little under 24h so a traveler who
  * opens the app at roughly the same time each day doesn't skip a day. */
@@ -52,12 +54,19 @@ export async function sendUploadReminders(
       Math.ceil((new Date(order.return_date).getTime() - Date.now()) / 86_400_000)
     );
 
+    const params = { item: order.item_description, days: daysLeft };
     await recordNotification(db, {
       userId: travelerId,
       type: 'upload_reminder',
-      params: { item: order.item_description, days: daysLeft },
+      params,
       orderId: order.id,
     });
+
+    // This is exactly the case a "hard" push exists for: a traveler who
+    // hasn't opened the app in a while, still counting down to their trip's
+    // return date, is precisely who the in-app feed alone won't reach.
+    const { subject, body } = renderNotification('en', 'upload_reminder', params);
+    await sendPush(db, travelerId, { title: subject, body, data: { link: `/orders/${order.id}` } });
 
     await db
       .updateTable('orders')
