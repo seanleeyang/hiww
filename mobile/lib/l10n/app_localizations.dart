@@ -1580,6 +1580,12 @@ abstract class AppLocalizations {
   /// **'Pick a delivery date'**
   String get errorPickDeliveryDate;
 
+  /// No description provided for @errorDeliveryBeforeReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery date must be on or after the trip\'s return date'**
+  String get errorDeliveryBeforeReturn;
+
   /// No description provided for @infoOfferSent.
   ///
   /// In en, this message translates to:
@@ -1621,6 +1627,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deliver by'**
   String get labelDeliverBy;
+
+  /// No description provided for @hintDeliverByFromReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be on or after the trip\'s return date, {date}'**
+  String hintDeliverByFromReturn(String date);
 
   /// No description provided for @actionPickADate.
   ///

@@ -8,6 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../trips/data/trips_repository.dart';
+import '../../trips/domain/trip.dart';
 import '../../trips/presentation/add_trip_sheet.dart';
 import '../data/offers_repository.dart';
 import '../data/wants_repository.dart';
@@ -46,6 +47,12 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
     }
     if (_deliverBy == null) {
       setState(() => _error = l10n.errorPickDeliveryDate);
+      return;
+    }
+    final trips = ref.read(myPublishedTripsProvider).valueOrNull ?? const <Trip>[];
+    final trip = trips.where((t) => t.id == _tripId).firstOrNull;
+    if (trip?.returnDate != null && _deliverBy!.isBefore(trip!.returnDate!)) {
+      setState(() => _error = l10n.errorDeliveryBeforeReturn);
       return;
     }
     setState(() {
@@ -104,6 +111,11 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
             );
           }
           _tripId ??= list.first.id;
+          final selectedTrip = list.where((t) => t.id == _tripId).firstOrNull ?? list.first;
+          final now = DateTime.now();
+          final minDeliverBy = (selectedTrip.returnDate != null && selectedTrip.returnDate!.isAfter(now))
+              ? selectedTrip.returnDate!
+              : now;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -123,7 +135,18 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
                       ),
                     ),
                 ],
-                onChanged: (v) => setState(() => _tripId = v),
+                onChanged: (v) {
+                  if (v == null) return;
+                  setState(() {
+                    _tripId = v;
+                    final newTrip = list.firstWhere((t) => t.id == v);
+                    if (newTrip.returnDate != null &&
+                        _deliverBy != null &&
+                        _deliverBy!.isBefore(newTrip.returnDate!)) {
+                      _deliverBy = null;
+                    }
+                  });
+                },
               ),
               const SizedBox(height: 16),
               TextField(
@@ -136,15 +159,24 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
               ),
               const SizedBox(height: 16),
               Text(l10n.labelDeliverBy, style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 4),
+              Text(
+                l10n.hintDeliverByFromReturn(shortDate(minDeliverBy)),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: () async {
-                  final now = DateTime.now();
+                  final initial = (_deliverBy != null && !_deliverBy!.isBefore(minDeliverBy))
+                      ? _deliverBy!
+                      : minDeliverBy;
                   final picked = await showDatePicker(
                     context: context,
-                    firstDate: now,
-                    lastDate: now.add(const Duration(days: 365)),
-                    initialDate: _deliverBy ?? now.add(const Duration(days: 21)),
+                    firstDate: minDeliverBy,
+                    lastDate: minDeliverBy.add(const Duration(days: 365)),
+                    initialDate: initial,
                   );
                   if (picked != null) setState(() => _deliverBy = picked);
                 },

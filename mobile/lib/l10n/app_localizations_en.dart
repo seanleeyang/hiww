@@ -847,6 +847,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorPickDeliveryDate => 'Pick a delivery date';
 
   @override
+  String get errorDeliveryBeforeReturn =>
+      'Delivery date must be on or after the trip\'s return date';
+
+  @override
   String get infoOfferSent => 'Offer sent';
 
   @override
@@ -867,6 +871,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelDeliverBy => 'Deliver by';
+
+  @override
+  String hintDeliverByFromReturn(String date) {
+    return 'Must be on or after the trip\'s return date, $date';
+  }
 
   @override
   String get actionPickADate => 'Pick a date';

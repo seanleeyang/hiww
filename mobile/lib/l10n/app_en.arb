@@ -324,6 +324,7 @@
   "errorPickTripForOffer": "Pick which trip this is for",
   "errorEnterYourPrice": "Enter your price",
   "errorPickDeliveryDate": "Pick a delivery date",
+  "errorDeliveryBeforeReturn": "Delivery date must be on or after the trip's return date",
   "infoOfferSent": "Offer sent",
   "makeOfferTitle": "Make an offer",
   "emptyNeedTripTitle": "You need a trip first",
@@ -331,6 +332,10 @@
   "labelWhichTrip": "Which trip",
   "fieldYourPriceForGoods": "Your price for the goods",
   "labelDeliverBy": "Deliver by",
+  "hintDeliverByFromReturn": "Must be on or after the trip's return date, {date}",
+  "@hintDeliverByFromReturn": {
+    "placeholders": { "date": { "type": "String" } }
+  },
   "actionPickADate": "Pick a date",
   "actionSendOffer": "Send offer",
 

@@ -264,6 +264,7 @@
   "errorPickTripForOffer": "เลือกทริปที่จะใช้เสนอราคา",
   "errorEnterYourPrice": "กรอกราคาของคุณ",
   "errorPickDeliveryDate": "เลือกวันที่จะส่งของ",
+  "errorDeliveryBeforeReturn": "วันที่ส่งของต้องอยู่ในหรือหลังวันเดินทางกลับของทริป",
   "infoOfferSent": "ส่งข้อเสนอแล้ว",
   "makeOfferTitle": "เสนอราคา",
   "emptyNeedTripTitle": "คุณต้องมีทริปก่อน",
@@ -271,6 +272,7 @@
   "labelWhichTrip": "ทริปไหน",
   "fieldYourPriceForGoods": "ราคาของคุณสำหรับสินค้านี้",
   "labelDeliverBy": "ส่งภายใน",
+  "hintDeliverByFromReturn": "ต้องอยู่ในหรือหลังวันเดินทางกลับของทริป {date}",
   "actionPickADate": "เลือกวันที่",
   "actionSendOffer": "ส่งข้อเสนอ",
 

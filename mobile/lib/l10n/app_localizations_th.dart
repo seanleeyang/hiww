@@ -823,6 +823,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorPickDeliveryDate => 'เลือกวันที่จะส่งของ';
 
   @override
+  String get errorDeliveryBeforeReturn =>
+      'วันที่ส่งของต้องอยู่ในหรือหลังวันเดินทางกลับของทริป';
+
+  @override
   String get infoOfferSent => 'ส่งข้อเสนอแล้ว';
 
   @override
@@ -843,6 +847,11 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get labelDeliverBy => 'ส่งภายใน';
+
+  @override
+  String hintDeliverByFromReturn(String date) {
+    return 'ต้องอยู่ในหรือหลังวันเดินทางกลับของทริป $date';
+  }
 
   @override
   String get actionPickADate => 'เลือกวันที่';
