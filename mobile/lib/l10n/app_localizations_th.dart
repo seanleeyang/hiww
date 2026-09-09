@@ -1224,6 +1224,10 @@ class AppLocalizationsTh extends AppLocalizations {
       'จะปล่อยให้นักเดินทางเมื่อคุณยืนยันว่าได้รับสินค้าแล้ว';
 
   @override
+  String get trustReleasedOnConfirmTraveler =>
+      'จะปล่อยเงินให้คุณเมื่อผู้ซื้อได้รับสินค้าและยืนยันแล้ว';
+
+  @override
   String get actionHowProtectionWorks => 'การคุ้มครองการชำระเงินทำงานอย่างไร';
 
   @override

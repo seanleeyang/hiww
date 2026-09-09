@@ -1250,6 +1250,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Released to the traveler when you confirm you have the item.';
 
   @override
+  String get trustReleasedOnConfirmTraveler =>
+      'Released to you once the shopper receives the item and confirms it.';
+
+  @override
   String get actionHowProtectionWorks => 'How payment protection works';
 
   @override

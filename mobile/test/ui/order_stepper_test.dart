@@ -69,4 +69,13 @@ void main() {
     // Accepted + Paid done; Bought is the current step.
     expect(find.byIcon(Icons.check), findsNWidgets(2));
   });
+
+  testWidgets('once payment is confirmed, Paid ticks immediately rather than waiting for Bought', (tester) async {
+    await tester.pumpWidget(_wrap(OrderStepper(
+      order: _order('confirmed', confirmed: DateTime(2026, 11, 14)),
+    )));
+    // Accepted + Paid done as soon as payment is confirmed — Bought is now
+    // the current (in-progress) step, not yet checked.
+    expect(find.byIcon(Icons.check), findsNWidgets(2));
+  });
 }

@@ -522,6 +522,7 @@
   },
   "trustSettled": "Payment for these goods has been settled.",
   "trustReleasedOnConfirm": "Released to the traveler when you confirm you have the item.",
+  "trustReleasedOnConfirmTraveler": "Released to you once the shopper receives the item and confirms it.",
   "actionHowProtectionWorks": "How payment protection works",
   "howProtectionStep1": "You pay Hiww when you accept an offer.",
   "howProtectionStep2": "Hiww holds the money — the traveler is not paid yet.",

@@ -8,8 +8,9 @@ import '../domain/order.dart';
 /// "Hiww is holding ฿X + ฿Y fee — released when you confirm delivery" +
 /// a How-it-works sheet that is honest about the manual-money pilot.
 class TrustPanel extends StatelessWidget {
-  const TrustPanel({super.key, required this.order});
+  const TrustPanel({super.key, required this.order, required this.isShopper});
   final Order order;
+  final bool isShopper;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +43,9 @@ class TrustPanel extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            released ? l10n.trustSettled : l10n.trustReleasedOnConfirm,
+            released
+                ? l10n.trustSettled
+                : (isShopper ? l10n.trustReleasedOnConfirm : l10n.trustReleasedOnConfirmTraveler),
             style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 4),

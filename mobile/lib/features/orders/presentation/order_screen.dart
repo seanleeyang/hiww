@@ -130,7 +130,7 @@ class OrderScreen extends ConsumerWidget {
                     ),
                   ],
                   const SizedBox(height: 14),
-                  TrustPanel(order: o),
+                  TrustPanel(order: o, isShopper: isShopper),
                   if (o.hasPricingBreakdown) ...[
                     const SizedBox(height: 14),
                     SoftCard(

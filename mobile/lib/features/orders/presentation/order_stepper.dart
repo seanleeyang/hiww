@@ -30,6 +30,24 @@ class OrderStepper extends StatelessWidget {
         _ => 0,
       };
 
+  /// Most stages represent an ongoing state — "Bought" stays a dot (not a
+  /// tick) for as long as the traveler is carrying the item, only ticking
+  /// once the *next* action (shipping) happens. "Paid" (index 1) has no
+  /// such in-between state: it's a discrete event that's done the instant
+  /// payment is confirmed, so it ticks immediately rather than waiting for
+  /// the order to move past it.
+  bool _isDone(int index) => index == 1 ? _reached >= 1 : index < _reached;
+
+  /// The first not-yet-done stage — normally just `_reached`, except once
+  /// the Paid exception above ticks early, in which case the active stage
+  /// shifts to the one right after it.
+  int get _currentIndex {
+    for (var i = 0; i < 5; i++) {
+      if (!_isDone(i)) return i;
+    }
+    return -1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -61,14 +79,14 @@ class OrderStepper extends StatelessWidget {
     required ColorScheme scheme,
     required HiwwColors hiww,
   }) {
-    final done = index < _reached;
-    final current = index == _reached;
+    final done = _isDone(index);
+    final current = index == _currentIndex;
     final dotColor = done
         ? hiww.success
         : current
             ? scheme.primary
             : scheme.outlineVariant;
-    final lineColor = index < _reached ? hiww.success : scheme.outlineVariant;
+    final lineColor = _isDone(index) ? hiww.success : scheme.outlineVariant;
 
     return IntrinsicHeight(
       child: Row(

@@ -2258,6 +2258,12 @@ abstract class AppLocalizations {
   /// **'Released to the traveler when you confirm you have the item.'**
   String get trustReleasedOnConfirm;
 
+  /// No description provided for @trustReleasedOnConfirmTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Released to you once the shopper receives the item and confirms it.'**
+  String get trustReleasedOnConfirmTraveler;
+
   /// No description provided for @actionHowProtectionWorks.
   ///
   /// In en, this message translates to:

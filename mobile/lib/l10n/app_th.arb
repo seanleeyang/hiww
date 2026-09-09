@@ -387,6 +387,7 @@
   "trustHoldingTotal": "Hiww ถือเงิน {total} ไว้",
   "trustSettled": "การชำระเงินสำหรับสินค้านี้เสร็จสมบูรณ์แล้ว",
   "trustReleasedOnConfirm": "จะปล่อยให้นักเดินทางเมื่อคุณยืนยันว่าได้รับสินค้าแล้ว",
+  "trustReleasedOnConfirmTraveler": "จะปล่อยเงินให้คุณเมื่อผู้ซื้อได้รับสินค้าและยืนยันแล้ว",
   "actionHowProtectionWorks": "การคุ้มครองการชำระเงินทำงานอย่างไร",
   "howProtectionStep1": "คุณชำระเงินให้ Hiww เมื่อรับข้อเสนอ",
   "howProtectionStep2": "Hiww ถือเงินไว้ — นักเดินทางยังไม่ได้รับเงิน",
