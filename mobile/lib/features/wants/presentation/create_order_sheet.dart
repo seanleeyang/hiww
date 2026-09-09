@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/cities.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
@@ -14,9 +15,24 @@ import '../../../ui/soft_card.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/wants_repository.dart';
 
-/// Empty-string sentinel for "no country picked yet" — lets the dropdown
-/// show a real "Select" placeholder entry instead of defaulting to a country.
+/// Empty-string sentinel for "nothing picked yet" — lets a dropdown show a
+/// real "Select" placeholder entry instead of defaulting to a value.
 const _unselected = '';
+
+/// Sentinel for "Others" in a city dropdown — reveals a free-text field for
+/// a city not in the curated list.
+const _othersCity = '__others__';
+
+/// Matches [sourceCity] against the curated list for [country]: an exact
+/// match preselects that city, anything else preselects "Others" with the
+/// value carried over into the custom field.
+String _initialCityChoice(String country, String? sourceCity) {
+  if (sourceCity == null || sourceCity.isEmpty) return _unselected;
+  final matches = kCities.any(
+    (c) => c.countryCode == country && c.city.toLowerCase() == sourceCity.toLowerCase(),
+  );
+  return matches ? sourceCity : _othersCity;
+}
 
 /// Creating a want is a near-full-height bottom sheet with two swipeable
 /// pages — the form, then a Summary review — not separate routes. Pass
@@ -69,12 +85,16 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   final _productUrl = TextEditingController();
   final _title = TextEditingController();
   final _details = TextEditingController();
-  late final _city = TextEditingController(text: widget.sourceCity ?? '');
-  final _destCity = TextEditingController();
   String? _photoUrl;
   String _category = 'sneakers';
   late String _country = _initialCountry();
+  late String _cityChoice = _initialCityChoice(_country, widget.sourceCity);
+  late final _cityCustom = TextEditingController(
+    text: _cityChoice == _othersCity ? (widget.sourceCity ?? '') : '',
+  );
   String _destCountry = _unselected;
+  String _destCityChoice = _unselected;
+  final _destCityCustom = TextEditingController();
   int _budget = 3000;
   int _qty = 1;
   DateTime? _needBy;
@@ -82,6 +102,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   bool _submitting = false;
 
   bool get _isDirectRequest => widget.targetTripId != null;
+
+  String get _cityValue =>
+      _cityChoice == _othersCity ? _cityCustom.text.trim() : (_cityChoice == _unselected ? '' : _cityChoice);
+  String get _destCityValue => _destCityChoice == _othersCity
+      ? _destCityCustom.text.trim()
+      : (_destCityChoice == _unselected ? '' : _destCityChoice);
 
   String _initialCountry() {
     final source = widget.sourceCountry;
@@ -94,8 +120,8 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
     _productUrl.dispose();
     _title.dispose();
     _details.dispose();
-    _city.dispose();
-    _destCity.dispose();
+    _cityCustom.dispose();
+    _destCityCustom.dispose();
     super.dispose();
   }
 
@@ -129,7 +155,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       _error = l10n.errorBuyInCountryRequired;
       return false;
     }
-    if (_city.text.trim().isEmpty) {
+    if (_cityValue.isEmpty) {
       _error = l10n.errorBuyInCityRequired;
       return false;
     }
@@ -137,7 +163,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       _error = l10n.errorDeliverToCountryRequired;
       return false;
     }
-    if (_destCity.text.trim().isEmpty) {
+    if (_destCityValue.isEmpty) {
       _error = l10n.errorDeliverToCityRequired;
       return false;
     }
@@ -179,7 +205,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
             title: _title.text.trim(),
             itemDescription: _details.text.trim(),
             sourceCountry: _country,
-            sourceCity: _city.text.trim(),
+            sourceCity: _cityValue,
             category: _category,
             estimatedWeightKg: 1,
             budget: '${_budget.toStringAsFixed(0)}.00',
@@ -188,7 +214,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
             imageUrl: _photoUrl,
             targetTripId: widget.targetTripId,
             destinationCountry: _destCountry,
-            destinationCity: _destCity.text.trim(),
+            destinationCity: _destCityValue,
             productUrl: _productUrl.text.trim().isEmpty ? null : _productUrl.text.trim(),
           );
       ref.invalidate(myWantsProvider);
@@ -437,24 +463,46 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   isExpanded: true,
                   decoration: InputDecoration(labelText: l10n.labelCountry),
                   items: [
-                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectCountry)),
+                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
                     for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
                   ],
-                  onChanged: (v) => setState(() => _country = v ?? _unselected),
+                  onChanged: (v) => setState(() {
+                    _country = v ?? _unselected;
+                    _cityChoice = _unselected;
+                    _cityCustom.clear();
+                  }),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: TextField(
-                  controller: _city,
-                  decoration: InputDecoration(
-                    labelText: l10n.fieldCity,
-                    hintText: l10n.hintCityExample,
-                  ),
+                child: DropdownButtonFormField<String>(
+                  key: ValueKey('buy-in-city-$_country'),
+                  initialValue: _cityChoice,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: l10n.fieldCity),
+                  items: [
+                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
+                    for (final c in kCities.where((c) => c.countryCode == _country))
+                      DropdownMenuItem(value: c.city, child: Text(c.city)),
+                    DropdownMenuItem(value: _othersCity, child: Text(l10n.cityOptionOthers)),
+                  ],
+                  onChanged: _country.isEmpty
+                      ? null
+                      : (v) => setState(() => _cityChoice = v ?? _unselected),
                 ),
               ),
             ],
           ),
+          if (_cityChoice == _othersCity) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _cityCustom,
+              decoration: InputDecoration(
+                labelText: l10n.fieldCity,
+                hintText: l10n.hintCityCustom,
+              ),
+            ),
+          ],
           if (routeMatch != null) ...[
             const SizedBox(height: 4),
             routeMatch.maybeWhen(
@@ -496,24 +544,46 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   isExpanded: true,
                   decoration: InputDecoration(labelText: l10n.labelCountry),
                   items: [
-                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectCountry)),
+                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
                     for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
                   ],
-                  onChanged: (v) => setState(() => _destCountry = v ?? _unselected),
+                  onChanged: (v) => setState(() {
+                    _destCountry = v ?? _unselected;
+                    _destCityChoice = _unselected;
+                    _destCityCustom.clear();
+                  }),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: TextField(
-                  controller: _destCity,
-                  decoration: InputDecoration(
-                    labelText: l10n.fieldCity,
-                    hintText: l10n.hintCityExample,
-                  ),
+                child: DropdownButtonFormField<String>(
+                  key: ValueKey('deliver-to-city-$_destCountry'),
+                  initialValue: _destCityChoice,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: l10n.fieldCity),
+                  items: [
+                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
+                    for (final c in kCities.where((c) => c.countryCode == _destCountry))
+                      DropdownMenuItem(value: c.city, child: Text(c.city)),
+                    DropdownMenuItem(value: _othersCity, child: Text(l10n.cityOptionOthers)),
+                  ],
+                  onChanged: _destCountry.isEmpty
+                      ? null
+                      : (v) => setState(() => _destCityChoice = v ?? _unselected),
                 ),
               ),
             ],
           ),
+          if (_destCityChoice == _othersCity) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _destCityCustom,
+              decoration: InputDecoration(
+                labelText: l10n.fieldCity,
+                hintText: l10n.hintCityCustom,
+              ),
+            ),
+          ],
           const SizedBox(height: 18),
           Text(l10n.labelBudget, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
@@ -605,14 +675,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                 const SizedBox(height: 6),
                 IconLine(
                   Icons.public,
-                  l10n.wantBuyInLine(_city.text.trim().isNotEmpty ? _city.text.trim() : countryName(_country)),
+                  l10n.wantBuyInLine(_cityValue.isNotEmpty ? _cityValue : countryName(_country)),
                 ),
                 const SizedBox(height: 6),
                 IconLine(
                   Icons.local_shipping_outlined,
-                  l10n.wantDeliverToLine(
-                    _destCity.text.trim().isNotEmpty ? _destCity.text.trim() : countryName(_destCountry),
-                  ),
+                  l10n.wantDeliverToLine(_destCityValue.isNotEmpty ? _destCityValue : countryName(_destCountry)),
                 ),
                 if (_needBy != null) ...[
                   const SizedBox(height: 6),

@@ -1328,11 +1328,23 @@ abstract class AppLocalizations {
   /// **'Country'**
   String get labelCountry;
 
-  /// No description provided for @selectCountry.
+  /// No description provided for @selectOption.
   ///
   /// In en, this message translates to:
   /// **'Select'**
-  String get selectCountry;
+  String get selectOption;
+
+  /// No description provided for @cityOptionOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get cityOptionOthers;
+
+  /// No description provided for @hintCityCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your city'**
+  String get hintCityCustom;
 
   /// No description provided for @errorBuyInCountryRequired.
   ///

@@ -694,7 +694,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelCountry => 'Country';
 
   @override
-  String get selectCountry => 'Select';
+  String get selectOption => 'Select';
+
+  @override
+  String get cityOptionOthers => 'Others';
+
+  @override
+  String get hintCityCustom => 'Enter your city';
 
   @override
   String get errorBuyInCountryRequired =>

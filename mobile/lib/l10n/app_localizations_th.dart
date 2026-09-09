@@ -684,7 +684,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get labelCountry => 'ประเทศ';
 
   @override
-  String get selectCountry => 'เลือก';
+  String get selectOption => 'เลือก';
+
+  @override
+  String get cityOptionOthers => 'อื่นๆ';
+
+  @override
+  String get hintCityCustom => 'ระบุชื่อเมือง';
 
   @override
   String get errorBuyInCountryRequired => 'ซื้อที่ (ประเทศ) ห้ามเว้นว่าง';
