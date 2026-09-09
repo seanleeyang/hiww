@@ -225,6 +225,14 @@
   "@wantBuyInLine": {
     "placeholders": { "place": { "type": "String" } }
   },
+  "wantDeliverToLine": "Deliver to {place}",
+  "@wantDeliverToLine": {
+    "placeholders": { "place": { "type": "String" } }
+  },
+  "wantProductUrlLine": "Product URL: {url}",
+  "@wantProductUrlLine": {
+    "placeholders": { "url": { "type": "String" } }
+  },
   "actionViewOrder": "View order →",
 
   "errorWantTitleTooShort": "Give your want a short name",
@@ -234,10 +242,13 @@
   "@directRequestNotice": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "fieldProductUrlOptional": "Product URL (optional)",
+  "hintProductUrl": "Paste a link to the exact item",
   "fieldItem": "Item",
   "hintItemExample": "e.g. Nike Dunk Panda",
   "fieldDetails": "Details",
   "hintDetails": "Brand, model, size, colour, links",
+  "tooltipProductDetails": "Provide as much information about the product as you can, so that the traveler buys the correct item.",
   "fieldPhotoOptional": "Add a photo (optional)",
   "labelCategory": "Category",
   "labelBudget": "Budget",
@@ -247,13 +258,17 @@
   },
   "labelQuantity": "Quantity",
   "labelNeedBy": "Need by",
+  "tooltipNeedBy": "The longer period you are ready to wait, the more offers you receive and can choose from.",
   "anyTime": "Any time",
   "labelBuyIn": "Buy in",
+  "labelDeliverTo": "Deliver to",
   "hintCityExample": "Tokyo",
   "travelersHeadingSoon": "{count, plural, one{{count} traveler} other{{count} travelers}} heading to {country} soon",
   "@travelersHeadingSoon": {
     "placeholders": { "count": { "type": "num" }, "country": { "type": "String" } }
   },
+  "actionNext": "Next",
+  "summaryScreenTitle": "Summary",
   "actionSendRequest": "Send request",
   "actionPostMyWant": "Post my want",
 

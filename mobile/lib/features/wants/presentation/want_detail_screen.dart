@@ -134,7 +134,7 @@ class WantDetailScreen extends ConsumerWidget {
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () =>
-                                  showPostWantSheet(context, existing: want),
+                                  showEditWantSheet(context, existing: want),
                               icon: const Icon(Icons.edit_outlined),
                               label: Text(l10n.actionEdit),
                             ),

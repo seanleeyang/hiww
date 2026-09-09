@@ -1154,6 +1154,18 @@ abstract class AppLocalizations {
   /// **'Buy in {place}'**
   String wantBuyInLine(String place);
 
+  /// No description provided for @wantDeliverToLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver to {place}'**
+  String wantDeliverToLine(String place);
+
+  /// No description provided for @wantProductUrlLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Product URL: {url}'**
+  String wantProductUrlLine(String url);
+
   /// No description provided for @actionViewOrder.
   ///
   /// In en, this message translates to:
@@ -1184,6 +1196,18 @@ abstract class AppLocalizations {
   /// **'Sent directly to {name} — not shown publicly. Your budget below is your opening price; they can accept, counter, or decline.'**
   String directRequestNotice(String name);
 
+  /// No description provided for @fieldProductUrlOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Product URL (optional)'**
+  String get fieldProductUrlOptional;
+
+  /// No description provided for @hintProductUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a link to the exact item'**
+  String get hintProductUrl;
+
   /// No description provided for @fieldItem.
   ///
   /// In en, this message translates to:
@@ -1207,6 +1231,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Brand, model, size, colour, links'**
   String get hintDetails;
+
+  /// No description provided for @tooltipProductDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Provide as much information about the product as you can, so that the traveler buys the correct item.'**
+  String get tooltipProductDetails;
 
   /// No description provided for @fieldPhotoOptional.
   ///
@@ -1244,6 +1274,12 @@ abstract class AppLocalizations {
   /// **'Need by'**
   String get labelNeedBy;
 
+  /// No description provided for @tooltipNeedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'The longer period you are ready to wait, the more offers you receive and can choose from.'**
+  String get tooltipNeedBy;
+
   /// No description provided for @anyTime.
   ///
   /// In en, this message translates to:
@@ -1256,6 +1292,12 @@ abstract class AppLocalizations {
   /// **'Buy in'**
   String get labelBuyIn;
 
+  /// No description provided for @labelDeliverTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver to'**
+  String get labelDeliverTo;
+
   /// No description provided for @hintCityExample.
   ///
   /// In en, this message translates to:
@@ -1267,6 +1309,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} traveler} other{{count} travelers}} heading to {country} soon'**
   String travelersHeadingSoon(num count, String country);
+
+  /// No description provided for @actionNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get actionNext;
+
+  /// No description provided for @summaryScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get summaryScreenTitle;
 
   /// No description provided for @actionSendRequest.
   ///
@@ -2107,12 +2161,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip'**
   String get actionSkip;
-
-  /// No description provided for @actionNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get actionNext;
 
   /// No description provided for @actionGetStarted.
   ///

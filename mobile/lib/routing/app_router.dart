@@ -34,8 +34,11 @@ import '../features/trips/presentation/new_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
 import '../features/wants/data/offers_repository.dart';
 import '../features/wants/data/wants_repository.dart';
+import '../features/wants/domain/want_draft.dart';
+import '../features/wants/presentation/create_order_screen.dart';
 import '../features/wants/presentation/make_offer_screen.dart';
 import '../features/wants/presentation/want_detail_screen.dart';
+import '../features/wants/presentation/want_summary_screen.dart';
 
 /// Bridges Riverpod changes into a [Listenable] that go_router can refresh on.
 /// Also the single place that clears every user-scoped data cache when the
@@ -76,13 +79,13 @@ class _AuthRefresh extends ChangeNotifier {
 
 /// A guest (signed-out, no account) may only *view* a few read-only routes —
 /// Browse, and one trip/want's detail page. Every action route (post/edit/
-/// offer/order/chat/account/…) still requires signing in. `/trips/new` looks
-/// like it could match the `/trips/:id` shape but must not — excluded
-/// explicitly.
+/// offer/order/chat/account/…) still requires signing in. `/trips/new` and
+/// `/wants/new` each look like they could match their sibling `:id` shape
+/// but must not — excluded explicitly.
 bool _isGuestViewableRoute(String loc) {
   if (loc == '/browse') return true;
   if (RegExp(r'^/trips/(?!new$)[^/]+$').hasMatch(loc)) return true;
-  if (RegExp(r'^/wants/[^/]+$').hasMatch(loc)) return true;
+  if (RegExp(r'^/wants/(?!new$)[^/]+$').hasMatch(loc)) return true;
   return false;
 }
 
@@ -183,6 +186,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/trips/:id',
         builder: (_, s) => TripDetailScreen(tripId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/wants/new',
+        builder: (_, s) {
+          final prefill = s.extra as PostWantPrefill?;
+          return CreateOrderScreen(
+            sourceCountry: prefill?.sourceCountry,
+            sourceCity: prefill?.sourceCity,
+            targetTripId: prefill?.targetTripId,
+            targetTravelerName: prefill?.targetTravelerName,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/wants/new/summary',
+        builder: (_, s) => WantSummaryScreen(draft: s.extra as WantDraft),
       ),
       GoRoute(
         path: '/wants/:id/offer',

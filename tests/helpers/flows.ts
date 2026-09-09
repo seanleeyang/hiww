@@ -16,6 +16,7 @@ export async function createRequest(ctx: TestContext, shopper: TestUser): Promis
       category: 'beauty',
       estimated_weight_kg: 2,
       budget: '150.00',
+      destination_country: 'TH',
     },
   });
   if (res.statusCode !== 201) throw new Error(`createRequest failed (${res.statusCode}): ${res.body}`);

@@ -85,6 +85,14 @@ export interface RequestsTable {
   target_trip_id?: string | null;
   /** Cleared from the owner's own My Wants list (migration 024) — history untouched. */
   archived_at?: Date | null;
+  /**
+   * Delivery destination (migration 027) — where the item should end up,
+   * distinct from source_country/source_city (where to buy it). Required at
+   * create time via Zod, nullable here only because existing rows predate it.
+   */
+  destination_country: string;
+  destination_city?: string | null;
+  product_url?: string | null;
   created_at: Date;
   updated_at: Date;
 }

@@ -586,6 +586,16 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String wantDeliverToLine(String place) {
+    return 'จัดส่งไปที่ $place';
+  }
+
+  @override
+  String wantProductUrlLine(String url) {
+    return 'ลิงก์สินค้า: $url';
+  }
+
+  @override
   String get actionViewOrder => 'ดูคำสั่งซื้อ →';
 
   @override
@@ -604,6 +614,12 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String get fieldProductUrlOptional => 'ลิงก์สินค้า (ไม่บังคับ)';
+
+  @override
+  String get hintProductUrl => 'วางลิงก์ไปยังสินค้าที่ต้องการ';
+
+  @override
   String get fieldItem => 'สินค้า';
 
   @override
@@ -614,6 +630,10 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get hintDetails => 'แบรนด์ รุ่น ไซซ์ สี ลิงก์';
+
+  @override
+  String get tooltipProductDetails =>
+      'ระบุรายละเอียดสินค้าให้ครบถ้วนที่สุด เพื่อให้นักเดินทางซื้อสินค้าได้ถูกต้อง';
 
   @override
   String get fieldPhotoOptional => 'เพิ่มรูปภาพ (ไม่บังคับ)';
@@ -636,10 +656,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get labelNeedBy => 'ต้องการภายใน';
 
   @override
+  String get tooltipNeedBy => 'ยิ่งรอได้นาน ยิ่งได้รับข้อเสนอมากขึ้นให้เลือก';
+
+  @override
   String get anyTime => 'เมื่อไหร่ก็ได้';
 
   @override
   String get labelBuyIn => 'ซื้อที่';
+
+  @override
+  String get labelDeliverTo => 'จัดส่งไปที่';
 
   @override
   String get hintCityExample => 'โตเกียว';
@@ -648,6 +674,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String travelersHeadingSoon(num count, String country) {
     return 'มีนักเดินทาง $count คนกำลังจะไป $country เร็วๆ นี้';
   }
+
+  @override
+  String get actionNext => 'ถัดไป';
+
+  @override
+  String get summaryScreenTitle => 'สรุปคำสั่งซื้อ';
 
   @override
   String get actionSendRequest => 'ส่งคำขอ';
@@ -1133,9 +1165,6 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get actionSkip => 'ข้าม';
-
-  @override
-  String get actionNext => 'ถัดไป';
 
   @override
   String get actionGetStarted => 'เริ่มต้นใช้งาน';

@@ -12,7 +12,6 @@ import '../../../ui/empty_state.dart';
 import '../../../ui/skeleton.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../trips/presentation/travel_hero_form.dart';
-import '../../wants/presentation/post_want_sheet.dart';
 import '../data/discovery_repository.dart';
 import '../domain/feed_item.dart';
 import 'browse_hero.dart';
@@ -127,7 +126,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
   }
 
   void _postWant() {
-    if (requireSignedIn(context, ref)) showPostWantSheet(context);
+    if (requireSignedIn(context, ref)) context.push('/wants/new');
   }
 
   void _postTrip() => context.push('/trips/new');
@@ -144,10 +143,34 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
               icon: const Icon(Icons.add),
               label: Text(l10n.actionPostATrip),
             )
-          : FloatingActionButton.extended(
+          : FloatingActionButton(
               onPressed: _postWant,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.actionPostAWant),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.shopping_bag_outlined, size: 26),
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          width: 2,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.add,
+                        size: 12,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
       body: Column(
         children: [

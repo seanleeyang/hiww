@@ -50,6 +50,11 @@ export const createRequestSchema = z.object({
   source_city: optionalText(120),
   need_by: z.string().datetime().optional(),
   image_url: optionalUrl,
+  // Delivery destination (migration 027) — required at create time, distinct
+  // from source_country/source_city (where to buy the item).
+  destination_country: z.string().min(1),
+  destination_city: optionalText(120),
+  product_url: optionalUrl,
   // Set via "Request from this trip" — see src/modules/requests/routes.ts.
   target_trip_id: z.string().uuid().optional(),
 });

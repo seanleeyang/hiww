@@ -589,6 +589,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String wantDeliverToLine(String place) {
+    return 'Deliver to $place';
+  }
+
+  @override
+  String wantProductUrlLine(String url) {
+    return 'Product URL: $url';
+  }
+
+  @override
   String get actionViewOrder => 'View order →';
 
   @override
@@ -607,6 +617,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get fieldProductUrlOptional => 'Product URL (optional)';
+
+  @override
+  String get hintProductUrl => 'Paste a link to the exact item';
+
+  @override
   String get fieldItem => 'Item';
 
   @override
@@ -617,6 +633,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hintDetails => 'Brand, model, size, colour, links';
+
+  @override
+  String get tooltipProductDetails =>
+      'Provide as much information about the product as you can, so that the traveler buys the correct item.';
 
   @override
   String get fieldPhotoOptional => 'Add a photo (optional)';
@@ -645,10 +665,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelNeedBy => 'Need by';
 
   @override
+  String get tooltipNeedBy =>
+      'The longer period you are ready to wait, the more offers you receive and can choose from.';
+
+  @override
   String get anyTime => 'Any time';
 
   @override
   String get labelBuyIn => 'Buy in';
+
+  @override
+  String get labelDeliverTo => 'Deliver to';
 
   @override
   String get hintCityExample => 'Tokyo';
@@ -663,6 +690,12 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0 heading to $country soon';
   }
+
+  @override
+  String get actionNext => 'Next';
+
+  @override
+  String get summaryScreenTitle => 'Summary';
 
   @override
   String get actionSendRequest => 'Send request';
@@ -1156,9 +1189,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionSkip => 'Skip';
-
-  @override
-  String get actionNext => 'Next';
 
   @override
   String get actionGetStarted => 'Get started';

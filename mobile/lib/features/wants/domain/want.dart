@@ -17,6 +17,9 @@ class Want {
     this.status = 'open',
     this.createdAt,
     this.targetTripId,
+    this.destinationCountry,
+    this.destinationCity,
+    this.productUrl,
   });
 
   final String id;
@@ -32,6 +35,13 @@ class Want {
   final DateTime? needBy;
   final String status;
   final DateTime? createdAt;
+
+  /// Delivery destination — distinct from sourceCountry/sourceCity (where to
+  /// buy the item). Required on new wants; may be null on wants created
+  /// before this field existed.
+  final String? destinationCountry;
+  final String? destinationCity;
+  final String? productUrl;
 
   /// Set when this want was sent directly to one trip's traveler ("Request
   /// from this trip") — never shown in public browse.
@@ -59,6 +69,9 @@ class Want {
         status: (j['status'] ?? 'open').toString(),
         createdAt: parseDate(j['created_at']),
         targetTripId: _s(j['target_trip_id']),
+        destinationCountry: _s(j['destination_country']),
+        destinationCity: _s(j['destination_city']),
+        productUrl: _s(j['product_url']),
       );
 }
 

@@ -219,8 +219,10 @@ void main() {
     await _pumpUntil(tester, find.textContaining('Bangkok → Tokyo'),
         timeout: const Duration(seconds: 40));
 
-    // --- Post a want through the FAB sheet. ---
-    await _tap(tester, find.widgetWithText(FloatingActionButton, 'Create Order'));
+    // --- Post a want through the Create Order → Summary flow. ---
+    // Travel is the default tab; the want-creation FAB only shows on Order.
+    await _tap(tester, find.widgetWithText(Tab, 'Order'));
+    await _tap(tester, find.byType(FloatingActionButton));
     await _pumpUntil(tester, find.widgetWithText(TextField, 'Item'));
 
     final wantTitle = 'IT Sneakers $stamp';
@@ -228,6 +230,8 @@ void main() {
         find.widgetWithText(TextField, 'Item'), wantTitle);
     await tester.enterText(find.widgetWithText(TextField, 'Details'),
         'Integration-test want, safe to ignore.');
+    await _tap(tester, find.widgetWithText(FilledButton, 'Next'));
+    await _pumpUntil(tester, find.text('Summary'));
     await _tap(tester, find.widgetWithText(FilledButton, 'Post my want'));
 
     // Submit → navigates to /wants/:id → detail screen shows the title.

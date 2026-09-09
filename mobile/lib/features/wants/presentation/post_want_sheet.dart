@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
@@ -13,77 +12,40 @@ import '../../discovery/data/discovery_repository.dart';
 import '../data/wants_repository.dart';
 import '../domain/want.dart';
 
-/// Pass [existing] to edit that want in place instead of posting a new one.
-/// Pass [targetTripId] for "Request from this trip" — this sends the want
-/// directly and privately to that trip's traveler instead of posting it
-/// publicly for any traveler to see and offer on.
-Future<void> showPostWantSheet(
-  BuildContext context, {
-  String? sourceCountry,
-  String? sourceCity,
-  String? targetTripId,
-  String? targetTravelerName,
-  Want? existing,
-}) {
+/// Edits an existing want in place. Creating a new want is a separate,
+/// full-screen flow — see `create_order_screen.dart` (`CreateOrderScreen` +
+/// `WantSummaryScreen`, reached via `/wants/new`).
+Future<void> showEditWantSheet(BuildContext context, {required Want existing}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     builder: (_) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: _PostWantSheet(
-        sourceCountry: sourceCountry,
-        sourceCity: sourceCity,
-        targetTripId: targetTripId,
-        targetTravelerName: targetTravelerName,
-        existing: existing,
-      ),
+      child: _EditWantSheet(existing: existing),
     ),
   );
 }
 
-class _PostWantSheet extends ConsumerStatefulWidget {
-  const _PostWantSheet({
-    this.sourceCountry,
-    this.sourceCity,
-    this.targetTripId,
-    this.targetTravelerName,
-    this.existing,
-  });
-  final String? sourceCountry;
-  final String? sourceCity;
-  final String? targetTripId;
-  final String? targetTravelerName;
-  final Want? existing;
+class _EditWantSheet extends ConsumerStatefulWidget {
+  const _EditWantSheet({required this.existing});
+  final Want existing;
 
   @override
-  ConsumerState<_PostWantSheet> createState() => _PostWantSheetState();
+  ConsumerState<_EditWantSheet> createState() => _EditWantSheetState();
 }
 
-class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
-  late final _title = TextEditingController(text: widget.existing?.title ?? '');
-  late final _details = TextEditingController(text: widget.existing?.itemDescription ?? '');
-  late final _city = TextEditingController(
-    text: widget.existing?.sourceCity ?? widget.sourceCity ?? '',
-  );
-  late String? _photoUrl = widget.existing?.imageUrl;
-  late String _category = widget.existing?.category ?? 'sneakers';
-  late String _country = _initialCountry();
-  late int _budget = widget.existing != null
-      ? (double.tryParse(widget.existing!.budget)?.round() ?? 3000)
-      : 3000;
-  late int _qty = widget.existing?.quantity ?? 1;
-  late DateTime? _needBy = widget.existing?.needBy;
+class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
+  late final _title = TextEditingController(text: widget.existing.title ?? '');
+  late final _details = TextEditingController(text: widget.existing.itemDescription);
+  late final _city = TextEditingController(text: widget.existing.sourceCity ?? '');
+  late String? _photoUrl = widget.existing.imageUrl;
+  late String _category = widget.existing.category;
+  late final String _country = widget.existing.sourceCountry;
+  late int _budget = double.tryParse(widget.existing.budget)?.round() ?? 3000;
+  late int _qty = widget.existing.quantity;
+  late DateTime? _needBy = widget.existing.needBy;
   bool _submitting = false;
   String? _error;
-
-  bool get _editing => widget.existing != null;
-
-  String _initialCountry() {
-    final existingCountry = widget.existing?.sourceCountry;
-    if (existingCountry != null && isLiveCountry(existingCountry)) return existingCountry;
-    final source = widget.sourceCountry;
-    return (source != null && isLiveCountry(source)) ? source : 'JP';
-  }
 
   @override
   void dispose() {
@@ -110,46 +72,23 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
       _error = null;
     });
     try {
-      if (_editing) {
-        final id = widget.existing!.id;
-        await ref.read(wantsRepositoryProvider).update(
-              id,
-              title: title,
-              itemDescription: details,
-              sourceCity: _city.text.trim(),
-              category: _category,
-              budget: '${_budget.toStringAsFixed(0)}.00',
-              quantity: _qty,
-              needBy: _needBy,
-              imageUrl: _photoUrl ?? '',
-            );
-        ref.invalidate(myWantsProvider);
-        ref.invalidate(feedProvider);
-        ref.invalidate(wantDetailProvider(id));
-        if (!mounted) return;
-        Navigator.of(context).pop();
-      } else {
-        final id = await ref
-            .read(wantsRepositoryProvider)
-            .create(
-              title: title,
-              itemDescription: details,
-              sourceCountry: _country,
-              sourceCity: _city.text.trim(),
-              category: _category,
-              estimatedWeightKg: 1,
-              budget: '${_budget.toStringAsFixed(0)}.00',
-              quantity: _qty,
-              needBy: _needBy,
-              imageUrl: _photoUrl ?? '',
-              targetTripId: widget.targetTripId,
-            );
-        ref.invalidate(myWantsProvider);
-        ref.invalidate(feedProvider);
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        context.push('/wants/$id');
-      }
+      final id = widget.existing.id;
+      await ref.read(wantsRepositoryProvider).update(
+            id,
+            title: title,
+            itemDescription: details,
+            sourceCity: _city.text.trim(),
+            category: _category,
+            budget: '${_budget.toStringAsFixed(0)}.00',
+            quantity: _qty,
+            needBy: _needBy,
+            imageUrl: _photoUrl ?? '',
+          );
+      ref.invalidate(myWantsProvider);
+      ref.invalidate(feedProvider);
+      ref.invalidate(wantDetailProvider(id));
+      if (!mounted) return;
+      Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -162,7 +101,6 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final routeMatch = ref.watch(routeMatchProvider(_country));
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -170,80 +108,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              _editing
-                  ? l10n.wantEditTitle
-                  : widget.targetTripId != null
-                      ? l10n.actionRequestFromThisTrip
-                      : l10n.actionPostAWant,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            if (!_editing) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.lightbulb_outline,
-                        size: 18, color: Theme.of(context).colorScheme.onTertiaryContainer),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.proTipTitle,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.onTertiaryContainer,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            l10n.proTipCreateOrderBody,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context).colorScheme.onTertiaryContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            if (!_editing && widget.targetTripId != null) ...[
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.lock_outline, size: 18, color: Theme.of(context).colorScheme.onPrimaryContainer),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.directRequestNotice(widget.targetTravelerName ?? l10n.fallbackATraveler),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            Text(l10n.wantEditTitle, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             TextField(
               controller: _title,
@@ -331,22 +196,11 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
             Row(
               children: [
                 Expanded(
-                  child: _editing
-                      ? TextFormField(
-                          initialValue: countryName(_country),
-                          enabled: false,
-                          decoration: InputDecoration(labelText: l10n.labelBuyIn),
-                        )
-                      : DropdownButtonFormField<String>(
-                          initialValue: _country,
-                          isExpanded: true,
-                          decoration: InputDecoration(labelText: l10n.labelBuyIn),
-                          items: [
-                            for (final c in kLiveCountries)
-                              DropdownMenuItem(value: c.code, child: Text(c.name)),
-                          ],
-                          onChanged: (v) => setState(() => _country = v ?? 'JP'),
-                        ),
+                  child: TextFormField(
+                    initialValue: countryName(_country),
+                    enabled: false,
+                    decoration: InputDecoration(labelText: l10n.labelBuyIn),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -359,31 +213,6 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 14),
-            routeMatch.maybeWhen(
-              data: (m) => m.count == 0
-                  ? const SizedBox.shrink()
-                  : Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.flight_takeoff, size: 18),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              l10n.travelersHeadingSoon(m.count, countryName(_country)),
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-              orElse: () => const SizedBox.shrink(),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
@@ -401,11 +230,7 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text(_editing
-                      ? l10n.actionSaveChanges
-                      : widget.targetTripId != null
-                          ? l10n.actionSendRequest
-                          : l10n.actionPostMyWant),
+                  : Text(l10n.actionSaveChanges),
             ),
           ],
         ),

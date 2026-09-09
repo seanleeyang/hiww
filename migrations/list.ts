@@ -26,6 +26,7 @@ import * as m023 from './023_request_target_trip';
 import * as m024 from './024_archive_trips_requests';
 import * as m025 from './025_notification_params';
 import * as m026 from './026_social_auth';
+import * as m027 from './027_add_request_destination';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -55,4 +56,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '024_archive_trips_requests', up: m024.up },
   { name: '025_notification_params', up: m025.up },
   { name: '026_social_auth', up: m026.up },
+  { name: '027_add_request_destination', up: m027.up },
 ];

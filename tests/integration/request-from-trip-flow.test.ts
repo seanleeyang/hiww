@@ -34,6 +34,7 @@ describe('"Request from this trip" — direct requests stay private', () => {
         category: 'food',
         estimated_weight_kg: 1,
         budget: '80.00',
+        destination_country: 'TH',
         target_trip_id: tripId,
       },
     });
@@ -78,6 +79,7 @@ describe('"Request from this trip" — direct requests stay private', () => {
         category: 'other',
         estimated_weight_kg: 1,
         budget: '50.00',
+        destination_country: 'TH',
         target_trip_id: tripId,
       },
     });
@@ -111,6 +113,7 @@ describe('"Request from this trip" — direct requests stay private', () => {
         category: 'other',
         estimated_weight_kg: 1,
         budget: '60.00',
+        destination_country: 'TH',
         target_trip_id: tripId,
       },
     });
@@ -142,6 +145,7 @@ describe('"Request from this trip" — direct requests stay private', () => {
         category: 'other',
         estimated_weight_kg: 1,
         budget: '40.00',
+        destination_country: 'TH',
         target_trip_id: tripId,
       },
     });
@@ -163,6 +167,7 @@ describe('"Request from this trip" — direct requests stay private', () => {
         category: 'other',
         estimated_weight_kg: 1,
         budget: '70.00',
+        destination_country: 'TH',
         target_trip_id: tripId,
       },
     });

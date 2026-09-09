@@ -23,6 +23,9 @@ class WantsRepository {
     DateTime? needBy,
     String? imageUrl,
     String? targetTripId,
+    required String destinationCountry,
+    String? destinationCity,
+    String? productUrl,
   }) async {
     final body = <String, dynamic>{
       'item_description': itemDescription,
@@ -32,11 +35,16 @@ class WantsRepository {
       'budget': budget,
       'quantity': quantity,
       'title': title,
+      'destination_country': destinationCountry,
     };
     if (sourceCity != null && sourceCity.isNotEmpty) body['source_city'] = sourceCity;
     if (needBy != null) body['need_by'] = needBy.toUtc().toIso8601String();
     if (imageUrl != null && imageUrl.isNotEmpty) body['image_url'] = imageUrl;
     if (targetTripId != null) body['target_trip_id'] = targetTripId;
+    if (destinationCity != null && destinationCity.isNotEmpty) {
+      body['destination_city'] = destinationCity;
+    }
+    if (productUrl != null && productUrl.isNotEmpty) body['product_url'] = productUrl;
     final data = await _api.post('/api/requests', body: body);
     return (data as Map)['id'].toString();
   }

@@ -19,7 +19,6 @@ import '../../wants/data/wants_repository.dart';
 import '../../wants/domain/offer.dart';
 import '../../wants/domain/want.dart';
 import '../../wants/presentation/offer_negotiation_actions.dart';
-import '../../wants/presentation/post_want_sheet.dart';
 import '../data/orders_repository.dart';
 import '../domain/order.dart';
 
@@ -178,7 +177,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
             emptyTitle: l10n.emptyMyWantsTitle,
             emptyMessage: l10n.emptyMyWantsMessage,
             emptyAction: FilledButton(
-              onPressed: () => showPostWantSheet(context),
+              onPressed: () => context.push('/wants/new'),
               child: Text(l10n.actionPostAWant),
             ),
           ),
@@ -197,7 +196,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showPostWantSheet(context),
+        onPressed: () => context.push('/wants/new'),
         icon: const Icon(Icons.add),
         label: Text(l10n.actionPostAWant),
       ),

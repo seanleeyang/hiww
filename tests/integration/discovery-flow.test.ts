@@ -44,6 +44,7 @@ describe('discovery feed + route match', () => {
         category: 'sneakers',
         estimated_weight_kg: 1.2,
         budget: '6500.00',
+        destination_country: 'TH',
         ...body,
       },
     });
@@ -188,5 +189,47 @@ describe('discovery feed + route match', () => {
     });
     expect(res.json().data.count).toBe(2);
     expect(res.json().data.sample.length).toBe(2);
+  });
+
+  it('round-trips destination_country/destination_city/product_url and requires destination_country', async () => {
+    const shopper = await createUser(ctx, { user_type: 'shopper' });
+
+    const wantId = await postWant(shopper, {
+      destination_country: 'SG',
+      destination_city: 'Singapore',
+      product_url: 'https://example.com/nike-dunk-panda',
+    });
+
+    const detail = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/requests/${wantId}`,
+      headers: authHeader(shopper),
+    });
+    expect(detail.json().data.destination_country).toBe('SG');
+    expect(detail.json().data.destination_city).toBe('Singapore');
+    expect(detail.json().data.product_url).toBe('https://example.com/nike-dunk-panda');
+
+    const mine = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/requests/mine',
+      headers: authHeader(shopper),
+    });
+    const item = mine.json().data.items.find((i: { id: string }) => i.id === wantId);
+    expect(item.destination_country).toBe('SG');
+
+    const rejected = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/requests',
+      headers: authHeader(shopper as never),
+      payload: {
+        item_description: 'Missing a destination on purpose',
+        source_country: 'JP',
+        category: 'sneakers',
+        estimated_weight_kg: 1,
+        budget: '100.00',
+      },
+    });
+    expect(rejected.statusCode).toBe(400);
+    expect(rejected.json().code).toBe('VALIDATION_ERROR');
   });
 });

@@ -9,7 +9,7 @@ const kCategories = <({String? value, String label})>[
   (value: 'sneakers', label: 'Sneakers'),
   (value: 'electronics', label: 'Electronics'),
   (value: 'snacks', label: 'Snacks'),
-  (value: 'other', label: 'Other'),
+  (value: 'other', label: 'Others'),
 ];
 
 class CategoryChips extends StatelessWidget {
