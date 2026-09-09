@@ -19,7 +19,6 @@ import '../../wants/data/wants_repository.dart';
 import '../../wants/domain/offer.dart';
 import '../../wants/domain/want.dart';
 import '../../wants/presentation/create_order_sheet.dart';
-import '../../wants/presentation/offer_negotiation_actions.dart';
 import '../data/orders_repository.dart';
 import '../domain/order.dart';
 
@@ -360,33 +359,15 @@ class _WantCardState extends ConsumerState<_WantCard> {
     }
   }
 
-  Future<void> _refresh() async {
-    ref.invalidate(negotiationsProvider);
-    ref.invalidate(myWantsProvider);
-  }
-
-  Future<void> _accept() async {
-    final orderId = await ref.read(offersRepositoryProvider).accept(widget.pendingOffer!.id);
-    await _refresh();
-    ref.invalidate(myOrdersProvider);
-    ref.invalidate(orderIdByRequestProvider);
-    if (mounted) context.push('/orders/$orderId');
-  }
-
-  Future<void> _counter(String price) async {
-    await ref.read(offersRepositoryProvider).counter(widget.pendingOffer!.id, price);
-    await _refresh();
-  }
-
-  Future<void> _reject() async {
-    await ref.read(offersRepositoryProvider).reject(widget.pendingOffer!.id);
-    await _refresh();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final w = widget.want;
+    // A pending offer is negotiation in progress — surface that on the
+    // pill instead of the want's own (still just "open") status. Tapping
+    // through to the want's detail page is where the actual offer/counter/
+    // decline controls live; the card itself stays a plain summary.
+    final displayStatus = widget.pendingOffer != null ? 'negotiating' : w.status;
     return SoftCard(
       onTap: () => context.push('/wants/${w.id}'),
       child: Column(
@@ -400,7 +381,7 @@ class _WantCardState extends ConsumerState<_WantCard> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
               ),
-              StatusPill(w.status),
+              StatusPill(displayStatus),
               if (_archivableWantStatuses.contains(w.status)) ...[
                 const SizedBox(width: 4),
                 IconButton(
@@ -417,62 +398,23 @@ class _WantCardState extends ConsumerState<_WantCard> {
             IconLine(Icons.public, l10n.wantBuyInLine(w.sourceCity ?? countryName(w.sourceCountry))),
             if (w.needByLabel != null) IconLine(Icons.event_outlined, w.needByLabel!),
           ]),
-          if (widget.pendingOffer != null) ...[
-            const SizedBox(height: 12),
-            OfferNegotiationActions(
-              offer: widget.pendingOffer!,
-              myRole: 'shopper',
-              enabled: w.status == 'open',
-              onAccept: _accept,
-              onCounter: _counter,
-              onReject: _reject,
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-/// A traveler's own outgoing offer, still being negotiated. Mirrors
-/// `_WantCard`'s inline negotiation controls so the traveler can respond to
-/// a counter (or just see they're waiting on the shopper) without leaving
-/// My Orders.
-class _NegotiationCard extends ConsumerStatefulWidget {
+/// A traveler's own outgoing offer, still being negotiated. A plain summary
+/// card like any other — the actual offer/counter/decline controls only
+/// show once tapped through to the want's detail page.
+class _NegotiationCard extends StatelessWidget {
   const _NegotiationCard({required this.offer});
   final Offer offer;
 
   @override
-  ConsumerState<_NegotiationCard> createState() => _NegotiationCardState();
-}
-
-class _NegotiationCardState extends ConsumerState<_NegotiationCard> {
-  Future<void> _refresh() async {
-    ref.invalidate(negotiationsProvider);
-  }
-
-  Future<void> _accept() async {
-    final orderId = await ref.read(offersRepositoryProvider).accept(widget.offer.id);
-    await _refresh();
-    ref.invalidate(myOrdersProvider);
-    ref.invalidate(orderIdByRequestProvider);
-    if (mounted) context.push('/orders/$orderId');
-  }
-
-  Future<void> _counter(String price) async {
-    await ref.read(offersRepositoryProvider).counter(widget.offer.id, price);
-    await _refresh();
-  }
-
-  Future<void> _reject() async {
-    await ref.read(offersRepositoryProvider).reject(widget.offer.id);
-    await _refresh();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final o = widget.offer;
+    final o = offer;
     return SoftCard(
       onTap: () => context.push('/wants/${o.requestId}'),
       child: Column(
@@ -486,7 +428,7 @@ class _NegotiationCardState extends ConsumerState<_NegotiationCard> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
               ),
-              StatusPill(o.status),
+              const StatusPill('negotiating'),
             ],
           ),
           const SizedBox(height: 8),
@@ -495,15 +437,6 @@ class _NegotiationCardState extends ConsumerState<_NegotiationCard> {
             if (o.counterpartyName != null)
               IconLine(Icons.person_outline, o.counterpartyName!),
           ]),
-          const SizedBox(height: 12),
-          OfferNegotiationActions(
-            offer: o,
-            myRole: 'traveler',
-            enabled: o.requestStatus == 'open',
-            onAccept: _accept,
-            onCounter: _counter,
-            onReject: _reject,
-          ),
         ],
       ),
     );

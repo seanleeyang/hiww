@@ -302,6 +302,7 @@
   "actionKeepWant": "Keep want",
   "actionCancelWant": "Cancel want",
   "noOffersYetMessage": "No offers yet — travelers on this route will see it.",
+  "labelYourOffer": "Your offer",
   "dialogAcceptOfferTitle": "Accept this offer?",
   "dialogAcceptOfferBody": "You will pay {price} for the goods. An order is created and you'll be asked to pay.",
   "@dialogAcceptOfferBody": {

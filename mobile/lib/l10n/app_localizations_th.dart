@@ -774,6 +774,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'ยังไม่มีข้อเสนอ — นักเดินทางบนเส้นทางนี้จะเห็นรายการของคุณ';
 
   @override
+  String get labelYourOffer => 'ข้อเสนอของคุณ';
+
+  @override
   String get dialogAcceptOfferTitle => 'รับข้อเสนอนี้ใช่ไหม?';
 
   @override

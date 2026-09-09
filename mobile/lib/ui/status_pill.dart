@@ -19,7 +19,13 @@ class StatusPill extends StatelessWidget {
     final tone = switch (status) {
       'approved' || 'confirmed' || 'delivered' || 'accepted' || 'clear' =>
         _Tone.positive,
-      'pending' || 'pending_payment' || 'open' || 'purchased' || 'in_transit' || 'in_review' =>
+      'pending' ||
+      'pending_payment' ||
+      'open' ||
+      'purchased' ||
+      'in_transit' ||
+      'in_review' ||
+      'negotiating' =>
         _Tone.warning,
       'rejected' || 'flagged' || 'restricted' || 'cancelled' || 'closed' =>
         _Tone.danger,

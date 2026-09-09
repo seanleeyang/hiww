@@ -156,12 +156,8 @@ class WantDetailScreen extends ConsumerWidget {
                         ],
                       ),
                     ],
-                  ] else if (iAmTraveler && want.status == 'open')
-                    FilledButton.icon(
-                      onPressed: () => context.push('/wants/$wantId/offer'),
-                      icon: const Icon(Icons.local_offer_outlined),
-                      label: Text(l10n.actionMakeAnOffer),
-                    )
+                  ] else if (iAmTraveler)
+                    _MyTravelerOfferSection(wantId: wantId, wantOpen: want.status == 'open')
                   else if (want.status != 'open')
                     Text(
                       l10n.wantClosedNote,
@@ -207,6 +203,147 @@ Future<void> _cancelWant(BuildContext context, WidgetRef ref, String wantId) asy
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     }
+  }
+}
+
+/// What a traveler (not the want's owner) sees: their own existing offer's
+/// negotiation controls if they've already made one, or a "Make an Offer"
+/// button if not. Only one offer per traveler per want, so there's at most
+/// one to find.
+class _MyTravelerOfferSection extends ConsumerWidget {
+  const _MyTravelerOfferSection({required this.wantId, required this.wantOpen});
+  final String wantId;
+  final bool wantOpen;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final negotiations = ref.watch(negotiationsProvider);
+
+    return negotiations.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => wantOpen
+          ? FilledButton.icon(
+              onPressed: () => context.push('/wants/$wantId/offer'),
+              icon: const Icon(Icons.local_offer_outlined),
+              label: Text(l10n.actionMakeAnOffer),
+            )
+          : const SizedBox.shrink(),
+      data: (list) {
+        final mine = list.where((o) => o.requestId == wantId && o.myRole == 'traveler').firstOrNull;
+        if (mine != null) {
+          return _MyOfferCard(offer: mine, wantOpen: wantOpen);
+        }
+        if (wantOpen) {
+          return FilledButton.icon(
+            onPressed: () => context.push('/wants/$wantId/offer'),
+            icon: const Icon(Icons.local_offer_outlined),
+            label: Text(l10n.actionMakeAnOffer),
+          );
+        }
+        return Text(
+          l10n.wantClosedNote,
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        );
+      },
+    );
+  }
+}
+
+class _MyOfferCard extends ConsumerStatefulWidget {
+  const _MyOfferCard({required this.offer, required this.wantOpen});
+  final Offer offer;
+  final bool wantOpen;
+
+  @override
+  ConsumerState<_MyOfferCard> createState() => _MyOfferCardState();
+}
+
+class _MyOfferCardState extends ConsumerState<_MyOfferCard> {
+  Future<void> _refresh() async {
+    ref.invalidate(negotiationsProvider);
+  }
+
+  Future<void> _accept() async {
+    try {
+      final orderId = await ref.read(offersRepositoryProvider).accept(widget.offer.id);
+      ref.invalidate(myOrdersProvider);
+      ref.invalidate(orderIdByRequestProvider);
+      await _refresh();
+      if (!mounted) return;
+      context.go('/orders/$orderId');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  Future<void> _counter(String price) async {
+    await ref.read(offersRepositoryProvider).counter(widget.offer.id, price);
+    await _refresh();
+  }
+
+  Future<void> _reject() async {
+    await ref.read(offersRepositoryProvider).reject(widget.offer.id);
+    await _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final o = widget.offer;
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(l10n.labelYourOffer, style: const TextStyle(fontWeight: FontWeight.w600)),
+              ),
+              StatusPill(o.status),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text(
+                o.priceLabel,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+              if (o.deliveryLabel != null) ...[
+                const SizedBox(width: 12),
+                Text(
+                  o.deliveryLabel!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (o.isNegotiating) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.offerCounteredTimes(o.round),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+            ),
+          ],
+          if (o.status == 'pending') ...[
+            const SizedBox(height: 12),
+            OfferNegotiationActions(
+              offer: o,
+              myRole: 'traveler',
+              enabled: widget.wantOpen,
+              onAccept: _accept,
+              onCounter: _counter,
+              onReject: _reject,
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 

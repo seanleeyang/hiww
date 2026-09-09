@@ -792,6 +792,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'No offers yet — travelers on this route will see it.';
 
   @override
+  String get labelYourOffer => 'Your offer';
+
+  @override
   String get dialogAcceptOfferTitle => 'Accept this offer?';
 
   @override

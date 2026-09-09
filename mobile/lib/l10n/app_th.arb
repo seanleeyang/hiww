@@ -248,6 +248,7 @@
   "actionKeepWant": "เก็บรายการไว้",
   "actionCancelWant": "ยกเลิกรายการต้องการ",
   "noOffersYetMessage": "ยังไม่มีข้อเสนอ — นักเดินทางบนเส้นทางนี้จะเห็นรายการของคุณ",
+  "labelYourOffer": "ข้อเสนอของคุณ",
   "dialogAcceptOfferTitle": "รับข้อเสนอนี้ใช่ไหม?",
   "dialogAcceptOfferBody": "คุณจะจ่าย {price} สำหรับสินค้านี้ ระบบจะสร้างคำสั่งซื้อและให้คุณชำระเงิน",
   "priceBreakdownProductPrice": "ราคาสินค้า",

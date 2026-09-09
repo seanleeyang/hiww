@@ -1490,6 +1490,12 @@ abstract class AppLocalizations {
   /// **'No offers yet — travelers on this route will see it.'**
   String get noOffersYetMessage;
 
+  /// No description provided for @labelYourOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Your offer'**
+  String get labelYourOffer;
+
   /// No description provided for @dialogAcceptOfferTitle.
   ///
   /// In en, this message translates to:
