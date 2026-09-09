@@ -107,20 +107,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       setState(() => _error = l10n.errorWantDetailsTooShort);
       return;
     }
-    if (_country.isEmpty) {
-      setState(() => _error = l10n.errorBuyInCountryRequired);
+    if (_country.isEmpty || _city.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorBuyInRequired);
       return;
     }
-    if (_city.text.trim().isEmpty) {
-      setState(() => _error = l10n.errorBuyInCityRequired);
-      return;
-    }
-    if (_destCountry.isEmpty) {
-      setState(() => _error = l10n.errorDeliverToCountryRequired);
-      return;
-    }
-    if (_destCity.text.trim().isEmpty) {
-      setState(() => _error = l10n.errorDeliverToCityRequired);
+    if (_destCountry.isEmpty || _destCity.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorDeliverToRequired);
       return;
     }
     setState(() => _error = null);

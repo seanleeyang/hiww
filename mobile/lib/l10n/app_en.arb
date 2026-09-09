@@ -235,8 +235,8 @@
   },
   "actionViewOrder": "View order →",
 
-  "errorWantTitleTooShort": "Give your want a short name",
-  "errorWantDetailsTooShort": "Add a few details (at least 10 characters)",
+  "errorWantTitleTooShort": "Product Name cannot be left blank",
+  "errorWantDetailsTooShort": "Product Details cannot be left blank",
   "wantEditTitle": "Edit want",
   "directRequestNotice": "Sent directly to {name} — not shown publicly. Your budget below is your opening price; they can accept, counter, or decline.",
   "@directRequestNotice": {
@@ -267,10 +267,8 @@
   "labelCountry": "Country",
   "selectCountry": "Select",
   "fieldCity": "City",
-  "errorBuyInCountryRequired": "Select a country to buy in",
-  "errorBuyInCityRequired": "Add a city to buy in",
-  "errorDeliverToCountryRequired": "Select a delivery country",
-  "errorDeliverToCityRequired": "Add a delivery city",
+  "errorBuyInRequired": "Buy in cannot be left blank",
+  "errorDeliverToRequired": "Deliver to cannot be left blank",
   "hintCityExample": "Tokyo",
   "travelersHeadingSoon": "{count, plural, one{{count} traveler} other{{count} travelers}} heading to {country} soon",
   "@travelersHeadingSoon": {

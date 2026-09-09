@@ -599,11 +599,11 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionViewOrder => 'ดูคำสั่งซื้อ →';
 
   @override
-  String get errorWantTitleTooShort => 'ตั้งชื่อรายการต้องการของคุณสั้นๆ';
+  String get errorWantTitleTooShort => 'กรุณากรอกชื่อสินค้า ห้ามเว้นว่าง';
 
   @override
   String get errorWantDetailsTooShort =>
-      'เพิ่มรายละเอียด (อย่างน้อย 10 ตัวอักษร)';
+      'กรุณากรอกรายละเอียดสินค้า ห้ามเว้นว่าง';
 
   @override
   String get wantEditTitle => 'แก้ไขรายการต้องการ';
@@ -680,16 +680,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get selectCountry => 'เลือก';
 
   @override
-  String get errorBuyInCountryRequired => 'กรุณาเลือกประเทศที่จะซื้อ';
+  String get errorBuyInRequired => 'ซื้อที่ ห้ามเว้นว่าง';
 
   @override
-  String get errorBuyInCityRequired => 'กรุณาระบุเมืองที่จะซื้อ';
-
-  @override
-  String get errorDeliverToCountryRequired => 'กรุณาเลือกประเทศปลายทาง';
-
-  @override
-  String get errorDeliverToCityRequired => 'กรุณาระบุเมืองปลายทาง';
+  String get errorDeliverToRequired => 'จัดส่งไปที่ ห้ามเว้นว่าง';
 
   @override
   String get hintCityExample => 'โตเกียว';

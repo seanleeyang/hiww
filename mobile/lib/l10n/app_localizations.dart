@@ -1175,13 +1175,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorWantTitleTooShort.
   ///
   /// In en, this message translates to:
-  /// **'Give your want a short name'**
+  /// **'Product Name cannot be left blank'**
   String get errorWantTitleTooShort;
 
   /// No description provided for @errorWantDetailsTooShort.
   ///
   /// In en, this message translates to:
-  /// **'Add a few details (at least 10 characters)'**
+  /// **'Product Details cannot be left blank'**
   String get errorWantDetailsTooShort;
 
   /// No description provided for @wantEditTitle.
@@ -1322,29 +1322,17 @@ abstract class AppLocalizations {
   /// **'Select'**
   String get selectCountry;
 
-  /// No description provided for @errorBuyInCountryRequired.
+  /// No description provided for @errorBuyInRequired.
   ///
   /// In en, this message translates to:
-  /// **'Select a country to buy in'**
-  String get errorBuyInCountryRequired;
+  /// **'Buy in cannot be left blank'**
+  String get errorBuyInRequired;
 
-  /// No description provided for @errorBuyInCityRequired.
+  /// No description provided for @errorDeliverToRequired.
   ///
   /// In en, this message translates to:
-  /// **'Add a city to buy in'**
-  String get errorBuyInCityRequired;
-
-  /// No description provided for @errorDeliverToCountryRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a delivery country'**
-  String get errorDeliverToCountryRequired;
-
-  /// No description provided for @errorDeliverToCityRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a delivery city'**
-  String get errorDeliverToCityRequired;
+  /// **'Deliver to cannot be left blank'**
+  String get errorDeliverToRequired;
 
   /// No description provided for @hintCityExample.
   ///

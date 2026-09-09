@@ -602,11 +602,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionViewOrder => 'View order →';
 
   @override
-  String get errorWantTitleTooShort => 'Give your want a short name';
+  String get errorWantTitleTooShort => 'Product Name cannot be left blank';
 
   @override
-  String get errorWantDetailsTooShort =>
-      'Add a few details (at least 10 characters)';
+  String get errorWantDetailsTooShort => 'Product Details cannot be left blank';
 
   @override
   String get wantEditTitle => 'Edit want';
@@ -690,16 +689,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectCountry => 'Select';
 
   @override
-  String get errorBuyInCountryRequired => 'Select a country to buy in';
+  String get errorBuyInRequired => 'Buy in cannot be left blank';
 
   @override
-  String get errorBuyInCityRequired => 'Add a city to buy in';
-
-  @override
-  String get errorDeliverToCountryRequired => 'Select a delivery country';
-
-  @override
-  String get errorDeliverToCityRequired => 'Add a delivery city';
+  String get errorDeliverToRequired => 'Deliver to cannot be left blank';
 
   @override
   String get hintCityExample => 'Tokyo';
