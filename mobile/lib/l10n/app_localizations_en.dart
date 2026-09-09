@@ -689,10 +689,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectCountry => 'Select';
 
   @override
-  String get errorBuyInRequired => 'Buy in cannot be left blank';
+  String get errorBuyInCountryRequired =>
+      'Buy in (Country) cannot be left blank';
 
   @override
-  String get errorDeliverToRequired => 'Deliver to cannot be left blank';
+  String get errorBuyInCityRequired => 'Buy in (City) cannot be left blank';
+
+  @override
+  String get errorDeliverToCountryRequired =>
+      'Deliver to (Country) cannot be left blank';
+
+  @override
+  String get errorDeliverToCityRequired =>
+      'Deliver to (City) cannot be left blank';
 
   @override
   String get hintCityExample => 'Tokyo';

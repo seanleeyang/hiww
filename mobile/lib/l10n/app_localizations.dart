@@ -1322,17 +1322,29 @@ abstract class AppLocalizations {
   /// **'Select'**
   String get selectCountry;
 
-  /// No description provided for @errorBuyInRequired.
+  /// No description provided for @errorBuyInCountryRequired.
   ///
   /// In en, this message translates to:
-  /// **'Buy in cannot be left blank'**
-  String get errorBuyInRequired;
+  /// **'Buy in (Country) cannot be left blank'**
+  String get errorBuyInCountryRequired;
 
-  /// No description provided for @errorDeliverToRequired.
+  /// No description provided for @errorBuyInCityRequired.
   ///
   /// In en, this message translates to:
-  /// **'Deliver to cannot be left blank'**
-  String get errorDeliverToRequired;
+  /// **'Buy in (City) cannot be left blank'**
+  String get errorBuyInCityRequired;
+
+  /// No description provided for @errorDeliverToCountryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver to (Country) cannot be left blank'**
+  String get errorDeliverToCountryRequired;
+
+  /// No description provided for @errorDeliverToCityRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver to (City) cannot be left blank'**
+  String get errorDeliverToCityRequired;
 
   /// No description provided for @hintCityExample.
   ///

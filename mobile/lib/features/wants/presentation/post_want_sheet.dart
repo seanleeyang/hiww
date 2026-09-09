@@ -148,11 +148,13 @@ class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
               value: _budget,
               onChanged: (v) => setState(() => _budget = v),
             ),
-            const SizedBox(height: 4),
-            Text(l10n.budgetTotalNote(_qty),
-                style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            if (_qty > 1) ...[
+              const SizedBox(height: 4),
+              Text(l10n.budgetTotalNote(_qty),
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            ],
             const SizedBox(height: 18),
             Row(
               children: [

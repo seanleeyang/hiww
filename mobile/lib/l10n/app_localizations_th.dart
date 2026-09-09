@@ -680,10 +680,17 @@ class AppLocalizationsTh extends AppLocalizations {
   String get selectCountry => 'เลือก';
 
   @override
-  String get errorBuyInRequired => 'ซื้อที่ ห้ามเว้นว่าง';
+  String get errorBuyInCountryRequired => 'ซื้อที่ (ประเทศ) ห้ามเว้นว่าง';
 
   @override
-  String get errorDeliverToRequired => 'จัดส่งไปที่ ห้ามเว้นว่าง';
+  String get errorBuyInCityRequired => 'ซื้อที่ (เมือง) ห้ามเว้นว่าง';
+
+  @override
+  String get errorDeliverToCountryRequired =>
+      'จัดส่งไปที่ (ประเทศ) ห้ามเว้นว่าง';
+
+  @override
+  String get errorDeliverToCityRequired => 'จัดส่งไปที่ (เมือง) ห้ามเว้นว่าง';
 
   @override
   String get hintCityExample => 'โตเกียว';

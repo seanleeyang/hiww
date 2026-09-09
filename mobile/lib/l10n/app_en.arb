@@ -267,8 +267,10 @@
   "labelCountry": "Country",
   "selectCountry": "Select",
   "fieldCity": "City",
-  "errorBuyInRequired": "Buy in cannot be left blank",
-  "errorDeliverToRequired": "Deliver to cannot be left blank",
+  "errorBuyInCountryRequired": "Buy in (Country) cannot be left blank",
+  "errorBuyInCityRequired": "Buy in (City) cannot be left blank",
+  "errorDeliverToCountryRequired": "Deliver to (Country) cannot be left blank",
+  "errorDeliverToCityRequired": "Deliver to (City) cannot be left blank",
   "hintCityExample": "Tokyo",
   "travelersHeadingSoon": "{count, plural, one{{count} traveler} other{{count} travelers}} heading to {country} soon",
   "@travelersHeadingSoon": {

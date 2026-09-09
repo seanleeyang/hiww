@@ -107,12 +107,20 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       setState(() => _error = l10n.errorWantDetailsTooShort);
       return;
     }
-    if (_country.isEmpty || _city.text.trim().isEmpty) {
-      setState(() => _error = l10n.errorBuyInRequired);
+    if (_country.isEmpty) {
+      setState(() => _error = l10n.errorBuyInCountryRequired);
       return;
     }
-    if (_destCountry.isEmpty || _destCity.text.trim().isEmpty) {
-      setState(() => _error = l10n.errorDeliverToRequired);
+    if (_city.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorBuyInCityRequired);
+      return;
+    }
+    if (_destCountry.isEmpty) {
+      setState(() => _error = l10n.errorDeliverToCountryRequired);
+      return;
+    }
+    if (_destCity.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorDeliverToCityRequired);
       return;
     }
     setState(() => _error = null);
@@ -409,11 +417,13 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
               value: _budget,
               onChanged: (v) => setState(() => _budget = v),
             ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.budgetTotalNote(_qty),
-              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-            ),
+            if (_qty > 1) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.budgetTotalNote(_qty),
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+              ),
+            ],
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(_error!, style: TextStyle(color: scheme.error)),
