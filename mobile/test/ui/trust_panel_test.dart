@@ -32,6 +32,6 @@ void main() {
   testWidgets('traveler sees the same holding line but traveler-appropriate release wording', (tester) async {
     await tester.pumpWidget(_wrap(TrustPanel(order: _order(status: 'in_transit'), isShopper: false)));
     expect(find.text('Hiww is holding ฿18,000 + ฿1,200 fee'), findsOneWidget);
-    expect(find.text('Released to you once the shopper receives the item and confirms it.'), findsOneWidget);
+    expect(find.text('Released to you once the shopper receives and confirms the item.'), findsOneWidget);
   });
 }

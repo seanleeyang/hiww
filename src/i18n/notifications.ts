@@ -174,6 +174,18 @@ const TEMPLATES: Record<string, Template> = {
           subject: 'The traveler bought your item',
           body: `The traveler bought "${p.item}" and attached the shop receipt. They'll ship it once they're back.`,
         },
+  upload_reminder: (l, p) => {
+    const days = Number(p.days);
+    return l === 'th'
+      ? {
+          subject: 'อย่าลืมอัปโหลดรูปสินค้าและใบเสร็จ',
+          body: `คุณเหลือเวลาอีก ${days} วันในการอัปโหลดรูปสินค้าและใบเสร็จสำหรับ "${p.item}" ก่อนทริปของคุณจะสิ้นสุด`,
+        }
+      : {
+          subject: 'Upload the item photo and receipt',
+          body: `You have ${days} ${days === 1 ? 'day' : 'days'} left to upload the item photo and receipt for "${p.item}" before your trip ends.`,
+        };
+  },
   shipped: (l, p) =>
     l === 'th'
       ? { subject: 'สินค้าของคุณกำลังจัดส่ง', body: `นักเดินทางทำเครื่องหมายว่า "${p.item}" จัดส่งแล้ว ยืนยันการรับสินค้าในแอปเมื่อได้รับ` }

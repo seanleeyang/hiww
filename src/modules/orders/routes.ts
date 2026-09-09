@@ -150,6 +150,15 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
             .executeTakeFirst()
         : undefined;
 
+      // The trip's return date — the traveler's upload-reminder countdown.
+      const trip = order.trip_id
+        ? await request.db
+            .selectFrom('trips')
+            .select(['return_date'])
+            .where('id', '=', order.trip_id)
+            .executeTakeFirst()
+        : undefined;
+
       // The AI receipt check is an operator tool — participants see the receipt
       // photo itself but not the risk assessment.
       const isAdmin = request.userRole === 'admin';
@@ -162,6 +171,7 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
           counterparty: counterparty ? toUserSummary(counterparty) : null,
           request_image_url: sourceRequest?.image_url ?? null,
           request_category: sourceRequest?.category ?? null,
+          trip_return_date: trip?.return_date ?? null,
           my_review: myReview ?? null,
           can_review: (isShopper || isTraveler) && order.status === 'delivered' && !myReview,
         },

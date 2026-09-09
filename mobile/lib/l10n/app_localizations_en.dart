@@ -1092,13 +1092,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionUploadItemPhoto => 'Upload item photo';
 
   @override
-  String get actionSubmitPurchaseProof => 'Submit for review';
+  String get actionSubmitPurchaseProof => 'Submit';
 
   @override
   String get labelItemPhoto => 'Item photo';
 
   @override
   String get labelReceipt => 'Receipt';
+
+  @override
+  String noteUploadDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other:
+          'You have $days days left to upload the item photo and receipt before your trip ends.',
+      one:
+          'You have $days day left to upload the item photo and receipt before your trip ends.',
+      zero: 'No days left to upload the item photo and receipt before your trip ends.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get noteTravelerBoughtWillShip =>
@@ -1251,7 +1265,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trustReleasedOnConfirmTraveler =>
-      'Released to you once the shopper receives the item and confirms it.';
+      'Released to you once the shopper receives and confirms the item.';
 
   @override
   String get actionHowProtectionWorks => 'How payment protection works';

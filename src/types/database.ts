@@ -158,6 +158,8 @@ export interface OrdersTable {
   purchased_at?: Date | null;
   /** Traveler's photo of the item itself, alongside the receipt (migration 030). */
   item_photo_url?: string | null;
+  /** Last time the traveler was nudged to upload it (migration 031); see `src/services/upload-reminder.ts`. */
+  last_upload_reminder_at?: Date | null;
   /** AI receipt check output (migration 014); see `src/services/ai/`. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   receipt_analysis?: Record<string, any> | null;

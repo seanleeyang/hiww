@@ -305,6 +305,10 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             note(l10n.notePaymentConfirmedUploadReceipt),
+            if (o.daysLeftToUpload != null) ...[
+              const SizedBox(height: 12),
+              _UploadDeadlineBanner(daysLeft: o.daysLeftToUpload!),
+            ],
             const SizedBox(height: 12),
             ImagePickerField(
               value: _itemPhotoUrl,
@@ -447,6 +451,44 @@ class _PaymentCountdownBannerState extends ConsumerState<_PaymentCountdownBanner
           Icon(Icons.timer_outlined, size: 18, color: fg),
           const SizedBox(width: 8),
           Expanded(child: Text(label, style: TextStyle(color: fg, fontSize: 13))),
+        ],
+      ),
+    );
+  }
+}
+
+/// "You have N days left to upload..." — shown above the item-photo/receipt
+/// upload fields once payment is confirmed, counting down to the linked
+/// trip's return date. The backend also nudges the traveler about this via
+/// a roughly-daily notification (see `src/services/upload-reminder.ts`);
+/// this is the same deadline surfaced right where they need to act on it.
+class _UploadDeadlineBanner extends StatelessWidget {
+  const _UploadDeadlineBanner({required this.daysLeft});
+  final int daysLeft;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final urgent = daysLeft <= 1;
+    final scheme = Theme.of(context).colorScheme;
+    final fg = urgent ? scheme.onErrorContainer : scheme.onPrimaryContainer;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: urgent ? scheme.errorContainer : scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.timer_outlined, size: 18, color: fg),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              l10n.noteUploadDaysLeft(daysLeft),
+              style: TextStyle(color: fg, fontSize: 13),
+            ),
+          ),
         ],
       ),
     );

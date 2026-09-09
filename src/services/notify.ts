@@ -17,6 +17,7 @@ export type NotificationType =
   | 'payment_confirmed'
   | 'payment_timeout'
   | 'purchase_proof'
+  | 'upload_reminder'
   | 'shipped'
   | 'delivered'
   | 'payout_sent'

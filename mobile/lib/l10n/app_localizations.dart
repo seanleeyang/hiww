@@ -1991,7 +1991,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionSubmitPurchaseProof.
   ///
   /// In en, this message translates to:
-  /// **'Submit for review'**
+  /// **'Submit'**
   String get actionSubmitPurchaseProof;
 
   /// No description provided for @labelItemPhoto.
@@ -2005,6 +2005,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Receipt'**
   String get labelReceipt;
+
+  /// No description provided for @noteUploadDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =0{No days left to upload the item photo and receipt before your trip ends.} one{You have {days} day left to upload the item photo and receipt before your trip ends.} other{You have {days} days left to upload the item photo and receipt before your trip ends.}}'**
+  String noteUploadDaysLeft(int days);
 
   /// No description provided for @noteTravelerBoughtWillShip.
   ///
@@ -2261,7 +2267,7 @@ abstract class AppLocalizations {
   /// No description provided for @trustReleasedOnConfirmTraveler.
   ///
   /// In en, this message translates to:
-  /// **'Released to you once the shopper receives the item and confirms it.'**
+  /// **'Released to you once the shopper receives and confirms the item.'**
   String get trustReleasedOnConfirmTraveler;
 
   /// No description provided for @actionHowProtectionWorks.

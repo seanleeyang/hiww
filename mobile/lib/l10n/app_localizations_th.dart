@@ -1068,13 +1068,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionUploadItemPhoto => 'อัปโหลดรูปสินค้า';
 
   @override
-  String get actionSubmitPurchaseProof => 'ส่งเพื่อตรวจสอบ';
+  String get actionSubmitPurchaseProof => 'ส่ง';
 
   @override
   String get labelItemPhoto => 'รูปสินค้า';
 
   @override
   String get labelReceipt => 'ใบเสร็จ';
+
+  @override
+  String noteUploadDaysLeft(int days) {
+    return 'คุณเหลือเวลาอีก $days วันในการอัปโหลดรูปสินค้าและใบเสร็จก่อนทริปของคุณจะสิ้นสุด';
+  }
 
   @override
   String get noteTravelerBoughtWillShip =>
@@ -1225,7 +1230,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get trustReleasedOnConfirmTraveler =>
-      'จะปล่อยเงินให้คุณเมื่อผู้ซื้อได้รับสินค้าและยืนยันแล้ว';
+      'จะปล่อยเงินให้คุณเมื่อผู้ซื้อได้รับและยืนยันสินค้าแล้ว';
 
   @override
   String get actionHowProtectionWorks => 'การคุ้มครองการชำระเงินทำงานอย่างไร';

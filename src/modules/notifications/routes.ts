@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
 import { renderNotification } from '@/i18n/notifications';
 import type { NotificationType } from '@/services/notify';
+import { sendUploadReminders } from '@/services/upload-reminder';
 import type { AppRequest } from '@/types/api';
 
 const readSchema = z.object({
@@ -25,6 +26,16 @@ export async function registerNotificationsRoutes(app: FastifyInstance): Promise
     async (request: any, reply: any) => {
       if (!request.userId) {
         throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
+      }
+
+      // Best-effort, lazy daily nudge for any of the caller's own orders
+      // still waiting on an item photo + receipt — see the service doc for
+      // why this lives here rather than a real cron.
+      try {
+        await sendUploadReminders(request.db, request.userId);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[upload-reminder] failed for user', request.userId, err);
       }
 
       const rows = await request.db

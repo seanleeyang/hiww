@@ -449,9 +449,13 @@
   "actionUploading": "Uploading…",
   "actionUploadReceipt": "Upload purchase receipt",
   "actionUploadItemPhoto": "Upload item photo",
-  "actionSubmitPurchaseProof": "Submit for review",
+  "actionSubmitPurchaseProof": "Submit",
   "labelItemPhoto": "Item photo",
   "labelReceipt": "Receipt",
+  "noteUploadDaysLeft": "{days, plural, =0{No days left to upload the item photo and receipt before your trip ends.} one{You have {days} day left to upload the item photo and receipt before your trip ends.} other{You have {days} days left to upload the item photo and receipt before your trip ends.}}",
+  "@noteUploadDaysLeft": {
+    "placeholders": { "days": { "type": "int" } }
+  },
   "noteTravelerBoughtWillShip": "The traveler bought your item. They’ll ship it once they’re back in the origin country.",
   "noteReceiptUploadedPostShip": "Receipt uploaded. Post the item when you’re home, then mark it shipped.",
   "actionMarkShipped": "Mark as shipped",
@@ -522,7 +526,7 @@
   },
   "trustSettled": "Payment for these goods has been settled.",
   "trustReleasedOnConfirm": "Released to the traveler when you confirm you have the item.",
-  "trustReleasedOnConfirmTraveler": "Released to you once the shopper receives the item and confirms it.",
+  "trustReleasedOnConfirmTraveler": "Released to you once the shopper receives and confirms the item.",
   "actionHowProtectionWorks": "How payment protection works",
   "howProtectionStep1": "You pay Hiww when you accept an offer.",
   "howProtectionStep2": "Hiww holds the money — the traveler is not paid yet.",

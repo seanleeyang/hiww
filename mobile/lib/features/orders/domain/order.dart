@@ -32,6 +32,7 @@ class Order {
     this.confirmedAt,
     this.purchaseProofUrl,
     this.itemPhotoUrl,
+    this.tripReturnDate,
     this.purchasedAt,
     this.shippedAt,
     this.deliveredAt,
@@ -70,6 +71,10 @@ class Order {
   final DateTime? confirmedAt;
   final String? purchaseProofUrl;
   final String? itemPhotoUrl;
+
+  /// The linked trip's return date — the deadline for uploading the item
+  /// photo + receipt, from the traveler's point of view.
+  final DateTime? tripReturnDate;
   final DateTime? purchasedAt;
   final DateTime? shippedAt;
   final DateTime? deliveredAt;
@@ -85,6 +90,15 @@ class Order {
   String? get travellerRewardLabel => travellerReward == null ? null : money(travellerReward!);
   String? get shopperTotalLabel => shopperTotal == null ? null : money(shopperTotal!);
   String? get travellerPayoutLabel => travellerPayout == null ? null : money(travellerPayout!);
+
+  /// Days left before the trip returns, floored at zero — null when there's
+  /// no linked trip to count down to.
+  int? get daysLeftToUpload {
+    final deadline = tripReturnDate;
+    if (deadline == null) return null;
+    final hoursLeft = deadline.difference(DateTime.now()).inHours;
+    return hoursLeft <= 0 ? 0 : (hoursLeft / 24).ceil();
+  }
 
   factory Order.fromJson(Map<String, dynamic> j) => Order(
         id: j['id'].toString(),
@@ -111,6 +125,7 @@ class Order {
         itemPhotoUrl: (j['item_photo_url'] as String?)?.trim().isEmpty ?? true
             ? null
             : j['item_photo_url'] as String,
+        tripReturnDate: parseDate(j['trip_return_date']),
         purchasedAt: parseDate(j['purchased_at']),
         shippedAt: parseDate(j['shipped_at']),
         deliveredAt: parseDate(j['delivered_at']),
