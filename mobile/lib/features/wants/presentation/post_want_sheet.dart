@@ -59,8 +59,16 @@ class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
     final l10n = AppLocalizations.of(context)!;
     final title = _title.text.trim();
     final details = _details.text.trim();
+    if (title.isEmpty) {
+      setState(() => _error = l10n.errorWantTitleBlank);
+      return;
+    }
     if (title.length < 3) {
       setState(() => _error = l10n.errorWantTitleTooShort);
+      return;
+    }
+    if (details.isEmpty) {
+      setState(() => _error = l10n.errorWantDetailsBlank);
       return;
     }
     if (details.length < 10) {

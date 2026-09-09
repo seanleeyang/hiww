@@ -599,11 +599,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionViewOrder => 'ดูคำสั่งซื้อ →';
 
   @override
-  String get errorWantTitleTooShort => 'กรุณากรอกชื่อสินค้า ห้ามเว้นว่าง';
+  String get errorWantTitleBlank => 'ชื่อสินค้า ห้ามเว้นว่าง';
+
+  @override
+  String get errorWantTitleTooShort =>
+      'ชื่อสินค้าต้องมีความยาวมากกว่า 3 ตัวอักษร';
+
+  @override
+  String get errorWantDetailsBlank => 'รายละเอียดสินค้า ห้ามเว้นว่าง';
 
   @override
   String get errorWantDetailsTooShort =>
-      'กรุณากรอกรายละเอียดสินค้า ห้ามเว้นว่าง';
+      'รายละเอียดสินค้าต้องมีความยาวมากกว่า 10 ตัวอักษร';
 
   @override
   String get wantEditTitle => 'แก้ไขรายการต้องการ';

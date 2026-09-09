@@ -99,8 +99,16 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       setState(() => _error = l10n.errorPhotoRequired);
       return;
     }
+    if (title.isEmpty) {
+      setState(() => _error = l10n.errorWantTitleBlank);
+      return;
+    }
     if (title.length < 3) {
       setState(() => _error = l10n.errorWantTitleTooShort);
+      return;
+    }
+    if (details.isEmpty) {
+      setState(() => _error = l10n.errorWantDetailsBlank);
       return;
     }
     if (details.length < 10) {

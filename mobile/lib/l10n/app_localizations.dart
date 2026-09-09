@@ -1172,16 +1172,28 @@ abstract class AppLocalizations {
   /// **'View order →'**
   String get actionViewOrder;
 
-  /// No description provided for @errorWantTitleTooShort.
+  /// No description provided for @errorWantTitleBlank.
   ///
   /// In en, this message translates to:
   /// **'Product Name cannot be left blank'**
+  String get errorWantTitleBlank;
+
+  /// No description provided for @errorWantTitleTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Name must be longer than 3 characters'**
   String get errorWantTitleTooShort;
+
+  /// No description provided for @errorWantDetailsBlank.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Details cannot be left blank'**
+  String get errorWantDetailsBlank;
 
   /// No description provided for @errorWantDetailsTooShort.
   ///
   /// In en, this message translates to:
-  /// **'Product Details cannot be left blank'**
+  /// **'Product Details must be longer than 10 characters'**
   String get errorWantDetailsTooShort;
 
   /// No description provided for @wantEditTitle.

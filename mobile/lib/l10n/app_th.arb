@@ -193,8 +193,10 @@
   "wantProductUrlLine": "ลิงก์สินค้า: {url}",
   "actionViewOrder": "ดูคำสั่งซื้อ →",
 
-  "errorWantTitleTooShort": "กรุณากรอกชื่อสินค้า ห้ามเว้นว่าง",
-  "errorWantDetailsTooShort": "กรุณากรอกรายละเอียดสินค้า ห้ามเว้นว่าง",
+  "errorWantTitleBlank": "ชื่อสินค้า ห้ามเว้นว่าง",
+  "errorWantTitleTooShort": "ชื่อสินค้าต้องมีความยาวมากกว่า 3 ตัวอักษร",
+  "errorWantDetailsBlank": "รายละเอียดสินค้า ห้ามเว้นว่าง",
+  "errorWantDetailsTooShort": "รายละเอียดสินค้าต้องมีความยาวมากกว่า 10 ตัวอักษร",
   "wantEditTitle": "แก้ไขรายการต้องการ",
   "directRequestNotice": "ส่งตรงถึง {name} — ไม่แสดงต่อสาธารณะ งบประมาณด้านล่างคือราคาเริ่มต้นของคุณ อีกฝ่ายสามารถรับ ต่อรอง หรือปฏิเสธได้",
   "fieldProductUrlOptional": "ลิงก์สินค้า (ไม่บังคับ)",

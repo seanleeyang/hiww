@@ -235,8 +235,10 @@
   },
   "actionViewOrder": "View order →",
 
-  "errorWantTitleTooShort": "Product Name cannot be left blank",
-  "errorWantDetailsTooShort": "Product Details cannot be left blank",
+  "errorWantTitleBlank": "Product Name cannot be left blank",
+  "errorWantTitleTooShort": "Product Name must be longer than 3 characters",
+  "errorWantDetailsBlank": "Product Details cannot be left blank",
+  "errorWantDetailsTooShort": "Product Details must be longer than 10 characters",
   "wantEditTitle": "Edit want",
   "directRequestNotice": "Sent directly to {name} — not shown publicly. Your budget below is your opening price; they can accept, counter, or decline.",
   "@directRequestNotice": {

@@ -149,23 +149,23 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  const Icon(Icons.shopping_bag_outlined, size: 26),
+                  const Icon(Icons.shopping_bag_outlined, size: 24),
                   Positioned(
-                    right: -4,
-                    top: -4,
+                    right: -5,
+                    top: -5,
                     child: Container(
-                      padding: const EdgeInsets.all(3),
+                      padding: const EdgeInsets.all(1.5),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: Theme.of(context).colorScheme.primaryContainer,
-                          width: 2,
+                          width: 1.5,
                         ),
                       ),
                       child: Icon(
                         Icons.add,
-                        size: 12,
+                        size: 9,
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),

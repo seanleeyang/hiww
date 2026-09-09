@@ -602,10 +602,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionViewOrder => 'View order →';
 
   @override
-  String get errorWantTitleTooShort => 'Product Name cannot be left blank';
+  String get errorWantTitleBlank => 'Product Name cannot be left blank';
 
   @override
-  String get errorWantDetailsTooShort => 'Product Details cannot be left blank';
+  String get errorWantTitleTooShort =>
+      'Product Name must be longer than 3 characters';
+
+  @override
+  String get errorWantDetailsBlank => 'Product Details cannot be left blank';
+
+  @override
+  String get errorWantDetailsTooShort =>
+      'Product Details must be longer than 10 characters';
 
   @override
   String get wantEditTitle => 'Edit want';
