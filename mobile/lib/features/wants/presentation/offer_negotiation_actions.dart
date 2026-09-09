@@ -63,15 +63,22 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
           decoration: InputDecoration(labelText: l10n.fieldYourPrice, prefixText: '฿ '),
           autofocus: true,
         ),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.actionCancel)),
-          FilledButton(
-            onPressed: () {
-              final v = double.tryParse(controller.text.trim());
-              if (v == null || v <= 0) return;
-              Navigator.pop(dialogContext, v.toStringAsFixed(2));
-            },
-            child: Text(l10n.actionSend),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FilledButton(
+                onPressed: () {
+                  final v = double.tryParse(controller.text.trim());
+                  if (v == null || v <= 0) return;
+                  Navigator.pop(dialogContext, v.toStringAsFixed(2));
+                },
+                child: Text(l10n.actionSubmit),
+              ),
+              const SizedBox(height: 8),
+              TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.actionCancel)),
+            ],
           ),
         ],
       ),
@@ -127,7 +134,8 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
               ),
           ],
         ),
-        TextButton(
+        const SizedBox(height: 8),
+        OutlinedButton(
           onPressed: _busy ? null : () => _run(widget.onReject),
           child: Text(o.canCounter ? l10n.actionDecline : l10n.actionDeclineFinalOffer),
         ),

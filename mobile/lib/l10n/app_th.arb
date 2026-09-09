@@ -284,15 +284,15 @@
   "fallbackAShopper": "ผู้ซื้อ",
   "fallbackOfferTitle": "ข้อเสนอ",
 
-  "dialogCounterOfferTitle": "ต่อรองราคา",
+  "dialogCounterOfferTitle": "ยื่นข้อเสนอโต้กลับ",
   "fieldYourPrice": "ราคาของคุณ",
-  "actionSend": "ส่ง",
+  "actionSubmit": "ส่ง",
   "waitingForResponse": "รอการตอบกลับ",
   "waitingForResponseWithCountdown": "รอการตอบกลับ · {countdown}",
   "wantNoLongerOpen": "รายการต้องการนี้ปิดรับข้อเสนอแล้ว",
   "respondWithin": "ตอบกลับภายใน {countdown}",
   "actionAcceptPrice": "รับราคา {price}",
-  "actionCounter": "ต่อรอง",
+  "actionCounter": "ยื่นข้อเสนอโต้กลับ",
   "actionDecline": "ปฏิเสธ",
   "actionDeclineFinalOffer": "ปฏิเสธ (ข้อเสนอสุดท้าย)",
 

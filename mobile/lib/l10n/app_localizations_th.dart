@@ -886,13 +886,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get fallbackOfferTitle => 'ข้อเสนอ';
 
   @override
-  String get dialogCounterOfferTitle => 'ต่อรองราคา';
+  String get dialogCounterOfferTitle => 'ยื่นข้อเสนอโต้กลับ';
 
   @override
   String get fieldYourPrice => 'ราคาของคุณ';
 
   @override
-  String get actionSend => 'ส่ง';
+  String get actionSubmit => 'ส่ง';
 
   @override
   String get waitingForResponse => 'รอการตอบกลับ';
@@ -916,7 +916,7 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
-  String get actionCounter => 'ต่อรอง';
+  String get actionCounter => 'ยื่นข้อเสนอโต้กลับ';
 
   @override
   String get actionDecline => 'ปฏิเสธ';

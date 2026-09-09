@@ -353,9 +353,9 @@
   "fallbackAShopper": "a shopper",
   "fallbackOfferTitle": "Offer",
 
-  "dialogCounterOfferTitle": "Counter-offer",
+  "dialogCounterOfferTitle": "Counter Offer",
   "fieldYourPrice": "Your price",
-  "actionSend": "Send",
+  "actionSubmit": "Submit",
   "waitingForResponse": "Waiting for a response",
   "waitingForResponseWithCountdown": "Waiting for a response · {countdown}",
   "@waitingForResponseWithCountdown": {
@@ -370,7 +370,7 @@
   "@actionAcceptPrice": {
     "placeholders": { "price": { "type": "String" } }
   },
-  "actionCounter": "Counter",
+  "actionCounter": "Counter Offer",
   "actionDecline": "Decline",
   "actionDeclineFinalOffer": "Decline (final offer)",
 

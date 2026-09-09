@@ -910,13 +910,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fallbackOfferTitle => 'Offer';
 
   @override
-  String get dialogCounterOfferTitle => 'Counter-offer';
+  String get dialogCounterOfferTitle => 'Counter Offer';
 
   @override
   String get fieldYourPrice => 'Your price';
 
   @override
-  String get actionSend => 'Send';
+  String get actionSubmit => 'Submit';
 
   @override
   String get waitingForResponse => 'Waiting for a response';
@@ -940,7 +940,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get actionCounter => 'Counter';
+  String get actionCounter => 'Counter Offer';
 
   @override
   String get actionDecline => 'Decline';

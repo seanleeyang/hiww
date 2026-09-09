@@ -1691,7 +1691,7 @@ abstract class AppLocalizations {
   /// No description provided for @dialogCounterOfferTitle.
   ///
   /// In en, this message translates to:
-  /// **'Counter-offer'**
+  /// **'Counter Offer'**
   String get dialogCounterOfferTitle;
 
   /// No description provided for @fieldYourPrice.
@@ -1700,11 +1700,11 @@ abstract class AppLocalizations {
   /// **'Your price'**
   String get fieldYourPrice;
 
-  /// No description provided for @actionSend.
+  /// No description provided for @actionSubmit.
   ///
   /// In en, this message translates to:
-  /// **'Send'**
-  String get actionSend;
+  /// **'Submit'**
+  String get actionSubmit;
 
   /// No description provided for @waitingForResponse.
   ///
@@ -1739,7 +1739,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionCounter.
   ///
   /// In en, this message translates to:
-  /// **'Counter'**
+  /// **'Counter Offer'**
   String get actionCounter;
 
   /// No description provided for @actionDecline.

@@ -296,14 +296,21 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
         content: pricing == null
             ? Text(l10n.dialogAcceptOfferBody(o.priceLabel))
             : _PriceBreakdown(pricing: pricing),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(
-            onPressed: () => context.pop(false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => context.pop(true),
-            child: Text(l10n.actionAccept),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FilledButton(
+                onPressed: () => context.pop(true),
+                child: Text(l10n.actionAccept),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => context.pop(false),
+                child: Text(l10n.actionCancel),
+              ),
+            ],
           ),
         ],
       ),
