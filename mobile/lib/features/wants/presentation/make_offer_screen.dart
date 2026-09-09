@@ -111,12 +111,16 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _tripId,
+                isExpanded: true,
                 items: [
                   for (final t in list)
                     DropdownMenuItem(
                       value: t.id,
-                      child: Text('${t.route}  ·  ${t.dates}',
-                          overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        '${t.route}  ·  ${t.dates}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                 ],
                 onChanged: (v) => setState(() => _tripId = v),
