@@ -8,6 +8,7 @@ interface OrderForCheck {
   item_description: string;
   total_price: string;
   purchase_proof_url?: string | null;
+  item_photo_url?: string | null;
   request_id?: string | null;
   created_at: Date;
 }
@@ -29,18 +30,22 @@ export async function runReceiptCheck(
 
   try {
     let sourceCountry: string | null = null;
+    let category: string | null = null;
     if (order.request_id) {
       const req = await db
         .selectFrom('requests')
-        .select(['source_country'])
+        .select(['source_country', 'category'])
         .where('id', '=', order.request_id)
         .executeTakeFirst();
       sourceCountry = req?.source_country ?? null;
+      category = req?.category ?? null;
     }
 
     const analysis = await getReceiptAnalyzer().analyze({
       imageUrl: order.purchase_proof_url,
+      itemPhotoUrl: order.item_photo_url ?? null,
       itemDescription: order.item_description,
+      category,
       expectedAmount: order.total_price,
       sourceCountry,
       orderCreatedAt: order.created_at,

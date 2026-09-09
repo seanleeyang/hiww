@@ -156,6 +156,8 @@ export interface OrdersTable {
   /** Traveler's shop-receipt photo + when they marked the item bought (migration 013). */
   purchase_proof_url?: string | null;
   purchased_at?: Date | null;
+  /** Traveler's photo of the item itself, alongside the receipt (migration 030). */
+  item_photo_url?: string | null;
   /** AI receipt check output (migration 014); see `src/services/ai/`. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   receipt_analysis?: Record<string, any> | null;

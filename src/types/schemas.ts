@@ -81,6 +81,7 @@ export type UpdateRequestInput = z.infer<typeof updateRequestSchema>;
 
 export const purchaseProofSchema = z.object({
   image_url: z.string().trim().url().max(2048),
+  item_photo_url: z.string().trim().url().max(2048).optional(),
   note: z.string().trim().max(500).optional(),
 });
 

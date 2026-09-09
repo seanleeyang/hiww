@@ -123,7 +123,11 @@ class OrderScreen extends ConsumerWidget {
                   SoftCard(child: OrderStepper(order: o)),
                   if (o.purchaseProofUrl != null) ...[
                     const SizedBox(height: 14),
-                    _ReceiptCard(url: o.purchaseProofUrl!, at: o.purchasedAt),
+                    _PurchaseProofCard(
+                      receiptUrl: o.purchaseProofUrl!,
+                      itemPhotoUrl: o.itemPhotoUrl,
+                      at: o.purchasedAt,
+                    ),
                   ],
                   const SizedBox(height: 14),
                   TrustPanel(order: o),
@@ -196,6 +200,8 @@ class _ActionBlock extends ConsumerStatefulWidget {
 
 class _ActionBlockState extends ConsumerState<_ActionBlock> {
   bool _busy = false;
+  String? _itemPhotoUrl;
+  String? _receiptUrl;
 
   Future<void> _run(Future<void> Function() action) async {
     setState(() => _busy = true);
@@ -294,19 +300,33 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
         if (widget.isShopper) {
           return note(l10n.notePaymentConfirmedWaitingBuy);
         }
+        final canSubmitProof = _itemPhotoUrl != null && _receiptUrl != null;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             note(l10n.notePaymentConfirmedUploadReceipt),
             const SizedBox(height: 12),
             ImagePickerField(
-              value: null,
+              value: _itemPhotoUrl,
+              label: _busy ? l10n.actionUploading : l10n.actionUploadItemPhoto,
+              onChanged: (url) => setState(() => _itemPhotoUrl = url),
+            ),
+            const SizedBox(height: 12),
+            ImagePickerField(
+              value: _receiptUrl,
               label: _busy ? l10n.actionUploading : l10n.actionUploadReceipt,
-              onChanged: (url) {
-                if (url != null) {
-                  _run(() => repo.submitPurchaseProof(o.id, url));
-                }
-              },
+              onChanged: (url) => setState(() => _receiptUrl = url),
+            ),
+            const SizedBox(height: 12),
+            primary(
+              l10n.actionSubmitPurchaseProof,
+              canSubmitProof
+                  ? () => _run(() => repo.submitPurchaseProof(
+                        o.id,
+                        receiptImageUrl: _receiptUrl!,
+                        itemPhotoUrl: _itemPhotoUrl,
+                      ))
+                  : null,
             ),
           ],
         );
@@ -475,17 +495,21 @@ class _PromptPayQrPlaceholder extends StatelessWidget {
   }
 }
 
-/// Shop receipt the traveler uploaded as proof of purchase. Visible to both
-/// parties and the operator; tap to view full-screen.
-class _ReceiptCard extends StatelessWidget {
-  const _ReceiptCard({required this.url, this.at});
-  final String url;
+/// Purchase evidence the traveler uploaded — the shop receipt, and (once
+/// this shipped) a photo of the item itself. Visible to both parties and
+/// the operator; tap either photo to view full-screen. Older orders may
+/// only have a receipt (uploaded before the item-photo field existed).
+class _PurchaseProofCard extends StatelessWidget {
+  const _PurchaseProofCard({required this.receiptUrl, this.itemPhotoUrl, this.at});
+  final String receiptUrl;
+  final String? itemPhotoUrl;
   final DateTime? at;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final captionStyle = TextStyle(fontSize: 11, color: scheme.onSurfaceVariant);
     return SoftCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,13 +538,53 @@ class _ReceiptCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          HeroImage(
-            url: url,
-            fallbackAsset: 'assets/images/electronics.jpg',
-            height: 150,
-            borderRadius: 12,
-            enableFullscreen: true,
-          ),
+          if (itemPhotoUrl != null)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.labelItemPhoto, style: captionStyle),
+                      const SizedBox(height: 4),
+                      HeroImage(
+                        url: itemPhotoUrl,
+                        fallbackAsset: 'assets/images/electronics.jpg',
+                        height: 130,
+                        borderRadius: 12,
+                        enableFullscreen: true,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.labelReceipt, style: captionStyle),
+                      const SizedBox(height: 4),
+                      HeroImage(
+                        url: receiptUrl,
+                        fallbackAsset: 'assets/images/electronics.jpg',
+                        height: 130,
+                        borderRadius: 12,
+                        enableFullscreen: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else
+            HeroImage(
+              url: receiptUrl,
+              fallbackAsset: 'assets/images/electronics.jpg',
+              height: 150,
+              borderRadius: 12,
+              enableFullscreen: true,
+            ),
         ],
       ),
     );

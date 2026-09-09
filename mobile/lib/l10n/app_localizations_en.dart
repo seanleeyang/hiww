@@ -1080,13 +1080,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notePaymentConfirmedUploadReceipt =>
-      'Payment confirmed. Buy the item, then upload a photo of the shop receipt — clear date and the item in frame. That unlocks the shipping step.';
+      'Payment confirmed. Buy the item, then upload a photo of the item itself and a photo of the shop receipt — clear date and totals in frame. That unlocks the shipping step.';
 
   @override
   String get actionUploading => 'Uploading…';
 
   @override
   String get actionUploadReceipt => 'Upload purchase receipt';
+
+  @override
+  String get actionUploadItemPhoto => 'Upload item photo';
+
+  @override
+  String get actionSubmitPurchaseProof => 'Submit for review';
+
+  @override
+  String get labelItemPhoto => 'Item photo';
+
+  @override
+  String get labelReceipt => 'Receipt';
 
   @override
   String get noteTravelerBoughtWillShip =>

@@ -30,12 +30,12 @@ describe('AI receipt check', () => {
     return { order, admin };
   }
 
-  const uploadReceipt = (order: MarketplaceOrder, imageUrl: string) =>
+  const uploadReceipt = (order: MarketplaceOrder, imageUrl: string, itemPhotoUrl?: string) =>
     ctx.app.inject({
       method: 'POST',
       url: `/api/orders/${order.orderId}/purchase-proof`,
       headers: authHeader(order.traveler),
-      payload: { image_url: imageUrl },
+      payload: itemPhotoUrl ? { image_url: imageUrl, item_photo_url: itemPhotoUrl } : { image_url: imageUrl },
     });
 
   const reviewQueue = async (admin: Awaited<ReturnType<typeof createUser>>) => {
@@ -132,5 +132,51 @@ describe('AI receipt check', () => {
       headers: authHeader(admin),
     });
     expect(asAdmin.json().data.receipt_risk).toBe('high');
+  });
+
+  it('stores an item photo alongside the receipt, visible to participants and admin', async () => {
+    const { order, admin } = await confirmedOrder();
+    await uploadReceipt(order, 'https://example.com/uploads/receipt-ok.jpg', 'https://example.com/uploads/item.jpg');
+
+    const row = await ctx.db
+      .selectFrom('orders')
+      .select(['item_photo_url', 'receipt_analysis'])
+      .where('id', '=', order.orderId)
+      .executeTakeFirst();
+    expect(row?.item_photo_url).toBe('https://example.com/uploads/item.jpg');
+    const analysis = row?.receipt_analysis as any;
+    expect(analysis.itemPhotoAssessment).toBe('match');
+    expect(analysis.extracted.language).toBe('English');
+
+    const asShopper = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}`,
+      headers: authHeader(order.shopper),
+    });
+    // The photo is visible to participants — only the AI risk verdict is admin-only.
+    expect(asShopper.json().data.item_photo_url).toBe('https://example.com/uploads/item.jpg');
+
+    const queue = await reviewQueue(admin);
+    expect(queue.some((q) => q.type === 'receipt' && q.order_id === order.orderId)).toBe(false);
+  });
+
+  it('flags a mismatched item photo and surfaces it in the review queue', async () => {
+    const { order, admin } = await confirmedOrder();
+    await uploadReceipt(order, 'https://example.com/uploads/receipt-ok.jpg', 'https://example.com/uploads/mismatch-item.jpg');
+
+    const row = await ctx.db
+      .selectFrom('orders')
+      .select(['receipt_analysis'])
+      .where('id', '=', order.orderId)
+      .executeTakeFirst();
+    const analysis = row?.receipt_analysis as any;
+    expect(analysis.itemPhotoAssessment).toBe('mismatch');
+    expect(analysis.flags).toContain('Item photo does not appear to match the request');
+
+    const queue = await reviewQueue(admin);
+    const entry = queue.find((q) => q.type === 'receipt' && q.order_id === order.orderId);
+    expect(entry).toBeDefined();
+    expect(entry.item_photo_assessment).toBe('mismatch');
+    expect(entry.item_photo_url).toBe('https://example.com/uploads/mismatch-item.jpg');
   });
 });

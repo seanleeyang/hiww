@@ -29,6 +29,7 @@ import * as m026 from './026_social_auth';
 import * as m027 from './027_add_request_destination';
 import * as m028 from './028_order_pricing_breakdown';
 import * as m029 from './029_chat_close_and_delete';
+import * as m030 from './030_order_item_photo';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -61,4 +62,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '027_add_request_destination', up: m027.up },
   { name: '028_order_pricing_breakdown', up: m028.up },
   { name: '029_chat_close_and_delete', up: m029.up },
+  { name: '030_order_item_photo', up: m030.up },
 ];

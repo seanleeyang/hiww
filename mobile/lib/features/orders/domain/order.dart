@@ -31,6 +31,7 @@ class Order {
     this.cancelledAt,
     this.confirmedAt,
     this.purchaseProofUrl,
+    this.itemPhotoUrl,
     this.purchasedAt,
     this.shippedAt,
     this.deliveredAt,
@@ -68,6 +69,7 @@ class Order {
   final DateTime? cancelledAt;
   final DateTime? confirmedAt;
   final String? purchaseProofUrl;
+  final String? itemPhotoUrl;
   final DateTime? purchasedAt;
   final DateTime? shippedAt;
   final DateTime? deliveredAt;
@@ -106,6 +108,9 @@ class Order {
         purchaseProofUrl: (j['purchase_proof_url'] as String?)?.trim().isEmpty ?? true
             ? null
             : j['purchase_proof_url'] as String,
+        itemPhotoUrl: (j['item_photo_url'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : j['item_photo_url'] as String,
         purchasedAt: parseDate(j['purchased_at']),
         shippedAt: parseDate(j['shipped_at']),
         deliveredAt: parseDate(j['delivered_at']),

@@ -3,15 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
+import '../../../ui/marketplace_bits.dart';
+import '../../../ui/soft_card.dart';
 import '../../trips/data/trips_repository.dart';
 import '../../trips/domain/trip.dart';
 import '../../trips/presentation/add_trip_sheet.dart';
 import '../data/offers_repository.dart';
 import '../data/wants_repository.dart';
+import '../domain/want.dart';
 
 class MakeOfferScreen extends ConsumerStatefulWidget {
   const MakeOfferScreen({super.key, required this.wantId});
@@ -92,6 +96,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final trips = ref.watch(myPublishedTripsProvider);
+    final want = ref.watch(wantDetailProvider(widget.wantId)).valueOrNull?.want;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.makeOfferTitle)),
@@ -119,6 +124,12 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Buy-in and deliver-to cities, shown up front so the price
+              // typed below can actually account for courier cost.
+              if (want != null) ...[
+                _WantContextCard(want: want),
+                const SizedBox(height: 16),
+              ],
               Text(l10n.labelWhichTrip, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
@@ -201,6 +212,37 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// The want's buy-in and deliver-to locations, so a traveler can factor
+/// courier/delivery cost into the price they're about to type below.
+class _WantContextCard extends StatelessWidget {
+  const _WantContextCard({required this.want});
+  final Want want;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            want.displayTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+          ),
+          const SizedBox(height: 8),
+          Wrap(spacing: 12, runSpacing: 4, children: [
+            IconLine(Icons.public, l10n.wantBuyInLine(want.sourceCity ?? countryName(want.sourceCountry))),
+            if (want.destinationLabel != null)
+              IconLine(Icons.local_shipping_outlined, l10n.wantDeliverToLine(want.destinationLabel!)),
+          ]),
+        ],
       ),
     );
   }

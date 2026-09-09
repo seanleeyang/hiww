@@ -326,16 +326,24 @@
       receipts.forEach(function (x) {
         var flags = el('ul', { style: 'margin:6px 0 6px 18px' });
         (x.flags || []).forEach(function (f) { flags.appendChild(el('li', { text: f })); });
+        var ex = x.extracted || {};
+        var extractedBits = [];
+        if (ex.language) extractedBits.push('language: ' + ex.language);
+        if (ex.merchant) extractedBits.push('merchant: ' + ex.merchant + (ex.merchantOriginal && ex.merchantOriginal !== ex.merchant ? ' (' + ex.merchantOriginal + ')' : ''));
+        if (ex.total) extractedBits.push('total: ' + ex.total + (ex.currency ? ' ' + ex.currency : ''));
         var row = el('div', { class: 'stack', style: 'padding:12px 0;border-bottom:1px solid var(--line)' }, [
           el('div', {}, [
             'Order ', el('span', { class: 'mono', text: shortId(x.order_id) }), ' · ',
             el('span', { class: 'badge ' + (x.risk === 'high' ? 'b-danger' : 'b-amber'), text: x.risk + ' risk' }),
+            x.item_photo_assessment === 'mismatch' ? el('span', { class: 'badge b-danger', style: 'margin-left:6px', text: 'item photo mismatch' }) : el('span', {}),
             ' · ', el('span', { class: 'muted', text: x.item_description || '' })
           ]),
           x.summary ? el('div', { text: x.summary }) : el('span', {}),
+          extractedBits.length ? el('div', { class: 'muted mono', text: extractedBits.join(' · ') }) : el('span', {}),
           flags,
           el('div', { class: 'row-actions' }, [
             x.receipt_url ? (function () { var a = el('a', { text: 'view receipt', href: x.receipt_url, target: '_blank' }); a.rel = 'noopener'; return a; })() : el('span', {}),
+            x.item_photo_url ? (function () { var a = el('a', { text: 'view item photo', href: x.item_photo_url, target: '_blank' }); a.rel = 'noopener'; return a; })() : el('span', {}),
             btn('Clear flag', 'clear-receipt', { oid: x.order_id }, 'small secondary')
           ])
         ]);
@@ -394,6 +402,12 @@
           var rl = el('a', { text: 'receipt', href: o.purchase_proof_url, target: '_blank' });
           rl.rel = 'noopener';
           statusCell.appendChild(rl);
+        }
+        if (o.item_photo_url) {
+          statusCell.appendChild(document.createTextNode(' '));
+          var pl = el('a', { text: 'item photo', href: o.item_photo_url, target: '_blank' });
+          pl.rel = 'noopener';
+          statusCell.appendChild(pl);
         }
         if (o.receipt_risk && o.receipt_risk !== 'low') {
           statusCell.appendChild(document.createTextNode(' '));

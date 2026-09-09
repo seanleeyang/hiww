@@ -61,6 +61,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         .set({
           status: 'purchased',
           purchase_proof_url: parsed.data.image_url,
+          item_photo_url: parsed.data.item_photo_url ?? null,
           purchased_at: now,
           updated_at: now,
         })
@@ -76,6 +77,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
           from_status: 'confirmed',
           to_status: 'purchased',
           receipt_url: parsed.data.image_url,
+          item_photo_url: parsed.data.item_photo_url ?? null,
           note: parsed.data.note ?? null,
         },
       });
@@ -91,7 +93,11 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       // deterministic, so await it. With a real model it takes a few seconds —
       // don't make the traveller's request wait; it runs in the background and
       // the operator picks up any flag from the review queue.
-      const check = runReceiptCheck(request.db, { ...order, purchase_proof_url: parsed.data.image_url });
+      const check = runReceiptCheck(request.db, {
+        ...order,
+        purchase_proof_url: parsed.data.image_url,
+        item_photo_url: parsed.data.item_photo_url ?? null,
+      });
       if (config.aiReceiptAnalyzer === 'claude') {
         void check.catch(() => undefined);
       } else {

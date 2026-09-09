@@ -51,6 +51,7 @@ class Want {
   String get displayTitle =>
       (title != null && title!.isNotEmpty) ? title! : itemDescription;
   String get sourceLabel => sourceCity ?? sourceCountry;
+  String? get destinationLabel => destinationCity ?? destinationCountry;
   String get budgetLabel => money(budget);
   String? get needByLabel => needBy == null ? null : 'Need by ${shortDate(needBy)}';
 

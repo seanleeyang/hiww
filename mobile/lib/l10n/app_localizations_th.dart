@@ -1056,13 +1056,25 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get notePaymentConfirmedUploadReceipt =>
-      'ยืนยันการชำระเงินแล้ว ซื้อสินค้าแล้วอัปโหลดรูปใบเสร็จ — ให้เห็นวันที่และสินค้าชัดเจน จะปลดล็อกขั้นตอนการจัดส่ง';
+      'ยืนยันการชำระเงินแล้ว ซื้อสินค้าแล้วอัปโหลดรูปสินค้าและรูปใบเสร็จ — ให้เห็นวันที่และยอดเงินชัดเจน จะปลดล็อกขั้นตอนการจัดส่ง';
 
   @override
   String get actionUploading => 'กำลังอัปโหลด…';
 
   @override
   String get actionUploadReceipt => 'อัปโหลดใบเสร็จการซื้อ';
+
+  @override
+  String get actionUploadItemPhoto => 'อัปโหลดรูปสินค้า';
+
+  @override
+  String get actionSubmitPurchaseProof => 'ส่งเพื่อตรวจสอบ';
+
+  @override
+  String get labelItemPhoto => 'รูปสินค้า';
+
+  @override
+  String get labelReceipt => 'ใบเสร็จ';
 
   @override
   String get noteTravelerBoughtWillShip =>

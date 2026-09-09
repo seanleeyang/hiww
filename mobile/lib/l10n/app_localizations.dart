@@ -1967,7 +1967,7 @@ abstract class AppLocalizations {
   /// No description provided for @notePaymentConfirmedUploadReceipt.
   ///
   /// In en, this message translates to:
-  /// **'Payment confirmed. Buy the item, then upload a photo of the shop receipt — clear date and the item in frame. That unlocks the shipping step.'**
+  /// **'Payment confirmed. Buy the item, then upload a photo of the item itself and a photo of the shop receipt — clear date and totals in frame. That unlocks the shipping step.'**
   String get notePaymentConfirmedUploadReceipt;
 
   /// No description provided for @actionUploading.
@@ -1981,6 +1981,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upload purchase receipt'**
   String get actionUploadReceipt;
+
+  /// No description provided for @actionUploadItemPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload item photo'**
+  String get actionUploadItemPhoto;
+
+  /// No description provided for @actionSubmitPurchaseProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit for review'**
+  String get actionSubmitPurchaseProof;
+
+  /// No description provided for @labelItemPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Item photo'**
+  String get labelItemPhoto;
+
+  /// No description provided for @labelReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get labelReceipt;
 
   /// No description provided for @noteTravelerBoughtWillShip.
   ///

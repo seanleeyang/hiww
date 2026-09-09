@@ -111,6 +111,13 @@ class WantDetailScreen extends ConsumerWidget {
                           Icons.public,
                           l10n.wantBuyInLine(want.sourceCity ?? countryName(want.sourceCountry)),
                         ),
+                        if (want.destinationLabel != null) ...[
+                          const SizedBox(height: 6),
+                          IconLine(
+                            Icons.local_shipping_outlined,
+                            l10n.wantDeliverToLine(want.destinationLabel!),
+                          ),
+                        ],
                         if (want.needByLabel != null) ...[
                           const SizedBox(height: 6),
                           IconLine(Icons.event_outlined, want.needByLabel!),

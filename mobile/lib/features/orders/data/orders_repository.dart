@@ -19,8 +19,18 @@ class OrdersRepository {
   }
 
   Future<void> claimPayment(String id) => _api.post('/api/orders/$id/claim-payment');
-  Future<void> submitPurchaseProof(String id, String imageUrl) =>
-      _api.post('/api/orders/$id/purchase-proof', body: {'image_url': imageUrl});
+
+  /// [itemPhotoUrl] is optional so old call sites (and any future
+  /// admin/test-lab shortcut) that only have a receipt keep working.
+  Future<void> submitPurchaseProof(
+    String id, {
+    required String receiptImageUrl,
+    String? itemPhotoUrl,
+  }) =>
+      _api.post('/api/orders/$id/purchase-proof', body: {
+        'image_url': receiptImageUrl,
+        'item_photo_url': ?itemPhotoUrl,
+      });
   Future<void> markShipped(String id) =>
       _api.post('/api/orders/$id/deliver', body: {'note': 'Shipped'});
   Future<void> confirmReceived(String id) =>
