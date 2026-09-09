@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/language_toggle.dart';
 import '../application/onboarding_controller.dart';
 
 class _Slide {
@@ -51,14 +52,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: TextButton(
-                  onPressed: _finish,
-                  child: Text(l10n.actionSkip),
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: LanguageToggle(),
+                  ),
+                  TextButton(
+                    onPressed: _finish,
+                    child: Text(l10n.actionSkip),
+                  ),
+                ],
               ),
             ),
             Expanded(
