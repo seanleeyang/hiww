@@ -163,6 +163,17 @@ export interface OrdersTable {
   receipt_reviewed_at?: Date | null;
   shipped_at?: Date | null;
   delivered_at?: Date | null;
+  /**
+   * MVP pricing model split (migration 028) — see `src/services/pricing.ts`.
+   * `total_price`/`fees` above keep their existing meaning ("goods price" /
+   * "platform's cut") unchanged; these are the additional legs. Nullable
+   * and never backfilled: orders created before this migration were priced
+   * under the old flat-fee model and keep exactly those numbers forever.
+   */
+  traveller_reward?: string | null;
+  shopper_total?: string | null;
+  traveller_payout?: string | null;
+  currency?: string | null;
   created_at: Date;
   updated_at: Date;
 }

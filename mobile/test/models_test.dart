@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/features/discovery/domain/feed_item.dart';
 import 'package:hiww_mobile/features/discovery/domain/route_match.dart';
 import 'package:hiww_mobile/features/orders/domain/order.dart';
+import 'package:hiww_mobile/features/shared/domain/pricing_preview.dart';
 import 'package:hiww_mobile/features/wants/domain/offer.dart';
 
 void main() {
@@ -143,6 +144,45 @@ void main() {
     expect(o.shippedAt, isNotNull);
     expect(o.deliveredAt, isNull);
     expect(o.counterparty!.fullName, 'Nuch S');
+    expect(o.hasPricingBreakdown, isFalse); // legacy order, no reward/total split
+    expect(o.travellerRewardLabel, isNull);
+  });
+
+  test('Order parses the MVP pricing-model breakdown when present', () {
+    final o = Order.fromJson({
+      'id': 'ord2',
+      'shopper_id': 's',
+      'traveler_id': 't',
+      'item_description': 'Nike Dunk Panda',
+      'total_price': '1000',
+      'fees': '100',
+      'traveller_reward': '100',
+      'shopper_total': '1200',
+      'traveller_payout': '1100',
+      'currency': 'THB',
+      'status': 'pending_payment',
+    });
+    expect(o.hasPricingBreakdown, isTrue);
+    expect(o.travellerRewardLabel, '฿100');
+    expect(o.shopperTotalLabel, '฿1,200');
+    expect(o.travellerPayoutLabel, '฿1,100');
+  });
+
+  test('PricingPreview parses the worked ฿1,000 example', () {
+    final p = PricingPreview.fromJson({
+      'itemPrice': '1000',
+      'travellerReward': '100',
+      'serviceFee': '100',
+      'shopperTotal': '1200',
+      'travellerPayout': '1100',
+      'platformGrossRevenue': '100',
+      'currency': 'THB',
+    });
+    expect(p.itemPriceLabel, '฿1,000');
+    expect(p.travellerRewardLabel, '฿100');
+    expect(p.serviceFeeLabel, '฿100');
+    expect(p.shopperTotalLabel, '฿1,200');
+    expect(p.travellerPayoutLabel, '฿1,100');
   });
 
   test('RouteMatch parses count + sample', () {

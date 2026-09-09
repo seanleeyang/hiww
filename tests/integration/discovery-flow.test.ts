@@ -81,8 +81,8 @@ describe('discovery feed + route match', () => {
       .data.items.find((i: { kind: string; id: string }) => i.kind === 'trip' && i.id === tripId);
     expect(trip.traveler.id).toBe(traveler.userId);
     expect(trip.match_count).toBeGreaterThanOrEqual(1);
-    // per-item commission range includes this want: 6500 * 0.08 = 520
-    expect(Number(trip.earn_max)).toBeGreaterThanOrEqual(520);
+    // per-item earn range includes this want's traveller reward: 6500 * 0.10 = 650
+    expect(Number(trip.earn_max)).toBeGreaterThanOrEqual(650);
     expect(Number(trip.earn_min)).toBeGreaterThan(0);
     expect(Number(trip.earn_min)).toBeLessThanOrEqual(Number(trip.earn_max));
   });

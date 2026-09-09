@@ -31,8 +31,10 @@ class TrustPanel extends StatelessWidget {
               Expanded(
                 child: Text(
                   released
-                      ? l10n.trustReleasedTo(order.totalLabel)
-                      : l10n.trustHolding(order.totalLabel, order.feesLabel),
+                      ? l10n.trustReleasedTo(order.travellerPayoutLabel ?? order.totalLabel)
+                      : (order.hasPricingBreakdown
+                          ? l10n.trustHoldingTotal(order.shopperTotalLabel!)
+                          : l10n.trustHolding(order.totalLabel, order.feesLabel)),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),

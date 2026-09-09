@@ -28,6 +28,7 @@ import { registerOpsRoutes } from '@/modules/ops/routes';
 import { registerAdminRoutes } from '@/modules/admin/routes';
 import { registerAdminActionRoutes } from '@/modules/admin/actions';
 import { registerMoneyRoutes } from '@/modules/money/routes';
+import { registerPricingRoutes } from '@/modules/pricing/routes';
 import { registerExternalRoutes } from '@/modules/external/routes';
 import { registerDiscoveryRoutes } from '@/modules/discovery/routes';
 import { registerReviewsRoutes } from '@/modules/reviews/routes';
@@ -141,6 +142,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await registerAdminRoutes(app);
   await registerAdminActionRoutes(app);
   await registerMoneyRoutes(app);
+  await registerPricingRoutes(app);
   await registerExternalRoutes(app);
   await registerDiscoveryRoutes(app);
   await registerReviewsRoutes(app);

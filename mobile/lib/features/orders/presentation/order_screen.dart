@@ -8,6 +8,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
+import '../../../ui/breakdown_row.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/marketplace_bits.dart';
@@ -126,6 +127,28 @@ class OrderScreen extends ConsumerWidget {
                   ],
                   const SizedBox(height: 14),
                   TrustPanel(order: o),
+                  if (o.hasPricingBreakdown) ...[
+                    const SizedBox(height: 14),
+                    SoftCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: isShopper
+                            ? [
+                                BreakdownRow(l10n.priceBreakdownProductPrice, o.totalLabel),
+                                BreakdownRow(l10n.priceBreakdownTravellerReward, o.travellerRewardLabel!),
+                                BreakdownRow(l10n.priceBreakdownServiceFee, o.feesLabel),
+                                const Divider(height: 16),
+                                BreakdownRow(l10n.priceBreakdownTotal, o.shopperTotalLabel!, bold: true),
+                              ]
+                            : [
+                                BreakdownRow(l10n.travellerBreakdownProductValue, o.totalLabel),
+                                BreakdownRow(l10n.travellerBreakdownYourReward, o.travellerRewardLabel!),
+                                const Divider(height: 16),
+                                BreakdownRow(l10n.travellerBreakdownYouReceive, o.travellerPayoutLabel!, bold: true),
+                              ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   Row(
                     children: [

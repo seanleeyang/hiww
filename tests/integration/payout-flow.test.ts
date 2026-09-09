@@ -32,7 +32,9 @@ describe('payouts + reconciliation', () => {
 
   it('a delivered order shows as awaiting payout, then moves to paid once recorded', async () => {
     const admin = await createUser(ctx, { admin: true });
-    const order = await createAcceptedOrder(ctx); // total_price 120.00, fees 9.60
+    // item 120.00 -> reward floors to 50 (10% of 120 is only 12), fee 12,
+    // so traveller_payout (item + reward) is 170.
+    const order = await createAcceptedOrder(ctx);
     await completeOrder(ctx, order); // → delivered
 
     let r = await recon(admin);
@@ -43,9 +45,10 @@ describe('payouts + reconciliation', () => {
       method: 'POST',
       url: '/api/payments/payout',
       headers: authHeader(admin),
-      payload: { order_id: order.orderId, amount: '120.00', method: 'wise', reference: 'W-123' },
+      payload: { order_id: order.orderId, method: 'wise', reference: 'W-123' },
     });
     expect(payout.statusCode).toBe(201);
+    expect(payout.json().data.amount).toBe('170');
 
     r = await recon(admin);
     expect(r.awaiting_payout.orders.some((o) => o.id === order.orderId)).toBe(false);
@@ -59,6 +62,30 @@ describe('payouts + reconciliation', () => {
     const entry = audit.json().data.items[0];
     expect(entry.actor_id).toBe(admin.userId);
     expect(entry.metadata.reference).toBe('W-123');
+    expect(entry.metadata.amount).toBe('170');
+  });
+
+  it('ignores a client-supplied amount and always pays out the server-computed traveller_payout', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx); // traveller_payout is 170
+    await completeOrder(ctx, order);
+
+    const payout = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/payout',
+      headers: authHeader(admin),
+      // Deliberately wrong amount — the server must not trust this.
+      payload: { order_id: order.orderId, amount: '999999.00', method: 'wise', reference: 'W-456' },
+    });
+    expect(payout.statusCode).toBe(201);
+    expect(payout.json().data.amount).toBe('170');
+
+    const stored = await ctx.db
+      .selectFrom('payouts')
+      .selectAll()
+      .where('id', '=', payout.json().data.id)
+      .executeTakeFirst();
+    expect(stored?.amount).toBe('170');
   });
 
   it('rejects a second payout for the same order', async () => {
@@ -66,7 +93,7 @@ describe('payouts + reconciliation', () => {
     const order = await createAcceptedOrder(ctx);
     await completeOrder(ctx, order);
 
-    const body = { order_id: order.orderId, amount: '120.00', method: 'bank', reference: 'B-1' };
+    const body = { order_id: order.orderId, method: 'bank', reference: 'B-1' };
     const first = await ctx.app.inject({ method: 'POST', url: '/api/payments/payout', headers: authHeader(admin), payload: body });
     expect(first.statusCode).toBe(201);
 
@@ -82,7 +109,7 @@ describe('payouts + reconciliation', () => {
       method: 'POST',
       url: '/api/payments/payout',
       headers: authHeader(admin),
-      payload: { order_id: order.orderId, amount: '120.00', method: 'wise', reference: 'X' },
+      payload: { order_id: order.orderId, method: 'wise', reference: 'X' },
     });
     expect(res.statusCode).toBe(409);
   });
@@ -105,15 +132,15 @@ describe('payouts + reconciliation', () => {
     expect(payout403.statusCode).toBe(403);
   });
 
-  it('a new pending order adds its goods+fee total to awaiting_payment', async () => {
+  it('a new pending order adds its full shopper_total to awaiting_payment', async () => {
     const admin = await createUser(ctx, { admin: true });
     const before = await recon(admin);
-    await createAcceptedOrder(ctx); // 120.00 goods + 9.60 fee
+    await createAcceptedOrder(ctx); // item 120 + reward 50 (floored) + fee 12 = 182
 
     const after = await recon(admin);
     expect(after.awaiting_payment.count).toBe(before.awaiting_payment.count + 1);
 
     const delta = Number(after.awaiting_payment.total) - Number(before.awaiting_payment.total);
-    expect(delta).toBeCloseTo(129.6, 2);
+    expect(delta).toBeCloseTo(182, 2);
   });
 });

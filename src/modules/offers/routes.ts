@@ -7,8 +7,7 @@ import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification } from '@/services/notify';
 import { requireCompleteProfile } from '@/utils/profile-guard';
 import { expireOverdueOffers } from '@/services/offer-expiry';
-
-const PLATFORM_FEE_RATE = 0.08;
+import { calculatePricing } from '@/services/pricing';
 
 const createOfferSchema = z.object({
   request_id: z.string().uuid(),
@@ -319,7 +318,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       await requireCompleteProfile(request.db, requestRow.shopper_id);
 
       const total = new Decimal(offer.quoted_price);
-      const fees = total.mul(PLATFORM_FEE_RATE).toDecimalPlaces(2).toString();
+      const pricing = calculatePricing(offer.quoted_price);
       const quantity = Math.max(1, Number(requestRow.quantity ?? 1));
       // The traveler quotes one all-in price; split it back out per unit for the receipt.
       const unitPrice = total.div(quantity).toDecimalPlaces(2).toString();
@@ -350,8 +349,12 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             item_description: requestRow.item_description,
             quantity,
             unit_price: unitPrice,
-            total_price: total.toString(),
-            fees,
+            total_price: pricing.itemPrice,
+            fees: pricing.serviceFee,
+            traveller_reward: pricing.travellerReward,
+            shopper_total: pricing.shopperTotal,
+            traveller_payout: pricing.travellerPayout,
+            currency: pricing.currency,
             status: 'pending_payment',
             payment_deadline_at: paymentDeadlineAt,
             created_at: now,
@@ -366,8 +369,11 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
           metadata: {
             offer_id: offer.id,
             request_id: requestRow.id,
-            total_price: total.toString(),
-            fees,
+            total_price: pricing.itemPrice,
+            fees: pricing.serviceFee,
+            traveller_reward: pricing.travellerReward,
+            shopper_total: pricing.shopperTotal,
+            traveller_payout: pricing.travellerPayout,
             shopper_id: requestRow.shopper_id,
             traveler_id: offer.traveler_id,
             payment_deadline_at: paymentDeadlineAt,

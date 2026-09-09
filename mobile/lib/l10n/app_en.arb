@@ -303,6 +303,13 @@
   "@dialogAcceptOfferBody": {
     "placeholders": { "price": { "type": "String" } }
   },
+  "priceBreakdownProductPrice": "Product price",
+  "priceBreakdownTravellerReward": "Traveller reward",
+  "priceBreakdownServiceFee": "Service & protection fee",
+  "priceBreakdownTotal": "Total",
+  "travellerBreakdownProductValue": "Product value",
+  "travellerBreakdownYourReward": "Your reward",
+  "travellerBreakdownYouReceive": "You receive",
   "actionAccept": "Accept",
   "offerCounteredTimes": "Countered {round, plural, one{{round} time} other{{round} times}}",
   "@offerCounteredTimes": {
@@ -473,6 +480,10 @@
   "trustHolding": "Hiww is holding {total} + {fee} fee",
   "@trustHolding": {
     "placeholders": { "total": { "type": "String" }, "fee": { "type": "String" } }
+  },
+  "trustHoldingTotal": "Hiww is holding {total}",
+  "@trustHoldingTotal": {
+    "placeholders": { "total": { "type": "String" } }
   },
   "trustSettled": "Payment for these goods has been settled.",
   "trustReleasedOnConfirm": "Released to the traveler when you confirm you have the item.",

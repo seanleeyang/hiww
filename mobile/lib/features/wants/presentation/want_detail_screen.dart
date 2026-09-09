@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
+import '../../../ui/breakdown_row.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/initials_avatar.dart';
 import '../../../ui/marketplace_bits.dart';
@@ -16,6 +17,8 @@ import '../../../ui/status_pill.dart';
 import '../../../ui/stock_images.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../orders/data/orders_repository.dart';
+import '../../shared/data/pricing_repository.dart';
+import '../../shared/domain/pricing_preview.dart';
 import '../../shared/presentation/reviews_preview.dart';
 import '../data/offers_repository.dart';
 import '../data/wants_repository.dart';
@@ -276,11 +279,23 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
   Future<void> _accept() async {
     final l10n = AppLocalizations.of(context)!;
     final o = widget.offer;
+
+    PricingPreview? pricing;
+    try {
+      pricing = await ref.read(pricingRepositoryProvider).preview(o.quotedPrice);
+    } catch (_) {
+      // Fall back to the plain price below if the preview call fails —
+      // don't block accepting an offer over a display-only breakdown.
+    }
+    if (!mounted) return;
+
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.dialogAcceptOfferTitle),
-        content: Text(l10n.dialogAcceptOfferBody(o.priceLabel)),
+        content: pricing == null
+            ? Text(l10n.dialogAcceptOfferBody(o.priceLabel))
+            : _PriceBreakdown(pricing: pricing),
         actions: [
           TextButton(
             onPressed: () => context.pop(false),
@@ -384,6 +399,30 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Itemized shopper-facing breakdown shown before accepting an offer —
+/// Product price / Traveller reward / Service & protection fee / = Total —
+/// rather than a single vague "X% fee".
+class _PriceBreakdown extends StatelessWidget {
+  const _PriceBreakdown({required this.pricing});
+  final PricingPreview pricing;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        BreakdownRow(l10n.priceBreakdownProductPrice, pricing.itemPriceLabel),
+        BreakdownRow(l10n.priceBreakdownTravellerReward, pricing.travellerRewardLabel),
+        BreakdownRow(l10n.priceBreakdownServiceFee, pricing.serviceFeeLabel),
+        const Divider(height: 16),
+        BreakdownRow(l10n.priceBreakdownTotal, pricing.shopperTotalLabel, bold: true),
+      ],
     );
   }
 }

@@ -769,6 +769,27 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String get priceBreakdownProductPrice => 'ราคาสินค้า';
+
+  @override
+  String get priceBreakdownTravellerReward => 'ค่าตอบแทนนักเดินทาง';
+
+  @override
+  String get priceBreakdownServiceFee => 'ค่าบริการและความคุ้มครอง';
+
+  @override
+  String get priceBreakdownTotal => 'รวมทั้งหมด';
+
+  @override
+  String get travellerBreakdownProductValue => 'มูลค่าสินค้า';
+
+  @override
+  String get travellerBreakdownYourReward => 'ค่าตอบแทนของคุณ';
+
+  @override
+  String get travellerBreakdownYouReceive => 'คุณจะได้รับ';
+
+  @override
   String get actionAccept => 'รับข้อเสนอ';
 
   @override
@@ -1125,6 +1146,11 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String trustHolding(String total, String fee) {
     return 'Hiww ถือเงิน $total + ค่าธรรมเนียม $fee ไว้';
+  }
+
+  @override
+  String trustHoldingTotal(String total) {
+    return 'Hiww ถือเงิน $total ไว้';
   }
 
   @override

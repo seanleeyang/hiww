@@ -3,6 +3,12 @@ export type IdentityProviderName = 'mock' | 'ndid';
 
 export interface PaymentSessionInput {
   id: string;
+  /**
+   * The amount to actually charge the shopper — their full total (goods +
+   * traveller reward + service fee, `order.shopper_total`), not the goods
+   * price alone. Named `total_price` for historical reasons; don't confuse
+   * it with `orders.total_price` (the DB column, which is goods-only).
+   */
   total_price: string;
   shopper_id: string;
   traveler_id: string;

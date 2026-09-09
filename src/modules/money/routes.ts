@@ -12,9 +12,11 @@ const moneyRoute = {
   config: { rateLimit: { max: config.moneyRateLimitMax, timeWindow: config.rateLimitWindow } },
 };
 
+// `amount` is deliberately not accepted from the client — the payout amount
+// is always derived server-side from the order's own stored pricing
+// snapshot (`order.traveller_payout`), never trusted from the request body.
 const payoutSchema = z.object({
   order_id: z.string().uuid(),
-  amount: z.string().regex(/^\d+(\.\d{2})?$/),
   method: z.string().min(2).max(40),
   reference: z.string().min(1).max(120),
   note: z.string().max(500).optional(),
@@ -76,7 +78,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
       const paymentProvider = getPaymentProvider();
       const session = await paymentProvider.createSession({
         id: order.id,
-        total_price: order.total_price,
+        total_price: order.shopper_total ?? order.total_price,
         shopper_id: order.shopper_id,
         traveler_id: order.traveler_id,
         item_description: order.item_description,
@@ -203,6 +205,12 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('ALREADY_DONE', 409, 'money.alreadyPaidOut');
       }
 
+      // Server-authoritative: never trust a client-sent amount. Orders
+      // created before the pricing-breakdown migration have no
+      // traveller_payout snapshot, so fall back to the legacy convention
+      // (payout = goods price only, per migrations/011_payouts.ts).
+      const payoutAmount = order.traveller_payout ?? order.total_price;
+
       const payoutId = generateId();
       await request.db
         .insertInto('payouts')
@@ -210,7 +218,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
           id: payoutId,
           order_id: order.id,
           recorded_by: request.userId ?? null,
-          amount: parsed.data.amount,
+          amount: payoutAmount,
           method: parsed.data.method,
           reference: parsed.data.reference,
           note: parsed.data.note ?? null,
@@ -222,10 +230,10 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         action: 'order.payout',
         targetType: 'order',
         targetId: order.id,
-        summary: `Payout of ${parsed.data.amount} to traveler for order ${order.id} via ${parsed.data.method} (${parsed.data.reference})`,
+        summary: `Payout of ${payoutAmount} to traveler for order ${order.id} via ${parsed.data.method} (${parsed.data.reference})`,
         metadata: {
           payout_id: payoutId,
-          amount: parsed.data.amount,
+          amount: payoutAmount,
           method: parsed.data.method,
           reference: parsed.data.reference,
           order_total_price: order.total_price,
@@ -237,7 +245,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         userId: order.traveler_id,
         type: 'payout_sent',
         params: {
-          amount: parsed.data.amount,
+          amount: payoutAmount,
           item: order.item_description,
           method: parsed.data.method,
           reference: parsed.data.reference,
@@ -247,7 +255,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
 
       reply.status(201).send({
         success: true,
-        data: { id: payoutId, order_id: order.id, amount: parsed.data.amount },
+        data: { id: payoutId, order_id: order.id, amount: payoutAmount },
         code: 'PAYOUT_RECORDED',
       });
     }

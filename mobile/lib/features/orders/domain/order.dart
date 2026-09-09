@@ -36,6 +36,10 @@ class Order {
     this.deliveredAt,
     this.canReview = false,
     this.myReview,
+    this.travellerReward,
+    this.shopperTotal,
+    this.travellerPayout,
+    this.currency,
   });
 
   final String id;
@@ -45,6 +49,13 @@ class Order {
   final String totalPrice;
   final String fees;
   final String status;
+
+  /// MVP pricing model split — null for orders created before it shipped;
+  /// callers should fall back to [totalPrice]/[fees] in that case.
+  final String? travellerReward;
+  final String? shopperTotal;
+  final String? travellerPayout;
+  final String? currency;
   final String? requestId;
   final UserSummary? counterparty;
   final String? requestImageUrl;
@@ -65,6 +76,13 @@ class Order {
 
   String get totalLabel => money(totalPrice);
   String get feesLabel => money(fees);
+
+  /// Whether this order has the pricing-model snapshot (created after
+  /// migration 028) vs. an older order priced under the flat-fee model.
+  bool get hasPricingBreakdown => travellerReward != null && shopperTotal != null && travellerPayout != null;
+  String? get travellerRewardLabel => travellerReward == null ? null : money(travellerReward!);
+  String? get shopperTotalLabel => shopperTotal == null ? null : money(shopperTotal!);
+  String? get travellerPayoutLabel => travellerPayout == null ? null : money(travellerPayout!);
 
   factory Order.fromJson(Map<String, dynamic> j) => Order(
         id: j['id'].toString(),
@@ -95,5 +113,14 @@ class Order {
         myReview: j['my_review'] is Map
             ? OrderReview.fromJson(Map<String, dynamic>.from(j['my_review'] as Map))
             : null,
+        travellerReward: _s(j['traveller_reward']),
+        shopperTotal: _s(j['shopper_total']),
+        travellerPayout: _s(j['traveller_payout']),
+        currency: _s(j['currency']),
       );
+}
+
+String? _s(Object? v) {
+  final s = v?.toString().trim() ?? '';
+  return s.isEmpty ? null : s;
 }

@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import Decimal from 'decimal.js';
 import { toUserSummary, USER_SUMMARY_COLUMNS, type UserSummary } from '@/utils/user-summary';
+import { calculatePricing } from '@/services/pricing';
 
-const PLATFORM_FEE_RATE = 0.08;
 const EARN_ESTIMATE_CAP = 50000;
 
 // A want and a trip are "on the same route" when the goods can be bought at
@@ -82,12 +82,12 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (r: any) => r.shopper_id !== trip.traveler_id && routeMatches(r.source_country, trip)
           );
-          // Per-item commission range (what carrying any one matched want
-          // would pay), not a sum — a trip can't fulfil every match at once,
-          // so a total overstates what's actually achievable.
+          // Per-item earn range (the traveller reward for carrying any one
+          // matched want), not a sum — a trip can't fulfil every match at
+          // once, so a total overstates what's actually achievable.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const commissions = matched.map((r: any) =>
-            Decimal.min(new Decimal(r.budget).mul(PLATFORM_FEE_RATE), new Decimal(EARN_ESTIMATE_CAP)).toDecimalPlaces(2)
+            Decimal.min(new Decimal(calculatePricing(r.budget).travellerReward), new Decimal(EARN_ESTIMATE_CAP))
           );
           const earnMin = commissions.length ? commissions.reduce((a: Decimal, b: Decimal) => (b.lt(a) ? b : a)) : null;
           const earnMax = commissions.length ? commissions.reduce((a: Decimal, b: Decimal) => (b.gt(a) ? b : a)) : null;

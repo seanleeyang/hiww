@@ -79,7 +79,17 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
     try {
       const awaitingPayment = await request.db
         .selectFrom('orders')
-        .select(['id', 'item_description', 'total_price', 'fees', 'shopper_id', 'traveler_id', 'payment_claimed_at', 'created_at'])
+        .select([
+          'id',
+          'item_description',
+          'total_price',
+          'fees',
+          'shopper_total',
+          'shopper_id',
+          'traveler_id',
+          'payment_claimed_at',
+          'created_at',
+        ])
         .where('status', '=', 'pending_payment')
         .orderBy('created_at', 'asc')
         .execute();
@@ -93,6 +103,7 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
           'orders.item_description as item_description',
           'orders.total_price as total_price',
           'orders.fees as fees',
+          'orders.traveller_payout as traveller_payout',
           'orders.traveler_id as traveler_id',
           'orders.delivered_at as delivered_at',
         ])
@@ -123,17 +134,27 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
         data: {
           awaiting_payment: {
             count: awaitingPayment.length,
-            // What the shoppers still owe: goods price + fee.
+            // What the shoppers still owe. Prefers the stored pricing-model
+            // snapshot (item + reward + fee); falls back to goods price +
+            // fee for orders created before that snapshot existed.
             total: awaitingPayment
-              .reduce((a: Decimal, r: any) => a.add(new Decimal(r.total_price)).add(new Decimal(r.fees)), new Decimal(0))
+              .reduce(
+                (a: Decimal, r: any) =>
+                  a.add(new Decimal(r.shopper_total ?? new Decimal(r.total_price).add(r.fees))),
+                new Decimal(0)
+              )
               .toFixed(2),
             claimed: awaitingPayment.filter((o: any) => o.payment_claimed_at).length,
             orders: awaitingPayment,
           },
           awaiting_payout: {
             count: awaitingPayout.length,
-            // What the operator owes travellers: the goods price only.
-            total: sum(awaitingPayout, 'total_price'),
+            // What the operator owes travellers: goods price + reward under
+            // the pricing model, falling back to goods price only for
+            // orders created before the reward concept existed.
+            total: awaitingPayout
+              .reduce((a: Decimal, r: any) => a.add(new Decimal(r.traveller_payout ?? r.total_price)), new Decimal(0))
+              .toFixed(2),
             orders: awaitingPayout,
           },
           paid_out: {

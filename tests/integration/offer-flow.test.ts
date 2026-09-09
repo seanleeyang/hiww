@@ -46,7 +46,12 @@ describe('offer flow', () => {
     expect(order?.status).toBe('pending_payment');
     expect(order?.trip_id).toBe(tripId);
     expect(order?.total_price).toBe('120');
-    expect(order?.fees).toBe('9.6');
+    // 10% of ฿120 is ฿12, below the ฿50 reward floor, so the floor applies.
+    expect(order?.fees).toBe('12');
+    expect(order?.traveller_reward).toBe('50');
+    expect(order?.shopper_total).toBe('182');
+    expect(order?.traveller_payout).toBe('170');
+    expect(order?.currency).toBe('THB');
 
     const req = await ctx.db.selectFrom('requests').selectAll().where('id', '=', requestId).executeTakeFirst();
     expect(req?.status).toBe('accepted');

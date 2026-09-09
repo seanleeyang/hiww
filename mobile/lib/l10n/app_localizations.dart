@@ -1478,6 +1478,48 @@ abstract class AppLocalizations {
   /// **'You will pay {price} for the goods. An order is created and you\'ll be asked to pay.'**
   String dialogAcceptOfferBody(String price);
 
+  /// No description provided for @priceBreakdownProductPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Product price'**
+  String get priceBreakdownProductPrice;
+
+  /// No description provided for @priceBreakdownTravellerReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveller reward'**
+  String get priceBreakdownTravellerReward;
+
+  /// No description provided for @priceBreakdownServiceFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Service & protection fee'**
+  String get priceBreakdownServiceFee;
+
+  /// No description provided for @priceBreakdownTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get priceBreakdownTotal;
+
+  /// No description provided for @travellerBreakdownProductValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Product value'**
+  String get travellerBreakdownProductValue;
+
+  /// No description provided for @travellerBreakdownYourReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reward'**
+  String get travellerBreakdownYourReward;
+
+  /// No description provided for @travellerBreakdownYouReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'You receive'**
+  String get travellerBreakdownYouReceive;
+
   /// No description provided for @actionAccept.
   ///
   /// In en, this message translates to:
@@ -2089,6 +2131,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hiww is holding {total} + {fee} fee'**
   String trustHolding(String total, String fee);
+
+  /// No description provided for @trustHoldingTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiww is holding {total}'**
+  String trustHoldingTotal(String total);
 
   /// No description provided for @trustSettled.
   ///

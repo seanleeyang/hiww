@@ -787,6 +787,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get priceBreakdownProductPrice => 'Product price';
+
+  @override
+  String get priceBreakdownTravellerReward => 'Traveller reward';
+
+  @override
+  String get priceBreakdownServiceFee => 'Service & protection fee';
+
+  @override
+  String get priceBreakdownTotal => 'Total';
+
+  @override
+  String get travellerBreakdownProductValue => 'Product value';
+
+  @override
+  String get travellerBreakdownYourReward => 'Your reward';
+
+  @override
+  String get travellerBreakdownYouReceive => 'You receive';
+
+  @override
   String get actionAccept => 'Accept';
 
   @override
@@ -1151,6 +1172,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String trustHolding(String total, String fee) {
     return 'Hiww is holding $total + $fee fee';
+  }
+
+  @override
+  String trustHoldingTotal(String total) {
+    return 'Hiww is holding $total';
   }
 
   @override

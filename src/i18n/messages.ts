@@ -121,6 +121,12 @@ const MESSAGES: Record<string, Entry> = {
   },
   'money.alreadyPaidOut': { en: 'This order has already been paid out', th: 'คำสั่งซื้อนี้จ่ายเงินไปแล้ว' },
 
+  // services/pricing.ts
+  'pricing.invalidItemPrice': {
+    en: 'Item price must be a valid, non-negative amount',
+    th: 'ราคาสินค้าต้องเป็นจำนวนที่ถูกต้องและไม่ติดลบ',
+  },
+
   // modules/notifications/routes.ts
   'notifications.invalidReadPayload': { en: 'Invalid read payload', th: 'ข้อมูลการทำเครื่องหมายอ่านแล้วไม่ถูกต้อง' },
 
