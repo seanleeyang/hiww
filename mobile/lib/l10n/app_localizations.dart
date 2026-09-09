@@ -773,8 +773,20 @@ abstract class AppLocalizations {
   /// No description provided for @actionPostAWant.
   ///
   /// In en, this message translates to:
-  /// **'Post a want'**
+  /// **'Create Order'**
   String get actionPostAWant;
+
+  /// No description provided for @proTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro tip'**
+  String get proTipTitle;
+
+  /// No description provided for @proTipCreateOrderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Be sure to provide all product specifics about your order to be sure you receive the correct item.'**
+  String get proTipCreateOrderBody;
 
   /// No description provided for @heroOrderGreetingNamed.
   ///

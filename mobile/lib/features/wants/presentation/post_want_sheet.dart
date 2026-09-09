@@ -178,6 +178,46 @@ class _PostWantSheetState extends ConsumerState<_PostWantSheet> {
                       : l10n.actionPostAWant,
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            if (!_editing) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.lightbulb_outline,
+                        size: 18, color: Theme.of(context).colorScheme.onTertiaryContainer),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.proTipTitle,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).colorScheme.onTertiaryContainer,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.proTipCreateOrderBody,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).colorScheme.onTertiaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             if (!_editing && widget.targetTripId != null) ...[
               const SizedBox(height: 6),
               Container(

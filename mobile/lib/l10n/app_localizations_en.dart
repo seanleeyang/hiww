@@ -373,7 +373,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionPostATrip => 'Post a trip';
 
   @override
-  String get actionPostAWant => 'Post a want';
+  String get actionPostAWant => 'Create Order';
+
+  @override
+  String get proTipTitle => 'Pro tip';
+
+  @override
+  String get proTipCreateOrderBody =>
+      'Be sure to provide all product specifics about your order to be sure you receive the correct item.';
 
   @override
   String heroOrderGreetingNamed(String name) {

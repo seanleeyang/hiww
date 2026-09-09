@@ -220,7 +220,7 @@ void main() {
         timeout: const Duration(seconds: 40));
 
     // --- Post a want through the FAB sheet. ---
-    await _tap(tester, find.widgetWithText(FloatingActionButton, 'Post a want'));
+    await _tap(tester, find.widgetWithText(FloatingActionButton, 'Create Order'));
     await _pumpUntil(tester, find.widgetWithText(TextField, 'Item'));
 
     final wantTitle = 'IT Sneakers $stamp';

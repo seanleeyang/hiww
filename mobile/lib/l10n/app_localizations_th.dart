@@ -371,7 +371,14 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionPostATrip => 'ลงทริป';
 
   @override
-  String get actionPostAWant => 'ลงรายการต้องการ';
+  String get actionPostAWant => 'สร้างคำสั่งซื้อ';
+
+  @override
+  String get proTipTitle => 'เคล็ดลับ';
+
+  @override
+  String get proTipCreateOrderBody =>
+      'ระบุรายละเอียดสินค้าให้ครบถ้วน เพื่อให้แน่ใจว่าคุณจะได้รับสินค้าที่ถูกต้อง';
 
   @override
   String heroOrderGreetingNamed(String name) {
