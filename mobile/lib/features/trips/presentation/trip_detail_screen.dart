@@ -13,7 +13,7 @@ import '../../../ui/soft_card.dart';
 import '../../../ui/stock_images.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/reviews_preview.dart';
-import '../../wants/domain/want_draft.dart';
+import '../../wants/presentation/create_order_sheet.dart';
 import '../data/trips_repository.dart';
 
 class TripDetailScreen extends ConsumerWidget {
@@ -91,14 +91,12 @@ class TripDetailScreen extends ConsumerWidget {
                     FilledButton.icon(
                       onPressed: () {
                         if (!requireSignedIn(context, ref)) return;
-                        context.push(
-                          '/wants/new',
-                          extra: PostWantPrefill(
-                            sourceCountry: trip.arrivalCountry,
-                            sourceCity: trip.arrivalCity,
-                            targetTripId: trip.id,
-                            targetTravelerName: d.traveler?.fullName,
-                          ),
+                        showCreateOrderSheet(
+                          context,
+                          sourceCountry: trip.arrivalCountry,
+                          sourceCity: trip.arrivalCity,
+                          targetTripId: trip.id,
+                          targetTravelerName: d.traveler?.fullName,
                         );
                       },
                       icon: const Icon(Icons.add_shopping_cart_outlined),

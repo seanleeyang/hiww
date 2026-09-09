@@ -180,12 +180,26 @@ class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _pickDate,
-                        icon: const Icon(Icons.event_outlined, size: 18),
-                        label: Text(
-                          _needBy == null ? l10n.anyTime : shortDate(_needBy),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _pickDate,
+                              icon: const Icon(Icons.event_outlined, size: 18),
+                              label: Text(
+                                _needBy == null ? l10n.anyTime : shortDate(_needBy),
+                              ),
+                            ),
+                          ),
+                          if (_needBy != null) ...[
+                            const SizedBox(width: 4),
+                            IconButton(
+                              onPressed: () => setState(() => _needBy = null),
+                              icon: const Icon(Icons.close, size: 18),
+                              tooltip: l10n.anyTime,
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),

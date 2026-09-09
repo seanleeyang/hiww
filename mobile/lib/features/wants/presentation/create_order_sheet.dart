@@ -11,6 +11,10 @@ import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../domain/want_draft.dart';
 
+/// Empty-string sentinel for "no country picked yet" — lets the dropdown
+/// show a real "Select" placeholder entry instead of defaulting to a country.
+const _unselected = '';
+
 /// Step 1 of creating a want: collects every field, then hands a [WantDraft]
 /// to `/wants/new/summary` for review before the actual API call. Pass
 /// [targetTripId] for "Request from this trip" — sends the want directly and
@@ -18,9 +22,30 @@ import '../domain/want_draft.dart';
 ///
 /// Editing an existing want is a separate, simpler flow — see
 /// `post_want_sheet.dart`'s `showEditWantSheet`.
-class CreateOrderScreen extends ConsumerStatefulWidget {
-  const CreateOrderScreen({
-    super.key,
+Future<void> showCreateOrderSheet(
+  BuildContext context, {
+  String? sourceCountry,
+  String? sourceCity,
+  String? targetTripId,
+  String? targetTravelerName,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: _CreateOrderSheet(
+        sourceCountry: sourceCountry,
+        sourceCity: sourceCity,
+        targetTripId: targetTripId,
+        targetTravelerName: targetTravelerName,
+      ),
+    ),
+  );
+}
+
+class _CreateOrderSheet extends ConsumerStatefulWidget {
+  const _CreateOrderSheet({
     this.sourceCountry,
     this.sourceCity,
     this.targetTripId,
@@ -33,19 +58,19 @@ class CreateOrderScreen extends ConsumerStatefulWidget {
   final String? targetTravelerName;
 
   @override
-  ConsumerState<CreateOrderScreen> createState() => _CreateOrderScreenState();
+  ConsumerState<_CreateOrderSheet> createState() => _CreateOrderSheetState();
 }
 
-class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
+class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   final _productUrl = TextEditingController();
   final _title = TextEditingController();
   final _details = TextEditingController();
   late final _city = TextEditingController(text: widget.sourceCity ?? '');
-  late final _destCity = TextEditingController();
+  final _destCity = TextEditingController();
   String? _photoUrl;
   String _category = 'sneakers';
   late String _country = _initialCountry();
-  late String _destCountry = _country;
+  String _destCountry = _unselected;
   int _budget = 3000;
   int _qty = 1;
   DateTime? _needBy;
@@ -53,7 +78,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
 
   String _initialCountry() {
     final source = widget.sourceCountry;
-    return (source != null && isLiveCountry(source)) ? source : 'JP';
+    return (source != null && isLiveCountry(source)) ? source : _unselected;
   }
 
   @override
@@ -70,12 +95,32 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
     final l10n = AppLocalizations.of(context)!;
     final title = _title.text.trim();
     final details = _details.text.trim();
+    if (_photoUrl == null || _photoUrl!.isEmpty) {
+      setState(() => _error = l10n.errorPhotoRequired);
+      return;
+    }
     if (title.length < 3) {
       setState(() => _error = l10n.errorWantTitleTooShort);
       return;
     }
     if (details.length < 10) {
       setState(() => _error = l10n.errorWantDetailsTooShort);
+      return;
+    }
+    if (_country.isEmpty) {
+      setState(() => _error = l10n.errorBuyInCountryRequired);
+      return;
+    }
+    if (_city.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorBuyInCityRequired);
+      return;
+    }
+    if (_destCountry.isEmpty) {
+      setState(() => _error = l10n.errorDeliverToCountryRequired);
+      return;
+    }
+    if (_destCity.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorDeliverToCityRequired);
       return;
     }
     setState(() => _error = null);
@@ -89,33 +134,34 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
       quantity: _qty,
       needBy: _needBy,
       sourceCountry: _country,
-      sourceCity: _city.text.trim().isEmpty ? null : _city.text.trim(),
+      sourceCity: _city.text.trim(),
       destinationCountry: _destCountry,
-      destinationCity: _destCity.text.trim().isEmpty ? null : _destCity.text.trim(),
+      destinationCity: _destCity.text.trim(),
       budget: _budget,
       targetTripId: widget.targetTripId,
       targetTravelerName: widget.targetTravelerName,
     );
+    Navigator.of(context).pop();
     context.push('/wants/new/summary', extra: draft);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final routeMatch = ref.watch(routeMatchProvider(_country));
+    final routeMatch = _country.isEmpty ? null : ref.watch(routeMatchProvider(_country));
     final scheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.targetTripId != null ? l10n.actionRequestFromThisTrip : l10n.actionPostAWant,
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Text(
+              widget.targetTripId != null ? l10n.actionRequestFromThisTrip : l10n.actionPostAWant,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -182,7 +228,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
             ImagePickerField(
               value: _photoUrl,
               onChanged: (url) => setState(() => _photoUrl = url),
-              label: l10n.fieldPhotoOptional,
+              label: l10n.fieldPhoto,
             ),
             const SizedBox(height: 12),
             TextField(
@@ -252,10 +298,24 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _pickDate,
-                        icon: const Icon(Icons.event_outlined, size: 18),
-                        label: Text(_needBy == null ? l10n.anyTime : shortDate(_needBy)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _pickDate,
+                              icon: const Icon(Icons.event_outlined, size: 18),
+                              label: Text(_needBy == null ? l10n.anyTime : shortDate(_needBy)),
+                            ),
+                          ),
+                          if (_needBy != null) ...[
+                            const SizedBox(width: 4),
+                            IconButton(
+                              onPressed: () => setState(() => _needBy = null),
+                              icon: const Icon(Icons.close, size: 18),
+                              tooltip: l10n.anyTime,
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -271,11 +331,12 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   child: DropdownButtonFormField<String>(
                     initialValue: _country,
                     isExpanded: true,
-                    decoration: InputDecoration(labelText: l10n.labelBuyIn),
+                    decoration: InputDecoration(labelText: l10n.labelCountry),
                     items: [
+                      DropdownMenuItem(value: _unselected, child: Text(l10n.selectCountry)),
                       for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
                     ],
-                    onChanged: (v) => setState(() => _country = v ?? 'JP'),
+                    onChanged: (v) => setState(() => _country = v ?? _unselected),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -283,41 +344,43 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   child: TextField(
                     controller: _city,
                     decoration: InputDecoration(
-                      labelText: l10n.fieldCityOptional,
+                      labelText: l10n.fieldCity,
                       hintText: l10n.hintCityExample,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            routeMatch.maybeWhen(
-              data: (m) => m.count == 0
-                  ? const SizedBox.shrink()
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: scheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.flight_takeoff, size: 18),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                l10n.travelersHeadingSoon(m.count, countryName(_country)),
-                                style: const TextStyle(fontSize: 13),
+            if (routeMatch != null) ...[
+              const SizedBox(height: 4),
+              routeMatch.maybeWhen(
+                data: (m) => m.count == 0
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.flight_takeoff, size: 18),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10n.travelersHeadingSoon(m.count, countryName(_country)),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-              orElse: () => const SizedBox.shrink(),
-            ),
+                orElse: () => const SizedBox.shrink(),
+              ),
+            ],
             const SizedBox(height: 18),
             Text(l10n.labelDeliverTo, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
@@ -327,11 +390,12 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   child: DropdownButtonFormField<String>(
                     initialValue: _destCountry,
                     isExpanded: true,
-                    decoration: InputDecoration(labelText: l10n.labelDeliverTo),
+                    decoration: InputDecoration(labelText: l10n.labelCountry),
                     items: [
+                      DropdownMenuItem(value: _unselected, child: Text(l10n.selectCountry)),
                       for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
                     ],
-                    onChanged: (v) => setState(() => _destCountry = v ?? 'JP'),
+                    onChanged: (v) => setState(() => _destCountry = v ?? _unselected),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -339,7 +403,7 @@ class _CreateOrderScreenState extends ConsumerState<CreateOrderScreen> {
                   child: TextField(
                     controller: _destCity,
                     decoration: InputDecoration(
-                      labelText: l10n.fieldCityOptional,
+                      labelText: l10n.fieldCity,
                       hintText: l10n.hintCityExample,
                     ),
                   ),

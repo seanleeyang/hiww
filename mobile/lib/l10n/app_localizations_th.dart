@@ -620,13 +620,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get hintProductUrl => 'วางลิงก์ไปยังสินค้าที่ต้องการ';
 
   @override
-  String get fieldItem => 'สินค้า';
+  String get fieldItem => 'ชื่อสินค้า';
 
   @override
   String get hintItemExample => 'เช่น Nike Dunk Panda';
 
   @override
-  String get fieldDetails => 'รายละเอียด';
+  String get fieldDetails => 'รายละเอียดสินค้า';
 
   @override
   String get hintDetails => 'แบรนด์ รุ่น ไซซ์ สี ลิงก์';
@@ -637,6 +637,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get fieldPhotoOptional => 'เพิ่มรูปภาพ (ไม่บังคับ)';
+
+  @override
+  String get fieldPhoto => 'เพิ่มรูปภาพ';
+
+  @override
+  String get errorPhotoRequired => 'กรุณาเพิ่มรูปภาพสินค้า';
 
   @override
   String get labelCategory => 'หมวดหมู่';
@@ -666,6 +672,24 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get labelDeliverTo => 'จัดส่งไปที่';
+
+  @override
+  String get labelCountry => 'ประเทศ';
+
+  @override
+  String get selectCountry => 'เลือก';
+
+  @override
+  String get errorBuyInCountryRequired => 'กรุณาเลือกประเทศที่จะซื้อ';
+
+  @override
+  String get errorBuyInCityRequired => 'กรุณาระบุเมืองที่จะซื้อ';
+
+  @override
+  String get errorDeliverToCountryRequired => 'กรุณาเลือกประเทศปลายทาง';
+
+  @override
+  String get errorDeliverToCityRequired => 'กรุณาระบุเมืองปลายทาง';
 
   @override
   String get hintCityExample => 'โตเกียว';

@@ -1,7 +1,6 @@
-/// Everything entered on the Create Order form, carried via go_router's
-/// `extra` from `CreateOrderScreen` to `WantSummaryScreen` for review before
-/// the actual `POST /api/requests` call. Mirrors `TripQuickPrefill`'s role for
-/// `/trips/new`.
+/// Everything entered on the Create Order sheet, carried via go_router's
+/// `extra` to `WantSummaryScreen` for review before the actual
+/// `POST /api/requests` call.
 class WantDraft {
   const WantDraft({
     this.productUrl,
@@ -36,20 +35,4 @@ class WantDraft {
   final String? targetTravelerName;
 
   bool get isDirectRequest => targetTripId != null;
-}
-
-/// Prefill passed into `/wants/new` for "Request from this trip" — mirrors
-/// `TripQuickPrefill`'s role for `/trips/new`.
-class PostWantPrefill {
-  const PostWantPrefill({
-    this.sourceCountry,
-    this.sourceCity,
-    this.targetTripId,
-    this.targetTravelerName,
-  });
-
-  final String? sourceCountry;
-  final String? sourceCity;
-  final String? targetTripId;
-  final String? targetTravelerName;
 }

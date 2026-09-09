@@ -623,13 +623,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintProductUrl => 'Paste a link to the exact item';
 
   @override
-  String get fieldItem => 'Item';
+  String get fieldItem => 'Product Name';
 
   @override
   String get hintItemExample => 'e.g. Nike Dunk Panda';
 
   @override
-  String get fieldDetails => 'Details';
+  String get fieldDetails => 'Product Details';
 
   @override
   String get hintDetails => 'Brand, model, size, colour, links';
@@ -640,6 +640,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fieldPhotoOptional => 'Add a photo (optional)';
+
+  @override
+  String get fieldPhoto => 'Add a photo';
+
+  @override
+  String get errorPhotoRequired => 'Add a photo of the item';
 
   @override
   String get labelCategory => 'Category';
@@ -676,6 +682,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelDeliverTo => 'Deliver to';
+
+  @override
+  String get labelCountry => 'Country';
+
+  @override
+  String get selectCountry => 'Select';
+
+  @override
+  String get errorBuyInCountryRequired => 'Select a country to buy in';
+
+  @override
+  String get errorBuyInCityRequired => 'Add a city to buy in';
+
+  @override
+  String get errorDeliverToCountryRequired => 'Select a delivery country';
+
+  @override
+  String get errorDeliverToCityRequired => 'Add a delivery city';
 
   @override
   String get hintCityExample => 'Tokyo';

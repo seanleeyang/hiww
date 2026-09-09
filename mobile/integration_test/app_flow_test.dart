@@ -219,16 +219,23 @@ void main() {
     await _pumpUntil(tester, find.textContaining('Bangkok → Tokyo'),
         timeout: const Duration(seconds: 40));
 
-    // --- Post a want through the Create Order → Summary flow. ---
+    // --- Post a want through the Create Order sheet → Summary flow. ---
     // Travel is the default tab; the want-creation FAB only shows on Order.
+    // NOTE: a photo, Buy-in country/city, and Deliver-to country/city are all
+    // now required fields, and there's no real gallery/file picker on the
+    // headless flutter-tester VM this suite runs on — so this scenario can't
+    // currently drive all the way to "Next" without a dedicated test seam
+    // for ImagePickerField. Left in place (rather than stubbed to a false
+    // pass) so the gap stays visible; it will fail at the "Next" tap
+    // (missing photo) until that seam exists.
     await _tap(tester, find.widgetWithText(Tab, 'Order'));
     await _tap(tester, find.byType(FloatingActionButton));
-    await _pumpUntil(tester, find.widgetWithText(TextField, 'Item'));
+    await _pumpUntil(tester, find.widgetWithText(TextField, 'Product Name'));
 
     final wantTitle = 'IT Sneakers $stamp';
     await tester.enterText(
-        find.widgetWithText(TextField, 'Item'), wantTitle);
-    await tester.enterText(find.widgetWithText(TextField, 'Details'),
+        find.widgetWithText(TextField, 'Product Name'), wantTitle);
+    await tester.enterText(find.widgetWithText(TextField, 'Product Details'),
         'Integration-test want, safe to ignore.');
     await _tap(tester, find.widgetWithText(FilledButton, 'Next'));
     await _pumpUntil(tester, find.text('Summary'));

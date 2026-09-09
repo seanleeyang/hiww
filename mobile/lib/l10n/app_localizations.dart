@@ -1211,7 +1211,7 @@ abstract class AppLocalizations {
   /// No description provided for @fieldItem.
   ///
   /// In en, this message translates to:
-  /// **'Item'**
+  /// **'Product Name'**
   String get fieldItem;
 
   /// No description provided for @hintItemExample.
@@ -1223,7 +1223,7 @@ abstract class AppLocalizations {
   /// No description provided for @fieldDetails.
   ///
   /// In en, this message translates to:
-  /// **'Details'**
+  /// **'Product Details'**
   String get fieldDetails;
 
   /// No description provided for @hintDetails.
@@ -1243,6 +1243,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a photo (optional)'**
   String get fieldPhotoOptional;
+
+  /// No description provided for @fieldPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get fieldPhoto;
+
+  /// No description provided for @errorPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo of the item'**
+  String get errorPhotoRequired;
 
   /// No description provided for @labelCategory.
   ///
@@ -1297,6 +1309,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deliver to'**
   String get labelDeliverTo;
+
+  /// No description provided for @labelCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get labelCountry;
+
+  /// No description provided for @selectCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get selectCountry;
+
+  /// No description provided for @errorBuyInCountryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a country to buy in'**
+  String get errorBuyInCountryRequired;
+
+  /// No description provided for @errorBuyInCityRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a city to buy in'**
+  String get errorBuyInCityRequired;
+
+  /// No description provided for @errorDeliverToCountryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a delivery country'**
+  String get errorDeliverToCountryRequired;
+
+  /// No description provided for @errorDeliverToCityRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a delivery city'**
+  String get errorDeliverToCityRequired;
 
   /// No description provided for @hintCityExample.
   ///

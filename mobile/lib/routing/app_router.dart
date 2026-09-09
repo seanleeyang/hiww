@@ -35,7 +35,6 @@ import '../features/trips/presentation/trip_detail_screen.dart';
 import '../features/wants/data/offers_repository.dart';
 import '../features/wants/data/wants_repository.dart';
 import '../features/wants/domain/want_draft.dart';
-import '../features/wants/presentation/create_order_screen.dart';
 import '../features/wants/presentation/make_offer_screen.dart';
 import '../features/wants/presentation/want_detail_screen.dart';
 import '../features/wants/presentation/want_summary_screen.dart';
@@ -186,18 +185,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/trips/:id',
         builder: (_, s) => TripDetailScreen(tripId: s.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/wants/new',
-        builder: (_, s) {
-          final prefill = s.extra as PostWantPrefill?;
-          return CreateOrderScreen(
-            sourceCountry: prefill?.sourceCountry,
-            sourceCity: prefill?.sourceCity,
-            targetTripId: prefill?.targetTripId,
-            targetTravelerName: prefill?.targetTravelerName,
-          );
-        },
       ),
       GoRoute(
         path: '/wants/new/summary',
