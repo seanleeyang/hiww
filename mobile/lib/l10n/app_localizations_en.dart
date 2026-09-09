@@ -790,25 +790,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get priceBreakdownProductPrice => 'Product price';
+  String get priceBreakdownProductPrice => 'Product Price';
 
   @override
-  String get priceBreakdownTravellerReward => 'Traveller reward';
+  String get priceBreakdownTravellerReward => 'Traveller Reward';
 
   @override
-  String get priceBreakdownServiceFee => 'Service & protection fee';
+  String get priceBreakdownServiceFee => 'Service & Protection Fee';
 
   @override
   String get priceBreakdownTotal => 'Total';
 
   @override
-  String get travellerBreakdownProductValue => 'Product value';
+  String get travellerBreakdownProductValue => 'Product Value';
 
   @override
-  String get travellerBreakdownYourReward => 'Your reward';
+  String get travellerBreakdownYourReward => 'Your Reward';
 
   @override
-  String get travellerBreakdownYouReceive => 'You receive';
+  String get travellerBreakdownYouReceive => 'You Receive';
 
   @override
   String get actionAccept => 'Accept';

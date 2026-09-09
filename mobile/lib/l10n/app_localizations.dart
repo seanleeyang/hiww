@@ -1487,19 +1487,19 @@ abstract class AppLocalizations {
   /// No description provided for @priceBreakdownProductPrice.
   ///
   /// In en, this message translates to:
-  /// **'Product price'**
+  /// **'Product Price'**
   String get priceBreakdownProductPrice;
 
   /// No description provided for @priceBreakdownTravellerReward.
   ///
   /// In en, this message translates to:
-  /// **'Traveller reward'**
+  /// **'Traveller Reward'**
   String get priceBreakdownTravellerReward;
 
   /// No description provided for @priceBreakdownServiceFee.
   ///
   /// In en, this message translates to:
-  /// **'Service & protection fee'**
+  /// **'Service & Protection Fee'**
   String get priceBreakdownServiceFee;
 
   /// No description provided for @priceBreakdownTotal.
@@ -1511,19 +1511,19 @@ abstract class AppLocalizations {
   /// No description provided for @travellerBreakdownProductValue.
   ///
   /// In en, this message translates to:
-  /// **'Product value'**
+  /// **'Product Value'**
   String get travellerBreakdownProductValue;
 
   /// No description provided for @travellerBreakdownYourReward.
   ///
   /// In en, this message translates to:
-  /// **'Your reward'**
+  /// **'Your Reward'**
   String get travellerBreakdownYourReward;
 
   /// No description provided for @travellerBreakdownYouReceive.
   ///
   /// In en, this message translates to:
-  /// **'You receive'**
+  /// **'You Receive'**
   String get travellerBreakdownYouReceive;
 
   /// No description provided for @actionAccept.

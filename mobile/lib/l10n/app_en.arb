@@ -304,13 +304,13 @@
   "@dialogAcceptOfferBody": {
     "placeholders": { "price": { "type": "String" } }
   },
-  "priceBreakdownProductPrice": "Product price",
-  "priceBreakdownTravellerReward": "Traveller reward",
-  "priceBreakdownServiceFee": "Service & protection fee",
+  "priceBreakdownProductPrice": "Product Price",
+  "priceBreakdownTravellerReward": "Traveller Reward",
+  "priceBreakdownServiceFee": "Service & Protection Fee",
   "priceBreakdownTotal": "Total",
-  "travellerBreakdownProductValue": "Product value",
-  "travellerBreakdownYourReward": "Your reward",
-  "travellerBreakdownYouReceive": "You receive",
+  "travellerBreakdownProductValue": "Product Value",
+  "travellerBreakdownYourReward": "Your Reward",
+  "travellerBreakdownYouReceive": "You Receive",
   "actionAccept": "Accept",
   "offerCounteredTimes": "Countered {round, plural, one{{round} time} other{{round} times}}",
   "@offerCounteredTimes": {

@@ -109,6 +109,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
 
   bool get _isDirectRequest => widget.targetTripId != null;
 
+  /// `_category` stores the lowercase id (e.g. "beauty") CategoryChips uses
+  /// as a value — look up its display label (e.g. "Beauty") for anywhere
+  /// the category is actually shown to the user.
+  String get _categoryLabel =>
+      kCategories.firstWhere((c) => c.value == _category, orElse: () => (value: _category, label: _category)).label;
+
   String get _cityValue {
     if (_cityChoice == _othersCity) return _cityCustom.text.trim();
     if (_cityChoice == _unselected || _cityChoice == _anyCity) return '';
@@ -687,7 +693,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                 ],
                 Text(_details.text.trim()),
                 const SizedBox(height: 10),
-                IconLine(Icons.category_outlined, _category),
+                IconLine(Icons.category_outlined, _categoryLabel),
                 const SizedBox(height: 6),
                 IconLine(Icons.numbers, l10n.wantQuantityLine(_qty)),
                 const SizedBox(height: 6),
