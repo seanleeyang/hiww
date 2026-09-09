@@ -137,25 +137,25 @@ abstract class AppLocalizations {
   /// No description provided for @ordersTabRequested.
   ///
   /// In en, this message translates to:
-  /// **'{count} requested'**
+  /// **'{count} Requested'**
   String ordersTabRequested(int count);
 
   /// No description provided for @ordersTabInTransit.
   ///
   /// In en, this message translates to:
-  /// **'{count} in transit'**
+  /// **'{count} In Transit'**
   String ordersTabInTransit(int count);
 
   /// No description provided for @ordersTabReceived.
   ///
   /// In en, this message translates to:
-  /// **'{count} received'**
+  /// **'{count} Received'**
   String ordersTabReceived(int count);
 
   /// No description provided for @ordersTabInactive.
   ///
   /// In en, this message translates to:
-  /// **'{count} inactive'**
+  /// **'{count} Inactive'**
   String ordersTabInactive(int count);
 
   /// No description provided for @emptyOrdersBucketTitle.

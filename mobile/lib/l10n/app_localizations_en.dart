@@ -29,22 +29,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String ordersTabRequested(int count) {
-    return '$count requested';
+    return '$count Requested';
   }
 
   @override
   String ordersTabInTransit(int count) {
-    return '$count in transit';
+    return '$count In Transit';
   }
 
   @override
   String ordersTabReceived(int count) {
-    return '$count received';
+    return '$count Received';
   }
 
   @override
   String ordersTabInactive(int count) {
-    return '$count inactive';
+    return '$count Inactive';
   }
 
   @override

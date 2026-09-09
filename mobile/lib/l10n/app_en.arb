@@ -7,19 +7,19 @@
   "tabOffers": "Offers",
   "tabOrders": "Orders",
   "tabInbox": "Inbox",
-  "ordersTabRequested": "{count} requested",
+  "ordersTabRequested": "{count} Requested",
   "@ordersTabRequested": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "ordersTabInTransit": "{count} in transit",
+  "ordersTabInTransit": "{count} In Transit",
   "@ordersTabInTransit": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "ordersTabReceived": "{count} received",
+  "ordersTabReceived": "{count} Received",
   "@ordersTabReceived": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "ordersTabInactive": "{count} inactive",
+  "ordersTabInactive": "{count} Inactive",
   "@ordersTabInactive": {
     "placeholders": { "count": { "type": "int" } }
   },
