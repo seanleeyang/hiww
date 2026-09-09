@@ -1044,6 +1044,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionSentPayment => 'ฉันชำระเงินแล้ว';
 
   @override
+  String get promptPayQrTitle => 'คิวอาร์โค้ด PromptPay';
+
+  @override
+  String get promptPayQrComingSoon =>
+      'ระบบสแกนจ่ายกำลังจะมาเร็วๆ นี้ ตอนนี้กรุณาทำตามคำแนะนำด้านบน';
+
+  @override
   String get notePaymentConfirmedWaitingBuy =>
       'ยืนยันการชำระเงินแล้ว รอนักเดินทางซื้อสินค้า';
 

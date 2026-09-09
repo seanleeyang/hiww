@@ -1946,6 +1946,18 @@ abstract class AppLocalizations {
   /// **'I\'ve sent the payment'**
   String get actionSentPayment;
 
+  /// No description provided for @promptPayQrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PromptPay QR code'**
+  String get promptPayQrTitle;
+
+  /// No description provided for @promptPayQrComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan-to-pay is coming soon. For now, follow the instructions above.'**
+  String get promptPayQrComingSoon;
+
   /// No description provided for @notePaymentConfirmedWaitingBuy.
   ///
   /// In en, this message translates to:

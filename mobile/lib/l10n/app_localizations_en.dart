@@ -1068,6 +1068,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionSentPayment => 'I\'ve sent the payment';
 
   @override
+  String get promptPayQrTitle => 'PromptPay QR code';
+
+  @override
+  String get promptPayQrComingSoon =>
+      'Scan-to-pay is coming soon. For now, follow the instructions above.';
+
+  @override
   String get notePaymentConfirmedWaitingBuy =>
       'Payment confirmed. Waiting for the traveler to buy the item.';
 

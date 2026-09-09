@@ -330,6 +330,8 @@
   "contactHiwwForPayment": "ติดต่อทีมงาน Hiww เพื่อจัดการการชำระเงิน",
   "amountReference": "จำนวนเงิน {total}  ·  เลขอ้างอิง {id}",
   "noteToldUsPaid": "คุณแจ้งว่าชำระเงินแล้ว เราจะยืนยันเมื่อได้รับเงิน",
+  "promptPayQrTitle": "คิวอาร์โค้ด PromptPay",
+  "promptPayQrComingSoon": "ระบบสแกนจ่ายกำลังจะมาเร็วๆ นี้ ตอนนี้กรุณาทำตามคำแนะนำด้านบน",
   "actionSentPayment": "ฉันชำระเงินแล้ว",
   "notePaymentConfirmedWaitingBuy": "ยืนยันการชำระเงินแล้ว รอนักเดินทางซื้อสินค้า",
   "notePaymentConfirmedUploadReceipt": "ยืนยันการชำระเงินแล้ว ซื้อสินค้าแล้วอัปโหลดรูปใบเสร็จ — ให้เห็นวันที่และสินค้าชัดเจน จะปลดล็อกขั้นตอนการจัดส่ง",

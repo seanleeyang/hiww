@@ -442,6 +442,8 @@
   },
   "noteToldUsPaid": "You've told us you paid. We'll confirm once it lands.",
   "actionSentPayment": "I've sent the payment",
+  "promptPayQrTitle": "PromptPay QR code",
+  "promptPayQrComingSoon": "Scan-to-pay is coming soon. For now, follow the instructions above.",
   "notePaymentConfirmedWaitingBuy": "Payment confirmed. Waiting for the traveler to buy the item.",
   "notePaymentConfirmedUploadReceipt": "Payment confirmed. Buy the item, then upload a photo of the shop receipt — clear date and the item in frame. That unlocks the shipping step.",
   "actionUploading": "Uploading…",

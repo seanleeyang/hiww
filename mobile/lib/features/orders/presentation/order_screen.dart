@@ -279,6 +279,8 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
               ),
             ),
             const SizedBox(height: 12),
+            const _PromptPayQrPlaceholder(),
+            const SizedBox(height: 12),
             if (o.paymentClaimedAt != null)
               note(l10n.noteToldUsPaid)
             else
@@ -425,6 +427,48 @@ class _PaymentCountdownBannerState extends ConsumerState<_PaymentCountdownBanner
           Icon(Icons.timer_outlined, size: 18, color: fg),
           const SizedBox(width: 8),
           Expanded(child: Text(label, style: TextStyle(color: fg, fontSize: 13))),
+        ],
+      ),
+    );
+  }
+}
+
+/// Reserved space for the PromptPay QR code a real payment gateway (e.g.
+/// Xendit) will generate — no gateway is wired up yet (manual-money pilot),
+/// so this is a placeholder box, not a real code. Swap this out for the
+/// actual generated image once that integration lands.
+class _PromptPayQrPlaceholder extends StatelessWidget {
+  const _PromptPayQrPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    return SoftCard(
+      child: Column(
+        children: [
+          Text(l10n.promptPayQrTitle, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 12),
+          Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: scheme.outlineVariant),
+            ),
+            child: Icon(
+              Icons.qr_code_2,
+              size: 96,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.promptPayQrComingSoon,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+          ),
         ],
       ),
     );

@@ -127,8 +127,9 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
               onPressed: canAdd ? _add : null,
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
-                disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
+                disabledBackgroundColor: Colors.white,
                 foregroundColor: widget.background,
+                disabledForegroundColor: widget.background.withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: const StadiumBorder(),
               ),
