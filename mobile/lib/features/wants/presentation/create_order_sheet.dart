@@ -7,12 +7,14 @@ import '../../../core/cities.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/breakdown_row.dart';
 import '../../../ui/budget_stepper.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
 import '../../discovery/data/discovery_repository.dart';
+import '../../shared/data/pricing_repository.dart';
 import '../data/wants_repository.dart';
 
 /// Empty-string sentinel for "nothing picked yet" — lets a dropdown show a
@@ -702,10 +704,32 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   const SizedBox(height: 6),
                   IconLine(Icons.event_outlined, 'Need by ${shortDate(_needBy)}'),
                 ],
-                const SizedBox(height: 6),
-                IconLine(Icons.sell_outlined, l10n.wantBudgetLine(money(_budget))),
               ],
             ),
+          ),
+          const SizedBox(height: 14),
+          SoftCard(
+            child: ref.watch(pricingPreviewProvider(_budget.toString())).when(
+                  data: (p) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      BreakdownRow(l10n.priceBreakdownProductPrice, p.itemPriceLabel),
+                      BreakdownRow(l10n.priceBreakdownTravellerReward, p.travellerRewardLabel),
+                      BreakdownRow(l10n.priceBreakdownServiceFee, p.serviceFeeLabel),
+                      const Divider(height: 16),
+                      BreakdownRow(l10n.priceBreakdownTotal, p.shopperTotalLabel, bold: true),
+                    ],
+                  ),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Center(
+                      child: SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                    ),
+                  ),
+                  // Don't block review over a display-only preview failing —
+                  // fall back to the plain budget figure.
+                  error: (_, _) => IconLine(Icons.sell_outlined, l10n.wantBudgetLine(money(_budget))),
+                ),
           ),
           if (_error != null && _page == 1) ...[
             const SizedBox(height: 12),
