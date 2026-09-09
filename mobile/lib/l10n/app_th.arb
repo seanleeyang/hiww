@@ -221,6 +221,7 @@
   "labelCountry": "ประเทศ",
   "selectOption": "เลือก",
   "fieldCity": "เมือง",
+  "cityOptionAny": "ที่ไหนก็ได้",
   "cityOptionOthers": "อื่นๆ",
   "hintCityCustom": "ระบุชื่อเมือง",
   "errorBuyInCountryRequired": "ซื้อที่ (ประเทศ) ห้ามเว้นว่าง",
@@ -232,7 +233,7 @@
   "actionNext": "ถัดไป",
   "summaryScreenTitle": "สรุปคำสั่งซื้อ",
   "actionSendRequest": "ส่งคำขอ",
-  "actionPostMyWant": "ลงรายการต้องการของฉัน",
+  "actionPostMyWant": "ส่ง",
 
   "wantDetailTitle": "รายการต้องการ",
   "directRequestBadge": "ส่งตรงถึงนักเดินทางคนเดียว — ไม่แสดงต่อสาธารณะ",

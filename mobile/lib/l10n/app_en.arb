@@ -269,6 +269,7 @@
   "labelCountry": "Country",
   "selectOption": "Select",
   "fieldCity": "City",
+  "cityOptionAny": "Any",
   "cityOptionOthers": "Others",
   "hintCityCustom": "Enter your city",
   "errorBuyInCountryRequired": "Buy in (Country) cannot be left blank",
@@ -283,7 +284,7 @@
   "actionNext": "Next",
   "summaryScreenTitle": "Summary",
   "actionSendRequest": "Send request",
-  "actionPostMyWant": "Post my want",
+  "actionPostMyWant": "Submit",
 
   "wantDetailTitle": "Want",
   "directRequestBadge": "Sent directly to one traveler — not shown publicly",

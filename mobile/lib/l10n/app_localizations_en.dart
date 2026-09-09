@@ -697,6 +697,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectOption => 'Select';
 
   @override
+  String get cityOptionAny => 'Any';
+
+  @override
   String get cityOptionOthers => 'Others';
 
   @override
@@ -741,7 +744,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionSendRequest => 'Send request';
 
   @override
-  String get actionPostMyWant => 'Post my want';
+  String get actionPostMyWant => 'Submit';
 
   @override
   String get wantDetailTitle => 'Want';

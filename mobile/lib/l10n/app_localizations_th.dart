@@ -687,6 +687,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get selectOption => 'เลือก';
 
   @override
+  String get cityOptionAny => 'ที่ไหนก็ได้';
+
+  @override
   String get cityOptionOthers => 'อื่นๆ';
 
   @override
@@ -723,7 +726,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionSendRequest => 'ส่งคำขอ';
 
   @override
-  String get actionPostMyWant => 'ลงรายการต้องการของฉัน';
+  String get actionPostMyWant => 'ส่ง';
 
   @override
   String get wantDetailTitle => 'รายการต้องการ';

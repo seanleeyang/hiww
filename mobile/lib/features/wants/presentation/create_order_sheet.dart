@@ -23,6 +23,10 @@ const _unselected = '';
 /// a city not in the curated list.
 const _othersCity = '__others__';
 
+/// Sentinel for "Any" in the Buy-in city dropdown — a deliberate choice
+/// meaning no specific city, distinct from [_unselected] (no choice made).
+const _anyCity = '__any__';
+
 /// Matches [sourceCity] against the curated list for [country]: an exact
 /// match preselects that city, anything else preselects "Others" with the
 /// value carried over into the custom field.
@@ -103,8 +107,19 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
 
   bool get _isDirectRequest => widget.targetTripId != null;
 
-  String get _cityValue =>
-      _cityChoice == _othersCity ? _cityCustom.text.trim() : (_cityChoice == _unselected ? '' : _cityChoice);
+  String get _cityValue {
+    if (_cityChoice == _othersCity) return _cityCustom.text.trim();
+    if (_cityChoice == _unselected || _cityChoice == _anyCity) return '';
+    return _cityChoice;
+  }
+
+  /// Whether the shopper has made a real choice for Buy-in city — "Any" and
+  /// a filled-in "Others" field both count; the empty placeholder and an
+  /// empty "Others" field don't. Distinct from [_cityValue], which is the
+  /// empty string for "Any" too (no specific city to display/submit).
+  bool get _cityIsChosen =>
+      _cityChoice != _unselected && (_cityChoice != _othersCity || _cityCustom.text.trim().isNotEmpty);
+
   String get _destCityValue => _destCityChoice == _othersCity
       ? _destCityCustom.text.trim()
       : (_destCityChoice == _unselected ? '' : _destCityChoice);
@@ -155,7 +170,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       _error = l10n.errorBuyInCountryRequired;
       return false;
     }
-    if (_cityValue.isEmpty) {
+    if (!_cityIsChosen) {
       _error = l10n.errorBuyInCityRequired;
       return false;
     }
@@ -482,6 +497,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   decoration: InputDecoration(labelText: l10n.fieldCity),
                   items: [
                     DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
+                    DropdownMenuItem(value: _anyCity, child: Text(l10n.cityOptionAny)),
                     for (final c in kCities.where((c) => c.countryCode == _country))
                       DropdownMenuItem(value: c.city, child: Text(c.city)),
                     DropdownMenuItem(value: _othersCity, child: Text(l10n.cityOptionOthers)),

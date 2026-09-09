@@ -1334,6 +1334,12 @@ abstract class AppLocalizations {
   /// **'Select'**
   String get selectOption;
 
+  /// No description provided for @cityOptionAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get cityOptionAny;
+
   /// No description provided for @cityOptionOthers.
   ///
   /// In en, this message translates to:
@@ -1403,7 +1409,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionPostMyWant.
   ///
   /// In en, this message translates to:
-  /// **'Post my want'**
+  /// **'Submit'**
   String get actionPostMyWant;
 
   /// No description provided for @wantDetailTitle.
