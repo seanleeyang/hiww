@@ -398,6 +398,7 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
             const SizedBox(height: 12),
             OfferNegotiationActions(
               offer: o,
+              myRole: 'shopper',
               enabled: widget.canAccept,
               onAccept: _accept,
               onCounter: _counter,

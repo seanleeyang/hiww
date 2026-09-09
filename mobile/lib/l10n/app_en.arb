@@ -373,6 +373,14 @@
   "actionCounter": "Counter Offer",
   "actionDecline": "Decline",
   "actionDeclineFinalOffer": "Decline (final offer)",
+  "offerHistoryOffered": "Offered {price}",
+  "@offerHistoryOffered": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "offerHistoryCountered": "Countered at {price}",
+  "@offerHistoryCountered": {
+    "placeholders": { "price": { "type": "String" } }
+  },
 
   "emptyOrdersTitle": "No orders yet",
   "emptyOrdersMessage": "When you accept an offer or one of your offers is accepted, the order shows up here so you can track every step.",

@@ -421,6 +421,7 @@ class _WantCardState extends ConsumerState<_WantCard> {
             const SizedBox(height: 12),
             OfferNegotiationActions(
               offer: widget.pendingOffer!,
+              myRole: 'shopper',
               enabled: w.status == 'open',
               onAccept: _accept,
               onCounter: _counter,
@@ -497,6 +498,7 @@ class _NegotiationCardState extends ConsumerState<_NegotiationCard> {
           const SizedBox(height: 12),
           OfferNegotiationActions(
             offer: o,
+            myRole: 'traveler',
             enabled: o.requestStatus == 'open',
             onAccept: _accept,
             onCounter: _counter,

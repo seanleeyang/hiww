@@ -1754,6 +1754,18 @@ abstract class AppLocalizations {
   /// **'Decline (final offer)'**
   String get actionDeclineFinalOffer;
 
+  /// No description provided for @offerHistoryOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'Offered {price}'**
+  String offerHistoryOffered(String price);
+
+  /// No description provided for @offerHistoryCountered.
+  ///
+  /// In en, this message translates to:
+  /// **'Countered at {price}'**
+  String offerHistoryCountered(String price);
+
   /// No description provided for @emptyOrdersTitle.
   ///
   /// In en, this message translates to:

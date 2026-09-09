@@ -9,10 +9,16 @@ import '../domain/offer.dart';
 /// only when it's the viewer's turn to respond (`offer.myTurn`) — the other
 /// side sees a waiting note instead. Counters are capped at 2 total; once
 /// `canCounter` is false the only options left are accept or decline.
+///
+/// Also renders the offer's price history as a read-only, chat-styled
+/// timeline above the controls: there's no real messaging thread for a
+/// negotiation (chat only opens once an order exists), so this is the
+/// closest thing to "seeing the back-and-forth" until then.
 class OfferNegotiationActions extends StatefulWidget {
   const OfferNegotiationActions({
     super.key,
     required this.offer,
+    required this.myRole,
     required this.enabled,
     required this.onAccept,
     required this.onCounter,
@@ -20,6 +26,11 @@ class OfferNegotiationActions extends StatefulWidget {
   });
 
   final Offer offer;
+
+  /// Which side the viewer is playing — 'shopper' or 'traveler' — used to
+  /// align the price-history bubbles ("mine" on the right, matching the
+  /// order chat's own bubble convention).
+  final String myRole;
 
   /// Additional gate beyond the server's `myTurn` — e.g. the want having
   /// since closed via a different offer.
@@ -93,6 +104,9 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
     if (o.status != 'pending') return const SizedBox.shrink();
 
     final muted = TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13);
+    final history = o.priceHistory.isEmpty
+        ? null
+        : _OfferHistoryTimeline(history: o.priceHistory, myRole: widget.myRole);
 
     if (!o.myTurn || !widget.enabled) {
       final waitingLabel = widget.enabled
@@ -100,11 +114,17 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
               ? l10n.waitingForResponseWithCountdown(countdown(o.respondBy))
               : l10n.waitingForResponse)
           : l10n.wantNoLongerOpen;
-      return Row(
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(Icons.hourglass_empty, size: 16, color: muted.color),
-          const SizedBox(width: 6),
-          Text(waitingLabel, style: muted),
+          if (history != null) ...[history, const SizedBox(height: 8)],
+          Row(
+            children: [
+              Icon(Icons.hourglass_empty, size: 16, color: muted.color),
+              const SizedBox(width: 6),
+              Text(waitingLabel, style: muted),
+            ],
+          ),
         ],
       );
     }
@@ -112,6 +132,7 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (history != null) ...[history, const SizedBox(height: 8)],
         if (o.respondBy != null) ...[
           Text(l10n.respondWithin(countdown(o.respondBy)), style: muted),
           const SizedBox(height: 8),
@@ -145,6 +166,83 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
             child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13)),
           ),
       ],
+    );
+  }
+}
+
+/// Read-only, chat-styled record of an offer's price history. Round 0 is
+/// always the traveler's opening price; every entry after that is a counter
+/// from whichever side didn't propose the current price.
+class _OfferHistoryTimeline extends StatelessWidget {
+  const _OfferHistoryTimeline({required this.history, required this.myRole});
+
+  final List<PriceHistoryEntry> history;
+  final String myRole;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < history.length; i++)
+          _HistoryBubble(
+            entry: history[i],
+            mine: history[i].by == myRole,
+            label: i == 0
+                ? l10n.offerHistoryOffered(money(history[i].price))
+                : l10n.offerHistoryCountered(money(history[i].price)),
+          ),
+      ],
+    );
+  }
+}
+
+/// Styled to match `OrderChatScreen`'s `_Bubble` — same shape, same
+/// timestamp treatment — so this genuinely reads as "the chat" for a
+/// negotiation that doesn't have a real messaging thread yet.
+class _HistoryBubble extends StatelessWidget {
+  const _HistoryBubble({required this.entry, required this.mine, required this.label});
+
+  final PriceHistoryEntry entry;
+  final bool mine;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Align(
+      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.76),
+        decoration: BoxDecoration(
+          color: mine ? scheme.primary : scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(mine ? 16 : 4),
+            bottomRight: Radius.circular(mine ? 4 : 16),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: TextStyle(color: mine ? scheme.onPrimary : scheme.onSurface)),
+            if (entry.at != null) ...[
+              const SizedBox(height: 3),
+              Text(
+                chatTimestamp(entry.at),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: (mine ? scheme.onPrimary : scheme.onSurfaceVariant).withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

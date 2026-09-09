@@ -949,6 +949,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionDeclineFinalOffer => 'Decline (final offer)';
 
   @override
+  String offerHistoryOffered(String price) {
+    return 'Offered $price';
+  }
+
+  @override
+  String offerHistoryCountered(String price) {
+    return 'Countered at $price';
+  }
+
+  @override
   String get emptyOrdersTitle => 'No orders yet';
 
   @override

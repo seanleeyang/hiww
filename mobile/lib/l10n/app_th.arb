@@ -295,6 +295,8 @@
   "actionCounter": "ยื่นข้อเสนอโต้กลับ",
   "actionDecline": "ปฏิเสธ",
   "actionDeclineFinalOffer": "ปฏิเสธ (ข้อเสนอสุดท้าย)",
+  "offerHistoryOffered": "เสนอราคา {price}",
+  "offerHistoryCountered": "ต่อรองที่ {price}",
 
   "emptyOrdersTitle": "ยังไม่มีคำสั่งซื้อ",
   "emptyOrdersMessage": "เมื่อคุณรับข้อเสนอ หรือข้อเสนอของคุณถูกรับ คำสั่งซื้อจะปรากฏที่นี่ให้คุณติดตามได้ทุกขั้นตอน",

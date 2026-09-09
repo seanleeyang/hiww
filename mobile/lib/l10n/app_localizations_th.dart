@@ -925,6 +925,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionDeclineFinalOffer => 'ปฏิเสธ (ข้อเสนอสุดท้าย)';
 
   @override
+  String offerHistoryOffered(String price) {
+    return 'เสนอราคา $price';
+  }
+
+  @override
+  String offerHistoryCountered(String price) {
+    return 'ต่อรองที่ $price';
+  }
+
+  @override
   String get emptyOrdersTitle => 'ยังไม่มีคำสั่งซื้อ';
 
   @override
