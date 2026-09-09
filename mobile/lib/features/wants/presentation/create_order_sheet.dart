@@ -2,21 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/budget_stepper.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/image_picker_field.dart';
+import '../../../ui/marketplace_bits.dart';
+import '../../../ui/soft_card.dart';
 import '../../discovery/data/discovery_repository.dart';
-import '../domain/want_draft.dart';
+import '../data/wants_repository.dart';
 
 /// Empty-string sentinel for "no country picked yet" — lets the dropdown
 /// show a real "Select" placeholder entry instead of defaulting to a country.
 const _unselected = '';
 
-/// Step 1 of creating a want: collects every field, then hands a [WantDraft]
-/// to `/wants/new/summary` for review before the actual API call. Pass
+/// Creating a want is a near-full-height bottom sheet with two swipeable
+/// pages — the form, then a Summary review — not separate routes. Pass
 /// [targetTripId] for "Request from this trip" — sends the want directly and
 /// privately to that trip's traveler instead of posting it publicly.
 ///
@@ -32,14 +35,12 @@ Future<void> showCreateOrderSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: _CreateOrderSheet(
-        sourceCountry: sourceCountry,
-        sourceCity: sourceCity,
-        targetTripId: targetTripId,
-        targetTravelerName: targetTravelerName,
-      ),
+    useSafeArea: true,
+    builder: (_) => _CreateOrderSheet(
+      sourceCountry: sourceCountry,
+      sourceCity: sourceCity,
+      targetTripId: targetTripId,
+      targetTravelerName: targetTravelerName,
     ),
   );
 }
@@ -62,6 +63,9 @@ class _CreateOrderSheet extends ConsumerStatefulWidget {
 }
 
 class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
+  final _pageController = PageController();
+  int _page = 0;
+
   final _productUrl = TextEditingController();
   final _title = TextEditingController();
   final _details = TextEditingController();
@@ -75,6 +79,9 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   int _qty = 1;
   DateTime? _needBy;
   String? _error;
+  bool _submitting = false;
+
+  bool get _isDirectRequest => widget.targetTripId != null;
 
   String _initialCountry() {
     final source = widget.sourceCountry;
@@ -83,6 +90,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _productUrl.dispose();
     _title.dispose();
     _details.dispose();
@@ -91,358 +99,546 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
     super.dispose();
   }
 
-  void _next() {
+  /// Returns whether every required field is filled; sets [_error] as a
+  /// side effect (to the first missing/invalid one) either way.
+  bool _validate() {
     final l10n = AppLocalizations.of(context)!;
     final title = _title.text.trim();
     final details = _details.text.trim();
     if (_photoUrl == null || _photoUrl!.isEmpty) {
-      setState(() => _error = l10n.errorPhotoRequired);
-      return;
+      _error = l10n.errorPhotoRequired;
+      return false;
     }
     if (title.isEmpty) {
-      setState(() => _error = l10n.errorWantTitleBlank);
-      return;
+      _error = l10n.errorWantTitleBlank;
+      return false;
     }
     if (title.length < 3) {
-      setState(() => _error = l10n.errorWantTitleTooShort);
-      return;
+      _error = l10n.errorWantTitleTooShort;
+      return false;
     }
     if (details.isEmpty) {
-      setState(() => _error = l10n.errorWantDetailsBlank);
-      return;
+      _error = l10n.errorWantDetailsBlank;
+      return false;
     }
     if (details.length < 10) {
-      setState(() => _error = l10n.errorWantDetailsTooShort);
-      return;
+      _error = l10n.errorWantDetailsTooShort;
+      return false;
     }
     if (_country.isEmpty) {
-      setState(() => _error = l10n.errorBuyInCountryRequired);
-      return;
+      _error = l10n.errorBuyInCountryRequired;
+      return false;
     }
     if (_city.text.trim().isEmpty) {
-      setState(() => _error = l10n.errorBuyInCityRequired);
-      return;
+      _error = l10n.errorBuyInCityRequired;
+      return false;
     }
     if (_destCountry.isEmpty) {
-      setState(() => _error = l10n.errorDeliverToCountryRequired);
-      return;
+      _error = l10n.errorDeliverToCountryRequired;
+      return false;
     }
     if (_destCity.text.trim().isEmpty) {
-      setState(() => _error = l10n.errorDeliverToCityRequired);
-      return;
+      _error = l10n.errorDeliverToCityRequired;
+      return false;
     }
-    setState(() => _error = null);
+    _error = null;
+    return true;
+  }
 
-    final draft = WantDraft(
-      productUrl: _productUrl.text.trim().isEmpty ? null : _productUrl.text.trim(),
-      imageUrl: _photoUrl,
-      title: title,
-      itemDescription: details,
-      category: _category,
-      quantity: _qty,
-      needBy: _needBy,
-      sourceCountry: _country,
-      sourceCity: _city.text.trim(),
-      destinationCountry: _destCountry,
-      destinationCity: _destCity.text.trim(),
-      budget: _budget,
-      targetTripId: widget.targetTripId,
-      targetTravelerName: widget.targetTravelerName,
-    );
-    Navigator.of(context).pop();
-    context.push('/wants/new/summary', extra: draft);
+  void _next() {
+    final ok = _validate();
+    setState(() {});
+    if (ok) {
+      _pageController.animateToPage(1, duration: const Duration(milliseconds: 280), curve: Curves.easeInOut);
+    }
+  }
+
+  void _goToPage(int index) {
+    _pageController.animateToPage(index, duration: const Duration(milliseconds: 280), curve: Curves.easeInOut);
+  }
+
+  /// Swiping straight to the Summary page bypasses the "Next" button, so
+  /// validate here too — bounce back to the form (with the error showing)
+  /// if something required is still missing.
+  void _onPageChanged(int index) {
+    if (index == 1 && !_validate()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _goToPage(0);
+      });
+    }
+    setState(() => _page = index);
+  }
+
+  Future<void> _submit() async {
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      final id = await ref.read(wantsRepositoryProvider).create(
+            title: _title.text.trim(),
+            itemDescription: _details.text.trim(),
+            sourceCountry: _country,
+            sourceCity: _city.text.trim(),
+            category: _category,
+            estimatedWeightKg: 1,
+            budget: '${_budget.toStringAsFixed(0)}.00',
+            quantity: _qty,
+            needBy: _needBy,
+            imageUrl: _photoUrl,
+            targetTripId: widget.targetTripId,
+            destinationCountry: _destCountry,
+            destinationCity: _destCity.text.trim(),
+            productUrl: _productUrl.text.trim().isEmpty ? null : _productUrl.text.trim(),
+          );
+      ref.invalidate(myWantsProvider);
+      ref.invalidate(feedProvider);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      context.push('/wants/$id');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.message;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.92,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 48,
+                  child: _page == 1
+                      ? IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => _goToPage(0),
+                        )
+                      : null,
+                ),
+                Expanded(
+                  child: Text(
+                    _page == 0
+                        ? (_isDirectRequest ? l10n.actionRequestFromThisTrip : l10n.actionPostAWant)
+                        : l10n.summaryScreenTitle,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              children: [
+                _buildFormPage(context, l10n),
+                _buildSummaryPage(context, l10n),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormPage(BuildContext context, AppLocalizations l10n) {
     final routeMatch = _country.isEmpty ? null : ref.watch(routeMatchProvider(_country));
     final scheme = Theme.of(context).colorScheme;
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              widget.targetTripId != null ? l10n.actionRequestFromThisTrip : l10n.actionPostAWant,
-              style: Theme.of(context).textTheme.titleLarge,
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.viewInsetsOf(context).bottom + 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: scheme.tertiaryContainer,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.lightbulb_outline, size: 18, color: scheme.onTertiaryContainer),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.proTipTitle,
+                        style: TextStyle(fontWeight: FontWeight.w700, color: scheme.onTertiaryContainer),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.proTipCreateOrderBody,
+                        style: TextStyle(fontSize: 13, color: scheme.onTertiaryContainer),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_isDirectRequest) ...[
+            const SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: scheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(12),
+                color: scheme.primaryContainer,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.lightbulb_outline, size: 18, color: scheme.onTertiaryContainer),
+                  Icon(Icons.lock_outline, size: 18, color: scheme.onPrimaryContainer),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.proTipTitle,
-                          style: TextStyle(fontWeight: FontWeight.w700, color: scheme.onTertiaryContainer),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.proTipCreateOrderBody,
-                          style: TextStyle(fontSize: 13, color: scheme.onTertiaryContainer),
-                        ),
-                      ],
+                    child: Text(
+                      l10n.directRequestNotice(widget.targetTravelerName ?? l10n.fallbackATraveler),
+                      style: TextStyle(fontSize: 13, color: scheme.onPrimaryContainer),
                     ),
                   ),
                 ],
               ),
             ),
-            if (widget.targetTripId != null) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
+          ],
+          const SizedBox(height: 16),
+          TextField(
+            controller: _productUrl,
+            keyboardType: TextInputType.url,
+            decoration: InputDecoration(
+              labelText: l10n.fieldProductUrlOptional,
+              hintText: l10n.hintProductUrl,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ImagePickerField(
+            value: _photoUrl,
+            onChanged: (url) => setState(() => _photoUrl = url),
+            label: l10n.fieldPhoto,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _title,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: l10n.fieldItem,
+              hintText: l10n.hintItemExample,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Text(l10n.fieldDetails, style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(width: 4),
+              Tooltip(
+                triggerMode: TooltipTriggerMode.tap,
+                message: l10n.tooltipProductDetails,
+                child: Icon(Icons.help_outline, size: 14, color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _details,
+            maxLines: 2,
+            decoration: InputDecoration(hintText: l10n.hintDetails),
+          ),
+          const SizedBox(height: 14),
+          Text(l10n.labelCategory, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 8),
+          CategoryChips(
+            includeAll: false,
+            selected: _category,
+            onSelected: (c) => setState(() => _category = c ?? 'other'),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.lock_outline, size: 18, color: scheme.onPrimaryContainer),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.directRequestNotice(widget.targetTravelerName ?? l10n.fallbackATraveler),
-                        style: TextStyle(fontSize: 13, color: scheme.onPrimaryContainer),
-                      ),
+                    Text(l10n.labelQuantity, style: Theme.of(context).textTheme.labelLarge),
+                    const SizedBox(height: 8),
+                    _QtyStepper(
+                      value: _qty,
+                      onChanged: (v) => setState(() => _qty = v),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(l10n.labelNeedBy, style: Theme.of(context).textTheme.labelLarge),
+                        const SizedBox(width: 4),
+                        Tooltip(
+                          triggerMode: TooltipTriggerMode.tap,
+                          message: l10n.tooltipNeedBy,
+                          child: Icon(Icons.help_outline, size: 14, color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _pickDate,
+                            icon: const Icon(Icons.event_outlined, size: 18),
+                            label: Text(_needBy == null ? l10n.anyTime : shortDate(_needBy)),
+                          ),
+                        ),
+                        if (_needBy != null) ...[
+                          const SizedBox(width: 4),
+                          IconButton(
+                            onPressed: () => setState(() => _needBy = null),
+                            icon: const Icon(Icons.close, size: 18),
+                            tooltip: l10n.anyTime,
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
-            const SizedBox(height: 16),
-            TextField(
-              controller: _productUrl,
-              keyboardType: TextInputType.url,
-              decoration: InputDecoration(
-                labelText: l10n.fieldProductUrlOptional,
-                hintText: l10n.hintProductUrl,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ImagePickerField(
-              value: _photoUrl,
-              onChanged: (url) => setState(() => _photoUrl = url),
-              label: l10n.fieldPhoto,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _title,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: l10n.fieldItem,
-                hintText: l10n.hintItemExample,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Text(l10n.fieldDetails, style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(width: 4),
-                Tooltip(
-                  triggerMode: TooltipTriggerMode.tap,
-                  message: l10n.tooltipProductDetails,
-                  child: Icon(Icons.help_outline, size: 14, color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 18),
+          Text(l10n.labelBuyIn, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _country,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: l10n.labelCountry),
+                  items: [
+                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectCountry)),
+                    for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
+                  ],
+                  onChanged: (v) => setState(() => _country = v ?? _unselected),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _details,
-              maxLines: 2,
-              decoration: InputDecoration(hintText: l10n.hintDetails),
-            ),
-            const SizedBox(height: 14),
-            Text(l10n.labelCategory, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            CategoryChips(
-              includeAll: false,
-              selected: _category,
-              onSelected: (c) => setState(() => _category = c ?? 'other'),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.labelQuantity, style: Theme.of(context).textTheme.labelLarge),
-                      const SizedBox(height: 8),
-                      _QtyStepper(
-                        value: _qty,
-                        onChanged: (v) => setState(() => _qty = v),
-                      ),
-                    ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _city,
+                  decoration: InputDecoration(
+                    labelText: l10n.fieldCity,
+                    hintText: l10n.hintCityExample,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(l10n.labelNeedBy, style: Theme.of(context).textTheme.labelLarge),
-                          const SizedBox(width: 4),
-                          Tooltip(
-                            triggerMode: TooltipTriggerMode.tap,
-                            message: l10n.tooltipNeedBy,
-                            child: Icon(Icons.help_outline, size: 14, color: scheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _pickDate,
-                              icon: const Icon(Icons.event_outlined, size: 18),
-                              label: Text(_needBy == null ? l10n.anyTime : shortDate(_needBy)),
-                            ),
-                          ),
-                          if (_needBy != null) ...[
-                            const SizedBox(width: 4),
-                            IconButton(
-                              onPressed: () => setState(() => _needBy = null),
-                              icon: const Icon(Icons.close, size: 18),
-                              tooltip: l10n.anyTime,
+              ),
+            ],
+          ),
+          if (routeMatch != null) ...[
+            const SizedBox(height: 4),
+            routeMatch.maybeWhen(
+              data: (m) => m.count == 0
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: scheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.flight_takeoff, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.travelersHeadingSoon(m.count, countryName(_country)),
+                                style: const TextStyle(fontSize: 13),
+                              ),
                             ),
                           ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text(l10n.labelBuyIn, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _country,
-                    isExpanded: true,
-                    decoration: InputDecoration(labelText: l10n.labelCountry),
-                    items: [
-                      DropdownMenuItem(value: _unselected, child: Text(l10n.selectCountry)),
-                      for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
-                    ],
-                    onChanged: (v) => setState(() => _country = v ?? _unselected),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _city,
-                    decoration: InputDecoration(
-                      labelText: l10n.fieldCity,
-                      hintText: l10n.hintCityExample,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (routeMatch != null) ...[
-              const SizedBox(height: 4),
-              routeMatch.maybeWhen(
-                data: (m) => m.count == 0
-                    ? const SizedBox.shrink()
-                    : Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: scheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.flight_takeoff, size: 18),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  l10n.travelersHeadingSoon(m.count, countryName(_country)),
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                       ),
-                orElse: () => const SizedBox.shrink(),
-              ),
-            ],
-            const SizedBox(height: 18),
-            Text(l10n.labelDeliverTo, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _destCountry,
-                    isExpanded: true,
-                    decoration: InputDecoration(labelText: l10n.labelCountry),
-                    items: [
-                      DropdownMenuItem(value: _unselected, child: Text(l10n.selectCountry)),
-                      for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
-                    ],
-                    onChanged: (v) => setState(() => _destCountry = v ?? _unselected),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _destCity,
-                    decoration: InputDecoration(
-                      labelText: l10n.fieldCity,
-                      hintText: l10n.hintCityExample,
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text(l10n.labelBudget, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            BudgetStepper(
-              value: _budget,
-              onChanged: (v) => setState(() => _budget = v),
-            ),
-            if (_qty > 1) ...[
-              const SizedBox(height: 4),
-              Text(
-                l10n.budgetTotalNote(_qty),
-                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-              ),
-            ],
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: TextStyle(color: scheme.error)),
-            ],
-            const SizedBox(height: 18),
-            FilledButton(
-              onPressed: _next,
-              child: Text(l10n.actionNext),
+              orElse: () => const SizedBox.shrink(),
             ),
           ],
-        ),
+          const SizedBox(height: 18),
+          Text(l10n.labelDeliverTo, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _destCountry,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: l10n.labelCountry),
+                  items: [
+                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectCountry)),
+                    for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
+                  ],
+                  onChanged: (v) => setState(() => _destCountry = v ?? _unselected),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _destCity,
+                  decoration: InputDecoration(
+                    labelText: l10n.fieldCity,
+                    hintText: l10n.hintCityExample,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(l10n.labelBudget, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 8),
+          BudgetStepper(
+            value: _budget,
+            onChanged: (v) => setState(() => _budget = v),
+          ),
+          if (_qty > 1) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.budgetTotalNote(_qty),
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            ),
+          ],
+          if (_error != null && _page == 0) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: TextStyle(color: scheme.error)),
+          ],
+          const SizedBox(height: 18),
+          FilledButton(
+            onPressed: _next,
+            child: Text(l10n.actionNext),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryPage(BuildContext context, AppLocalizations l10n) {
+    final scheme = Theme.of(context).colorScheme;
+    final title = _title.text.trim();
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              if (_photoUrl != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(_photoUrl!, width: 56, height: 56, fit: BoxFit.cover),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: Text(title, style: Theme.of(context).textTheme.headlineSmall),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_isDirectRequest) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.lock_outline, size: 18, color: scheme.onPrimaryContainer),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.directRequestNotice(widget.targetTravelerName ?? l10n.fallbackATraveler),
+                      style: TextStyle(fontSize: 13, color: scheme.onPrimaryContainer),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+          SoftCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_productUrl.text.trim().isNotEmpty) ...[
+                  IconLine(Icons.link, l10n.wantProductUrlLine(_productUrl.text.trim())),
+                  const SizedBox(height: 8),
+                ],
+                Text(_details.text.trim()),
+                const SizedBox(height: 10),
+                IconLine(Icons.category_outlined, _category),
+                const SizedBox(height: 6),
+                IconLine(Icons.numbers, l10n.wantQuantityLine(_qty)),
+                const SizedBox(height: 6),
+                IconLine(
+                  Icons.public,
+                  l10n.wantBuyInLine(_city.text.trim().isNotEmpty ? _city.text.trim() : countryName(_country)),
+                ),
+                const SizedBox(height: 6),
+                IconLine(
+                  Icons.local_shipping_outlined,
+                  l10n.wantDeliverToLine(
+                    _destCity.text.trim().isNotEmpty ? _destCity.text.trim() : countryName(_destCountry),
+                  ),
+                ),
+                if (_needBy != null) ...[
+                  const SizedBox(height: 6),
+                  IconLine(Icons.event_outlined, 'Need by ${shortDate(_needBy)}'),
+                ],
+                const SizedBox(height: 6),
+                IconLine(Icons.sell_outlined, l10n.wantBudgetLine(money(_budget))),
+              ],
+            ),
+          ),
+          if (_error != null && _page == 1) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: TextStyle(color: scheme.error)),
+          ],
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: _submitting ? null : _submit,
+            child: _submitting
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(_isDirectRequest ? l10n.actionSendRequest : l10n.actionPostMyWant),
+          ),
+        ],
       ),
     );
   }

@@ -34,10 +34,8 @@ import '../features/trips/presentation/new_trip_screen.dart';
 import '../features/trips/presentation/trip_detail_screen.dart';
 import '../features/wants/data/offers_repository.dart';
 import '../features/wants/data/wants_repository.dart';
-import '../features/wants/domain/want_draft.dart';
 import '../features/wants/presentation/make_offer_screen.dart';
 import '../features/wants/presentation/want_detail_screen.dart';
-import '../features/wants/presentation/want_summary_screen.dart';
 
 /// Bridges Riverpod changes into a [Listenable] that go_router can refresh on.
 /// Also the single place that clears every user-scoped data cache when the
@@ -185,10 +183,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/trips/:id',
         builder: (_, s) => TripDetailScreen(tripId: s.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/wants/new/summary',
-        builder: (_, s) => WantSummaryScreen(draft: s.extra as WantDraft),
       ),
       GoRoute(
         path: '/wants/:id/offer',
