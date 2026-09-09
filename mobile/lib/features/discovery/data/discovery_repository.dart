@@ -28,8 +28,9 @@ class DiscoveryRepository {
     String? sourceCity,
   }) async {
     final query = <String, dynamic>{'source_country': sourceCountry};
-    if (sourceCity != null && sourceCity.isNotEmpty)
+    if (sourceCity != null && sourceCity.isNotEmpty) {
       query['source_city'] = sourceCity;
+    }
     final data = await _api.get('/api/discover/route-match', query: query);
     return RouteMatch.fromJson(Map<String, dynamic>.from(data as Map));
   }

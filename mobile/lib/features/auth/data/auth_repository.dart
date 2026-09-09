@@ -73,7 +73,7 @@ class AuthRepository {
       'provider': provider,
       'token': idToken,
       if (userType != null) 'user_type': userType.name,
-      if (redirectUri != null) 'redirect_uri': redirectUri,
+      'redirect_uri': ?redirectUri,
     });
     await _storeToken(data);
     return me();
