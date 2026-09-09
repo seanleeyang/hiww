@@ -140,7 +140,7 @@
 
   "browseTabOrder": "Order",
   "browseTabTravel": "Travel",
-  "actionPostATrip": "Post a trip",
+  "actionPostATrip": "Add Trip",
   "actionPostAWant": "Create Order",
   "proTipTitle": "Pro tip",
   "proTipCreateOrderBody": "Be sure to provide all product specifics about your order to be sure you receive the correct item.",
@@ -169,6 +169,9 @@
 
   "actionRemove": "Remove",
   "actionCancel": "Cancel",
+  "actionContinue": "Continue",
+  "verifyGateTitle": "Before You Proceed",
+  "verifyGateBody": "Our mission is to build a safe community of shoppers and travelers who help each other shop across borders. To keep everyone protected, we'll need to confirm a few quick details before you continue.",
   "dialogRemoveFromListBody": "It disappears from your list. This does not affect its history.",
   "tooltipRemoveFromList": "Remove from your list",
 
@@ -195,7 +198,7 @@
   "hintNoteTrip": "What you can carry, preferences…",
   "fieldCoverPhotoOptional": "Add a cover photo (optional)",
   "actionSaveChanges": "Save changes",
-  "actionPostTrip": "Post trip",
+  "actionPostTrip": "Add Trip",
   "fieldCityOptional": "City (optional)",
   "heroTravelFormHeading": "Add your trip details to start earning money",
   "labelTravelingFrom": "Traveling from",

@@ -767,7 +767,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionPostATrip.
   ///
   /// In en, this message translates to:
-  /// **'Post a trip'**
+  /// **'Add Trip'**
   String get actionPostATrip;
 
   /// No description provided for @actionPostAWant.
@@ -895,6 +895,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get actionCancel;
+
+  /// No description provided for @actionContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get actionContinue;
+
+  /// No description provided for @verifyGateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before You Proceed'**
+  String get verifyGateTitle;
+
+  /// No description provided for @verifyGateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Our mission is to build a safe community of shoppers and travelers who help each other shop across borders. To keep everyone protected, we\'ll need to confirm a few quick details before you continue.'**
+  String get verifyGateBody;
 
   /// No description provided for @dialogRemoveFromListBody.
   ///
@@ -1043,7 +1061,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionPostTrip.
   ///
   /// In en, this message translates to:
-  /// **'Post trip'**
+  /// **'Add Trip'**
   String get actionPostTrip;
 
   /// No description provided for @fieldCityOptional.

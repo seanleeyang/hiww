@@ -368,7 +368,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get browseTabTravel => 'เดินทาง';
 
   @override
-  String get actionPostATrip => 'ลงทริป';
+  String get actionPostATrip => 'เพิ่มทริป';
 
   @override
   String get actionPostAWant => 'สร้างคำสั่งซื้อ';
@@ -442,6 +442,16 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get actionCancel => 'ยกเลิก';
+
+  @override
+  String get actionContinue => 'ดำเนินการต่อ';
+
+  @override
+  String get verifyGateTitle => 'ก่อนดำเนินการต่อ';
+
+  @override
+  String get verifyGateBody =>
+      'พันธกิจของเราคือสร้างชุมชนที่ปลอดภัยสำหรับผู้ซื้อและนักเดินทางที่ช่วยเหลือกันข้ามพรมแดน เพื่อความปลอดภัยของทุกคน เราจำเป็นต้องยืนยันข้อมูลบางอย่างก่อนที่คุณจะดำเนินการต่อ';
 
   @override
   String get dialogRemoveFromListBody =>
@@ -521,7 +531,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionSaveChanges => 'บันทึกการเปลี่ยนแปลง';
 
   @override
-  String get actionPostTrip => 'ลงทริป';
+  String get actionPostTrip => 'เพิ่มทริป';
 
   @override
   String get fieldCityOptional => 'เมือง (ไม่บังคับ)';

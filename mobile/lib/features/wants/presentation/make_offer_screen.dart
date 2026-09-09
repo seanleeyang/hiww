@@ -8,6 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../trips/data/trips_repository.dart';
+import '../../trips/presentation/add_trip_sheet.dart';
 import '../data/offers_repository.dart';
 import '../data/wants_repository.dart';
 
@@ -97,7 +98,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
               title: l10n.emptyNeedTripTitle,
               message: l10n.emptyNeedTripMessage,
               action: FilledButton(
-                onPressed: () => context.push('/trips/new'),
+                onPressed: () => showAddTripSheet(context),
                 child: Text(l10n.actionPostATrip),
               ),
             );

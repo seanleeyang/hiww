@@ -11,6 +11,7 @@ import '../../../ui/country_chips.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/skeleton.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../trips/presentation/add_trip_sheet.dart';
 import '../../trips/presentation/travel_hero_form.dart';
 import '../../wants/presentation/create_order_sheet.dart';
 import '../data/discovery_repository.dart';
@@ -130,7 +131,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
     if (requireSignedIn(context, ref)) showCreateOrderSheet(context);
   }
 
-  void _postTrip() => context.push('/trips/new');
+  void _postTrip() => showAddTripSheet(context);
 
   @override
   Widget build(BuildContext context) {

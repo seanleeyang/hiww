@@ -119,7 +119,7 @@
 
   "browseTabOrder": "สั่งของ",
   "browseTabTravel": "เดินทาง",
-  "actionPostATrip": "ลงทริป",
+  "actionPostATrip": "เพิ่มทริป",
   "actionPostAWant": "สร้างคำสั่งซื้อ",
   "proTipTitle": "เคล็ดลับ",
   "proTipCreateOrderBody": "ระบุรายละเอียดสินค้าให้ครบถ้วน เพื่อให้แน่ใจว่าคุณจะได้รับสินค้าที่ถูกต้อง",
@@ -142,6 +142,9 @@
 
   "actionRemove": "ลบ",
   "actionCancel": "ยกเลิก",
+  "actionContinue": "ดำเนินการต่อ",
+  "verifyGateTitle": "ก่อนดำเนินการต่อ",
+  "verifyGateBody": "พันธกิจของเราคือสร้างชุมชนที่ปลอดภัยสำหรับผู้ซื้อและนักเดินทางที่ช่วยเหลือกันข้ามพรมแดน เพื่อความปลอดภัยของทุกคน เราจำเป็นต้องยืนยันข้อมูลบางอย่างก่อนที่คุณจะดำเนินการต่อ",
   "dialogRemoveFromListBody": "รายการนี้จะหายไปจากลิสต์ของคุณ ไม่กระทบประวัติของรายการ",
   "tooltipRemoveFromList": "ลบออกจากลิสต์ของคุณ",
 
@@ -168,7 +171,7 @@
   "hintNoteTrip": "สิ่งที่คุณรับฝากได้ ความชอบส่วนตัว…",
   "fieldCoverPhotoOptional": "เพิ่มรูปปก (ไม่บังคับ)",
   "actionSaveChanges": "บันทึกการเปลี่ยนแปลง",
-  "actionPostTrip": "ลงทริป",
+  "actionPostTrip": "เพิ่มทริป",
   "fieldCityOptional": "เมือง (ไม่บังคับ)",
   "heroTravelFormHeading": "กรอกรายละเอียดทริปเพื่อเริ่มสร้างรายได้",
   "labelTravelingFrom": "เดินทางจาก",

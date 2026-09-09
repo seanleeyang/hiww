@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/navigation.dart';
 import '../features/account/presentation/account_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
@@ -100,6 +101,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/landing',
     refreshListenable: refresh,
     redirect: (context, state) {
@@ -112,12 +114,15 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final signedInState = auth.valueOrNull;
       if (signedInState is AuthSignedIn) {
-        final onVerifyPage = loc == '/verify';
-        if (signedInState.user.needsVerification) {
-          return onVerifyPage ? null : '/verify';
-        }
         final onPreAuthPage = _preAuthRoutes.contains(loc) || loc == '/onboarding';
-        if (onPreAuthPage || loc == '/splash' || onVerifyPage) return '/browse';
+        if (onPreAuthPage || loc == '/splash') return '/browse';
+        // Unverified users browse freely rather than being force-redirected
+        // here — a gated action shows a "Before You Proceed" prompt instead
+        // (see ApiClient's VERIFICATION_REQUIRED interception). /verify is
+        // reached on demand via that prompt's Continue button, so only
+        // bounce away from it once there's nothing left to verify.
+        final onVerifyPage = loc == '/verify';
+        if (onVerifyPage && !signedInState.user.needsVerification) return '/browse';
         return null;
       }
 
@@ -163,22 +168,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(
-        path: '/trips/new',
-        builder: (_, s) {
-          final prefill = s.extra as TripQuickPrefill?;
-          return NewTripScreen(
-            prefillFromCountry: prefill?.fromCountry,
-            prefillFromCity: prefill?.fromCity,
-            prefillToCountry: prefill?.toCountry,
-            prefillToCity: prefill?.toCity,
-            prefillDepart: prefill?.depart,
-            prefillReturn: prefill?.ret,
-          );
-        },
-      ),
-      GoRoute(
         path: '/trips/:id/edit',
-        builder: (_, s) => NewTripScreen(existing: s.extra as Trip),
+        builder: (_, s) => EditTripScreen(existing: s.extra as Trip),
       ),
       GoRoute(
         path: '/trips/:id',

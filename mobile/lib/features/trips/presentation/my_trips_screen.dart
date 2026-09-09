@@ -11,6 +11,7 @@ import '../../../ui/soft_card.dart';
 import '../../../ui/status_pill.dart';
 import '../data/trips_repository.dart';
 import '../domain/trip.dart';
+import 'add_trip_sheet.dart';
 
 const _archivableStatuses = {'cancelled', 'completed'};
 
@@ -89,7 +90,7 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen>
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/trips/new'),
+        onPressed: () => showAddTripSheet(context),
         icon: const Icon(Icons.add),
         label: Text(l10n.actionPostATrip),
       ),
@@ -119,7 +120,7 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen>
                         emptyTitle: l10n.emptyMyTripsTitle,
                         emptyMessage: l10n.emptyMyTripsMessage,
                         emptyAction: FilledButton(
-                          onPressed: () => context.push('/trips/new'),
+                          onPressed: () => showAddTripSheet(context),
                           child: Text(l10n.actionPostATrip),
                         ),
                       ),

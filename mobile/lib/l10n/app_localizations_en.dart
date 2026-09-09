@@ -370,7 +370,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get browseTabTravel => 'Travel';
 
   @override
-  String get actionPostATrip => 'Post a trip';
+  String get actionPostATrip => 'Add Trip';
 
   @override
   String get actionPostAWant => 'Create Order';
@@ -445,6 +445,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionCancel => 'Cancel';
+
+  @override
+  String get actionContinue => 'Continue';
+
+  @override
+  String get verifyGateTitle => 'Before You Proceed';
+
+  @override
+  String get verifyGateBody =>
+      'Our mission is to build a safe community of shoppers and travelers who help each other shop across borders. To keep everyone protected, we\'ll need to confirm a few quick details before you continue.';
 
   @override
   String get dialogRemoveFromListBody =>
@@ -523,7 +533,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionSaveChanges => 'Save changes';
 
   @override
-  String get actionPostTrip => 'Post trip';
+  String get actionPostTrip => 'Add Trip';
 
   @override
   String get fieldCityOptional => 'City (optional)';

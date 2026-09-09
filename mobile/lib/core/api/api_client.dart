@@ -1,10 +1,13 @@
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../ui/verification_required_dialog.dart';
 import '../../features/settings/locale_controller.dart';
 import '../env.dart';
+import '../navigation.dart';
 import '../storage/token_storage.dart';
 import 'api_exception.dart';
 
@@ -131,6 +134,15 @@ class ApiClient {
               ? 'Request failed ($status).'
               : 'Something went wrong. Please try again.',
       };
+    }
+    if (code == 'VERIFICATION_REQUIRED') {
+      // Fire the "Before You Proceed" prompt from wherever this error
+      // happens to surface, without every call site needing to special-case
+      // it. Post-frame since this can run mid-build/mid-error-handling.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = rootNavigatorKey.currentContext;
+        if (ctx != null) showVerificationRequiredDialog(ctx);
+      });
     }
     return ApiException(message, statusCode: status, code: code);
   }

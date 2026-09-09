@@ -11,78 +11,29 @@ import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
 import '../domain/trip.dart';
 
-/// Passed via `GoRouterState.extra` from the Home screen's quick
-/// from/to/dates card — see `TravelHeroForm`.
-class TripQuickPrefill {
-  const TripQuickPrefill({
-    required this.fromCountry,
-    this.fromCity,
-    required this.toCountry,
-    this.toCity,
-    required this.depart,
-    required this.ret,
-  });
-  final String fromCountry;
-  final String? fromCity;
-  final String toCountry;
-  final String? toCity;
-  final DateTime depart;
-  final DateTime ret;
-}
-
-/// Doubles as the edit form: pass [existing] to prefill and switch the
-/// submit action from create to update. Route (departure/arrival country)
-/// is never editable — see the schema-side comment for why.
-class NewTripScreen extends ConsumerStatefulWidget {
-  const NewTripScreen({
-    super.key,
-    this.existing,
-    this.prefillFromCountry,
-    this.prefillFromCity,
-    this.prefillToCountry,
-    this.prefillToCity,
-    this.prefillDepart,
-    this.prefillReturn,
-  });
-  final Trip? existing;
-
-  /// Lighter-weight prefill for a brand-new trip (e.g. from the Home
-  /// screen's quick from/to/dates card) — unlike [existing], this doesn't
-  /// switch the form into edit mode.
-  final String? prefillFromCountry;
-  final String? prefillFromCity;
-  final String? prefillToCountry;
-  final String? prefillToCity;
-  final DateTime? prefillDepart;
-  final DateTime? prefillReturn;
+/// Editing an existing trip is a full-screen form. Posting a new trip is a
+/// separate, simpler bottom sheet — see `add_trip_sheet.dart`'s
+/// `showAddTripSheet`. Route (departure/arrival country) is never editable —
+/// see the schema-side comment for why.
+class EditTripScreen extends ConsumerStatefulWidget {
+  const EditTripScreen({super.key, required this.existing});
+  final Trip existing;
 
   @override
-  ConsumerState<NewTripScreen> createState() => _NewTripScreenState();
+  ConsumerState<EditTripScreen> createState() => _EditTripScreenState();
 }
 
-class _NewTripScreenState extends ConsumerState<NewTripScreen> {
-  late final _fromCity = TextEditingController(
-    text: widget.existing?.departureCity ?? widget.prefillFromCity ?? '',
-  );
-  late final _toCity = TextEditingController(
-    text: widget.existing?.arrivalCity ?? widget.prefillToCity ?? '',
-  );
-  late final _note = TextEditingController(text: widget.existing?.note ?? '');
-  late final _weight = TextEditingController(
-    text: widget.existing == null ? '8' : widget.existing!.maxWeightKg.toString(),
-  );
-  late final _items = TextEditingController(
-    text: widget.existing == null ? '5' : widget.existing!.maxItems.toString(),
-  );
-  late String _from = widget.existing?.departureCountry ?? widget.prefillFromCountry ?? 'TH';
-  late String _to = widget.existing?.arrivalCountry ?? widget.prefillToCountry ?? 'JP';
-  late String? _coverUrl = widget.existing?.coverImageUrl;
-  late DateTime? _depart = widget.existing?.departureDate ?? widget.prefillDepart;
-  late DateTime? _ret = widget.existing?.returnDate ?? widget.prefillReturn;
+class _EditTripScreenState extends ConsumerState<EditTripScreen> {
+  late final _fromCity = TextEditingController(text: widget.existing.departureCity ?? '');
+  late final _toCity = TextEditingController(text: widget.existing.arrivalCity ?? '');
+  late final _note = TextEditingController(text: widget.existing.note ?? '');
+  late final _weight = TextEditingController(text: widget.existing.maxWeightKg.toString());
+  late final _items = TextEditingController(text: widget.existing.maxItems.toString());
+  late String? _coverUrl = widget.existing.coverImageUrl;
+  late DateTime? _depart = widget.existing.departureDate;
+  late DateTime? _ret = widget.existing.returnDate;
   bool _submitting = false;
   String? _error;
-
-  bool get _editing => widget.existing != null;
 
   @override
   void dispose() {
@@ -115,45 +66,23 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
       _error = null;
     });
     try {
-      if (_editing) {
-        final id = widget.existing!.id;
-        await ref.read(tripsRepositoryProvider).update(
-              id,
-              departureCity: _fromCity.text.trim(),
-              arrivalCity: _toCity.text.trim(),
-              departureDate: _depart!,
-              returnDate: _ret!,
-              maxWeightKg: weight,
-              maxItems: items,
-              note: _note.text.trim(),
-              coverImageUrl: _coverUrl,
-            );
-        ref.invalidate(myTripsProvider);
-        ref.invalidate(feedProvider);
-        ref.invalidate(tripDetailProvider(id));
-        if (!mounted) return;
-        context.pop();
-      } else {
-        final id = await ref
-            .read(tripsRepositoryProvider)
-            .create(
-              departureCountry: _from,
-              arrivalCountry: _to,
-              departureCity: _fromCity.text.trim(),
-              arrivalCity: _toCity.text.trim(),
-              departureDate: _depart!,
-              returnDate: _ret!,
-              maxWeightKg: weight,
-              maxItems: items,
-              note: _note.text.trim(),
-              coverImageUrl: _coverUrl,
-            );
-        ref.invalidate(myTripsProvider);
-        ref.invalidate(feedProvider);
-        if (!mounted) return;
-        context.pop();
-        context.push('/trips/$id');
-      }
+      final id = widget.existing.id;
+      await ref.read(tripsRepositoryProvider).update(
+            id,
+            departureCity: _fromCity.text.trim(),
+            arrivalCity: _toCity.text.trim(),
+            departureDate: _depart!,
+            returnDate: _ret!,
+            maxWeightKg: weight,
+            maxItems: items,
+            note: _note.text.trim(),
+            coverImageUrl: _coverUrl,
+          );
+      ref.invalidate(myTripsProvider);
+      ref.invalidate(feedProvider);
+      ref.invalidate(tripDetailProvider(id));
+      if (!mounted) return;
+      context.pop();
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -190,7 +119,7 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     if (confirmed != true) return;
 
     setState(() => _submitting = true);
-    final id = widget.existing!.id;
+    final id = widget.existing.id;
     final repo = ref.read(tripsRepositoryProvider);
 
     try {
@@ -231,27 +160,21 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_editing ? l10n.tripEditTitle : l10n.actionPostATrip),
+        title: Text(l10n.tripEditTitle),
         actions: [
-          if (_editing)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: l10n.actionCancelTrip,
-              onPressed: _submitting ? null : _cancelTrip,
-            ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: l10n.actionCancelTrip,
+            onPressed: _submitting ? null : _cancelTrip,
+          ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _countryRow(
-            l10n.labelFrom,
-            _from,
-            _fromCity,
-            (v) => setState(() => _from = v),
-          ),
+          _countryRow(l10n.labelFrom, widget.existing.departureCountry, _fromCity),
           const SizedBox(height: 14),
-          _countryRow(l10n.labelTo, _to, _toCity, (v) => setState(() => _to = v)),
+          _countryRow(l10n.labelTo, widget.existing.arrivalCountry, _toCity),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -325,39 +248,23 @@ class _NewTripScreenState extends ConsumerState<NewTripScreen> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Text(_editing ? l10n.actionSaveChanges : l10n.actionPostTrip),
+                : Text(l10n.actionSaveChanges),
           ),
         ],
       ),
     );
   }
 
-  Widget _countryRow(
-    String label,
-    String code,
-    TextEditingController city,
-    ValueChanged<String> onCountry,
-  ) {
+  Widget _countryRow(String label, String code, TextEditingController city) {
     final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
-          child: _editing
-              ? TextFormField(
-                  initialValue: countryName(code),
-                  enabled: false,
-                  decoration: InputDecoration(labelText: label),
-                )
-              : DropdownButtonFormField<String>(
-                  initialValue: code,
-                  isExpanded: true,
-                  decoration: InputDecoration(labelText: label),
-                  items: [
-                    for (final c in kLiveCountries)
-                      DropdownMenuItem(value: c.code, child: Text(c.name)),
-                  ],
-                  onChanged: (v) => onCountry(v ?? code),
-                ),
+          child: TextFormField(
+            initialValue: countryName(code),
+            enabled: false,
+            decoration: InputDecoration(labelText: label),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(

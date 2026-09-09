@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/cities.dart';
 import '../../../l10n/app_localizations.dart';
+import 'add_trip_sheet.dart';
 import 'date_range_sheet.dart';
 import 'location_search_sheet.dart';
-import 'new_trip_screen.dart';
 
 /// The Travel tab's hero: greeting + a quick from/to/dates card that jumps
 /// straight into the full "Post a trip" form pre-filled, instead of a bare
@@ -60,16 +59,14 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
     final depart = _depart;
     final ret = _ret;
     if (from == null || to == null || depart == null || ret == null) return;
-    context.push(
-      '/trips/new',
-      extra: TripQuickPrefill(
-        fromCountry: from.countryCode,
-        fromCity: from.city,
-        toCountry: to.countryCode,
-        toCity: to.city,
-        depart: depart,
-        ret: ret,
-      ),
+    showAddTripSheet(
+      context,
+      fromCountry: from.countryCode,
+      fromCity: from.city,
+      toCountry: to.countryCode,
+      toCity: to.city,
+      depart: depart,
+      ret: ret,
     );
   }
 
