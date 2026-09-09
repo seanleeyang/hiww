@@ -62,6 +62,26 @@ const TEMPLATES: Record<string, Template> = {
           subject: 'Your counter-offer was accepted',
           body: `The traveler accepted your price on "${p.item}". Pay within ${p.minutes} minutes or the order is cancelled.`,
         },
+  'offer_accepted:shopper_self': (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'คุณยอมรับข้อเสนอแล้ว',
+          body: `คุณยอมรับข้อเสนอสำหรับ "${p.item}" แล้ว ชำระเงินภายใน ${p.minutes} นาที ไม่เช่นนั้นคำสั่งซื้อจะถูกยกเลิก`,
+        }
+      : {
+          subject: 'You accepted the offer',
+          body: `You accepted the offer on "${p.item}". Pay within ${p.minutes} minutes or the order is cancelled.`,
+        },
+  'offer_accepted:traveler_self': (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'คุณยอมรับราคาแล้ว',
+          body: `คุณยอมรับราคาของผู้ซื้อสำหรับ "${p.item}" แล้ว ต่อไปพวกเขาจะชำระเงิน — คุณจะได้รับแจ้งเมื่อยืนยันแล้ว`,
+        }
+      : {
+          subject: 'You accepted the price',
+          body: `You accepted the shopper's price on "${p.item}". They'll pay next — you'll get a heads-up when it's confirmed.`,
+        },
   offer_countered: (l, p) => {
     const who = roleLabel(l, String(p.role));
     const canStillCounter = Boolean(p.canStillCounter);

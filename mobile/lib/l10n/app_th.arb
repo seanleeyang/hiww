@@ -398,6 +398,11 @@
   "statusSent": "ส่งแล้ว",
   "statusRead": "อ่านแล้ว",
   "purchaseReceiptTitle": "ใบเสร็จการซื้อ",
+  "chatClosedBanner": "แชทนี้ปิดแล้ว — คำสั่งซื้อเสร็จสมบูรณ์แล้ว",
+  "chatDeletedMessage": "คุณลบการสนทนานี้แล้ว",
+  "actionDeleteChat": "ลบแชท",
+  "dialogDeleteChatTitle": "ลบแชทนี้ใช่ไหม?",
+  "dialogDeleteChatBody": "การลบนี้จะลบออกจากกล่องข้อความของคุณเท่านั้น อีกฝ่ายยังคงเห็นแชทนี้ได้",
 
   "actionSkip": "ข้าม",
   "actionNext": "ถัดไป",

@@ -527,6 +527,11 @@
   "statusSent": "Sent",
   "statusRead": "Read",
   "purchaseReceiptTitle": "Purchase receipt",
+  "chatClosedBanner": "This chat is closed — the order is complete.",
+  "chatDeletedMessage": "You deleted this conversation.",
+  "actionDeleteChat": "Delete chat",
+  "dialogDeleteChatTitle": "Delete this chat?",
+  "dialogDeleteChatBody": "This only removes it from your own inbox. The other person can still see it.",
 
   "actionSkip": "Skip",
   "actionNext": "Next",

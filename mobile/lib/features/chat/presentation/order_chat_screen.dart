@@ -28,6 +28,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   final _input = TextEditingController();
   bool _sending = false;
   bool _attaching = false;
+  bool _deletingChat = false;
   Uint8List? _pendingImageBytes;
   String? _pendingImageUrl;
   int _lastSeenCount = -1;
@@ -95,11 +96,8 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     } catch (_) {
       if (mounted) {
         setState(() => _pendingImageBytes = null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorAttachPhoto),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.errorAttachPhoto)));
       }
     } finally {
       if (mounted) setState(() => _attaching = false);
@@ -140,12 +138,61 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     }
   }
 
+  Future<void> _deleteChat() async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.dialogDeleteChatTitle),
+        content: Text(l10n.dialogDeleteChatBody),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(dialogContext).colorScheme.error,
+                ),
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(l10n.actionDeleteChat),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(l10n.actionCancel),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    setState(() => _deletingChat = true);
+    try {
+      await ref.read(chatRepositoryProvider).deleteChat(widget.orderId);
+      ref.invalidate(orderMessagesProvider(widget.orderId));
+      ref.invalidate(inboxProvider);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _deletingChat = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final me = ref.watch(currentUserProvider);
     final order = ref.watch(orderProvider(widget.orderId));
     final feed = ref.watch(orderMessagesProvider(widget.orderId));
+    final feedValue = feed.valueOrNull;
+    final closed = feedValue?.closed ?? false;
+    final deleted = feedValue?.deleted ?? false;
 
     // Mark read whenever new inbound messages land.
     ref.listen(orderMessagesProvider(widget.orderId), (_, next) {
@@ -159,7 +206,8 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
       }
     });
 
-    final title = order.valueOrNull?.counterparty?.fullName ?? l10n.chatFallbackTitle;
+    final title =
+        order.valueOrNull?.counterparty?.fullName ?? l10n.chatFallbackTitle;
     final subtitle = order.valueOrNull?.itemDescription;
 
     return Scaffold(
@@ -180,15 +228,52 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
               ),
           ],
         ),
+        actions: [
+          if (closed && !deleted)
+            IconButton(
+              tooltip: l10n.actionDeleteChat,
+              onPressed: _deletingChat ? null : _deleteChat,
+              icon: _deletingChat
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_outline),
+            ),
+        ],
       ),
       body: Column(
         children: [
+          if (closed && !deleted)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+              child: Text(
+                l10n.chatClosedBanner,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           Expanded(
             child: AsyncValueView(
               value: feed,
               onRetry: () =>
                   ref.invalidate(orderMessagesProvider(widget.orderId)),
               data: (chatFeed) {
+                if (chatFeed.deleted) {
+                  return Center(
+                    child: Text(
+                      l10n.chatDeletedMessage,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  );
+                }
                 final list = chatFeed.messages;
                 if (list.isEmpty) {
                   return Center(
@@ -225,19 +310,20 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
                 child: _TypingBubble(),
               ),
             ),
-          _Composer(
-            controller: _input,
-            sending: _sending,
-            attaching: _attaching,
-            pendingImageBytes: _pendingImageBytes,
-            onAttach: _attachPhoto,
-            onRemoveAttachment: () => setState(() {
-              _pendingImageUrl = null;
-              _pendingImageBytes = null;
-            }),
-            onSend: _send,
-            onTextChanged: _onComposerChanged,
-          ),
+          if (!closed)
+            _Composer(
+              controller: _input,
+              sending: _sending,
+              attaching: _attaching,
+              pendingImageBytes: _pendingImageBytes,
+              onAttach: _attachPhoto,
+              onRemoveAttachment: () => setState(() {
+                _pendingImageUrl = null;
+                _pendingImageBytes = null;
+              }),
+              onSend: _send,
+              onTextChanged: _onComposerChanged,
+            ),
         ],
       ),
     );
@@ -341,7 +427,9 @@ class _Bubble extends StatelessWidget {
                     ),
                     const SizedBox(width: 2),
                     Text(
-                      message.readAt != null ? l10n.statusRead : l10n.statusSent,
+                      message.readAt != null
+                          ? l10n.statusRead
+                          : l10n.statusSent,
                       style: TextStyle(
                         fontSize: 10,
                         color: scheme.onPrimary.withValues(alpha: 0.9),

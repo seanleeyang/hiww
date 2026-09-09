@@ -108,6 +108,14 @@ const MESSAGES: Record<string, Entry> = {
 
   // modules/messages/routes.ts
   'messages.invalidBody': { en: 'Provide a message or a photo', th: 'กรุณาใส่ข้อความหรือรูปภาพ' },
+  'messages.chatClosed': {
+    en: 'This chat is closed — the order is complete',
+    th: 'แชทนี้ปิดแล้ว — คำสั่งซื้อเสร็จสมบูรณ์แล้ว',
+  },
+  'messages.chatNotYetClosed': {
+    en: 'You can delete this chat once the order is complete',
+    th: 'คุณสามารถลบแชทนี้ได้เมื่อคำสั่งซื้อเสร็จสมบูรณ์แล้ว',
+  },
 
   // modules/money/routes.ts
   'money.notImplemented': {

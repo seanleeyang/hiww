@@ -1260,6 +1260,22 @@ class AppLocalizationsTh extends AppLocalizations {
   String get purchaseReceiptTitle => 'ใบเสร็จการซื้อ';
 
   @override
+  String get chatClosedBanner => 'แชทนี้ปิดแล้ว — คำสั่งซื้อเสร็จสมบูรณ์แล้ว';
+
+  @override
+  String get chatDeletedMessage => 'คุณลบการสนทนานี้แล้ว';
+
+  @override
+  String get actionDeleteChat => 'ลบแชท';
+
+  @override
+  String get dialogDeleteChatTitle => 'ลบแชทนี้ใช่ไหม?';
+
+  @override
+  String get dialogDeleteChatBody =>
+      'การลบนี้จะลบออกจากกล่องข้อความของคุณเท่านั้น อีกฝ่ายยังคงเห็นแชทนี้ได้';
+
+  @override
   String get actionSkip => 'ข้าม';
 
   @override

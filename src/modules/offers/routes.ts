@@ -4,7 +4,7 @@ import Decimal from 'decimal.js';
 import { AppError, generateId } from '@/utils/helpers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
-import { recordNotification } from '@/services/notify';
+import { recordNotification, recordNotifications } from '@/services/notify';
 import { requireCompleteProfile } from '@/utils/profile-guard';
 import { expireOverdueOffers } from '@/services/offer-expiry';
 import { calculatePricing } from '@/services/pricing';
@@ -380,27 +380,33 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             accepted_by: callerRole,
           },
         });
-        // Notify whichever side didn't click accept — the other side is
-        // already looking at the order screen they just created.
-        if (callerRole === 'shopper') {
-          await recordNotification(trx, {
-            userId: offer.traveler_id,
-            type: 'offer_accepted',
-            params: { _variant: 'by_shopper', item: requestRow.item_description },
-            orderId,
-          });
-        } else {
-          await recordNotification(trx, {
+        // Notify both sides — the shopper always gets an explicit payment
+        // deadline (even when they're the one who just clicked accept and
+        // are already looking at the order screen's live countdown, this
+        // is what shows up later in their notification feed as a durable
+        // reminder/record of the deadline). The traveler's wording differs
+        // depending on whether they accepted or are waiting on payment.
+        await recordNotifications(trx, [
+          {
             userId: requestRow.shopper_id,
             type: 'offer_accepted',
             params: {
-              _variant: 'by_traveler',
+              _variant: callerRole === 'shopper' ? 'shopper_self' : 'by_traveler',
               item: requestRow.item_description,
               minutes: config.paymentTimeoutMinutes,
             },
             orderId,
-          });
-        }
+          },
+          {
+            userId: offer.traveler_id,
+            type: 'offer_accepted',
+            params: {
+              _variant: callerRole === 'shopper' ? 'by_shopper' : 'traveler_self',
+              item: requestRow.item_description,
+            },
+            orderId,
+          },
+        ]);
       });
 
       reply.send({ success: true, data: { order_id: orderId, offer_id: offer.id }, code: 'OFFER_ACCEPTED' });

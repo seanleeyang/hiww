@@ -1,5 +1,5 @@
 import { makeTestApp, closeTestApp, authHeader, type TestContext } from '../helpers/test-app';
-import { createAcceptedOrder } from '../helpers/flows';
+import { createAcceptedOrder, completeOrder } from '../helpers/flows';
 
 describe('messages / inbox flow', () => {
   let ctx: TestContext;
@@ -125,5 +125,92 @@ describe('messages / inbox flow', () => {
       headers: authHeader(order.traveler),
     });
     expect(asTraveler.json().data.counterparty_typing).toBe(false);
+  });
+
+  it('closes the chat once the shopper releases payment (order delivered)', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+      payload: { body: 'Excited for this one!' },
+    });
+
+    await completeOrder(ctx, order);
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(list.json().data.closed).toBe(true);
+    expect(list.json().data.items).toHaveLength(1); // history stays visible
+
+    const post = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+      payload: { body: 'thanks!' },
+    });
+    expect(post.statusCode).toBe(409);
+  });
+
+  it('cannot delete a chat before the order is delivered', async () => {
+    const order = await createAcceptedOrder(ctx);
+    const del = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages/delete-chat`,
+      headers: authHeader(order.shopper),
+    });
+    expect(del.statusCode).toBe(409);
+  });
+
+  it('deleting a closed chat hides it from just the deleter — not the other side', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+      payload: { body: 'See you at pickup!' },
+    });
+    await completeOrder(ctx, order);
+
+    const del = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages/delete-chat`,
+      headers: authHeader(order.shopper),
+    });
+    expect(del.statusCode).toBe(200);
+
+    const asShopper = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(asShopper.json().data.deleted).toBe(true);
+    expect(asShopper.json().data.items).toHaveLength(0);
+
+    // The traveler's copy is untouched.
+    const asTraveler = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+    });
+    expect(asTraveler.json().data.deleted).toBe(false);
+    expect(asTraveler.json().data.items).toHaveLength(1);
+
+    // And it's gone from the shopper's inbox, but still in the traveler's.
+    const shopperInbox = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/inbox',
+      headers: authHeader(order.shopper),
+    });
+    expect(shopperInbox.json().data.items).toHaveLength(0);
+    const travelerInbox = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/inbox',
+      headers: authHeader(order.traveler),
+    });
+    expect(travelerInbox.json().data.items).toHaveLength(1);
   });
 });

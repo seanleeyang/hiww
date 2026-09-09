@@ -25,6 +25,8 @@ class ChatRepository {
     return ChatFeed(
       messages: parsed,
       counterpartyTyping: map['counterparty_typing'] == true,
+      closed: map['closed'] == true,
+      deleted: map['deleted'] == true,
     );
   }
 
@@ -58,6 +60,12 @@ class ChatRepository {
 
   Future<void> markRead(String orderId) =>
       _api.post('/api/orders/$orderId/messages/read');
+
+  /// Hides this (closed) chat from the caller's own inbox/view — the
+  /// counterparty's copy and the underlying messages are untouched. Throws
+  /// [ApiException] if the order isn't delivered yet.
+  Future<void> deleteChat(String orderId) =>
+      _api.post('/api/orders/$orderId/messages/delete-chat');
 
   Future<List<InboxThread>> inbox() async {
     final data = await _api.get('/api/inbox');

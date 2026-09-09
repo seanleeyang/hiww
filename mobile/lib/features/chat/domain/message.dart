@@ -36,10 +36,23 @@ class Message {
 /// One poll of a conversation: the messages plus whether the other
 /// participant is currently typing.
 class ChatFeed {
-  const ChatFeed({required this.messages, required this.counterpartyTyping});
+  const ChatFeed({
+    required this.messages,
+    required this.counterpartyTyping,
+    this.closed = false,
+    this.deleted = false,
+  });
 
   final List<Message> messages;
   final bool counterpartyTyping;
+
+  /// The order reached `delivered` — the shopper released payment, so
+  /// there's nothing left to coordinate on and new messages are rejected.
+  final bool closed;
+
+  /// The viewer deleted this (closed) chat from their own view — `messages`
+  /// is empty in that case; the counterparty's copy is unaffected.
+  final bool deleted;
 }
 
 class InboxThread {

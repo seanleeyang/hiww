@@ -2324,6 +2324,36 @@ abstract class AppLocalizations {
   /// **'Purchase receipt'**
   String get purchaseReceiptTitle;
 
+  /// No description provided for @chatClosedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat is closed — the order is complete.'**
+  String get chatClosedBanner;
+
+  /// No description provided for @chatDeletedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You deleted this conversation.'**
+  String get chatDeletedMessage;
+
+  /// No description provided for @actionDeleteChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat'**
+  String get actionDeleteChat;
+
+  /// No description provided for @dialogDeleteChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this chat?'**
+  String get dialogDeleteChatTitle;
+
+  /// No description provided for @dialogDeleteChatBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This only removes it from your own inbox. The other person can still see it.'**
+  String get dialogDeleteChatBody;
+
   /// No description provided for @actionSkip.
   ///
   /// In en, this message translates to:

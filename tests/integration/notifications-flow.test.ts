@@ -56,10 +56,16 @@ describe('notifications feed', () => {
     expect(accepted!.order_id).toBe(order.orderId);
     expect(accepted!.link).toBe(`/orders/${order.orderId}`);
     expect(traveler.unread_count).toBeGreaterThanOrEqual(1);
+  });
 
-    // The shopper who did the accepting doesn't get that one.
+  it('also notifies the shopper — who did the accepting — with the payment deadline', async () => {
+    const order = await createAcceptedOrder(ctx); // shopper accepts in this fixture
+
     const shopper = await feed(order.shopper);
-    expect(shopper.items.some((n) => n.type === 'offer_accepted')).toBe(false);
+    const accepted = shopper.items.find((n) => n.type === 'offer_accepted');
+    expect(accepted).toBeDefined();
+    expect(accepted!.order_id).toBe(order.orderId);
+    expect(accepted!.body).toMatch(/pay within \d+ minutes/i);
   });
 
   it('notifies the shopper when the traveler uploads a purchase receipt', async () => {

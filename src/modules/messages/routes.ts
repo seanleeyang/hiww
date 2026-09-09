@@ -31,6 +31,11 @@ async function loadOrderForParticipant(request: any, orderId: string): Promise<a
   return order;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function chatDeletedColumnFor(order: any, userId: string): 'chat_deleted_by_shopper_at' | 'chat_deleted_by_traveler_at' {
+  return order.shopper_id === userId ? 'chat_deleted_by_shopper_at' : 'chat_deleted_by_traveler_at';
+}
+
 /**
  * Order-scoped messaging. A conversation is every message with the same
  * `order_id`; the inbox groups by order. Poll-based — no websockets in the pilot.
@@ -41,7 +46,19 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
     '/api/orders/:id/messages',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
-      await loadOrderForParticipant(request, request.params.id);
+      const order = await loadOrderForParticipant(request, request.params.id);
+
+      // Deleting a closed chat only hides it from the deleter's own view —
+      // the other party's copy, and the underlying rows, are untouched.
+      const deletedAt = order[chatDeletedColumnFor(order, request.userId)];
+      if (deletedAt) {
+        reply.send({
+          success: true,
+          data: { items: [], counterparty_typing: false, closed: true, deleted: true },
+          code: 'MESSAGES_LISTED',
+        });
+        return;
+      }
 
       const rows = await request.db
         .selectFrom('messages')
@@ -72,6 +89,8 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         data: {
           items,
           counterparty_typing: isCounterpartyTyping(request.params.id, request.userId),
+          closed: order.status === 'delivered',
+          deleted: false,
         },
         code: 'MESSAGES_LISTED',
       });
@@ -86,7 +105,12 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'messages.invalidBody');
       }
-      await loadOrderForParticipant(request, request.params.id);
+      const order = await loadOrderForParticipant(request, request.params.id);
+      // The shopper confirming receipt (and releasing payment) is the
+      // natural end of the conversation — nothing left to coordinate on.
+      if (order.status === 'delivered') {
+        throw new AppError('INVALID_STATUS', 409, 'messages.chatClosed');
+      }
 
       const id = generateId();
 
@@ -204,6 +228,29 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
     }
   );
 
+  // Hide a closed chat from the caller's own inbox/view. Only sets the
+  // caller's own timestamp — never touches the other party's copy or the
+  // message rows themselves, which stay intact for dispute/support
+  // reference. Only available once the chat is actually closed (delivered).
+  app.post<{ Params: { id: string } }>(
+    '/api/orders/:id/messages/delete-chat',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const order = await loadOrderForParticipant(request, request.params.id);
+      if (order.status !== 'delivered') {
+        throw new AppError('INVALID_STATUS', 409, 'messages.chatNotYetClosed');
+      }
+
+      await request.db
+        .updateTable('orders')
+        .set({ [chatDeletedColumnFor(order, request.userId)]: new Date(), updated_at: new Date() })
+        .where('id', '=', request.params.id)
+        .execute();
+
+      reply.send({ success: true, data: { ok: true }, code: 'CHAT_DELETED' });
+    }
+  );
+
   // Every order the caller is in that has at least one message.
   app.get(
     '/api/inbox',
@@ -211,7 +258,15 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
     async (request: any, reply: any) => {
       const orders = await request.db
         .selectFrom('orders')
-        .select(['id', 'shopper_id', 'traveler_id', 'item_description', 'status'])
+        .select([
+          'id',
+          'shopper_id',
+          'traveler_id',
+          'item_description',
+          'status',
+          'chat_deleted_by_shopper_at',
+          'chat_deleted_by_traveler_at',
+        ])
         .where((eb: any) =>
           eb.or([eb('shopper_id', '=', request.userId), eb('traveler_id', '=', request.userId)])
         )
@@ -220,6 +275,8 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const threads: any[] = [];
       for (const order of orders) {
+        if (order[chatDeletedColumnFor(order, request.userId)]) continue;
+
         const last = await request.db
           .selectFrom('messages')
           .select(['id', 'sender_id', 'body', 'image_url', 'hidden_at', 'created_at'])

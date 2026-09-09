@@ -174,6 +174,14 @@ export interface OrdersTable {
   shopper_total?: string | null;
   traveller_payout?: string | null;
   currency?: string | null;
+  /**
+   * Order chat closes once `status` reaches `delivered` (migration 029) —
+   * see `messages/routes.ts`. Either side can then "delete" the closed
+   * chat from their own view; this only sets their own timestamp, never
+   * touches the message rows or the other side's copy.
+   */
+  chat_deleted_by_shopper_at?: Date | null;
+  chat_deleted_by_traveler_at?: Date | null;
   created_at: Date;
   updated_at: Date;
 }

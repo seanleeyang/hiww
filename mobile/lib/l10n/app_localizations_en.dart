@@ -1286,6 +1286,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get purchaseReceiptTitle => 'Purchase receipt';
 
   @override
+  String get chatClosedBanner => 'This chat is closed — the order is complete.';
+
+  @override
+  String get chatDeletedMessage => 'You deleted this conversation.';
+
+  @override
+  String get actionDeleteChat => 'Delete chat';
+
+  @override
+  String get dialogDeleteChatTitle => 'Delete this chat?';
+
+  @override
+  String get dialogDeleteChatBody =>
+      'This only removes it from your own inbox. The other person can still see it.';
+
+  @override
   String get actionSkip => 'Skip';
 
   @override
