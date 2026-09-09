@@ -149,4 +149,27 @@ void main() {
 
     expect(find.text('Nike Dunk Low Panda'), findsOneWidget);
   });
+
+  testWidgets('a pending offer I made as a traveler shows under Requested', (tester) async {
+    await tester.pumpWidget(_wrap(
+      [],
+      negotiations: [
+        const Offer(
+          id: 'offer-1',
+          quotedPrice: '500.00',
+          requestId: 'want-9',
+          requestItem: 'Onitsuka Tiger Mexico 66',
+          requestStatus: 'open',
+          myRole: 'traveler',
+          counterpartyName: 'Nuch S',
+          status: 'pending',
+          lastActor: 'traveler',
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Onitsuka Tiger Mexico 66'), findsOneWidget);
+    expect(find.text('Nuch S'), findsOneWidget);
+  });
 }

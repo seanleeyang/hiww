@@ -45,6 +45,18 @@ class _OrderEntry extends _Entry {
   DateTime get sortKey => order.createdAt ?? DateTime(0);
 }
 
+/// An offer the caller made as a traveler that's still awaiting a decision.
+/// The shopper's side of the same negotiation surfaces via a `pendingOffer`
+/// on their own `_WantEntry` below — but the traveler has no want of their
+/// own to attach it to, so it needs its own card, or it's invisible to them
+/// anywhere except a notification's deep link.
+class _NegotiationEntry extends _Entry {
+  _NegotiationEntry(this.offer);
+  final Offer offer;
+  @override
+  DateTime get sortKey => offer.createdAt ?? DateTime(0);
+}
+
 typedef _Buckets = ({
   List<_Entry> requested,
   List<Order> inTransit,
@@ -97,6 +109,12 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
         requested.add(_WantEntry(w, pendingByRequest[w.id]));
       }
       // 'accepted' wants are represented by their linked order below instead.
+    }
+
+    for (final o in negotiations) {
+      if (o.myRole == 'traveler' && o.status == 'pending' && o.requestId != null) {
+        requested.add(_NegotiationEntry(o));
+      }
     }
 
     for (final o in orders) {
@@ -257,6 +275,7 @@ class _EntryList extends StatelessWidget {
         return switch (e) {
           _WantEntry() => _WantCard(want: e.want, pendingOffer: e.pendingOffer),
           _OrderEntry() => _OrderCard(order: e.order, isShopper: me?.id == e.order.shopperId),
+          _NegotiationEntry() => _NegotiationCard(offer: e.offer),
         };
       },
     );
@@ -408,6 +427,81 @@ class _WantCardState extends ConsumerState<_WantCard> {
               onReject: _reject,
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A traveler's own outgoing offer, still being negotiated. Mirrors
+/// `_WantCard`'s inline negotiation controls so the traveler can respond to
+/// a counter (or just see they're waiting on the shopper) without leaving
+/// My Orders.
+class _NegotiationCard extends ConsumerStatefulWidget {
+  const _NegotiationCard({required this.offer});
+  final Offer offer;
+
+  @override
+  ConsumerState<_NegotiationCard> createState() => _NegotiationCardState();
+}
+
+class _NegotiationCardState extends ConsumerState<_NegotiationCard> {
+  Future<void> _refresh() async {
+    ref.invalidate(negotiationsProvider);
+  }
+
+  Future<void> _accept() async {
+    final orderId = await ref.read(offersRepositoryProvider).accept(widget.offer.id);
+    await _refresh();
+    ref.invalidate(myOrdersProvider);
+    ref.invalidate(orderIdByRequestProvider);
+    if (mounted) context.push('/orders/$orderId');
+  }
+
+  Future<void> _counter(String price) async {
+    await ref.read(offersRepositoryProvider).counter(widget.offer.id, price);
+    await _refresh();
+  }
+
+  Future<void> _reject() async {
+    await ref.read(offersRepositoryProvider).reject(widget.offer.id);
+    await _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final o = widget.offer;
+    return SoftCard(
+      onTap: () => context.push('/wants/${o.requestId}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(o.requestItem ?? l10n.fallbackOfferTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              ),
+              StatusPill(o.status),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(spacing: 12, runSpacing: 4, children: [
+            IconLine(Icons.sell_outlined, o.priceLabel),
+            if (o.counterpartyName != null)
+              IconLine(Icons.person_outline, o.counterpartyName!),
+          ]),
+          const SizedBox(height: 12),
+          OfferNegotiationActions(
+            offer: o,
+            enabled: o.requestStatus == 'open',
+            onAccept: _accept,
+            onCounter: _counter,
+            onReject: _reject,
+          ),
         ],
       ),
     );
