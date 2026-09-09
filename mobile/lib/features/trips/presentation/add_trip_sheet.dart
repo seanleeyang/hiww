@@ -3,12 +3,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/cities.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
+import 'date_range_sheet.dart';
+
+/// Empty-string sentinel for "nothing picked yet" — lets a dropdown show a
+/// real "Select" placeholder entry instead of defaulting to a value.
+const _unselected = '';
+
+/// Sentinel for "Others" in a city dropdown — reveals a free-text field for
+/// a city not in the curated list.
+const _othersCity = '__others__';
+
+/// Sentinel for "Any" in a city dropdown — a deliberate choice meaning no
+/// specific city, distinct from [_unselected] (no choice made).
+const _anyCity = '__any__';
+
+/// Matches [city] against the curated list for [country]: an exact match
+/// preselects that city, anything else preselects "Others" with the value
+/// carried over into the custom field.
+String _initialCityChoice(String country, String? city) {
+  if (city == null || city.isEmpty) return _unselected;
+  final matches = kCities.any(
+    (c) => c.countryCode == country && c.city.toLowerCase() == city.toLowerCase(),
+  );
+  return matches ? city : _othersCity;
+}
 
 /// Posting a new trip is a near-full-height bottom sheet, matching the
 /// Create Order flow's presentation. Editing an existing trip is a separate,
@@ -59,27 +84,49 @@ class _AddTripSheet extends ConsumerStatefulWidget {
 }
 
 class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
-  late final _fromCity = TextEditingController(text: widget.fromCity ?? '');
-  late final _toCity = TextEditingController(text: widget.toCity ?? '');
   final _note = TextEditingController();
   final _weight = TextEditingController(text: '8');
   final _items = TextEditingController(text: '5');
   late String _from = widget.fromCountry ?? 'TH';
   late String _to = widget.toCountry ?? 'JP';
+  late String _fromCityChoice = _initialCityChoice(_from, widget.fromCity);
+  late String _toCityChoice = _initialCityChoice(_to, widget.toCity);
+  late final _fromCityCustom = TextEditingController(
+    text: _fromCityChoice == _othersCity ? (widget.fromCity ?? '') : '',
+  );
+  late final _toCityCustom = TextEditingController(
+    text: _toCityChoice == _othersCity ? (widget.toCity ?? '') : '',
+  );
   String? _coverUrl;
   late DateTime? _depart = widget.depart;
   late DateTime? _ret = widget.ret;
   bool _submitting = false;
   String? _error;
 
+  String _cityValueFor(String choice, TextEditingController custom) {
+    if (choice == _othersCity) return custom.text.trim();
+    if (choice == _unselected || choice == _anyCity) return '';
+    return choice;
+  }
+
   @override
   void dispose() {
-    _fromCity.dispose();
-    _toCity.dispose();
+    _fromCityCustom.dispose();
+    _toCityCustom.dispose();
     _note.dispose();
     _weight.dispose();
     _items.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDates() async {
+    final picked = await showDateRangeSheet(context, initialStart: _depart, initialEnd: _ret);
+    if (picked == null) return;
+    final (start, end) = picked;
+    setState(() {
+      _depart = start;
+      _ret = end;
+    });
   }
 
   Future<void> _submit() async {
@@ -106,8 +153,8 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
       final id = await ref.read(tripsRepositoryProvider).create(
             departureCountry: _from,
             arrivalCountry: _to,
-            departureCity: _fromCity.text.trim(),
-            arrivalCity: _toCity.text.trim(),
+            departureCity: _cityValueFor(_fromCityChoice, _fromCityCustom),
+            arrivalCity: _cityValueFor(_toCityChoice, _toCityCustom),
             departureDate: _depart!,
             returnDate: _ret!,
             maxWeightKg: weight,
@@ -162,20 +209,53 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _countryRow(l10n.labelFrom, _from, _fromCity, (v) => setState(() => _from = v)),
-                  const SizedBox(height: 14),
-                  _countryRow(l10n.labelTo, _to, _toCity, (v) => setState(() => _to = v)),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _dateField(l10n.labelDeparture, _depart, (d) => setState(() => _depart = d)),
+                  Text(l10n.labelFrom, style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 8),
+                  _countryCityRow(
+                    country: _from,
+                    onCountryChanged: (v) => setState(() {
+                      _from = v;
+                      _fromCityChoice = _unselected;
+                      _fromCityCustom.clear();
+                    }),
+                    cityChoice: _fromCityChoice,
+                    onCityChoiceChanged: (v) => setState(() => _fromCityChoice = v),
+                    customCityController: _fromCityCustom,
+                    keyPrefix: 'from',
+                  ),
+                  const SizedBox(height: 18),
+                  Text(l10n.labelTo, style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 8),
+                  _countryCityRow(
+                    country: _to,
+                    onCountryChanged: (v) => setState(() {
+                      _to = v;
+                      _toCityChoice = _unselected;
+                      _toCityCustom.clear();
+                    }),
+                    cityChoice: _toCityChoice,
+                    onCityChoiceChanged: (v) => setState(() => _toCityChoice = v),
+                    customCityController: _toCityCustom,
+                    keyPrefix: 'to',
+                  ),
+                  const SizedBox(height: 18),
+                  Text(l10n.labelTravelDates, style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: _pickDates,
+                    icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                    label: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        (_depart != null && _ret != null)
+                            ? '${shortDate(_depart)} – ${shortDate(_ret)}'
+                            : l10n.labelTravelDates,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _dateField(l10n.labelReturn, _ret, (d) => setState(() => _ret = d)),
-                      ),
-                    ],
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      alignment: Alignment.centerLeft,
+                    ),
                   ),
                   const SizedBox(height: 14),
                   Row(
@@ -236,53 +316,61 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
     );
   }
 
-  Widget _countryRow(
-    String label,
-    String code,
-    TextEditingController city,
-    ValueChanged<String> onCountry,
-  ) {
+  Widget _countryCityRow({
+    required String country,
+    required ValueChanged<String> onCountryChanged,
+    required String cityChoice,
+    required ValueChanged<String> onCityChoiceChanged,
+    required TextEditingController customCityController,
+    required String keyPrefix,
+  }) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: DropdownButtonFormField<String>(
-            initialValue: code,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: label),
-            items: [
-              for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
-            ],
-            onChanged: (v) => onCountry(v ?? code),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                initialValue: country,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: l10n.labelCountry),
+                items: [
+                  for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
+                ],
+                onChanged: (v) => onCountryChanged(v ?? country),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                key: ValueKey('$keyPrefix-city-$country'),
+                initialValue: cityChoice,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: l10n.fieldCity),
+                items: [
+                  DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
+                  DropdownMenuItem(value: _anyCity, child: Text(l10n.cityOptionAny)),
+                  for (final c in kCities.where((c) => c.countryCode == country))
+                    DropdownMenuItem(value: c.city, child: Text(c.city)),
+                  DropdownMenuItem(value: _othersCity, child: Text(l10n.cityOptionOthers)),
+                ],
+                onChanged: (v) => onCityChoiceChanged(v ?? _unselected),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: TextField(
-            controller: city,
-            decoration: InputDecoration(labelText: l10n.fieldCityOptional),
+        if (cityChoice == _othersCity) ...[
+          const SizedBox(height: 8),
+          TextField(
+            controller: customCityController,
+            decoration: InputDecoration(
+              labelText: l10n.fieldCity,
+              hintText: l10n.hintCityCustom,
+            ),
           ),
-        ),
+        ],
       ],
-    );
-  }
-
-  Widget _dateField(String label, DateTime? value, ValueChanged<DateTime> onPick) {
-    return OutlinedButton(
-      onPressed: () async {
-        final now = DateTime.now();
-        final picked = await showDatePicker(
-          context: context,
-          firstDate: now,
-          lastDate: now.add(const Duration(days: 365)),
-          initialDate: value ?? now.add(const Duration(days: 7)),
-        );
-        if (picked != null) onPick(picked);
-      },
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(value == null ? label : shortDate(value)),
-      ),
     );
   }
 }
