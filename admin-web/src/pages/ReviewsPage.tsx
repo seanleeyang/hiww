@@ -1,21 +1,36 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../api/client';
+import { api, ApiError } from '../api/client';
 import type { AdminReview } from '../api/types';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useToast } from '../components/Toast';
 import { dateTime } from '../lib/format';
 
 export function ReviewsPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const reviews = useQuery({ queryKey: ['admin-reviews-list'], queryFn: () => api.get<{ reviews: AdminReview[] }>('/admin/order-reviews') });
+  const [hiding, setHiding] = useState<AdminReview | null>(null);
+
+  const onError = (err: unknown) => toast(err instanceof ApiError ? err.message : 'Something went wrong', 'error');
 
   const hide = useMutation({
     mutationFn: (id: string) => api.post(`/admin/order-reviews/${id}/hide`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reviews-list'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-reviews-list'] });
+      toast('Review hidden');
+    },
+    onError,
   });
   const unhide = useMutation({
     mutationFn: (id: string) => api.post(`/admin/order-reviews/${id}/unhide`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reviews-list'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-reviews-list'] });
+      toast('Review restored');
+    },
+    onError,
   });
 
   if (reviews.isLoading) return <LoadingState />;
@@ -45,7 +60,8 @@ export function ReviewsPage() {
               <button
                 type="button"
                 className="btn btn-small"
-                onClick={() => (r.hidden_at ? unhide.mutate(r.id) : hide.mutate(r.id))}
+                disabled={unhide.isPending}
+                onClick={() => (r.hidden_at ? unhide.mutate(r.id) : setHiding(r))}
               >
                 {r.hidden_at ? 'Unhide' : 'Hide'}
               </button>
@@ -53,6 +69,19 @@ export function ReviewsPage() {
           </Card>
         ))
       )}
+
+      <ConfirmDialog
+        open={hiding !== null}
+        title="Hide this review"
+        description={hiding ? `Removes it from ${hiding.reviewee_name}'s public reviews. You can unhide it again any time.` : undefined}
+        confirmLabel="Hide review"
+        danger
+        onClose={() => setHiding(null)}
+        onConfirm={async () => {
+          if (!hiding) return;
+          await hide.mutateAsync(hiding.id);
+        }}
+      />
     </div>
   );
 }

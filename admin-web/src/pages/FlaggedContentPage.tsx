@@ -5,6 +5,8 @@ import { api } from '../api/client';
 import type { QueueItem } from '../api/types';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
+import { useToast } from '../components/Toast';
+import { ApiError } from '../api/client';
 import { riskLabel, riskTone } from '../lib/status';
 import { money } from '../lib/format';
 
@@ -13,16 +15,27 @@ type MessageItem = Extract<QueueItem, { type: 'message' }>;
 
 export function FlaggedContentPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const [tab, setTab] = useState<'receipts' | 'messages'>('receipts');
   const queue = useQuery({ queryKey: ['admin-reviews'], queryFn: () => api.get<{ queue: QueueItem[] }>('/admin/reviews') });
 
+  const onError = (err: unknown) => toast(err instanceof ApiError ? err.message : 'Something went wrong', 'error');
+
   const clearReceipt = useMutation({
     mutationFn: (orderId: string) => api.post(`/admin/orders/${orderId}/clear-receipt-flag`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reviews'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-reviews'] });
+      toast('Receipt flag cleared');
+    },
+    onError,
   });
   const clearMessage = useMutation({
     mutationFn: (messageId: string) => api.post(`/admin/messages/${messageId}/clear-flag`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reviews'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-reviews'] });
+      toast('Message flag cleared');
+    },
+    onError,
   });
 
   if (queue.isLoading) return <LoadingState />;
@@ -63,7 +76,7 @@ export function FlaggedContentPage() {
                     </a>
                   )}
                 </div>
-                <button type="button" className="btn" onClick={() => clearReceipt.mutate(r.order_id)}>
+                <button type="button" className="btn" disabled={clearReceipt.isPending} onClick={() => clearReceipt.mutate(r.order_id)}>
                   Clear flag
                 </button>
               </div>
@@ -86,7 +99,7 @@ export function FlaggedContentPage() {
                   <p>{m.body}</p>
                   {m.summary && <p className="muted">{m.summary}</p>}
                 </div>
-                <button type="button" className="btn" onClick={() => clearMessage.mutate(m.id)}>
+                <button type="button" className="btn" disabled={clearMessage.isPending} onClick={() => clearMessage.mutate(m.id)}>
                   Clear flag
                 </button>
               </div>

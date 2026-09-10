@@ -5,10 +5,12 @@ import { api } from '../api/client';
 import type { Dispute, QueueItem } from '../api/types';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useToast } from '../components/Toast';
 import { dateTime } from '../lib/format';
 
 export function DisputesPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const queue = useQuery({ queryKey: ['admin-reviews'], queryFn: () => api.get<{ queue: QueueItem[] }>('/admin/reviews') });
   const [resolving, setResolving] = useState<Dispute | null>(null);
   const [cancelling, setCancelling] = useState<Dispute | null>(null);
@@ -16,7 +18,10 @@ export function DisputesPage() {
   const resolve = useMutation({
     mutationFn: ({ id, resolution, status }: { id: string; resolution: string; status: 'resolved' | 'closed' }) =>
       api.post(`/admin/disputes/${id}/resolve`, { status, resolution }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reviews'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-reviews'] });
+      toast('Dispute resolved');
+    },
   });
 
   const cancelOrder = useMutation({
@@ -26,6 +31,7 @@ export function DisputesPage() {
       qc.invalidateQueries({ queryKey: ['admin-reviews'] });
       qc.invalidateQueries({ queryKey: ['reconciliation'] });
       qc.invalidateQueries({ queryKey: ['orders'] });
+      toast('Order cancelled and dispute resolved');
     },
   });
 

@@ -7,6 +7,7 @@ import { Card, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { MoneyActionDialog } from '../components/MoneyActionDialog';
+import { useToast } from '../components/Toast';
 import { orderStatusLabel, orderStatusTone } from '../lib/status';
 import { dateTime, money } from '../lib/format';
 
@@ -23,10 +24,12 @@ export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const toast = useToast();
   const [cancelling, setCancelling] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [recordingPayout, setRecordingPayout] = useState(false);
   const [recordingRefund, setRecordingRefund] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const order = useQuery({ queryKey: ['order', id], queryFn: () => api.get<Order>(`/orders/${id}`), enabled: Boolean(id) });
   const users = useQuery({ queryKey: ['admin-users'], queryFn: () => api.get<{ users: AdminUser[] }>('/admin/users') });
@@ -41,21 +44,33 @@ export function OrderDetailPage() {
 
   const confirmPayment = useMutation({
     mutationFn: () => api.post('/payments/confirm', { order_id: id }),
-    onSuccess: invalidateAll,
+    onSuccess: () => {
+      invalidateAll();
+      toast('Payment confirmed');
+    },
   });
   const cancelOrder = useMutation({
     mutationFn: (reason: string) => api.post(`/admin/orders/${id}/cancel`, { reason }),
-    onSuccess: invalidateAll,
+    onSuccess: () => {
+      invalidateAll();
+      toast('Order cancelled');
+    },
   });
   const recordPayout = useMutation({
     mutationFn: (input: { method: string; reference: string; note?: string }) =>
       api.post('/payments/payout', { order_id: id, ...input }),
-    onSuccess: invalidateAll,
+    onSuccess: () => {
+      invalidateAll();
+      toast('Payout recorded');
+    },
   });
   const recordRefund = useMutation({
     mutationFn: (input: { method: string; reference: string; note?: string }) =>
       api.post(`/admin/orders/${id}/refund`, input),
-    onSuccess: invalidateAll,
+    onSuccess: () => {
+      invalidateAll();
+      toast('Refund recorded');
+    },
   });
 
   if (order.isLoading) return <LoadingState />;
@@ -64,12 +79,33 @@ export function OrderDetailPage() {
 
   const nameById = new Map((users.data?.users ?? []).map((u) => [u.id, u.full_name]));
   const linkedDispute = queue.data?.queue.find((q) => q.type === 'dispute' && q.order_id === o.id);
+  const payoutAmount = money(o.traveller_payout ?? o.total_price);
+  const refundAmount = money(o.shopper_total ?? o.total_price);
+  const paymentConfirmed = Boolean(o.confirmed_at);
+
+  function copyId() {
+    void navigator.clipboard.writeText(o.id).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
 
   return (
     <div>
+      <Link to="/orders" className="breadcrumb">
+        ← Orders
+      </Link>
+
       <PageHeader
         title={o.item_description}
-        subtitle={`Order ${o.id}`}
+        subtitle={
+          <>
+            Order <code className="mono-id">{o.id.slice(0, 8)}</code>
+            <button type="button" className="btn-inline-copy" onClick={copyId}>
+              {copied ? 'Copied' : 'Copy full ID'}
+            </button>
+          </>
+        }
         actions={
           <div className="btn-row">
             {o.status === 'pending_payment' && (
@@ -82,12 +118,12 @@ export function OrderDetailPage() {
                 Record payout
               </button>
             )}
-            {o.status === 'cancelled' && o.confirmed_at && (
+            {o.status === 'cancelled' && paymentConfirmed && (
               <button type="button" className="btn btn-primary" onClick={() => setRecordingRefund(true)}>
                 Record refund
               </button>
             )}
-            {o.status !== 'cancelled' && (
+            {o.status !== 'cancelled' && !linkedDispute && (
               <button type="button" className="btn btn-danger" onClick={() => setCancelling(true)}>
                 Cancel order
               </button>
@@ -98,7 +134,9 @@ export function OrderDetailPage() {
 
       {linkedDispute && (
         <div className="error-state" style={{ marginBottom: 16 }}>
-          <p>This order has an open dispute. Resolve it from the Disputes page before releasing or paying out.</p>
+          <p>
+            This order has an open dispute — payout, refund, and cancellation are all locked here until it's resolved.
+          </p>
           <Link to="/disputes" className="btn btn-ghost">
             Go to Disputes
           </Link>
@@ -106,8 +144,18 @@ export function OrderDetailPage() {
       )}
 
       <div className="section">
-        <Card title="Status">
-          <StatusPill label={orderStatusLabel(o.status)} tone={orderStatusTone(o.status)} />
+        <Card title="Status & timeline">
+          <div style={{ marginBottom: 14 }}>
+            <StatusPill label={orderStatusLabel(o.status)} tone={orderStatusTone(o.status)} />
+          </div>
+          <ol className="timeline">
+            {TIMELINE_STEPS.filter((step) => o[step.key]).map((step) => (
+              <li key={step.key}>
+                <span className="timeline-label">{step.label}</span>
+                <span className="timeline-time">{dateTime(o[step.key] as string)}</span>
+              </li>
+            ))}
+          </ol>
         </Card>
 
         <Card title="Parties">
@@ -120,30 +168,28 @@ export function OrderDetailPage() {
         </Card>
 
         <Card title="Money">
-          <p>
-            <strong>Total price:</strong> {money(o.total_price)}
-          </p>
-          <p>
-            <strong>Fees:</strong> {money(o.fees)}
-          </p>
-          {o.shopper_total && (
-            <p>
-              <strong>Shopper pays:</strong> {money(o.shopper_total)}
-            </p>
-          )}
-          {o.traveller_payout && (
-            <p>
-              <strong>Traveler receives:</strong> {money(o.traveller_payout)}
-            </p>
-          )}
-        </Card>
-
-        <Card title="Timeline">
-          {TIMELINE_STEPS.filter((step) => o[step.key]).map((step) => (
-            <p key={step.key}>
-              <strong>{step.label}:</strong> {dateTime(o[step.key] as string)}
-            </p>
-          ))}
+          <div className="money-breakdown">
+            <div className="money-row">
+              <span>Total price</span>
+              <span>{money(o.total_price)}</span>
+            </div>
+            <div className="money-row">
+              <span>Platform fees</span>
+              <span>{money(o.fees)}</span>
+            </div>
+            {o.shopper_total && (
+              <div className="money-row money-row-total">
+                <span>Shopper pays</span>
+                <span>{money(o.shopper_total)}</span>
+              </div>
+            )}
+            {o.traveller_payout && (
+              <div className="money-row money-row-total">
+                <span>Traveler receives</span>
+                <span>{money(o.traveller_payout)}</span>
+              </div>
+            )}
+          </div>
         </Card>
 
         {(o.purchase_proof_url || o.item_photo_url || o.shipping_proof_url || o.delivery_proof_url) && (
@@ -188,7 +234,11 @@ export function OrderDetailPage() {
       <ConfirmDialog
         open={cancelling}
         title="Cancel this order"
-        description="Cancels the order from its current status. Both parties are notified; if payment had been confirmed, every admin gets a refund-owed notice."
+        description={
+          paymentConfirmed
+            ? `Payment for this order (${money(o.shopper_total ?? o.total_price)}) has already been confirmed. Cancelling will create a ${refundAmount} refund obligation — every admin gets notified, and it'll show under Money → Awaiting refund until you record it.`
+            : 'No payment has been confirmed for this order yet — cancelling now creates no refund obligation.'
+        }
         reason={{ label: 'Reason', minLength: 10, placeholder: 'Why this order is being cancelled…' }}
         confirmLabel="Cancel order"
         danger
@@ -202,6 +252,8 @@ export function OrderDetailPage() {
         open={recordingPayout}
         title="Record payout"
         description="Record that you've sent the traveler their payout out of band."
+        amount={payoutAmount}
+        context={o.item_description}
         confirmLabel="Record payout"
         onClose={() => setRecordingPayout(false)}
         onConfirm={async (input) => {
@@ -213,6 +265,8 @@ export function OrderDetailPage() {
         open={recordingRefund}
         title="Record refund"
         description="Record that you've refunded the shopper out of band."
+        amount={refundAmount}
+        context={o.item_description}
         confirmLabel="Record refund"
         onClose={() => setRecordingRefund(false)}
         onConfirm={async (input) => {

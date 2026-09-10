@@ -5,10 +5,12 @@ import { api } from '../api/client';
 import type { MoneyOrderRow, Reconciliation } from '../api/types';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader, Stat, StatGrid } from '../components/ui';
 import { MoneyActionDialog } from '../components/MoneyActionDialog';
+import { useToast } from '../components/Toast';
 import { money } from '../lib/format';
 
 export function MoneyPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const recon = useQuery({ queryKey: ['reconciliation'], queryFn: () => api.get<Reconciliation>('/ops/reconciliation') });
   const [payingOut, setPayingOut] = useState<MoneyOrderRow | null>(null);
   const [refunding, setRefunding] = useState<MoneyOrderRow | null>(null);
@@ -17,12 +19,18 @@ export function MoneyPage() {
   const payout = useMutation({
     mutationFn: (input: { order_id: string; method: string; reference: string; note?: string }) =>
       api.post('/payments/payout', input),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      toast('Payout recorded');
+    },
   });
   const refund = useMutation({
     mutationFn: ({ orderId, ...input }: { orderId: string; method: string; reference: string; note?: string }) =>
       api.post(`/admin/orders/${orderId}/refund`, input),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      toast('Refund recorded');
+    },
   });
 
   if (recon.isLoading) return <LoadingState />;
@@ -194,6 +202,8 @@ export function MoneyPage() {
         open={payingOut !== null}
         title="Record payout"
         description="Record that you've sent the traveler their payout out of band."
+        amount={money(payingOut?.traveller_payout ?? payingOut?.total_price)}
+        context={payingOut?.item_description ?? ''}
         confirmLabel="Record payout"
         onClose={() => setPayingOut(null)}
         onConfirm={async (input) => {
@@ -206,6 +216,8 @@ export function MoneyPage() {
         open={refunding !== null}
         title="Record refund"
         description="Record that you've refunded the shopper out of band."
+        amount={money(refunding?.shopper_total ?? refunding?.total_price)}
+        context={refunding?.item_description ?? ''}
         confirmLabel="Record refund"
         onClose={() => setRefunding(null)}
         onConfirm={async (input) => {

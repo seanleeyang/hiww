@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OrderDetailPage } from './OrderDetailPage';
 import { api } from '../api/client';
+import { ToastProvider } from '../components/Toast';
 import type { Order } from '../api/types';
 
 vi.mock('../api/client', async () => {
@@ -39,11 +40,13 @@ function renderOrderDetail(order: Order) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/orders/${order.id}`]}>
-        <Routes>
-          <Route path="/orders/:id" element={<OrderDetailPage />} />
-        </Routes>
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={[`/orders/${order.id}`]}>
+          <Routes>
+            <Route path="/orders/:id" element={<OrderDetailPage />} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }
@@ -91,15 +94,58 @@ describe('OrderDetailPage action set', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[`/orders/${order.id}`]}>
-          <Routes>
-            <Route path="/orders/:id" element={<OrderDetailPage />} />
-          </Routes>
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter initialEntries={[`/orders/${order.id}`]}>
+            <Routes>
+              <Route path="/orders/:id" element={<OrderDetailPage />} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
       </QueryClientProvider>
     );
 
     await waitFor(() => expect(screen.getByText(/open dispute/i)).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Record payout' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel order' })).not.toBeInTheDocument();
+  });
+
+  it('warns about the specific refund amount when cancelling an order with confirmed payment', async () => {
+    const order = baseOrder({
+      status: 'confirmed',
+      confirmed_at: new Date().toISOString(),
+      shopper_total: '150.00',
+    });
+    renderOrderDetail(order);
+
+    const cancelButton = await screen.findByRole('button', { name: 'Cancel order' });
+    cancelButton.click();
+
+    const description = await screen.findByText(/already been confirmed/i);
+    expect(description.textContent).toContain('฿150.00');
+  });
+
+  it('does not warn about a refund when cancelling an order with no confirmed payment', async () => {
+    renderOrderDetail(baseOrder({ status: 'pending_payment' }));
+
+    const cancelButton = await screen.findByRole('button', { name: 'Cancel order' });
+    cancelButton.click();
+
+    expect(await screen.findByText(/no refund obligation/i)).toBeInTheDocument();
+  });
+
+  it('shows the payout amount inside the "Record payout" dialog', async () => {
+    renderOrderDetail(
+      baseOrder({
+        status: 'delivered',
+        confirmed_at: new Date().toISOString(),
+        delivered_at: new Date().toISOString(),
+        traveller_payout: '85.50',
+      })
+    );
+
+    const payoutButton = await screen.findByRole('button', { name: 'Record payout' });
+    payoutButton.click();
+
+    expect(await screen.findByText('฿85.50')).toBeInTheDocument();
   });
 });

@@ -9,6 +9,16 @@ export function setToken(token: string | null): void {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
+// A 401 means the session died server-side (expired/revoked token) — the UI
+// needs to know immediately rather than staying on a stale "signed in" shell
+// until the next action throws a confusing, unrelated-looking error.
+// AuthProvider registers itself here on mount so this module doesn't need to
+// import React state directly.
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler;
+}
+
 export class ApiError extends Error {
   status: number;
   code?: string;
@@ -46,7 +56,10 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   }
 
   if (!res.ok) {
-    if (res.status === 401) setToken(null);
+    if (res.status === 401) {
+      setToken(null);
+      onUnauthorized?.();
+    }
     throw new ApiError(json?.error ?? `Request failed (${res.status})`, res.status, json?.code);
   }
 

@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { ApiError } from '../api/client';
+import { useModalA11y } from './useModalA11y';
 
 interface MoneyActionDialogProps {
   open: boolean;
   title: string;
   description?: string;
+  /** The already-formatted amount (e.g. "฿4,500.00") — restated prominently
+   * so the admin has a final on-screen check of the figure they're
+   * attesting to, since it's easy to lose track of once the row's table is
+   * behind the modal. */
+  amount: string;
+  /** What the amount is for — the order's item description, shown next to
+   * the amount so two similarly-priced orders can't be confused. */
+  context: string;
   confirmLabel: string;
   onConfirm: (input: { method: string; reference: string; note?: string }) => Promise<void>;
   onClose: () => void;
@@ -14,16 +23,31 @@ interface MoneyActionDialogProps {
  * method + reference (proof the money actually moved out of band) plus an
  * optional note. See POST /api/payments/payout and
  * POST /api/admin/orders/:id/refund. */
-export function MoneyActionDialog({ open, title, description, confirmLabel, onConfirm, onClose }: MoneyActionDialogProps) {
+export function MoneyActionDialog({
+  open,
+  title,
+  description,
+  amount,
+  context,
+  confirmLabel,
+  onConfirm,
+  onClose,
+}: MoneyActionDialogProps) {
   const [method, setMethod] = useState('bank_transfer');
   const [reference, setReference] = useState('');
   const [note, setNote] = useState('');
+  const [referenceTouched, setReferenceTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const modalRef = useModalA11y(open, onClose);
 
   if (!open) return null;
 
+  const referenceMissing = reference.trim().length === 0;
+
   async function submit() {
+    setReferenceTouched(true);
+    if (referenceMissing) return;
     setBusy(true);
     setError(null);
     try {
@@ -40,9 +64,13 @@ export function MoneyActionDialog({ open, title, description, confirmLabel, onCo
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
         {description && <p className="modal-description">{description}</p>}
+        <div className="modal-amount">
+          <span className="modal-amount-value">{amount}</span>
+          <span className="modal-amount-context">{context}</span>
+        </div>
         <label>
           Method
           <select value={method} onChange={(e) => setMethod(e.target.value)}>
@@ -53,8 +81,16 @@ export function MoneyActionDialog({ open, title, description, confirmLabel, onCo
           </select>
         </label>
         <label>
-          Reference (transaction id, confirmation code…)
-          <input value={reference} onChange={(e) => setReference(e.target.value)} autoFocus />
+          Reference (transaction id, confirmation code…) <span className="required-mark">Required</span>
+          <input
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            onBlur={() => setReferenceTouched(true)}
+            autoFocus
+          />
+          {referenceTouched && referenceMissing && (
+            <span className="field-hint field-hint-error">Enter a reference before recording this.</span>
+          )}
         </label>
         <label>
           Note (optional)
@@ -65,7 +101,7 @@ export function MoneyActionDialog({ open, title, description, confirmLabel, onCo
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={busy}>
             Cancel
           </button>
-          <button type="button" className="btn btn-primary" onClick={submit} disabled={busy || reference.trim().length === 0}>
+          <button type="button" className="btn btn-primary" onClick={submit} disabled={busy}>
             {busy ? 'Working…' : confirmLabel}
           </button>
         </div>

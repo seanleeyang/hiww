@@ -253,7 +253,8 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   // cancelled trips untouched, since those aren't showing anywhere anyway
   // and this is meant to clear the live listings, not rewrite history.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.post('/api/admin/trips/remove-all', async (request, reply) => {
+  app.post<{ Body: unknown }>('/api/admin/trips/remove-all', async (request, reply) => {
+    const reason = typeof (request.body as any)?.reason === 'string' ? (request.body as any).reason.trim() : '';
     const now = new Date();
     const removed = await request.db
       .updateTable('trips')
@@ -266,8 +267,8 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       action: 'trip.remove_by_admin',
       targetType: 'trip',
       targetId: 'bulk',
-      summary: `Operator cancelled all ${removed.length} live trip(s)`,
-      metadata: { count: removed.length, ids: removed.map((r: { id: string }) => r.id) },
+      summary: `Operator cancelled all ${removed.length} live trip(s)${reason ? `: ${reason}` : ''}`,
+      metadata: { count: removed.length, ids: removed.map((r: { id: string }) => r.id), reason: reason || null },
     });
 
     reply.send({ success: true, data: { removed: removed.length }, code: 'TRIPS_REMOVED_BY_ADMIN' });
@@ -337,7 +338,8 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   // Bulk version — cancels every want still visible in the app (open or
   // accepted). Leaves completed and already-cancelled wants untouched.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.post('/api/admin/requests/remove-all', async (request, reply) => {
+  app.post<{ Body: unknown }>('/api/admin/requests/remove-all', async (request, reply) => {
+    const reason = typeof (request.body as any)?.reason === 'string' ? (request.body as any).reason.trim() : '';
     const now = new Date();
     const removed = await request.db
       .updateTable('requests')
@@ -350,8 +352,8 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       action: 'request.remove_by_admin',
       targetType: 'request',
       targetId: 'bulk',
-      summary: `Operator cancelled all ${removed.length} live want(s)`,
-      metadata: { count: removed.length, ids: removed.map((r: { id: string }) => r.id) },
+      summary: `Operator cancelled all ${removed.length} live want(s)${reason ? `: ${reason}` : ''}`,
+      metadata: { count: removed.length, ids: removed.map((r: { id: string }) => r.id), reason: reason || null },
     });
 
     reply.send({ success: true, data: { removed: removed.length }, code: 'REQUESTS_REMOVED_BY_ADMIN' });

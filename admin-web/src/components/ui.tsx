@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ApiError } from '../api/client';
 
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
+export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="page-header">
       <div>

@@ -1,0 +1,79 @@
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { UsersPage } from './UsersPage';
+import { api } from '../api/client';
+import { ToastProvider } from '../components/Toast';
+import type { AdminUser } from '../api/types';
+
+vi.mock('../api/client', async () => {
+  const actual = await vi.importActual<typeof import('../api/client')>('../api/client');
+  return { ...actual, api: { get: vi.fn(), post: vi.fn() } };
+});
+
+function user(overrides: Partial<AdminUser> = {}): AdminUser {
+  return {
+    id: 'user-1',
+    email: 'shopper@example.com',
+    full_name: 'Test Shopper',
+    user_type: 'shopper',
+    role: 'user',
+    kyc_status: 'pending',
+    risk_status: 'clear',
+    created_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+function renderUsersPage(users: AdminUser[]) {
+  vi.mocked(api.get).mockResolvedValue({ users });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <UsersPage />
+      </ToastProvider>
+    </QueryClientProvider>
+  );
+}
+
+describe('UsersPage', () => {
+  it('requires a typed reason before rejecting an ID check — same friction as the ID Checks page', async () => {
+    const testUser = userEvent.setup();
+    renderUsersPage([user()]);
+
+    await testUser.click(await screen.findByRole('button', { name: 'Reject ID' }));
+
+    // A confirm dialog opens instead of the request firing immediately.
+    const dialog = await screen.findByRole('dialog', { name: 'Reject ID check' });
+    const confirmButton = screen.getByRole('button', { name: 'Reject' });
+    expect(confirmButton).toBeDisabled();
+    expect(api.post).not.toHaveBeenCalled();
+
+    await testUser.type(within(dialog).getByRole('textbox'), 'Document photo unreadable');
+    expect(confirmButton).toBeEnabled();
+    await testUser.click(confirmButton);
+
+    expect(api.post).toHaveBeenCalledWith('/admin/users/user-1/kyc-review', {
+      status: 'rejected',
+      note: 'Document photo unreadable',
+    });
+    expect(dialog).not.toBeInTheDocument();
+  });
+
+  it('filters the table by name or email', async () => {
+    const testUser = userEvent.setup();
+    renderUsersPage([
+      user({ id: 'a', full_name: 'Alice Traveler', email: 'alice@example.com' }),
+      user({ id: 'b', full_name: 'Bob Shopper', email: 'bob@example.com' }),
+    ]);
+
+    expect(await screen.findByText('Alice Traveler')).toBeInTheDocument();
+    expect(screen.getByText('Bob Shopper')).toBeInTheDocument();
+
+    await testUser.type(screen.getByPlaceholderText('Search by name or email…'), 'alice');
+    expect(screen.getByText('Alice Traveler')).toBeInTheDocument();
+    expect(screen.queryByText('Bob Shopper')).not.toBeInTheDocument();
+  });
+});

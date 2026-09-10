@@ -1,26 +1,55 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../api/client';
+import { api, ApiError } from '../api/client';
 import type { Want } from '../api/types';
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useToast } from '../components/Toast';
 import { money } from '../lib/format';
+import { lifecycleTone, wantStatusLabel } from '../lib/status';
 
 export function WantsPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const wants = useQuery({ queryKey: ['admin-wants'], queryFn: () => api.get<{ requests: Want[] }>('/admin/requests') });
   const [removing, setRemoving] = useState<Want | null>(null);
   const [cancellingAll, setCancellingAll] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const onError = (err: unknown) => toast(err instanceof ApiError ? err.message : 'Something went wrong', 'error');
 
   const remove = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) => api.post(`/admin/requests/${id}/remove`, { reason }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-wants'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-wants'] });
+      toast('Want removed');
+    },
+    onError,
   });
   const removeAll = useMutation({
-    mutationFn: () => api.post('/admin/requests/remove-all'),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-wants'] }),
+    mutationFn: (reason: string) => api.post('/admin/requests/remove-all', { reason }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['admin-wants'] });
+      toast(`Cancelled ${(data as { removed: number }).removed} want(s)`);
+    },
+    onError,
   });
+
+  const filtered = useMemo(() => {
+    const items = wants.data?.requests ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(
+      (w) =>
+        w.item_description.toLowerCase().includes(q) ||
+        (w.title ?? '').toLowerCase().includes(q) ||
+        w.shopper_name.toLowerCase().includes(q) ||
+        w.shopper_email.toLowerCase().includes(q)
+    );
+  }, [wants.data, search]);
+
+  const liveCount = (wants.data?.requests ?? []).filter((w) => w.status === 'open' || w.status === 'accepted').length;
 
   if (wants.isLoading) return <LoadingState />;
   if (wants.isError) return <ErrorState error={wants.error} onRetry={() => wants.refetch()} />;
@@ -37,8 +66,15 @@ export function WantsPage() {
         }
       />
 
-      {wants.data!.requests.length === 0 ? (
-        <EmptyState>No wants yet.</EmptyState>
+      <input
+        placeholder="Search by item or shopper…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{ marginBottom: 16, maxWidth: 320 }}
+      />
+
+      {filtered.length === 0 ? (
+        <EmptyState>{search ? 'No wants match your search.' : 'No wants yet.'}</EmptyState>
       ) : (
         <table>
           <thead>
@@ -51,7 +87,7 @@ export function WantsPage() {
             </tr>
           </thead>
           <tbody>
-            {wants.data!.requests.map((w) => (
+            {filtered.map((w) => (
               <tr key={w.id}>
                 <td>{w.title || w.item_description}</td>
                 <td>
@@ -60,11 +96,11 @@ export function WantsPage() {
                 </td>
                 <td>{money(w.budget)}</td>
                 <td>
-                  <StatusPill label={w.status} tone={w.status === 'cancelled' ? 'negative' : w.status === 'completed' ? 'positive' : 'neutral'} />
+                  <StatusPill label={wantStatusLabel(w.status)} tone={lifecycleTone(w.status)} />
                 </td>
                 <td>
                   {w.status === 'open' && (
-                    <button type="button" className="btn btn-small" onClick={() => setRemoving(w)}>
+                    <button type="button" className="btn btn-small" disabled={remove.isPending} onClick={() => setRemoving(w)}>
                       Remove
                     </button>
                   )}
@@ -91,12 +127,13 @@ export function WantsPage() {
       <ConfirmDialog
         open={cancellingAll}
         title="Cancel every live want"
-        description="Cancels every open or accepted want. This is a bulk moderation action — use with care."
+        description={`Cancels all ${liveCount} open or accepted want${liveCount === 1 ? '' : 's'} platform-wide. This is a bulk moderation action — use with care.`}
+        reason={{ label: 'Reason', minLength: 10, placeholder: 'Why every live want is being cancelled…' }}
         confirmLabel="Cancel all"
         danger
         onClose={() => setCancellingAll(false)}
-        onConfirm={async () => {
-          await removeAll.mutateAsync();
+        onConfirm={async (reason) => {
+          await removeAll.mutateAsync(reason!);
         }}
       />
     </div>

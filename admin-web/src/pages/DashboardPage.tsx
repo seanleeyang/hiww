@@ -5,6 +5,18 @@ import type { OpsOverview, QueueItem, Reconciliation } from '../api/types';
 import { PageHeader, Stat, StatGrid, LoadingState, ErrorState } from '../components/ui';
 import { money } from '../lib/format';
 
+function StatLink({ to, value, label }: { to: string; value: string | number; label: string }) {
+  return (
+    <Link to={to} className="stat stat-link">
+      <div className="stat-value">{value}</div>
+      <div className="stat-label">
+        {label}
+        <span className="stat-link-arrow">→</span>
+      </div>
+    </Link>
+  );
+}
+
 export function DashboardPage() {
   const overview = useQuery({ queryKey: ['ops-overview'], queryFn: () => api.get<OpsOverview>('/ops/overview') });
   const queue = useQuery({ queryKey: ['admin-reviews'], queryFn: () => api.get<{ queue: QueueItem[] }>('/admin/reviews') });
@@ -18,6 +30,7 @@ export function DashboardPage() {
     <div>
       <PageHeader title="Dashboard" subtitle="What needs attention right now." />
 
+      <h3 className="dashboard-section-label">Overview</h3>
       {overview.isLoading ? (
         <LoadingState />
       ) : overview.isError ? (
@@ -31,29 +44,15 @@ export function DashboardPage() {
         </StatGrid>
       )}
 
+      <h3 className="dashboard-section-label">Needs attention — tap to open</h3>
       <StatGrid>
-        <Link to="/disputes" className="stat" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <div className="stat-value">{openDisputes}</div>
-          <div className="stat-label">Open disputes</div>
-        </Link>
-        <Link to="/id-checks" className="stat" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <div className="stat-value">{pendingIdChecks}</div>
-          <div className="stat-label">Pending ID checks</div>
-        </Link>
-        <Link to="/flagged" className="stat" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <div className="stat-value">{flaggedContent}</div>
-          <div className="stat-label">Flagged content</div>
-        </Link>
+        <StatLink to="/disputes" value={openDisputes} label="Open disputes" />
+        <StatLink to="/id-checks" value={pendingIdChecks} label="Pending ID checks" />
+        <StatLink to="/flagged" value={flaggedContent} label="Flagged content" />
         {recon.data && (
           <>
-            <Link to="/money" className="stat" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="stat-value">{money(recon.data.awaiting_payout.total)}</div>
-              <div className="stat-label">Awaiting payout</div>
-            </Link>
-            <Link to="/money" className="stat" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="stat-value">{money(recon.data.awaiting_refund.total)}</div>
-              <div className="stat-label">Awaiting refund</div>
-            </Link>
+            <StatLink to="/money" value={money(recon.data.awaiting_payout.total)} label="Awaiting payout" />
+            <StatLink to="/money" value={money(recon.data.awaiting_refund.total)} label="Awaiting refund" />
           </>
         )}
       </StatGrid>

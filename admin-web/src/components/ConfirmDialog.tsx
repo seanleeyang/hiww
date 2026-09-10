@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { ApiError } from '../api/client';
+import { useModalA11y } from './useModalA11y';
 
 interface ReasonField {
   label: string;
@@ -36,10 +37,13 @@ export function ConfirmDialog({
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const modalRef = useModalA11y(open, onClose);
 
   if (!open) return null;
 
-  const reasonTooShort = Boolean(reason) && text.trim().length < (reason?.minLength ?? 0);
+  const minLength = reason?.minLength ?? 0;
+  const remaining = minLength - text.trim().length;
+  const reasonTooShort = Boolean(reason) && remaining > 0;
 
   async function submit() {
     setBusy(true);
@@ -57,7 +61,7 @@ export function ConfirmDialog({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
         {description && <div className="modal-description">{description}</div>}
         {reason && (
@@ -70,6 +74,11 @@ export function ConfirmDialog({
               rows={3}
               autoFocus
             />
+            {minLength > 0 && (
+              <span className={remaining > 0 ? 'field-hint' : 'field-hint field-hint-ok'}>
+                {remaining > 0 ? `${remaining} more character${remaining === 1 ? '' : 's'} needed` : 'Looks good'}
+              </span>
+            )}
           </label>
         )}
         {error && <p className="form-error">{error}</p>}

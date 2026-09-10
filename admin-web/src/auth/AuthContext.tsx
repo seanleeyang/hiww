@@ -1,5 +1,5 @@
 import { createContext, use, useCallback, useEffect, useState, type ReactNode } from 'react';
-import { api, ApiError, getToken, setToken } from '../api/client';
+import { api, ApiError, getToken, setToken, setUnauthorizedHandler } from '../api/client';
 
 interface Me {
   id: string;
@@ -46,6 +46,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void loadMe();
   }, [loadMe]);
+
+  // A 401 anywhere in the app means the session died server-side — drop
+  // straight back to the login screen instead of leaving the sidebar/shell
+  // showing "signed in" while every subsequent action fails confusingly.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setMe(null);
+      setStatus('signed-out');
+      setError('Your session expired — sign in again.');
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   const login = useCallback(
     async (email: string, password: string) => {
