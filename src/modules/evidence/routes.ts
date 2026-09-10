@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError, generateId } from '@/utils/helpers';
+import { requireOrderParticipant } from '@/utils/order-participant';
 
 const evidenceSchema = z.object({
   evidence_type: z.enum(['photo', 'receipt', 'document']),
@@ -14,20 +15,7 @@ export async function registerEvidenceRoutes(app: FastifyInstance): Promise<void
       throw new AppError('VALIDATION_ERROR', 400, 'evidence.invalidPayload');
     }
 
-    const order = await request.db
-      .selectFrom('orders')
-      .selectAll()
-      .where('id', '=', request.params.id)
-      .executeTakeFirst();
-
-    if (!order) {
-      throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
-    }
-
-    const userId = request.userId;
-    if (order.shopper_id !== userId && order.traveler_id !== userId) {
-      throw new AppError('FORBIDDEN', 403, 'evidence.onlyParticipantsUpload');
-    }
+    const order = await requireOrderParticipant(request.db, request.userId, request.params.id, 'evidence.onlyParticipantsUpload');
 
     const evidenceId = generateId();
 
@@ -50,20 +38,7 @@ export async function registerEvidenceRoutes(app: FastifyInstance): Promise<void
   });
 
   app.get<{ Params: { id: string } }>('/api/orders/:id/evidence', async (request: any, reply: any) => {
-    const order = await request.db
-      .selectFrom('orders')
-      .selectAll()
-      .where('id', '=', request.params.id)
-      .executeTakeFirst();
-
-    if (!order) {
-      throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
-    }
-
-    const userId = request.userId;
-    if (order.shopper_id !== userId && order.traveler_id !== userId) {
-      throw new AppError('FORBIDDEN', 403, 'evidence.onlyParticipantsView');
-    }
+    const order = await requireOrderParticipant(request.db, request.userId, request.params.id, 'evidence.onlyParticipantsView');
 
     const items = await request.db
       .selectFrom('evidence')

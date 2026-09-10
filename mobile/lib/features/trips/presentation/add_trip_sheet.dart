@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/cities.dart';
+import '../../../core/city_choice.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
@@ -11,29 +12,6 @@ import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
 import 'date_range_sheet.dart';
-
-/// Empty-string sentinel for "nothing picked yet" — lets a dropdown show a
-/// real "Select" placeholder entry instead of defaulting to a value.
-const _unselected = '';
-
-/// Sentinel for "Others" in a city dropdown — reveals a free-text field for
-/// a city not in the curated list.
-const _othersCity = '__others__';
-
-/// Sentinel for "Any" in a city dropdown — a deliberate choice meaning no
-/// specific city, distinct from [_unselected] (no choice made).
-const _anyCity = '__any__';
-
-/// Matches [city] against the curated list for [country]: an exact match
-/// preselects that city, anything else preselects "Others" with the value
-/// carried over into the custom field.
-String _initialCityChoice(String country, String? city) {
-  if (city == null || city.isEmpty) return _unselected;
-  final matches = kCities.any(
-    (c) => c.countryCode == country && c.city.toLowerCase() == city.toLowerCase(),
-  );
-  return matches ? city : _othersCity;
-}
 
 /// Posting a new trip is a near-full-height bottom sheet, matching the
 /// Create Order flow's presentation. Editing an existing trip is a separate,
@@ -89,13 +67,13 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
   final _items = TextEditingController(text: '5');
   late String _from = widget.fromCountry ?? 'TH';
   late String _to = widget.toCountry ?? 'JP';
-  late String _fromCityChoice = _initialCityChoice(_from, widget.fromCity);
-  late String _toCityChoice = _initialCityChoice(_to, widget.toCity);
+  late String _fromCityChoice = initialCityChoice(_from, widget.fromCity);
+  late String _toCityChoice = initialCityChoice(_to, widget.toCity);
   late final _fromCityCustom = TextEditingController(
-    text: _fromCityChoice == _othersCity ? (widget.fromCity ?? '') : '',
+    text: _fromCityChoice == othersCity ? (widget.fromCity ?? '') : '',
   );
   late final _toCityCustom = TextEditingController(
-    text: _toCityChoice == _othersCity ? (widget.toCity ?? '') : '',
+    text: _toCityChoice == othersCity ? (widget.toCity ?? '') : '',
   );
   String? _coverUrl;
   late DateTime? _depart = widget.depart;
@@ -104,8 +82,8 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
   String? _error;
 
   String _cityValueFor(String choice, TextEditingController custom) {
-    if (choice == _othersCity) return custom.text.trim();
-    if (choice == _unselected || choice == _anyCity) return '';
+    if (choice == othersCity) return custom.text.trim();
+    if (choice == unselected || choice == anyCity) return '';
     return choice;
   }
 
@@ -215,7 +193,7 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                     country: _from,
                     onCountryChanged: (v) => setState(() {
                       _from = v;
-                      _fromCityChoice = _unselected;
+                      _fromCityChoice = unselected;
                       _fromCityCustom.clear();
                     }),
                     cityChoice: _fromCityChoice,
@@ -230,7 +208,7 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                     country: _to,
                     onCountryChanged: (v) => setState(() {
                       _to = v;
-                      _toCityChoice = _unselected;
+                      _toCityChoice = unselected;
                       _toCityCustom.clear();
                     }),
                     cityChoice: _toCityChoice,
@@ -349,18 +327,18 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                 isExpanded: true,
                 decoration: InputDecoration(labelText: l10n.fieldCity),
                 items: [
-                  DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
-                  DropdownMenuItem(value: _anyCity, child: Text(l10n.cityOptionAny)),
+                  DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
+                  DropdownMenuItem(value: anyCity, child: Text(l10n.cityOptionAny)),
                   for (final c in kCities.where((c) => c.countryCode == country))
                     DropdownMenuItem(value: c.city, child: Text(c.city)),
-                  DropdownMenuItem(value: _othersCity, child: Text(l10n.cityOptionOthers)),
+                  DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
                 ],
-                onChanged: (v) => onCityChoiceChanged(v ?? _unselected),
+                onChanged: (v) => onCityChoiceChanged(v ?? unselected),
               ),
             ),
           ],
         ),
-        if (cityChoice == _othersCity) ...[
+        if (cityChoice == othersCity) ...[
           const SizedBox(height: 8),
           TextField(
             controller: customCityController,

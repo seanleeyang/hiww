@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/confirm_dialog.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
@@ -101,22 +102,14 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
   /// here, since one trip can carry many shoppers' orders.
   Future<void> _cancelTrip() async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.dialogCancelTripTitle),
-        content: Text(l10n.dialogCancelTripBody),
-        actions: [
-          TextButton(onPressed: () => context.pop(false), child: Text(l10n.actionKeepTrip)),
-          FilledButton(
-            onPressed: () => context.pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            child: Text(l10n.actionCancelTrip),
-          ),
-        ],
-      ),
+    final confirmed = await showCancelConfirmDialog(
+      context,
+      title: l10n.dialogCancelTripTitle,
+      body: l10n.dialogCancelTripBody,
+      keepLabel: l10n.actionKeepTrip,
+      confirmLabel: l10n.actionCancelTrip,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     setState(() => _submitting = true);
     final id = widget.existing.id;

@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/badged_fab.dart';
+import '../../../ui/confirm_dialog.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
@@ -18,35 +19,14 @@ const _archivableStatuses = {'cancelled', 'completed'};
 
 Future<void> _archiveTrip(BuildContext context, WidgetRef ref, String tripId) async {
   final l10n = AppLocalizations.of(context)!;
-  final ok = await showDialog<bool>(
-    context: context,
-    // Shadow `context` with the dialog's own — using the caller's context to
-    // pop here would pop the tab's own nested navigator instead of just
-    // dismissing the dialog, since this screen lives inside the bottom-tab
-    // shell, not on the root navigator.
-    builder: (context) => AlertDialog(
-      title: Text(l10n.dialogRemoveTripTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(l10n.dialogRemoveFromListBody),
-          const SizedBox(height: 20),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            onPressed: () => context.pop(true),
-            child: Text(l10n.actionRemove),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () => context.pop(false),
-            child: Text(l10n.actionCancel),
-          ),
-        ],
-      ),
-    ),
+  final ok = await showRemoveFromListDialog(
+    context,
+    title: l10n.dialogRemoveTripTitle,
+    body: l10n.dialogRemoveFromListBody,
+    confirmLabel: l10n.actionRemove,
+    cancelLabel: l10n.actionCancel,
   );
-  if (ok != true) return;
+  if (!ok) return;
   try {
     await ref.read(tripsRepositoryProvider).archive(tripId);
     ref.invalidate(myTripsProvider);

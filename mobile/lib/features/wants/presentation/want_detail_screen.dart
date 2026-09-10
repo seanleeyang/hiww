@@ -7,6 +7,7 @@ import '../../../core/countries.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/breakdown_row.dart';
+import '../../../ui/confirm_dialog.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/initials_avatar.dart';
 import '../../../ui/marketplace_bits.dart';
@@ -184,22 +185,14 @@ class WantDetailScreen extends ConsumerWidget {
 
 Future<void> _cancelWant(BuildContext context, WidgetRef ref, String wantId) async {
   final l10n = AppLocalizations.of(context)!;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(l10n.dialogCancelWantTitle),
-      content: Text(l10n.dialogCancelWantBody),
-      actions: [
-        TextButton(onPressed: () => context.pop(false), child: Text(l10n.actionKeepWant)),
-        FilledButton(
-          onPressed: () => context.pop(true),
-          style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-          child: Text(l10n.actionCancelWant),
-        ),
-      ],
-    ),
+  final confirmed = await showCancelConfirmDialog(
+    context,
+    title: l10n.dialogCancelWantTitle,
+    body: l10n.dialogCancelWantBody,
+    keepLabel: l10n.actionKeepWant,
+    confirmLabel: l10n.actionCancelWant,
   );
-  if (confirmed != true) return;
+  if (!confirmed) return;
 
   try {
     await ref.read(wantsRepositoryProvider).cancel(wantId);

@@ -14,22 +14,11 @@ import { detectQrCode } from '@/services/qr-check';
 import { recordTyping, isCounterpartyTyping } from '@/services/typing';
 import { sendPush } from '@/services/push-notify';
 import { config } from '@/config/env';
+import { requireOrderParticipant } from '@/utils/order-participant';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadOrderForParticipant(request: any, orderId: string): Promise<any> {
-  const order = await request.db
-    .selectFrom('orders')
-    .selectAll()
-    .where('id', '=', orderId)
-    .executeTakeFirst();
-
-  if (!order) {
-    throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
-  }
-  if (order.shopper_id !== request.userId && order.traveler_id !== request.userId) {
-    throw new AppError('FORBIDDEN', 403, 'common.notPartOfOrder');
-  }
-  return order;
+  return requireOrderParticipant(request.db, request.userId, orderId, 'common.notPartOfOrder');
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

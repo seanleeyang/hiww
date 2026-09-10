@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/badged_fab.dart';
+import '../../../ui/confirm_dialog.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_order_card.dart';
 import '../../../ui/skeleton.dart';
@@ -325,30 +326,14 @@ class _WantCard extends ConsumerStatefulWidget {
 class _WantCardState extends ConsumerState<_WantCard> {
   Future<void> _archive(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
-    final ok = await showDialog<bool>(
-      context: context,
-      // Shadow `context` with the dialog's own — this screen lives inside
-      // the bottom-tab shell, not the root navigator.
-      builder: (context) => AlertDialog(
-        title: Text(l10n.dialogRemoveWantTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.dialogRemoveFromListBody),
-            const SizedBox(height: 20),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-              onPressed: () => context.pop(true),
-              child: Text(l10n.actionRemove),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(onPressed: () => context.pop(false), child: Text(l10n.actionCancel)),
-          ],
-        ),
-      ),
+    final ok = await showRemoveFromListDialog(
+      context,
+      title: l10n.dialogRemoveWantTitle,
+      body: l10n.dialogRemoveFromListBody,
+      confirmLabel: l10n.actionRemove,
+      cancelLabel: l10n.actionCancel,
     );
-    if (ok != true) return;
+    if (!ok) return;
     try {
       await ref.read(wantsRepositoryProvider).archive(widget.want.id);
       ref.invalidate(myWantsProvider);

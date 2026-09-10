@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AppError, generateId } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
+import { requireOrderParticipant } from '@/utils/order-participant';
 
 const disputeSchema = z.object({
   order_id: z.string().uuid(),
@@ -21,20 +22,13 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
       throw new AppError('VALIDATION_ERROR', 400, 'disputes.invalidPayload');
     }
 
-    const order = await request.db
-      .selectFrom('orders')
-      .selectAll()
-      .where('id', '=', parsed.data.order_id)
-      .executeTakeFirst();
-
-    if (!order) {
-      throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
-    }
-
+    const order = await requireOrderParticipant(
+      request.db,
+      request.userId,
+      parsed.data.order_id,
+      'disputes.onlyParticipantsCanOpen'
+    );
     const initiatorId = request.userId;
-    if (order.shopper_id !== initiatorId && order.traveler_id !== initiatorId) {
-      throw new AppError('FORBIDDEN', 403, 'disputes.onlyParticipantsCanOpen');
-    }
 
     const disputeId = generateId();
 

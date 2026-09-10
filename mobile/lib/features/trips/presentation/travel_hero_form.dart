@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/cities.dart';
+import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import 'add_trip_sheet.dart';
 import 'date_range_sheet.dart';
@@ -116,7 +117,7 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
           _FormRow(
             label: l10n.labelTravelDates,
             value: (_depart != null && _ret != null)
-                ? '${_short(_depart!)} – ${_short(_ret!)}'
+                ? '${shortDate(_depart)} – ${shortDate(_ret)}'
                 : null,
             onTap: _pickDates,
           ),
@@ -140,8 +141,6 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
       ),
     );
   }
-
-  static String _short(DateTime d) => '${d.month}/${d.day}';
 }
 
 class _FormRow extends StatelessWidget {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/cities.dart';
+import '../../../core/city_choice.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
@@ -12,33 +13,11 @@ import '../../../ui/budget_stepper.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/marketplace_bits.dart';
+import '../../../ui/qty_stepper.dart';
 import '../../../ui/soft_card.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../../shared/data/pricing_repository.dart';
 import '../data/wants_repository.dart';
-
-/// Empty-string sentinel for "nothing picked yet" — lets a dropdown show a
-/// real "Select" placeholder entry instead of defaulting to a value.
-const _unselected = '';
-
-/// Sentinel for "Others" in a city dropdown — reveals a free-text field for
-/// a city not in the curated list.
-const _othersCity = '__others__';
-
-/// Sentinel for "Any" in the Buy-in city dropdown — a deliberate choice
-/// meaning no specific city, distinct from [_unselected] (no choice made).
-const _anyCity = '__any__';
-
-/// Matches [sourceCity] against the curated list for [country]: an exact
-/// match preselects that city, anything else preselects "Others" with the
-/// value carried over into the custom field.
-String _initialCityChoice(String country, String? sourceCity) {
-  if (sourceCity == null || sourceCity.isEmpty) return _unselected;
-  final matches = kCities.any(
-    (c) => c.countryCode == country && c.city.toLowerCase() == sourceCity.toLowerCase(),
-  );
-  return matches ? sourceCity : _othersCity;
-}
 
 /// Creating a want is a near-full-height bottom sheet with two swipeable
 /// pages — the form, then a Summary review — not separate routes. Pass
@@ -94,12 +73,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   String? _photoUrl;
   String _category = 'sneakers';
   late String _country = _initialCountry();
-  late String _cityChoice = _initialCityChoice(_country, widget.sourceCity);
+  late String _cityChoice = initialCityChoice(_country, widget.sourceCity);
   late final _cityCustom = TextEditingController(
-    text: _cityChoice == _othersCity ? (widget.sourceCity ?? '') : '',
+    text: _cityChoice == othersCity ? (widget.sourceCity ?? '') : '',
   );
-  String _destCountry = _unselected;
-  String _destCityChoice = _unselected;
+  String _destCountry = unselected;
+  String _destCityChoice = unselected;
   final _destCityCustom = TextEditingController();
   int _budget = 3000;
   int _qty = 1;
@@ -116,8 +95,8 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       kCategories.firstWhere((c) => c.value == _category, orElse: () => (value: _category, label: _category)).label;
 
   String get _cityValue {
-    if (_cityChoice == _othersCity) return _cityCustom.text.trim();
-    if (_cityChoice == _unselected || _cityChoice == _anyCity) return '';
+    if (_cityChoice == othersCity) return _cityCustom.text.trim();
+    if (_cityChoice == unselected || _cityChoice == anyCity) return '';
     return _cityChoice;
   }
 
@@ -126,15 +105,15 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   /// empty "Others" field don't. Distinct from [_cityValue], which is the
   /// empty string for "Any" too (no specific city to display/submit).
   bool get _cityIsChosen =>
-      _cityChoice != _unselected && (_cityChoice != _othersCity || _cityCustom.text.trim().isNotEmpty);
+      _cityChoice != unselected && (_cityChoice != othersCity || _cityCustom.text.trim().isNotEmpty);
 
-  String get _destCityValue => _destCityChoice == _othersCity
+  String get _destCityValue => _destCityChoice == othersCity
       ? _destCityCustom.text.trim()
-      : (_destCityChoice == _unselected ? '' : _destCityChoice);
+      : (_destCityChoice == unselected ? '' : _destCityChoice);
 
   String _initialCountry() {
     final source = widget.sourceCountry;
-    return (source != null && isLiveCountry(source)) ? source : _unselected;
+    return (source != null && isLiveCountry(source)) ? source : unselected;
   }
 
   @override
@@ -427,7 +406,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   children: [
                     Text(l10n.labelQuantity, style: Theme.of(context).textTheme.labelLarge),
                     const SizedBox(height: 8),
-                    _QtyStepper(
+                    QtyStepper(
                       value: _qty,
                       onChanged: (v) => setState(() => _qty = v),
                     ),
@@ -486,12 +465,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   isExpanded: true,
                   decoration: InputDecoration(labelText: l10n.labelCountry),
                   items: [
-                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
+                    DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
                     for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
                   ],
                   onChanged: (v) => setState(() {
-                    _country = v ?? _unselected;
-                    _cityChoice = _unselected;
+                    _country = v ?? unselected;
+                    _cityChoice = unselected;
                     _cityCustom.clear();
                   }),
                 ),
@@ -504,20 +483,20 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   isExpanded: true,
                   decoration: InputDecoration(labelText: l10n.fieldCity),
                   items: [
-                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
-                    DropdownMenuItem(value: _anyCity, child: Text(l10n.cityOptionAny)),
+                    DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
+                    DropdownMenuItem(value: anyCity, child: Text(l10n.cityOptionAny)),
                     for (final c in kCities.where((c) => c.countryCode == _country))
                       DropdownMenuItem(value: c.city, child: Text(c.city)),
-                    DropdownMenuItem(value: _othersCity, child: Text(l10n.cityOptionOthers)),
+                    DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
                   ],
                   onChanged: _country.isEmpty
                       ? null
-                      : (v) => setState(() => _cityChoice = v ?? _unselected),
+                      : (v) => setState(() => _cityChoice = v ?? unselected),
                 ),
               ),
             ],
           ),
-          if (_cityChoice == _othersCity) ...[
+          if (_cityChoice == othersCity) ...[
             const SizedBox(height: 8),
             TextField(
               controller: _cityCustom,
@@ -568,12 +547,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   isExpanded: true,
                   decoration: InputDecoration(labelText: l10n.labelCountry),
                   items: [
-                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
+                    DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
                     for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
                   ],
                   onChanged: (v) => setState(() {
-                    _destCountry = v ?? _unselected;
-                    _destCityChoice = _unselected;
+                    _destCountry = v ?? unselected;
+                    _destCityChoice = unselected;
                     _destCityCustom.clear();
                   }),
                 ),
@@ -586,19 +565,19 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   isExpanded: true,
                   decoration: InputDecoration(labelText: l10n.fieldCity),
                   items: [
-                    DropdownMenuItem(value: _unselected, child: Text(l10n.selectOption)),
+                    DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
                     for (final c in kCities.where((c) => c.countryCode == _destCountry))
                       DropdownMenuItem(value: c.city, child: Text(c.city)),
-                    DropdownMenuItem(value: _othersCity, child: Text(l10n.cityOptionOthers)),
+                    DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
                   ],
                   onChanged: _destCountry.isEmpty
                       ? null
-                      : (v) => setState(() => _destCityChoice = v ?? _unselected),
+                      : (v) => setState(() => _destCityChoice = v ?? unselected),
                 ),
               ),
             ],
           ),
-          if (_destCityChoice == _othersCity) ...[
+          if (_destCityChoice == othersCity) ...[
             const SizedBox(height: 8),
             TextField(
               controller: _destCityCustom,
@@ -766,42 +745,5 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
       initialDate: _needBy ?? now.add(const Duration(days: 14)),
     );
     if (picked != null) setState(() => _needBy = picked);
-  }
-}
-
-/// "− 2 +" whole-number stepper, clamped to 1–99.
-class _QtyStepper extends StatelessWidget {
-  const _QtyStepper({required this.value, required this.onChanged});
-  final int value;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: scheme.outline),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: value > 1 ? () => onChanged(value - 1) : null,
-            icon: const Icon(Icons.remove),
-          ),
-          Expanded(
-            child: Text(
-              '$value',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-            ),
-          ),
-          IconButton(
-            onPressed: value < 99 ? () => onChanged(value + 1) : null,
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
-    );
   }
 }

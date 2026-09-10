@@ -8,6 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../ui/budget_stepper.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/image_picker_field.dart';
+import '../../../ui/qty_stepper.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/wants_repository.dart';
 import '../domain/want.dart';
@@ -173,7 +174,7 @@ class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
                       Text(l10n.labelQuantity,
                           style: Theme.of(context).textTheme.labelLarge),
                       const SizedBox(height: 8),
-                      _QtyStepper(
+                      QtyStepper(
                         value: _qty,
                         onChanged: (v) => setState(() => _qty = v),
                       ),
@@ -271,40 +272,5 @@ class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
       initialDate: _needBy ?? now.add(const Duration(days: 14)),
     );
     if (picked != null) setState(() => _needBy = picked);
-  }
-}
-
-/// "− 2 +" whole-number stepper, clamped to 1–99.
-class _QtyStepper extends StatelessWidget {
-  const _QtyStepper({required this.value, required this.onChanged});
-  final int value;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: scheme.outline),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: value > 1 ? () => onChanged(value - 1) : null,
-            icon: const Icon(Icons.remove),
-          ),
-          Expanded(
-            child: Text('$value',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-          ),
-          IconButton(
-            onPressed: value < 99 ? () => onChanged(value + 1) : null,
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
-    );
   }
 }

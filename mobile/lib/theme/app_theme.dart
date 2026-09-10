@@ -10,7 +10,6 @@ class HiwwRadii {
   static const sheet = 28.0;
   static const input = 14.0;
   static const button = 16.0;
-  static const pill = 999.0;
 }
 
 const _lightScheme = ColorScheme(
