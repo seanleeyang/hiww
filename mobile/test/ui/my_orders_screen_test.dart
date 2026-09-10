@@ -94,9 +94,14 @@ void main() {
     expect(find.text('Buy the item, then upload the receipt'), findsOneWidget);
   });
 
-  testWidgets('purchased stage tells the traveler to ship', (tester) async {
+  testWidgets('a purchased order sits under In Transit and tells the traveler to ship', (tester) async {
     await tester.pumpWidget(_wrap([_order(status: 'purchased', iAmShopper: false)]));
     await tester.pumpAndSettle();
+
+    // Bought but not yet shipped still counts as "in progress", not
+    // "requested" — the shopper/traveler have nothing further to arrange.
+    expect(find.text('Post the item, then mark it shipped'), findsNothing);
+    await _tapTab(tester, 1); // In Transit
     expect(find.text('Post the item, then mark it shipped'), findsOneWidget);
   });
 

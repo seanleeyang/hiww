@@ -117,8 +117,12 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
       switch (o.status) {
         case 'pending_payment':
         case 'confirmed':
-        case 'purchased':
           requested.add(_OrderEntry(o));
+        // Once the traveler has bought the item (photo + receipt uploaded),
+        // the shopper's job is done and the item is on its way to being
+        // shipped — that reads as "in progress" to both sides, not still
+        // "requested", even though shipping itself hasn't started yet.
+        case 'purchased':
         case 'in_transit':
           inTransit.add(o);
         case 'delivered':
