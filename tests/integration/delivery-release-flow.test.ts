@@ -35,7 +35,7 @@ describe('delivery and release flow', () => {
       method: 'POST',
       url: `/api/orders/${order.orderId}/release`,
       headers: authHeader(order.shopper),
-      payload: { note: 'Received package' },
+      payload: { note: 'Received package', image_url: 'https://example.com/delivery-proof.jpg' },
     });
 
     expect(releaseResponse.statusCode).toBe(200);
@@ -45,6 +45,7 @@ describe('delivery and release flow', () => {
       .where('id', '=', order.orderId)
       .executeTakeFirst();
     expect(finalOrder?.status).toBe('delivered');
+    expect(finalOrder?.delivery_proof_url).toBe('https://example.com/delivery-proof.jpg');
 
     // Manual-money pilot: no funds move through these routes.
     const ledger = await ctx.db
@@ -157,6 +158,40 @@ describe('delivery and release flow', () => {
     expect(addProof.statusCode).toBe(403);
   });
 
+  it('requires a delivery photo before releasing payment', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+
+    const noPhoto = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/release`,
+      headers: authHeader(order.shopper),
+      payload: { note: 'Received it' },
+    });
+    expect(noPhoto.statusCode).toBe(400);
+
+    const stillInTransit = await ctx.db
+      .selectFrom('orders')
+      .selectAll()
+      .where('id', '=', order.orderId)
+      .executeTakeFirst();
+    expect(stillInTransit?.status).toBe('in_transit');
+
+    const withPhoto = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/release`,
+      headers: authHeader(order.shopper),
+      payload: { image_url: 'https://example.com/proof.jpg' },
+    });
+    expect(withPhoto.statusCode).toBe(200);
+  });
+
   it('is idempotent: releasing an already-delivered order stays delivered', async () => {
     const order = await createAcceptedOrder(ctx);
     await forceOrderStatus(ctx, order.orderId, 'purchased');
@@ -171,8 +206,10 @@ describe('delivery and release flow', () => {
       method: 'POST',
       url: `/api/orders/${order.orderId}/release`,
       headers: authHeader(order.shopper),
-      payload: {},
+      payload: { image_url: 'https://example.com/delivery-proof.jpg' },
     });
+    // Repeat call with no photo — already delivered, so it's a no-op and
+    // doesn't re-check the required-photo rule.
     const second = await ctx.app.inject({
       method: 'POST',
       url: `/api/orders/${order.orderId}/release`,

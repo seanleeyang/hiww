@@ -2006,6 +2006,12 @@ abstract class AppLocalizations {
   /// **'Add shipping proof (optional)'**
   String get actionUploadShippingProof;
 
+  /// No description provided for @actionUploadDeliveryPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a photo of the item received'**
+  String get actionUploadDeliveryPhoto;
+
   /// No description provided for @labelItemPhoto.
   ///
   /// In en, this message translates to:
@@ -2023,6 +2029,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shipping proof'**
   String get labelShippingProof;
+
+  /// No description provided for @labelDeliveryProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Proof of receipt'**
+  String get labelDeliveryProof;
+
+  /// No description provided for @hintDeliveryProofRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required before payment is released to the traveler.'**
+  String get hintDeliveryProofRequired;
+
+  /// No description provided for @errorDeliveryPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo of the item you received before confirming'**
+  String get errorDeliveryPhotoRequired;
 
   /// No description provided for @noteUploadDaysLeft.
   ///
@@ -2419,6 +2443,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shipping proof'**
   String get shippingProofTitle;
+
+  /// No description provided for @deliveryProofTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Proof of receipt'**
+  String get deliveryProofTitle;
 
   /// No description provided for @chatClosedBanner.
   ///

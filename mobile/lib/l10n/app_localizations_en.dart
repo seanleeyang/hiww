@@ -1101,6 +1101,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionUploadShippingProof => 'Add shipping proof (optional)';
 
   @override
+  String get actionUploadDeliveryPhoto => 'Upload a photo of the item received';
+
+  @override
   String get labelItemPhoto => 'Item photo';
 
   @override
@@ -1108,6 +1111,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelShippingProof => 'Shipping proof';
+
+  @override
+  String get labelDeliveryProof => 'Proof of receipt';
+
+  @override
+  String get hintDeliveryProofRequired =>
+      'Required before payment is released to the traveler.';
+
+  @override
+  String get errorDeliveryPhotoRequired =>
+      'Add a photo of the item you received before confirming';
 
   @override
   String noteUploadDaysLeft(int days) {
@@ -1345,6 +1359,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shippingProofTitle => 'Shipping proof';
+
+  @override
+  String get deliveryProofTitle => 'Proof of receipt';
 
   @override
   String get chatClosedBanner => 'This chat is closed — the order is complete.';

@@ -134,7 +134,7 @@ export async function completeOrder(ctx: TestContext, order: MarketplaceOrder): 
     method: 'POST',
     url: `/api/orders/${order.orderId}/release`,
     headers: authHeader(order.shopper),
-    payload: {},
+    payload: { image_url: 'https://example.com/delivery-proof.jpg' },
   });
   if (release.statusCode !== 200) throw new Error(`release failed (${release.statusCode}): ${release.body}`);
 }

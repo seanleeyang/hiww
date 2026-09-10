@@ -86,8 +86,9 @@ expectFail GET /api/admin/reviews $null $null 401
 Write-Host "`n== Admin confirms payment, order ships and completes ==" -ForegroundColor Cyan
 api POST /api/payments/confirm @{ order_id = $orderId; payment_id = 'SMOKE-REF' } $admin | Out-Null; Write-Host "  payment confirmed"
 api POST /api/payments/confirm @{ order_id = $orderId; payment_id = 'SMOKE-REF' } $admin | Out-Null; Write-Host "  confirm again -> idempotent OK"
+api POST "/api/orders/$orderId/purchase-proof" @{ image_url = 'https://placehold.co/600x800?text=Receipt' } $traveler | Out-Null; Write-Host "  traveler uploaded purchase receipt"
 api POST "/api/orders/$orderId/deliver" @{ note = 'shipped' } $traveler | Out-Null; Write-Host "  traveler marked shipped"
-api POST "/api/orders/$orderId/release" @{ note = 'received' } $shopper | Out-Null; Write-Host "  shopper confirmed receipt"
+api POST "/api/orders/$orderId/release" @{ note = 'received'; image_url = 'https://placehold.co/600x800?text=Delivery+Photo' } $shopper | Out-Null; Write-Host "  shopper confirmed receipt"
 $final = (api GET "/api/orders/$orderId" $null $admin).data
 if ($final.status -ne 'delivered') { throw "expected delivered, got $($final.status)" }
 Write-Host "  final status: $($final.status)"

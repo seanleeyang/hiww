@@ -3,7 +3,7 @@ import { sql } from 'kysely';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
 import { config } from '@/config/env';
-import { purchaseProofSchema, shippingProofSchema } from '@/types/schemas';
+import { purchaseProofSchema, shippingProofSchema, releaseSchema } from '@/types/schemas';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
 import { runReceiptCheck } from '@/services/receipt-check';
@@ -243,7 +243,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
     '/api/orders/:id/release',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
-      const parsed = noteSchema.safeParse(request.body || {});
+      const parsed = releaseSchema.safeParse(request.body || {});
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'delivery.invalidReleasePayload');
       }
@@ -271,12 +271,24 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         throw new AppError('INVALID_STATUS', 409, 'delivery.mustBeInTransit');
       }
 
+      // A photo of the item as received is required before payment is
+      // released — unlike the traveler's shipping proof, this one gates
+      // the transition.
+      if (!parsed.data.image_url) {
+        throw new AppError('VALIDATION_ERROR', 400, 'delivery.deliveryProofUrlRequired');
+      }
+
       const now = new Date();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await request.db.transaction().execute(async (trx: any) => {
         await trx
           .updateTable('orders')
-          .set({ status: 'delivered', delivered_at: now, updated_at: now })
+          .set({
+            status: 'delivered',
+            delivered_at: now,
+            delivery_proof_url: parsed.data.image_url,
+            updated_at: now,
+          })
           .where('id', '=', order.id)
           .execute();
         await trx
@@ -296,6 +308,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
             shopper_id: order.shopper_id,
             traveler_id: order.traveler_id,
             note: parsed.data.note ?? null,
+            delivery_proof_url: parsed.data.image_url,
           },
         });
         await recordNotifications(trx, [

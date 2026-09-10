@@ -169,6 +169,8 @@ export interface OrdersTable {
   /** Traveler's optional photo/screenshot of the item being shipped (migration 033). */
   shipping_proof_url?: string | null;
   delivered_at?: Date | null;
+  /** Shopper's proof-of-receipt photo (migration 034) — required to release. */
+  delivery_proof_url?: string | null;
   /**
    * MVP pricing model split (migration 028) — see `src/services/pricing.ts`.
    * `total_price`/`fees` above keep their existing meaning ("goods price" /

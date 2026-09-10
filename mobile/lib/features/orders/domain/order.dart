@@ -37,6 +37,7 @@ class Order {
     this.shippedAt,
     this.shippingProofUrl,
     this.deliveredAt,
+    this.deliveryProofUrl,
     this.canReview = false,
     this.myReview,
     this.travellerReward,
@@ -85,6 +86,10 @@ class Order {
   /// gate marking the order shipped.
   final String? shippingProofUrl;
   final DateTime? deliveredAt;
+
+  /// The shopper's proof-of-receipt photo — required before payment can be
+  /// released (see `confirm_review_screen.dart`).
+  final String? deliveryProofUrl;
   final bool canReview;
   final OrderReview? myReview;
 
@@ -138,6 +143,9 @@ class Order {
         shippingProofUrl: (j['shipping_proof_url'] as String?)?.trim().isEmpty ?? true
             ? null
             : j['shipping_proof_url'] as String,
+        deliveryProofUrl: (j['delivery_proof_url'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : j['delivery_proof_url'] as String,
         deliveredAt: parseDate(j['delivered_at']),
         canReview: j['can_review'] == true,
         myReview: j['my_review'] is Map

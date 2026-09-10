@@ -89,6 +89,14 @@ export const shippingProofSchema = z.object({
   image_url: z.string().trim().url().max(2048),
 });
 
+/** `image_url` is optional here so an idempotent no-op retry (already
+ * `delivered`) doesn't need one — the route itself requires it before
+ * actually transitioning `in_transit` -> `delivered`. */
+export const releaseSchema = z.object({
+  note: z.string().trim().max(500).optional(),
+  image_url: z.string().trim().url().max(2048).optional(),
+});
+
 export const createOrderSchema = z.object({
   trip_id: z.string().uuid().optional(),
   request_id: z.string().uuid().optional(),

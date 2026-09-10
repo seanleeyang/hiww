@@ -133,6 +133,10 @@ class OrderScreen extends ConsumerWidget {
                     const SizedBox(height: 14),
                     _ShippingProofCard(url: o.shippingProofUrl!, at: o.shippedAt),
                   ],
+                  if (o.deliveryProofUrl != null) ...[
+                    const SizedBox(height: 14),
+                    _DeliveryProofCard(url: o.deliveryProofUrl!, at: o.deliveredAt),
+                  ],
                   const SizedBox(height: 14),
                   TrustPanel(order: o, isShopper: isShopper),
                   if (o.hasPricingBreakdown) ...[
@@ -694,6 +698,55 @@ class _ShippingProofCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 l10n.shippingProofTitle,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const Spacer(),
+              if (at != null)
+                Text(
+                  shortDate(at),
+                  style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          HeroImage(
+            url: url,
+            fallbackAsset: 'assets/images/electronics.jpg',
+            height: 150,
+            borderRadius: 12,
+            enableFullscreen: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The shopper's required proof-of-receipt photo — what unlocks the payment
+/// release.
+class _DeliveryProofCard extends StatelessWidget {
+  const _DeliveryProofCard({required this.url, this.at});
+  final String url;
+  final DateTime? at;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.inventory_2_outlined,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.deliveryProofTitle,
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const Spacer(),

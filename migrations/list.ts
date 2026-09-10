@@ -33,6 +33,7 @@ import * as m030 from './030_order_item_photo';
 import * as m031 from './031_order_upload_reminder';
 import * as m032 from './032_device_tokens';
 import * as m033 from './033_shipping_proof';
+import * as m034 from './034_delivery_proof';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -69,4 +70,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '031_order_upload_reminder', up: m031.up },
   { name: '032_device_tokens', up: m032.up },
   { name: '033_shipping_proof', up: m033.up },
+  { name: '034_delivery_proof', up: m034.up },
 ];

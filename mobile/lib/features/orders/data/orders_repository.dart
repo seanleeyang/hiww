@@ -39,8 +39,10 @@ class OrdersRepository {
         'note': 'Shipped',
         'shipping_proof_url': ?shippingProofUrl,
       });
-  Future<void> confirmReceived(String id) =>
-      _api.post('/api/orders/$id/release', body: {'note': 'Received'});
+  /// [imageUrl] is required — a photo of the item as received, enforced
+  /// server-side before payment can be released.
+  Future<void> confirmReceived(String id, {required String imageUrl}) =>
+      _api.post('/api/orders/$id/release', body: {'note': 'Received', 'image_url': imageUrl});
 
   /// Adds or replaces shipping proof after the order has already shipped —
   /// the picker at ship-time is a one-shot opportunity; this covers a

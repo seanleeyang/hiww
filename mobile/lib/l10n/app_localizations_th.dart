@@ -1077,6 +1077,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionUploadShippingProof => 'แนบหลักฐานการจัดส่ง (ไม่บังคับ)';
 
   @override
+  String get actionUploadDeliveryPhoto => 'อัปโหลดรูปสินค้าที่ได้รับ';
+
+  @override
   String get labelItemPhoto => 'รูปสินค้า';
 
   @override
@@ -1084,6 +1087,16 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get labelShippingProof => 'หลักฐานการจัดส่ง';
+
+  @override
+  String get labelDeliveryProof => 'หลักฐานการรับสินค้า';
+
+  @override
+  String get hintDeliveryProofRequired => 'ต้องแนบก่อนปล่อยเงินให้นักเดินทาง';
+
+  @override
+  String get errorDeliveryPhotoRequired =>
+      'กรุณาแนบรูปสินค้าที่คุณได้รับก่อนยืนยัน';
 
   @override
   String noteUploadDaysLeft(int days) {
@@ -1310,6 +1323,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get shippingProofTitle => 'หลักฐานการจัดส่ง';
+
+  @override
+  String get deliveryProofTitle => 'หลักฐานการรับสินค้า';
 
   @override
   String get chatClosedBanner => 'แชทนี้ปิดแล้ว — คำสั่งซื้อเสร็จสมบูรณ์แล้ว';

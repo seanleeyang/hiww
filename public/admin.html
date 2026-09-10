@@ -696,7 +696,7 @@
     if (act === 'test-create') return createTestOrder(b);
     if (act === 'test-proof') return run(b, api('POST', '/api/orders/' + oid + '/purchase-proof', { image_url: 'https://placehold.co/600x800?text=Receipt', note: 'Console test receipt' }, personas[oid] && personas[oid].traveler), 'Receipt attached', refreshAfterTest);
     if (act === 'test-ship') return run(b, api('POST', '/api/orders/' + oid + '/deliver', { note: 'Shipped (console test)' }, personas[oid] && personas[oid].traveler), 'Marked shipped', refreshAfterTest);
-    if (act === 'test-receive') return run(b, api('POST', '/api/orders/' + oid + '/release', { note: 'Received (console test)' }, personas[oid] && personas[oid].shopper), 'Receipt confirmed', refreshAfterTest);
+    if (act === 'test-receive') return run(b, api('POST', '/api/orders/' + oid + '/release', { note: 'Received (console test)', image_url: 'https://placehold.co/600x800?text=Delivery+Photo' }, personas[oid] && personas[oid].shopper), 'Receipt confirmed', refreshAfterTest);
     if (act === 'test-dispute') return run(b, api('POST', '/api/disputes', { order_id: oid, reason: 'Console test: one item was missing from the parcel' }, personas[oid] && personas[oid].shopper), 'Dispute opened', refreshAfterTest);
     if (act === 'test-forget') { delete personas[oid]; savePersonas(); renderTestOrders(); return; }
   });

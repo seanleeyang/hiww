@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
+import '../../../ui/image_picker_field.dart';
 import '../../../ui/responsive_body.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
@@ -34,6 +35,7 @@ class ConfirmReviewScreen extends ConsumerStatefulWidget {
 class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
   final _comment = TextEditingController();
   int _rating = 5;
+  String? _deliveryPhotoUrl;
   bool _busy = false;
   String? _error;
 
@@ -49,6 +51,10 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
       setState(() => _error = l10n.errorTapStarToRate);
       return;
     }
+    if (!widget.reviewOnly && _deliveryPhotoUrl == null) {
+      setState(() => _error = l10n.errorDeliveryPhotoRequired);
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -56,7 +62,7 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
     try {
       final orders = ref.read(ordersRepositoryProvider);
       if (!widget.reviewOnly) {
-        await orders.confirmReceived(widget.orderId);
+        await orders.confirmReceived(widget.orderId, imageUrl: _deliveryPhotoUrl!);
       }
       await ref
           .read(reviewsRepositoryProvider)
@@ -126,6 +132,23 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
                     ],
                   ),
                 ),
+                if (!widget.reviewOnly) ...[
+                  const SizedBox(height: 20),
+                  Text(l10n.labelDeliveryProof, style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.hintDeliveryProofRequired,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  ImagePickerField(
+                    value: _deliveryPhotoUrl,
+                    label: _busy ? l10n.actionUploading : l10n.actionUploadDeliveryPhoto,
+                    onChanged: (url) => setState(() => _deliveryPhotoUrl = url),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 Text(
                   l10n.howWasName(name),

@@ -221,6 +221,10 @@ const MESSAGES: Record<string, Entry> = {
     en: 'Order must be in transit to add shipping proof',
     th: 'คำสั่งซื้อต้องอยู่ระหว่างจัดส่งจึงจะแนบหลักฐานการจัดส่งได้',
   },
+  'delivery.deliveryProofUrlRequired': {
+    en: 'A photo of the item as received is required before releasing payment',
+    th: 'ต้องแนบรูปสินค้าที่ได้รับก่อนปล่อยเงิน',
+  },
 
   // modules/orders/routes.ts
   'orders.onlyShopperCanReportPayment': {
