@@ -885,4 +885,81 @@ void main() {
     final order = await _api('GET', '/api/orders/$orderId', token: travelerToken);
     expect(order['status'], 'in_transit');
   });
+
+  testWidgets('shopper messages the traveler on an order, leakage is redacted',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+
+    final shopper = await _register('shopper', stamp, type: 'shopper');
+    final traveler = await _register('traveler', stamp, type: 'traveler');
+    final shopperToken = shopper['token'] as String;
+    final travelerToken = traveler['token'] as String;
+
+    final itemDescription = 'Instant camera, boxed, from any Tokyo store.';
+    final want = await _api('POST', '/api/requests', token: shopperToken, body: {
+      'title': 'IT Chat $stamp',
+      'item_description': itemDescription,
+      'source_country': 'JP', 'destination_country': 'TH', 'category': 'other',
+      'estimated_weight_kg': 1.0, 'budget': '6000.00',
+    });
+    final trip = await _api('POST', '/api/trips', token: travelerToken, body: {
+      'departure_country': 'TH', 'arrival_country': 'JP',
+      'departure_date': _isoDays(3), 'return_date': _isoDays(13),
+      'max_weight_kg': 6, 'max_items': 3,
+    });
+    final offer = await _api('POST', '/api/offers', token: travelerToken, body: {
+      'request_id': want['id'], 'trip_id': trip['id'],
+      'quoted_price': '5500.00', 'delivery_date': _isoDays(10),
+    });
+    final accept = await _api('POST', '/api/offers/${offer['id']}/accept',
+        token: shopperToken);
+    final orderId = accept['order_id'] as String;
+    // Order is at pending_payment — chat is open (only delivered/cancelled,
+    // 24h after the fact, ever closes it).
+
+    await tester.pumpWidget(
+      ProviderScope(
+          overrides: _appOverrides(shopperToken), child: const HiwwApp()),
+    );
+
+    await _pumpUntil(tester, find.text('Orders'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.text('Orders'));
+    await _pumpUntil(tester, find.textContaining(itemDescription),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, find.textContaining(itemDescription));
+
+    await _scrollUntil(tester, find.widgetWithText(OutlinedButton, 'Open chat'),
+        timeout: const Duration(seconds: 30));
+    await _tap(tester, find.widgetWithText(OutlinedButton, 'Open chat'));
+
+    // Composer → type → send. (The chat screen's only TextField.)
+    await _pumpUntil(tester, find.byTooltip('Send'),
+        timeout: const Duration(seconds: 20));
+    const plain = 'Hi! Any preference on the colour?';
+    await tester.enterText(find.byType(TextField).last, plain);
+    await _tap(tester, find.byTooltip('Send'));
+    await _pumpUntil(tester, find.text(plain), timeout: const Duration(seconds: 20));
+
+    // A phone number is redacted in place before the message is ever stored.
+    await tester.enterText(
+        find.byType(TextField).last, 'reach me on 0812345678 maybe');
+    await _tap(tester, find.byTooltip('Send'));
+    await _pumpUntil(tester, find.textContaining('[number hidden]'),
+        timeout: const Duration(seconds: 20));
+
+    // Backend: the traveler sees both, and the raw number was never stored.
+    final msgs = await _api('GET', '/api/orders/$orderId/messages',
+        token: travelerToken);
+    final bodies = (msgs['items'] as List)
+        .map((m) => (m as Map)['body'] as String)
+        .toList();
+    expect(bodies, contains(plain));
+    expect(bodies.any((b) => b.contains('[number hidden]')), isTrue);
+    expect(bodies.every((b) => !b.contains('0812345678')), isTrue);
+  });
 }

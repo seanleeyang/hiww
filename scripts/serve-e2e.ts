@@ -98,6 +98,14 @@ async function main(): Promise<void> {
   await resetAndMigrate();
   process.env.DATABASE_URL = E2E_DATABASE_URL;
   process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+  // The whole suite hammers one IP — every seed call, every background poll
+  // and every uploaded-image fetch. The rate limits are real product
+  // behaviour (covered by tests/integration/rate-limit-flow.test.ts), just
+  // not what this rig is testing, so lift them well clear for the run.
+  process.env.RATE_LIMIT_MAX ||= '100000';
+  process.env.AUTH_RATE_LIMIT_MAX ||= '100000';
+  process.env.MONEY_RATE_LIMIT_MAX ||= '100000';
+  process.env.UPLOAD_RATE_LIMIT_MAX ||= '100000';
   await seedAdmin();
   await import('../src/main');
 }

@@ -28,9 +28,10 @@ cd mobile && flutter test -d flutter-tester integration_test/app_flow_test.dart
 | traveller: open a want → make an offer | trip picker, date picker, offer create |
 | report a problem → admin queue | dispute create, `GET /api/admin/reviews` |
 | new user submits KYC → admin queue | KYC submit |
-| traveller: My Trips → order → Mark as shipped | traveller order actions |
+| traveller: order → record purchase → Mark as shipped | traveller order actions, purchase proof |
+| shopper → Open chat → send messages | order chat, leakage redaction |
 
-Status: **7/7 green.**
+Status: **8/8 green.**
 
 ### Backend officer — operator console + scripts
 
@@ -56,7 +57,10 @@ Status: **7/7 green.**
 
 ### Still open in Stage 1
 
-- [ ] Chat / messaging flow has no integration coverage.
+- [x] ~~Chat / messaging flow has no integration coverage~~ — `app_flow_test.dart`
+      now drives shopper→traveler order chat through the real composer, and
+      asserts a phone number typed into a message is redacted to `[number
+      hidden]` before it's stored.
 - [x] ~~Tests share the dev database~~ — `npm test` drops + recreates `<db>_test`
       (jest `globalSetup` + `setupFiles`), and `npm run dev:e2e` does the same for
       `<db>_e2e` before serving the Flutter suite (`scripts/serve-e2e.ts`, also
