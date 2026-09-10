@@ -11,14 +11,19 @@ Widget _wrap(Widget child) => MaterialApp(
     );
 
 void main() {
-  testWidgets('StatusPill renders a humanised label', (tester) async {
+  testWidgets('StatusPill renders a humanised, capitalized label', (tester) async {
     await tester.pumpWidget(_wrap(const StatusPill('pending_payment')));
-    expect(find.text('awaiting payment'), findsOneWidget);
+    expect(find.text('Awaiting payment'), findsOneWidget);
   });
 
-  testWidgets('StatusPill maps in_transit to "shipped"', (tester) async {
+  testWidgets('StatusPill maps in_transit to "Shipped"', (tester) async {
     await tester.pumpWidget(_wrap(const StatusPill('in_transit')));
-    expect(find.text('shipped'), findsOneWidget);
+    expect(find.text('Shipped'), findsOneWidget);
+  });
+
+  testWidgets('StatusPill maps purchased to "Items purchased"', (tester) async {
+    await tester.pumpWidget(_wrap(const StatusPill('purchased')));
+    expect(find.text('Items purchased'), findsOneWidget);
   });
 
   testWidgets('InitialsAvatar shows initials when no url', (tester) async {

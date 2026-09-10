@@ -39,12 +39,12 @@ class StatusPill extends StatelessWidget {
       _Tone.neutral => (scheme.surfaceContainerHigh, scheme.onSurfaceVariant),
     };
 
-    final label = switch (status) {
+    final label = _capitalize(switch (status) {
       'pending_payment' => 'awaiting payment',
-      'purchased' => 'bought',
+      'purchased' => 'items purchased',
       'in_transit' => 'shipped',
       _ => status.replaceAll('_', ' '),
-    };
+    });
 
     return Container(
       padding: EdgeInsets.fromLTRB(icon == null ? 10 : 8, 4, 10, 4),
@@ -62,3 +62,7 @@ class StatusPill extends StatelessWidget {
     );
   }
 }
+
+/// Sentence-cases a status label so every status reads the same way,
+/// regardless of which branch above produced it.
+String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);

@@ -1847,7 +1847,7 @@ abstract class AppLocalizations {
   /// No description provided for @nextStepBoughtWaitShip.
   ///
   /// In en, this message translates to:
-  /// **'Bought — traveler will ship once they’re back'**
+  /// **'Items purchased — traveler will ship once they’re back'**
   String get nextStepBoughtWaitShip;
 
   /// No description provided for @nextStepPostThenShip.
@@ -2111,7 +2111,7 @@ abstract class AppLocalizations {
   /// No description provided for @stageBoughtTitle.
   ///
   /// In en, this message translates to:
-  /// **'Bought'**
+  /// **'Items purchased'**
   String get stageBoughtTitle;
 
   /// No description provided for @stageBoughtHint.

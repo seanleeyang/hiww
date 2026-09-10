@@ -1004,7 +1004,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextStepBoughtWaitShip =>
-      'Bought — traveler will ship once they’re back';
+      'Items purchased — traveler will ship once they’re back';
 
   @override
   String get nextStepPostThenShip => 'Post the item, then mark it shipped';
@@ -1173,7 +1173,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stagePaidHint => 'Payment confirmed';
 
   @override
-  String get stageBoughtTitle => 'Bought';
+  String get stageBoughtTitle => 'Items purchased';
 
   @override
   String get stageBoughtHint => 'Traveler bought the item';

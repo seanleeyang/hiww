@@ -34,7 +34,7 @@ void main() {
     await tester.pumpWidget(_wrap(OrderStepper(order: _order('pending_payment'))));
     expect(find.text('Accepted'), findsOneWidget);
     expect(find.text('Paid'), findsOneWidget);
-    expect(find.text('Bought'), findsOneWidget);
+    expect(find.text('Items purchased'), findsOneWidget);
     expect(find.text('In transit'), findsOneWidget);
     expect(find.text('Delivered'), findsOneWidget);
   });
@@ -61,21 +61,25 @@ void main() {
     expect(find.byIcon(Icons.check), findsNWidgets(5));
   });
 
-  testWidgets('mid-flight, the Bought stage is current, not yet checked', (tester) async {
+  testWidgets(
+      'once purchase proof is uploaded, Items purchased ticks immediately rather than waiting for shipping',
+      (tester) async {
     await tester.pumpWidget(_wrap(OrderStepper(
       order: _order('purchased',
           confirmed: DateTime(2026, 11, 14), purchased: DateTime(2026, 11, 15)),
     )));
-    // Accepted + Paid done; Bought is the current step.
-    expect(find.byIcon(Icons.check), findsNWidgets(2));
+    // Accepted + Paid + Items purchased all done as soon as the photo/receipt
+    // are uploaded — In transit is now the current (in-progress) step.
+    expect(find.byIcon(Icons.check), findsNWidgets(3));
   });
 
-  testWidgets('once payment is confirmed, Paid ticks immediately rather than waiting for Bought', (tester) async {
+  testWidgets('once payment is confirmed, Paid ticks immediately rather than waiting for the next stage',
+      (tester) async {
     await tester.pumpWidget(_wrap(OrderStepper(
       order: _order('confirmed', confirmed: DateTime(2026, 11, 14)),
     )));
-    // Accepted + Paid done as soon as payment is confirmed — Bought is now
-    // the current (in-progress) step, not yet checked.
+    // Accepted + Paid done as soon as payment is confirmed — Items purchased
+    // is now the current (in-progress) step, not yet checked.
     expect(find.byIcon(Icons.check), findsNWidgets(2));
   });
 }
