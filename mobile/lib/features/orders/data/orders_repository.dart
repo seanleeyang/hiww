@@ -41,6 +41,12 @@ class OrdersRepository {
       });
   Future<void> confirmReceived(String id) =>
       _api.post('/api/orders/$id/release', body: {'note': 'Received'});
+
+  /// Adds or replaces shipping proof after the order has already shipped —
+  /// the picker at ship-time is a one-shot opportunity; this covers a
+  /// traveler who skipped it then, or wants to swap in a better photo.
+  Future<void> addShippingProof(String id, String imageUrl) =>
+      _api.post('/api/orders/$id/shipping-proof', body: {'image_url': imageUrl});
 }
 
 final ordersRepositoryProvider = Provider<OrdersRepository>(

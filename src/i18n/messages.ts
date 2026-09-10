@@ -209,6 +209,18 @@ const MESSAGES: Record<string, Entry> = {
     en: 'Order must be in transit before release',
     th: 'คำสั่งซื้อต้องอยู่ระหว่างจัดส่งก่อนจึงจะปล่อยเงินได้',
   },
+  'delivery.shippingProofUrlRequired': {
+    en: 'A shipping proof photo URL is required',
+    th: 'ต้องแนบรูปหลักฐานการจัดส่ง',
+  },
+  'delivery.onlyTravelerCanUploadShippingProof': {
+    en: 'Only the traveler can upload shipping proof',
+    th: 'เฉพาะนักเดินทางเท่านั้นที่อัปโหลดหลักฐานการจัดส่งได้',
+  },
+  'delivery.mustBeInTransitToAddShippingProof': {
+    en: 'Order must be in transit to add shipping proof',
+    th: 'คำสั่งซื้อต้องอยู่ระหว่างจัดส่งจึงจะแนบหลักฐานการจัดส่งได้',
+  },
 
   // modules/orders/routes.ts
   'orders.onlyShopperCanReportPayment': {

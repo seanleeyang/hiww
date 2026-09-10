@@ -362,7 +362,30 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
         );
       case 'in_transit':
         if (!widget.isShopper) {
-          return note(l10n.noteShippedWaitingConfirm);
+          if (o.shippingProofUrl != null) {
+            return note(l10n.noteShippedWaitingConfirm);
+          }
+          // The picker at ship-time was skipped — still let the traveler
+          // attach proof while the order is in transit, not just then.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              note(l10n.noteShippedWaitingConfirm),
+              const SizedBox(height: 12),
+              ImagePickerField(
+                value: _shippingProofUrl,
+                label: _busy ? l10n.actionUploading : l10n.actionUploadShippingProof,
+                onChanged: (url) => setState(() => _shippingProofUrl = url),
+              ),
+              const SizedBox(height: 12),
+              primary(
+                l10n.actionSubmit,
+                _shippingProofUrl != null
+                    ? () => _run(() => repo.addShippingProof(o.id, _shippingProofUrl!))
+                    : null,
+              ),
+            ],
+          );
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

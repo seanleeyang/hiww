@@ -97,6 +97,66 @@ describe('delivery and release flow', () => {
     expect(afterDelivery?.shipping_proof_url).toBeNull();
   });
 
+  it('lets the traveler add shipping proof after the fact, while still in_transit', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+
+    const addProof = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/shipping-proof`,
+      headers: authHeader(order.traveler),
+      payload: { image_url: 'https://example.com/grabbike-late.jpg' },
+    });
+
+    expect(addProof.statusCode).toBe(200);
+    const row = await ctx.db
+      .selectFrom('orders')
+      .selectAll()
+      .where('id', '=', order.orderId)
+      .executeTakeFirst();
+    expect(row?.shipping_proof_url).toBe('https://example.com/grabbike-late.jpg');
+  });
+
+  it('rejects adding shipping proof before the order has shipped', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+
+    const addProof = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/shipping-proof`,
+      headers: authHeader(order.traveler),
+      payload: { image_url: 'https://example.com/too-early.jpg' },
+    });
+
+    expect(addProof.statusCode).toBe(409);
+  });
+
+  it('rejects the shopper adding shipping proof — traveler only', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+
+    const addProof = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/shipping-proof`,
+      headers: authHeader(order.shopper),
+      payload: { image_url: 'https://example.com/not-yours.jpg' },
+    });
+
+    expect(addProof.statusCode).toBe(403);
+  });
+
   it('is idempotent: releasing an already-delivered order stays delivered', async () => {
     const order = await createAcceptedOrder(ctx);
     await forceOrderStatus(ctx, order.orderId, 'purchased');

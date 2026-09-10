@@ -85,6 +85,10 @@ export const purchaseProofSchema = z.object({
   note: z.string().trim().max(500).optional(),
 });
 
+export const shippingProofSchema = z.object({
+  image_url: z.string().trim().url().max(2048),
+});
+
 export const createOrderSchema = z.object({
   trip_id: z.string().uuid().optional(),
   request_id: z.string().uuid().optional(),

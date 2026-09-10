@@ -18,6 +18,7 @@ export type AuditAction =
   | 'order.receipt_flag'
   | 'order.receipt_flag_cleared'
   | 'order.ship'
+  | 'order.shipping_proof'
   | 'order.release'
   | 'order.payout'
   | 'dispute.open'

@@ -3,7 +3,7 @@ import { sql } from 'kysely';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
 import { config } from '@/config/env';
-import { purchaseProofSchema } from '@/types/schemas';
+import { purchaseProofSchema, shippingProofSchema } from '@/types/schemas';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
 import { runReceiptCheck } from '@/services/receipt-check';
@@ -184,6 +184,57 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         success: true,
         data: { order_id: order.id, status: 'in_transit' },
         code: 'ORDER_MARKED_DELIVERED',
+      });
+    }
+  );
+
+  // Add or replace shipping proof after the fact — the picker on `/deliver`
+  // is a one-shot opportunity (a traveler who skips it there has no way
+  // back), so this lets them attach it any time while still in_transit,
+  // not just at the moment they mark it shipped.
+  app.post<{ Params: { id: string }; Body: unknown }>(
+    '/api/orders/:id/shipping-proof',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request: any, reply: any) => {
+      const parsed = shippingProofSchema.safeParse(request.body || {});
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'delivery.shippingProofUrlRequired');
+      }
+
+      const order = await request.db
+        .selectFrom('orders')
+        .selectAll()
+        .where('id', '=', request.params.id)
+        .executeTakeFirst();
+
+      if (!order) {
+        throw new AppError('NOT_FOUND', 404, 'common.orderNotFound');
+      }
+      if (order.traveler_id !== request.userId) {
+        throw new AppError('FORBIDDEN', 403, 'delivery.onlyTravelerCanUploadShippingProof');
+      }
+      if (order.status !== 'in_transit') {
+        throw new AppError('INVALID_STATUS', 409, 'delivery.mustBeInTransitToAddShippingProof');
+      }
+
+      await request.db
+        .updateTable('orders')
+        .set({ shipping_proof_url: parsed.data.image_url, updated_at: new Date() })
+        .where('id', '=', order.id)
+        .execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'order.shipping_proof',
+        targetType: 'order',
+        targetId: order.id,
+        summary: `Traveler added shipping proof for order ${order.id}`,
+        metadata: { shipping_proof_url: parsed.data.image_url },
+      });
+
+      reply.send({
+        success: true,
+        data: { order_id: order.id, shipping_proof_url: parsed.data.image_url },
+        code: 'SHIPPING_PROOF_ADDED',
       });
     }
   );
