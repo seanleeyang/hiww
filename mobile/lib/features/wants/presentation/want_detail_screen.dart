@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
+import '../../../core/guest_guard.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/breakdown_row.dart';
@@ -169,6 +170,25 @@ class WantDetailScreen extends ConsumerWidget {
                   else if (want.status != 'open')
                     Text(
                       l10n.wantClosedNote,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  else if (me == null) ...[
+                    Text(
+                      l10n.wantSignInToOfferNote,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton(
+                      onPressed: () => requireSignedIn(context, ref),
+                      child: Text(l10n.actionLogIn),
+                    ),
+                  ] else
+                    Text(
+                      l10n.wantOnlyTravelersCanOfferNote,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -444,24 +464,38 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
       if (!mounted) return;
       context.go('/orders/$orderId');
     } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.message),
-        action: e.code == 'PROFILE_INCOMPLETE'
-            ? SnackBarAction(label: 'Update profile', onPressed: () => context.push('/account'))
-            : null,
-      ));
+      // The one error worth a dedicated action beyond the message itself —
+      // shown here (not left to OfferNegotiationActions' generic inline
+      // error) specifically for the "Update profile" shortcut. Every other
+      // failure rethrows so Accept fails the same visible way Counter and
+      // Decline already do, on the same card, instead of a SnackBar that
+      // can be missed if the card has scrolled off-screen.
+      if (e.code == 'PROFILE_INCOMPLETE') {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message),
+          action: SnackBarAction(label: 'Update profile', onPressed: () => context.push('/account')),
+        ));
+        return;
+      }
+      rethrow;
     }
   }
 
   Future<void> _counter(String price) async {
     await ref.read(offersRepositoryProvider).counter(widget.offer.id, price);
     await _refreshAfterAction();
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.infoCounterSent)));
   }
 
   Future<void> _reject() async {
     await ref.read(offersRepositoryProvider).reject(widget.offer.id);
     await _refreshAfterAction();
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.infoOfferDeclined)));
   }
 
   @override

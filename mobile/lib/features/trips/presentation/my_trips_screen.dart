@@ -73,6 +73,7 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen>
       floatingActionButton: BadgedFab(
         icon: Icons.flight_outlined,
         onPressed: () => showAddTripSheet(context),
+        tooltip: l10n.actionPostATrip,
       ),
       body: Column(
         children: [

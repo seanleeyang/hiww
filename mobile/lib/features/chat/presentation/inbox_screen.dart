@@ -7,20 +7,29 @@ import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/initials_avatar.dart';
+import '../../notifications/data/notifications_repository.dart';
 import '../../notifications/presentation/notifications_screen.dart';
 import '../data/chat_repository.dart';
 
 /// Two sub-tabs: order-scoped chat threads, and account notifications —
 /// previously two separate bottom-nav destinations, now one.
-class InboxScreen extends StatefulWidget {
+class InboxScreen extends ConsumerStatefulWidget {
   const InboxScreen({super.key});
 
   @override
-  State<InboxScreen> createState() => _InboxScreenState();
+  ConsumerState<InboxScreen> createState() => _InboxScreenState();
 }
 
-class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStateMixin {
-  late final TabController _tabController = TabController(length: 2, vsync: this);
+class _InboxScreenState extends ConsumerState<InboxScreen> with SingleTickerProviderStateMixin {
+  late final TabController _tabController = TabController(
+    length: 2,
+    vsync: this,
+    // The bottom-nav badge sums unread messages + unread notifications into
+    // one number — open on whichever sub-tab actually has the unread items,
+    // not always Messages, so tapping the badge doesn't land on an
+    // unrelated (possibly empty-looking) tab.
+    initialIndex: ref.read(unreadTotalProvider) == 0 && ref.read(notificationUnreadProvider) > 0 ? 1 : 0,
+  );
 
   @override
   void dispose() {

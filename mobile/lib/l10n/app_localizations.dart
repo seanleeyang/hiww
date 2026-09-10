@@ -1508,6 +1508,18 @@ abstract class AppLocalizations {
   /// **'This want is no longer taking offers.'**
   String get wantClosedNote;
 
+  /// No description provided for @wantOnlyTravelersCanOfferNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only travelers can make offers on this — your account isn\'t set up as one.'**
+  String get wantOnlyTravelersCanOfferNote;
+
+  /// No description provided for @wantSignInToOfferNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in as a traveler to make an offer on this.'**
+  String get wantSignInToOfferNote;
+
   /// No description provided for @dialogCancelWantTitle.
   ///
   /// In en, this message translates to:
@@ -1753,6 +1765,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your price'**
   String get fieldYourPrice;
+
+  /// No description provided for @errorEnterValidPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a price above ฿0'**
+  String get errorEnterValidPrice;
 
   /// No description provided for @actionSubmit.
   ///
@@ -2251,6 +2269,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment released — thank you!'**
   String get infoPaymentReleased;
+
+  /// No description provided for @infoCounterSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter offer sent'**
+  String get infoCounterSent;
+
+  /// No description provided for @infoOfferDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer declined'**
+  String get infoOfferDeclined;
 
   /// No description provided for @leaveReviewTitle.
   ///

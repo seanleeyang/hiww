@@ -799,6 +799,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wantClosedNote => 'This want is no longer taking offers.';
 
   @override
+  String get wantOnlyTravelersCanOfferNote =>
+      'Only travelers can make offers on this — your account isn\'t set up as one.';
+
+  @override
+  String get wantSignInToOfferNote =>
+      'Sign in as a traveler to make an offer on this.';
+
+  @override
   String get dialogCancelWantTitle => 'Cancel this want?';
 
   @override
@@ -941,6 +949,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fieldYourPrice => 'Your price';
+
+  @override
+  String get errorEnterValidPrice => 'Enter a price above ฿0';
 
   @override
   String get actionSubmit => 'Submit';
@@ -1247,6 +1258,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get infoPaymentReleased => 'Payment released — thank you!';
+
+  @override
+  String get infoCounterSent => 'Counter offer sent';
+
+  @override
+  String get infoOfferDeclined => 'Offer declined';
 
   @override
   String get leaveReviewTitle => 'Leave a review';

@@ -141,8 +141,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
 
     return Scaffold(
       floatingActionButton: onTravelTab
-          ? BadgedFab(icon: Icons.flight_outlined, onPressed: _postTrip)
-          : BadgedFab(icon: Icons.shopping_bag_outlined, onPressed: _postWant),
+          ? BadgedFab(icon: Icons.flight_outlined, onPressed: _postTrip, tooltip: l10n.actionPostATrip)
+          : BadgedFab(icon: Icons.shopping_bag_outlined, onPressed: _postWant, tooltip: l10n.actionPostAWant),
       body: Column(
         children: [
           TabBar(

@@ -175,6 +175,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
       floatingActionButton: BadgedFab(
         icon: Icons.shopping_bag_outlined,
         onPressed: () => showCreateOrderSheet(context),
+        tooltip: l10n.actionPostAWant,
       ),
       body: Column(
         children: [

@@ -781,6 +781,14 @@ class AppLocalizationsTh extends AppLocalizations {
   String get wantClosedNote => 'รายการต้องการนี้ไม่รับข้อเสนอแล้ว';
 
   @override
+  String get wantOnlyTravelersCanOfferNote =>
+      'เฉพาะนักเดินทางเท่านั้นที่เสนอราคาได้ — บัญชีของคุณยังไม่ได้ตั้งค่าเป็นนักเดินทาง';
+
+  @override
+  String get wantSignInToOfferNote =>
+      'เข้าสู่ระบบในฐานะนักเดินทางเพื่อเสนอราคาสำหรับรายการนี้';
+
+  @override
   String get dialogCancelWantTitle => 'ยกเลิกรายการต้องการนี้ใช่ไหม?';
 
   @override
@@ -917,6 +925,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get fieldYourPrice => 'ราคาของคุณ';
+
+  @override
+  String get errorEnterValidPrice => 'กรุณาระบุราคามากกว่า ฿0';
 
   @override
   String get actionSubmit => 'ส่ง';
@@ -1212,6 +1223,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get infoPaymentReleased => 'ปล่อยเงินแล้ว — ขอบคุณ!';
+
+  @override
+  String get infoCounterSent => 'ส่งข้อเสนอต่อรองแล้ว';
+
+  @override
+  String get infoOfferDeclined => 'ปฏิเสธข้อเสนอแล้ว';
 
   @override
   String get leaveReviewTitle => 'เขียนรีวิว';

@@ -84,34 +84,46 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
   Future<void> _showCounterDialog() async {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: widget.offer.quotedPrice);
+    String? error;
     final price = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.dialogCounterOfferTitle),
-        content: TextField(
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(labelText: l10n.fieldYourPrice, prefixText: '฿ '),
-          autofocus: true,
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FilledButton(
-                onPressed: () {
-                  final v = double.tryParse(controller.text.trim());
-                  if (v == null || v <= 0) return;
-                  Navigator.pop(dialogContext, v.toStringAsFixed(2));
-                },
-                child: Text(l10n.actionSubmit),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          return AlertDialog(
+            title: Text(l10n.dialogCounterOfferTitle),
+            content: TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: l10n.fieldYourPrice,
+                prefixText: '฿ ',
+                errorText: error,
               ),
-              const SizedBox(height: 8),
-              TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.actionCancel)),
+              autofocus: true,
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton(
+                    onPressed: () {
+                      final v = double.tryParse(controller.text.trim());
+                      if (v == null || v <= 0) {
+                        setDialogState(() => error = l10n.errorEnterValidPrice);
+                        return;
+                      }
+                      Navigator.pop(dialogContext, v.toStringAsFixed(2));
+                    },
+                    child: Text(l10n.actionSubmit),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(l10n.actionCancel)),
+                ],
+              ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
     if (price != null) await _run(() => widget.onCounter(price));

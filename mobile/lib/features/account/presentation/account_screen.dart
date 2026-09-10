@@ -14,6 +14,7 @@ import '../../../ui/busy_filled_button.dart';
 import '../../../ui/section_header.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
+import '../../../ui/async_value_view.dart';
 import '../../../ui/status_pill.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
@@ -35,7 +36,12 @@ class AccountScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
+    // Watching the controller directly (rather than currentUserProvider,
+    // which collapses "still loading" and "the fetch genuinely failed" into
+    // the same null) so a real failure gets AsyncValueView's error + Retry
+    // instead of a spinner with no way out.
+    final authState = ref.watch(authControllerProvider);
+    final user = authState.valueOrNull is AuthSignedIn ? (authState.valueOrNull as AuthSignedIn).user : null;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -50,9 +56,14 @@ class AccountScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: user == null
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
+      body: AsyncValueView(
+        value: authState,
+        onRetry: () => ref.invalidate(authControllerProvider),
+        data: (_) {
+          // Not actually signed in — the router redirects away from
+          // /account momentarily; render nothing in the meantime.
+          if (user == null) return const SizedBox.shrink();
+          return ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
                 Row(
@@ -117,7 +128,9 @@ class AccountScreen extends ConsumerWidget {
                   label: Text(l10n.actionLogOut),
                 ),
               ],
-            ),
+            );
+        },
+      ),
     );
   }
 }
