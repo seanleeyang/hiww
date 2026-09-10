@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import Fastify, { FastifyInstance, FastifyReply } from 'fastify';
+import { sql } from 'kysely';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
@@ -122,9 +123,16 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await registerAuthGuard(app);
 
   app.get('/health', async (_request, reply) => {
-    reply.send({
-      status: 'ok',
+    let databaseOk = true;
+    try {
+      await sql`select 1`.execute(db);
+    } catch {
+      databaseOk = false;
+    }
+    reply.status(databaseOk ? 200 : 503).send({
+      status: databaseOk ? 'ok' : 'error',
       timestamp: new Date().toISOString(),
+      database: databaseOk ? 'ok' : 'error',
       env: getHealthSummary(),
     });
   });

@@ -35,12 +35,28 @@ final notificationsRepositoryProvider = Provider<NotificationsRepository>(
   (ref) => NotificationsRepository(ref.watch(apiClientProvider)),
 );
 
-/// Polls the feed every 20 s so the bell badge stays roughly current.
+/// Polls the feed every 20 s so the bell badge stays roughly current. A
+/// single failed fetch (a network blip, a transient 5xx, a not-yet-verified
+/// account) must not permanently kill the polling loop — an uncaught throw
+/// inside an async* generator ends the stream for good, so every fetch here
+/// is guarded to keep the loop alive, same as `orderMessagesProvider` in
+/// chat_repository.dart.
 final notificationsProvider = StreamProvider<NotificationsFeed>((ref) async* {
   final repo = ref.watch(notificationsRepositoryProvider);
-  yield await repo.feed();
+  NotificationsFeed? last;
+  Future<void> fetch() async {
+    try {
+      last = await repo.feed();
+    } catch (_) {
+      // keep showing the previous value; the next poll tries again
+    }
+  }
+
+  await fetch();
+  if (last != null) yield last!;
   await for (final _ in Stream<void>.periodic(const Duration(seconds: 20))) {
-    yield await repo.feed();
+    await fetch();
+    if (last != null) yield last!;
   }
 });
 

@@ -82,12 +82,27 @@ final chatRepositoryProvider = Provider<ChatRepository>(
   (ref) => ChatRepository(ref.watch(apiClientProvider)),
 );
 
-/// Polls the inbox every 15 s so the nav badge stays roughly current.
+/// Polls the inbox every 15 s so the nav badge stays roughly current. A
+/// single failed fetch (a network blip, a transient 5xx, a not-yet-verified
+/// account) must not permanently kill the polling loop — an uncaught throw
+/// inside an async* generator ends the stream for good, so every fetch here
+/// is guarded to keep the loop alive, same as `orderMessagesProvider` below.
 final inboxProvider = StreamProvider<List<InboxThread>>((ref) async* {
   final repo = ref.watch(chatRepositoryProvider);
-  yield await repo.inbox();
+  List<InboxThread>? last;
+  Future<void> fetch() async {
+    try {
+      last = await repo.inbox();
+    } catch (_) {
+      // keep showing the previous value; the next poll tries again
+    }
+  }
+
+  await fetch();
+  if (last != null) yield last!;
   await for (final _ in Stream<void>.periodic(const Duration(seconds: 15))) {
-    yield await repo.inbox();
+    await fetch();
+    if (last != null) yield last!;
   }
 });
 

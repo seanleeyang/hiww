@@ -64,6 +64,9 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   mocktail: ^1.0.5
   image: ^4.9.2
+  # Only needed to fake ImagePickerPlatform in integration_test/ — the VM
+  # test binding has no real image_picker platform implementation.
+  image_picker_platform_interface: ^2.11.1
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
 
