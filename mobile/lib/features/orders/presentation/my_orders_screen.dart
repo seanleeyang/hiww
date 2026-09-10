@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/badged_fab.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_order_card.dart';
 import '../../../ui/skeleton.dart';
@@ -209,10 +210,9 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
     }
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: BadgedFab(
+        icon: Icons.shopping_bag_outlined,
         onPressed: () => showCreateOrderSheet(context),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.actionPostAWant),
       ),
       body: Column(
         children: [

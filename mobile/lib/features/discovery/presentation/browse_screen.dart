@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/guest_guard.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart' show PullToRefresh;
+import '../../../ui/badged_fab.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/country_chips.dart';
 import '../../../ui/empty_state.dart';
@@ -140,40 +141,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
 
     return Scaffold(
       floatingActionButton: onTravelTab
-          ? FloatingActionButton.extended(
-              onPressed: _postTrip,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.actionPostATrip),
-            )
-          : FloatingActionButton(
-              onPressed: _postWant,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Icon(Icons.shopping_bag_outlined, size: 24),
-                  Positioned(
-                    right: -5,
-                    top: -5,
-                    child: Container(
-                      padding: const EdgeInsets.all(1.5),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.add,
-                        size: 9,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ? BadgedFab(icon: Icons.flight_outlined, onPressed: _postTrip)
+          : BadgedFab(icon: Icons.shopping_bag_outlined, onPressed: _postWant),
       body: Column(
         children: [
           TabBar(

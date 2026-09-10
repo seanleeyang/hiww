@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
+import '../../../ui/badged_fab.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
@@ -89,10 +90,9 @@ class _MyTripsScreenState extends ConsumerState<MyTripsScreen>
     final trips = ref.watch(myTripsProvider);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: BadgedFab(
+        icon: Icons.flight_outlined,
         onPressed: () => showAddTripSheet(context),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.actionPostATrip),
       ),
       body: Column(
         children: [
