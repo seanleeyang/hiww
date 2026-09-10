@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 
 // The built app is served under /admin/* by the Fastify backend
 // (see src/app.ts) — base must match so asset URLs resolve correctly.
@@ -30,5 +31,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // e2e/ is Playwright, not Vitest — its spec files match Vitest's default
+    // glob but must not be collected here.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 });

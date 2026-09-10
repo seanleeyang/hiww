@@ -35,14 +35,20 @@ Status: **8/8 green.**
 
 ### Backend officer — operator console + scripts
 
-- `public/admin.html` was click-through verified headless end to end: log in →
-  Test lab creates a full order chain → Orders tab confirms payment (handles the
-  `confirm()` + `prompt()` dialogs) → ship → receive → delivered; Review queue
-  resolves a dispute; Users tab approves KYC; `/api/ops/overview` renders.
-  **Works.**
+- `admin-web/e2e/console.spec.ts` (Playwright) drives the **real** admin console
+  against a running backend: sign in → Developer tools creates an order → confirm
+  its payment through the confirm dialog → the `payment.confirm` entry shows in
+  the Audit log → the ID-checks queue renders. Run:
+
+  ```bash
+  npm run dev:e2e                 # terminal 1 — API + built console on :3000
+  cd admin-web && npm run e2e     # (first time: npm run e2e:install)
+  ```
+
 - `scripts/pilot-smoke-test.ps1` (full API lifecycle + security checks + dispute)
   — **fixed and green** (was stale: `POST /api/offers` now needs `trip_id`, and
   `/accept` takes no body).
+- Both e2e suites run in CI on every relevant push/PR (`.github/workflows/e2e.yml`).
 
 ### Findings fixed in Stage 1
 
@@ -65,7 +71,8 @@ Status: **8/8 green.**
       (jest `globalSetup` + `setupFiles`), and `npm run dev:e2e` does the same for
       `<db>_e2e` before serving the Flutter suite (`scripts/serve-e2e.ts`, also
       seeds the pilot admin). The dev / demo database is never touched by either.
-- [ ] Console verification is a manual headless drive, not a committed script.
+- [x] ~~Console verification is a manual headless drive~~ — `admin-web/e2e/console.spec.ts`
+      (Playwright) is committed and runs in CI; see the officer section above.
 
 ## Stage 2 — operational safety for a money pilot
 

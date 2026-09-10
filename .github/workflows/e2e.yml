@@ -1,9 +1,9 @@
-name: E2E (app + API)
+name: E2E (app + console + API)
 
-# Runs the Flutter end-to-end suite (mobile/integration_test/app_flow_test.dart)
-# against a real API: `npm run dev:e2e` boots the backend on a throwaway
-# `<db>_e2e` database, then `flutter test` drives the real widget tree over
-# sockets on the headless flutter-tester VM (no emulator needed).
+# Both personas, driven through their real interfaces against a live API that
+# `npm run dev:e2e` boots on a throwaway `<db>_e2e` database:
+#   - app:     mobile/integration_test/app_flow_test.dart on the flutter-tester VM
+#   - officer: admin-web/e2e/*.spec.ts (Playwright) against the built console
 
 on:
   push:
@@ -12,7 +12,9 @@ on:
       - 'src/**'
       - 'migrations/**'
       - 'mobile/**'
+      - 'admin-web/**'
       - 'scripts/serve-e2e.ts'
+      - 'scripts/build-admin.mjs'
       - 'package.json'
       - '.github/workflows/e2e.yml'
   pull_request:
@@ -20,12 +22,22 @@ on:
       - 'src/**'
       - 'migrations/**'
       - 'mobile/**'
+      - 'admin-web/**'
       - 'scripts/serve-e2e.ts'
+      - 'scripts/build-admin.mjs'
       - 'package.json'
       - '.github/workflows/e2e.yml'
 
+env:
+  NODE_ENV: development
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hiww
+  JWT_SECRET: ci-only-secret-ci-only-secret-0123456789
+  MANUAL_MONEY_PILOT: 'true'
+  PAYMENT_PROVIDER: mock
+  IDENTITY_PROVIDER: mock
+
 jobs:
-  e2e:
+  app:
     runs-on: ubuntu-latest
 
     services:
@@ -42,14 +54,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-
-    env:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hiww
-      JWT_SECRET: ci-only-secret-ci-only-secret-0123456789
-      MANUAL_MONEY_PILOT: 'true'
-      PAYMENT_PROVIDER: mock
-      IDENTITY_PROVIDER: mock
 
     steps:
       - name: Checkout
@@ -96,3 +100,75 @@ jobs:
       - name: API logs
         if: always()
         run: cat "$RUNNER_TEMP/api.log" || true
+
+  console:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: hiww
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d hiww"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install API dependencies
+        run: npm ci
+
+      - name: Install console dependencies
+        run: npm ci
+        working-directory: admin-web
+
+      - name: Build the console into public/admin
+        run: npm run build:admin
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+        working-directory: admin-web
+
+      - name: Start the API + console on a throwaway database
+        run: |
+          nohup npm run dev:e2e > "$RUNNER_TEMP/api.log" 2>&1 &
+          disown || true
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000/health >/dev/null; then
+              echo "API is healthy"; exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API never became healthy"
+          cat "$RUNNER_TEMP/api.log"
+          exit 1
+
+      - name: Run the officer console e2e suite
+        run: npm run e2e
+        working-directory: admin-web
+
+      - name: API logs
+        if: always()
+        run: cat "$RUNNER_TEMP/api.log" || true
+
+      - name: Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: admin-web/playwright-report
+          retention-days: 7

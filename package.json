@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "dev:e2e": "tsx scripts/serve-e2e.ts",
+    "build:admin": "node scripts/build-admin.mjs",
     "build": "tsc",
     "start": "tsx src/main.ts",
     "test": "jest",
