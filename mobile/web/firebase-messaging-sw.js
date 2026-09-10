@@ -13,10 +13,10 @@ importScripts('https://www.gstatic.com/firebasejs/12.3.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/12.3.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: 'REPLACE_WITH_WEB_API_KEY',
-  appId: 'REPLACE_WITH_WEB_APP_ID',
-  messagingSenderId: 'REPLACE_WITH_SENDER_ID',
-  projectId: 'REPLACE_WITH_PROJECT_ID',
+  apiKey: 'AIzaSyCej8Pm_1hEcleuNSiD3a-zvQJOXrX8h4s',
+  appId: '1:696163754096:web:17e96c2165a97395d114b5',
+  messagingSenderId: '696163754096',
+  projectId: 'hiww-d1f5c',
 });
 
 const messaging = firebase.messaging();

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "696163754096",
+    "project_id": "hiww-d1f5c",
+    "storage_bucket": "hiww-d1f5c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696163754096:android:7068d270436c82aad114b5",
+        "android_client_info": {
+          "package_name": "com.hiww.hiww_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB38t8wRYjnigtEAgHZMbnesAi2-p-KyLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

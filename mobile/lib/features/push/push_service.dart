@@ -21,11 +21,10 @@ class PushService {
 
   bool get supportsPush => kIsWeb || defaultTargetPlatform == TargetPlatform.android;
 
-  /// Set this to your Firebase Web Push VAPID key (Project settings ->
-  /// Cloud Messaging -> Web configuration) once you have one — required for
-  /// `getToken()` to succeed on Web. Left null for now, which just means
-  /// web push doesn't work until it's set; Android is unaffected.
-  static const String? _webVapidKey = null;
+  /// Firebase Web Push VAPID key (Project settings -> Cloud Messaging ->
+  /// Web configuration), required for `getToken()` to succeed on Web.
+  static const String _webVapidKey =
+      'BEDs7obKvRQx3jTuY9J4s6VTVuT_hYXDFuX0YmogGth4vi6vS_NKy50M84XYi0GPVxrwjRKaD6Z8C75qFekARlA';
 
   Future<void> registerForCurrentUser() async {
     if (!supportsPush) return;
