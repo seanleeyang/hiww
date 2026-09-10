@@ -112,6 +112,27 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
         .orderBy('orders.delivered_at', 'asc')
         .execute();
 
+      // Cancelled orders that had confirmed payment and no refund row yet —
+      // the operator still owes the shopper money back (see
+      // POST /api/admin/orders/:id/cancel's refund_due notification).
+      const awaitingRefund = await request.db
+        .selectFrom('orders')
+        .leftJoin('refunds', 'refunds.order_id', 'orders.id')
+        .select([
+          'orders.id as id',
+          'orders.item_description as item_description',
+          'orders.total_price as total_price',
+          'orders.fees as fees',
+          'orders.shopper_total as shopper_total',
+          'orders.shopper_id as shopper_id',
+          'orders.cancelled_at as cancelled_at',
+        ])
+        .where('orders.status', '=', 'cancelled')
+        .where('orders.confirmed_at', 'is not', null)
+        .where('refunds.id', 'is', null)
+        .orderBy('orders.cancelled_at', 'asc')
+        .execute();
+
       const paidOut = await request.db
         .selectFrom('payouts')
         .innerJoin('orders', 'orders.id', 'payouts.order_id')
@@ -126,6 +147,23 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
           'orders.item_description as item_description',
         ])
         .orderBy('payouts.created_at', 'desc')
+        .limit(100)
+        .execute();
+
+      const refunded = await request.db
+        .selectFrom('refunds')
+        .innerJoin('orders', 'orders.id', 'refunds.order_id')
+        .select([
+          'refunds.id as id',
+          'refunds.order_id as order_id',
+          'refunds.amount as amount',
+          'refunds.method as method',
+          'refunds.reference as reference',
+          'refunds.recorded_by as recorded_by',
+          'refunds.created_at as created_at',
+          'orders.item_description as item_description',
+        ])
+        .orderBy('refunds.created_at', 'desc')
         .limit(100)
         .execute();
 
@@ -161,6 +199,22 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
             count: paidOut.length,
             total: sum(paidOut, 'amount'),
             payouts: paidOut,
+          },
+          awaiting_refund: {
+            count: awaitingRefund.length,
+            total: awaitingRefund
+              .reduce(
+                (a: Decimal, r: any) =>
+                  a.add(new Decimal(r.shopper_total ?? new Decimal(r.total_price).add(r.fees))),
+                new Decimal(0)
+              )
+              .toFixed(2),
+            orders: awaitingRefund,
+          },
+          refunded: {
+            count: refunded.length,
+            total: sum(refunded, 'amount'),
+            refunds: refunded,
           },
         },
         code: 'OPS_RECONCILIATION',

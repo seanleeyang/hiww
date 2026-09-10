@@ -108,6 +108,7 @@ export async function registerReviewsRoutes(app: FastifyInstance): Promise<void>
           'reviewer.avatar_url as reviewer_avatar_url',
         ])
         .where('reviews.reviewee_id', '=', request.params.id)
+        .where('reviews.hidden_at', 'is', null)
         .orderBy('reviews.created_at', 'desc')
         .limit(50)
         .execute();

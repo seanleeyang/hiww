@@ -276,6 +276,8 @@ export interface ReviewsTable {
   rating: number;
   comment?: string | null;
   created_at: Generated<Date>;
+  /** Set by an admin to hide an abusive/inappropriate review (migration 037). */
+  hidden_at?: Date | null;
 }
 
 export interface MessagesTable {
@@ -329,6 +331,18 @@ export interface PayoutsTable {
   created_at: Generated<Date>;
 }
 
+/** One row per shopper refund (migration 036) — mirrors `PayoutsTable`. */
+export interface RefundsTable {
+  id: string;
+  order_id: string;
+  recorded_by?: string | null;
+  amount: string; // Decimal as string
+  method: string;
+  reference: string;
+  note?: string | null;
+  created_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   trips: TripsTable;
@@ -344,6 +358,7 @@ export interface Database {
   messages: MessagesTable;
   audit_log: AuditLogTable;
   payouts: PayoutsTable;
+  refunds: RefundsTable;
   otp_codes: OtpCodesTable;
   device_tokens: DeviceTokensTable;
 }

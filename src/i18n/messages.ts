@@ -48,10 +48,18 @@ const MESSAGES: Record<string, Entry> = {
     th: 'ข้อมูลการตัดสินข้อพิพาทไม่ถูกต้อง',
   },
   'adminActions.invalidRiskFlag': { en: 'Invalid risk flag payload', th: 'ข้อมูลการตั้งค่าความเสี่ยงไม่ถูกต้อง' },
+  'adminActions.invalidCancelPayload': { en: 'Invalid cancel payload', th: 'ข้อมูลการยกเลิกไม่ถูกต้อง' },
+  'adminActions.orderAlreadyCancelled': { en: 'This order is already cancelled', th: 'คำสั่งซื้อนี้ถูกยกเลิกไปแล้ว' },
+  'adminActions.orderAlreadyPaidOut': {
+    en: 'This order has already been paid out and can no longer be cancelled',
+    th: 'คำสั่งซื้อนี้จ่ายเงินไปแล้วและไม่สามารถยกเลิกได้อีก',
+  },
+  'adminActions.invalidRefundPayload': { en: 'Invalid refund payload', th: 'ข้อมูลการคืนเงินไม่ถูกต้อง' },
 
   // modules/admin/routes.ts
   'admin.dbErrorReviewQueue': { en: 'Failed to load admin review queue', th: 'โหลดคิวตรวจสอบของผู้ดูแลระบบไม่สำเร็จ' },
   'admin.messageNotFound': { en: 'Message not found', th: 'ไม่พบข้อความนี้' },
+  'admin.reviewNotFound': { en: 'Review not found', th: 'ไม่พบรีวิวนี้' },
 
   // modules/auth/routes.ts
   'auth.invalidRegistration': { en: 'Invalid registration data', th: 'ข้อมูลการสมัครไม่ถูกต้อง' },
@@ -144,6 +152,11 @@ const MESSAGES: Record<string, Entry> = {
     th: 'จ่ายเงินได้เฉพาะคำสั่งซื้อที่จัดส่งสำเร็จแล้วเท่านั้น',
   },
   'money.alreadyPaidOut': { en: 'This order has already been paid out', th: 'คำสั่งซื้อนี้จ่ายเงินไปแล้ว' },
+  'money.onlyCancelledCanRefund': {
+    en: 'Only a cancelled order with confirmed payment can be refunded',
+    th: 'คืนเงินได้เฉพาะคำสั่งซื้อที่ถูกยกเลิกและยืนยันการชำระเงินแล้วเท่านั้น',
+  },
+  'money.alreadyRefunded': { en: 'This order has already been refunded', th: 'คำสั่งซื้อนี้คืนเงินไปแล้ว' },
 
   // services/pricing.ts
   'pricing.invalidItemPrice': {

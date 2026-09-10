@@ -18,6 +18,8 @@ const GET_ROUTES = new Set([
   '/api/admin/audit',
   '/api/admin/trips',
   '/api/admin/requests',
+  '/api/admin/offers',
+  '/api/admin/order-reviews',
   '/api/ledger/:userId',
   '/api/ops/overview',
   '/api/ops/reconciliation',

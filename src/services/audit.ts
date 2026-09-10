@@ -40,7 +40,11 @@ export type AuditAction =
   | 'request.update'
   | 'request.cancel'
   | 'request.archive'
-  | 'request.remove_by_admin';
+  | 'request.remove_by_admin'
+  | 'order.admin_cancel'
+  | 'order.refund'
+  | 'review.hide'
+  | 'review.unhide';
 
 export interface AuditActor {
   id?: string | null;
@@ -49,7 +53,7 @@ export interface AuditActor {
 
 export interface AuditInput {
   action: AuditAction;
-  targetType: 'order' | 'user' | 'dispute' | 'message' | 'trip' | 'request' | 'offer';
+  targetType: 'order' | 'user' | 'dispute' | 'message' | 'trip' | 'request' | 'offer' | 'review';
   targetId: string;
   summary: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

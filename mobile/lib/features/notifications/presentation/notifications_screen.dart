@@ -142,6 +142,9 @@ class NotificationsScreen extends ConsumerWidget {
     'dispute_opened' => Icons.report_gmailerrorred_outlined,
     'dispute_resolved' => Icons.gavel_outlined,
     'message_flagged' => Icons.flag_outlined,
+    'order_cancelled' => Icons.cancel_outlined,
+    'refund_due' => Icons.account_balance_wallet_outlined,
+    'refund_sent' => Icons.account_balance_wallet_outlined,
     _ => Icons.notifications_none,
   };
 }

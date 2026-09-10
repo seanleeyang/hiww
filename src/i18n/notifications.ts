@@ -250,6 +250,36 @@ const TEMPLATES: Record<string, Template> = {
           subject: 'A message was removed',
           body: "One of your chat messages didn't meet Hiww's chat guidelines and was removed. It's under review.",
         },
+  order_cancelled: (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'คำสั่งซื้อถูกยกเลิกแล้ว',
+          body: `ทีมงาน Hiww ยกเลิกคำสั่งซื้อสำหรับ "${p.item}" แล้ว: ${p.reason}`,
+        }
+      : {
+          subject: 'Your order was cancelled',
+          body: `Hiww cancelled the order for "${p.item}": ${p.reason}`,
+        },
+  refund_due: (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'ถึงกำหนดคืนเงินให้ผู้ซื้อ',
+          body: `คำสั่งซื้อ "${p.item}" ถูกยกเลิกหลังยืนยันการชำระเงินแล้ว (${p.amount}) กรุณาคืนเงินให้ผู้ซื้อและบันทึกการคืนเงินในคอนโซล`,
+        }
+      : {
+          subject: 'Refund now due',
+          body: `The order for "${p.item}" was cancelled after payment was confirmed (${p.amount}). Refund the shopper and record it in the console.`,
+        },
+  refund_sent: (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'คุณได้รับเงินคืนแล้ว',
+          body: `Hiww คืนเงิน ${p.amount} สำหรับ "${p.item}" ผ่าน ${p.method} (อ้างอิง ${p.reference}) ให้คุณแล้ว`,
+        }
+      : {
+          subject: 'You’ve been refunded',
+          body: `Hiww refunded ${p.amount} for "${p.item}" via ${p.method} (ref ${p.reference}).`,
+        },
 };
 
 /** Renders a notification's subject/body in `locale`. `type` is the stored

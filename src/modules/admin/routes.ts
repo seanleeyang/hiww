@@ -357,6 +357,117 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     reply.send({ success: true, data: { removed: removed.length }, code: 'REQUESTS_REMOVED_BY_ADMIN' });
   });
 
+  // All offers, most recent first — offers otherwise only surface indirectly
+  // through the want/order they're attached to; this gives an operator a
+  // direct view of the negotiation layer.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.get('/api/admin/offers', async (request, reply) => {
+    const offers = await request.db
+      .selectFrom('offers')
+      .innerJoin('requests', 'requests.id', 'offers.request_id')
+      .innerJoin('users as traveler', 'traveler.id', 'offers.traveler_id')
+      .innerJoin('users as shopper', 'shopper.id', 'requests.shopper_id')
+      .select([
+        'offers.id',
+        'offers.request_id',
+        'offers.trip_id',
+        'offers.quoted_price',
+        'offers.status',
+        'offers.round',
+        'offers.last_actor',
+        'offers.respond_by',
+        'offers.created_at',
+        'requests.item_description',
+        'traveler.id as traveler_id',
+        'traveler.full_name as traveler_name',
+        'shopper.id as shopper_id',
+        'shopper.full_name as shopper_name',
+      ])
+      .orderBy('offers.created_at', 'desc')
+      .limit(200)
+      .execute();
+
+    reply.send({ success: true, data: { offers }, code: 'ADMIN_OFFERS' });
+  });
+
+  // All reviews (ratings), including hidden ones — for moderating abusive or
+  // inappropriate review text. Ordinary users only ever see the filtered,
+  // un-hidden list via GET /api/users/:id/reviews.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.get('/api/admin/order-reviews', async (request, reply) => {
+    const reviews = await request.db
+      .selectFrom('reviews')
+      .innerJoin('users as reviewer', 'reviewer.id', 'reviews.reviewer_id')
+      .innerJoin('users as reviewee', 'reviewee.id', 'reviews.reviewee_id')
+      .innerJoin('orders', 'orders.id', 'reviews.order_id')
+      .select([
+        'reviews.id',
+        'reviews.order_id',
+        'reviews.rating',
+        'reviews.comment',
+        'reviews.hidden_at',
+        'reviews.created_at',
+        'reviewer.id as reviewer_id',
+        'reviewer.full_name as reviewer_name',
+        'reviewee.id as reviewee_id',
+        'reviewee.full_name as reviewee_name',
+        'orders.item_description',
+      ])
+      .orderBy('reviews.created_at', 'desc')
+      .limit(200)
+      .execute();
+
+    reply.send({ success: true, data: { reviews }, code: 'ADMIN_ORDER_REVIEWS' });
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post<{ Params: { id: string } }>('/api/admin/order-reviews/:id/hide', async (request, reply) => {
+    const review = await request.db
+      .selectFrom('reviews')
+      .select(['id', 'hidden_at'])
+      .where('id', '=', request.params.id)
+      .executeTakeFirst();
+    if (!review) {
+      throw new AppError('NOT_FOUND', 404, 'admin.reviewNotFound');
+    }
+
+    await request.db.updateTable('reviews').set({ hidden_at: new Date() }).where('id', '=', review.id).execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'review.hide',
+      targetType: 'review',
+      targetId: review.id,
+      summary: `Operator hid review ${review.id}`,
+      metadata: {},
+    });
+
+    reply.send({ success: true, data: { id: review.id }, code: 'REVIEW_HIDDEN' });
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post<{ Params: { id: string } }>('/api/admin/order-reviews/:id/unhide', async (request, reply) => {
+    const review = await request.db
+      .selectFrom('reviews')
+      .select(['id', 'hidden_at'])
+      .where('id', '=', request.params.id)
+      .executeTakeFirst();
+    if (!review) {
+      throw new AppError('NOT_FOUND', 404, 'admin.reviewNotFound');
+    }
+
+    await request.db.updateTable('reviews').set({ hidden_at: null }).where('id', '=', review.id).execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'review.unhide',
+      targetType: 'review',
+      targetId: review.id,
+      summary: `Operator restored review ${review.id}`,
+      metadata: {},
+    });
+
+    reply.send({ success: true, data: { id: review.id }, code: 'REVIEW_UNHIDDEN' });
+  });
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.get('/api/admin/users', async (request, reply) => {
     const users = await request.db

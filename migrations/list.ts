@@ -35,6 +35,8 @@ import * as m032 from './032_device_tokens';
 import * as m033 from './033_shipping_proof';
 import * as m034 from './034_delivery_proof';
 import * as m035 from './035_orders_offer_unique';
+import * as m036 from './036_refunds';
+import * as m037 from './037_reviews_hidden';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -73,4 +75,6 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '033_shipping_proof', up: m033.up },
   { name: '034_delivery_proof', up: m034.up },
   { name: '035_orders_offer_unique', up: m035.up },
+  { name: '036_refunds', up: m036.up },
+  { name: '037_reviews_hidden', up: m037.up },
 ];
