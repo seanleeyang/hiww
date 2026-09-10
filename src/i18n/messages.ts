@@ -209,6 +209,10 @@ const MESSAGES: Record<string, Entry> = {
     en: 'Order must be in transit before release',
     th: 'คำสั่งซื้อต้องอยู่ระหว่างจัดส่งก่อนจึงจะปล่อยเงินได้',
   },
+  'delivery.orderHasOpenDispute': {
+    en: 'This order has an open dispute — it must be resolved before payment can be released',
+    th: 'คำสั่งซื้อนี้มีข้อพิพาทที่ยังไม่ได้รับการแก้ไข ต้องแก้ไขข้อพิพาทก่อนจึงจะปล่อยเงินได้',
+  },
   'delivery.shippingProofUrlRequired': {
     en: 'A shipping proof photo URL is required',
     th: 'ต้องแนบรูปหลักฐานการจัดส่ง',

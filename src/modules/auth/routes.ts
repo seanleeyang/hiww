@@ -7,7 +7,7 @@ import { config } from '@/config/env';
 import { profileUpdateSchema, phoneSchema } from '@/types/schemas';
 import { toUserSummary } from '@/utils/user-summary';
 import { issueOtp, verifyOtp, isMockOtp } from '@/services/otp';
-import { recordAudit } from '@/services/audit';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 // Tighter abuse protection on the credential endpoints than the global default.
 const authRouteConfig = {
@@ -138,6 +138,20 @@ async function verifyLineToken(code: string, redirectUri: string | undefined): P
   }
 }
 
+let verifierOverride:
+  | ((
+      provider: 'google' | 'apple' | 'facebook' | 'line',
+      token: string,
+      redirectUri: string | undefined
+    ) => Promise<VerifiedIdentity>)
+  | undefined;
+
+/** Test seam — avoids real Google/LINE network calls when testing the
+ * account-linking logic that runs after verification. */
+export function __setSocialTokenVerifier(fn: typeof verifierOverride): void {
+  verifierOverride = fn;
+}
+
 /** Verifies a provider's token server-side and returns the identity it
  * actually attests to — the client's own claims about who it is are never
  * trusted. Throws AppError on anything that doesn't check out. */
@@ -146,6 +160,7 @@ async function verifySocialToken(
   token: string,
   redirectUri: string | undefined
 ): Promise<VerifiedIdentity> {
+  if (verifierOverride) return verifierOverride(provider, token, redirectUri);
   if (provider === 'google') return verifyGoogleToken(token);
   if (provider === 'line') return verifyLineToken(token, redirectUri);
   throw new AppError('NOT_IMPLEMENTED', 501, 'auth.socialProviderNotConfigured');
@@ -282,17 +297,42 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
           : undefined;
 
         if (existing) {
+          // If this row's email was never itself verified (e.g. someone
+          // registered with this email and password but never completed the
+          // OTP step — nothing proved they actually own the address), its
+          // password proves nothing about who the rightful owner is. A
+          // provider that DID verify the email now claiming it is the
+          // stronger proof, so the row is reclaimed for them: link the
+          // provider and clear the old password hash so whoever set it can
+          // no longer sign in as this account. They can set a new password
+          // later via the email-OTP-gated reset flow if they want one.
+          const reclaiming = !existing.email_verified_at;
           await request.db
             .updateTable('users')
             .set({
               auth_provider: parsed.data.provider,
               provider_user_id: identity.providerId,
               email_verified_at: existing.email_verified_at ?? new Date(),
+              ...(reclaiming ? { password_hash: null } : {}),
               updated_at: new Date(),
             })
             .where('id', '=', existing.id)
             .execute();
-          user = { ...existing, auth_provider: parsed.data.provider, provider_user_id: identity.providerId };
+          if (reclaiming) {
+            await recordAudit(request.db, actorFromRequest(request), {
+              action: 'user.reclaimed_via_social_link',
+              targetType: 'user',
+              targetId: existing.id,
+              summary: `A verified ${parsed.data.provider} login reclaimed a previously-unverified account registered with the same email — old password invalidated`,
+              metadata: { provider: parsed.data.provider, email: identity.email },
+            });
+          }
+          user = {
+            ...existing,
+            auth_provider: parsed.data.provider,
+            provider_user_id: identity.providerId,
+            ...(reclaiming ? { password_hash: null } : {}),
+          };
         } else {
           const userId = generateId();
           const now = new Date();

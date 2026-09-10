@@ -335,7 +335,30 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await request.db.transaction().execute(async (trx: any) => {
-        await trx.updateTable('offers').set({ status: 'accepted', updated_at: now }).where('id', '=', offer.id).execute();
+        // Guarded by prior status so two concurrent accepts on the same offer
+        // (double-tap, or shopper/traveler racing) can't both fall through and
+        // both create an order — whichever loses the race gets zero rows back
+        // here and aborts instead of proceeding.
+        const acceptedOffer = await trx
+          .updateTable('offers')
+          .set({ status: 'accepted', updated_at: now })
+          .where('id', '=', offer.id)
+          .where('status', '=', 'pending')
+          .returning('id')
+          .execute();
+        if (acceptedOffer.length === 0) {
+          throw new AppError('INVALID_STATUS', 409, 'offers.offerCannotBeAccepted');
+        }
+        const acceptedRequest = await trx
+          .updateTable('requests')
+          .set({ status: 'accepted', updated_at: now })
+          .where('id', '=', requestRow.id)
+          .where('status', '=', 'open')
+          .returning('id')
+          .execute();
+        if (acceptedRequest.length === 0) {
+          throw new AppError('INVALID_STATUS', 409, 'offers.requestAlreadyAccepted');
+        }
         await trx
           .updateTable('offers')
           .set({ status: 'rejected', updated_at: now })
@@ -343,7 +366,6 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
           .where('id', '!=', offer.id)
           .where('status', '=', 'pending')
           .execute();
-        await trx.updateTable('requests').set({ status: 'accepted', updated_at: now }).where('id', '=', requestRow.id).execute();
         await trx
           .insertInto('orders')
           .values({

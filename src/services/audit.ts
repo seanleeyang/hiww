@@ -26,6 +26,7 @@ export type AuditAction =
   | 'kyc.review'
   | 'user.flag'
   | 'user.password_reset'
+  | 'user.reclaimed_via_social_link'
   | 'message.flag'
   | 'message.flag_cleared'
   | 'message.check_failed'

@@ -196,6 +196,19 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('INVALID_STATUS', 409, 'money.onlyDeliveredCanPayout');
       }
 
+      // A dispute can be opened any time, independent of order status —
+      // including after release but before payout. Don't let money go out
+      // the door while one is still unresolved.
+      const openDispute = await request.db
+        .selectFrom('disputes')
+        .select('id')
+        .where('order_id', '=', order.id)
+        .where('status', 'in', ['open', 'in_review'])
+        .executeTakeFirst();
+      if (openDispute) {
+        throw new AppError('INVALID_STATUS', 409, 'delivery.orderHasOpenDispute');
+      }
+
       const existing = await request.db
         .selectFrom('payouts')
         .select(['id'])

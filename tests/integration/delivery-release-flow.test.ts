@@ -185,6 +185,71 @@ describe('delivery and release flow', () => {
     }
   });
 
+  it('blocks release while the order has an open dispute', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+
+    const dispute = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/disputes',
+      headers: authHeader(order.shopper),
+      payload: { order_id: order.orderId, reason: 'Wrong item shipped' },
+    });
+    expect(dispute.statusCode).toBe(201);
+
+    const release = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/release`,
+      headers: authHeader(order.shopper),
+      payload: { image_url: 'https://example.com/proof.jpg' },
+    });
+    expect(release.statusCode).toBe(409);
+
+    const row = await ctx.db.selectFrom('orders').select(['status']).where('id', '=', order.orderId).executeTakeFirst();
+    expect(row?.status).toBe('in_transit');
+  });
+
+  it('a concurrent double-release only increments delivered_count once', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+
+    const before = await ctx.db
+      .selectFrom('users')
+      .select(['delivered_count'])
+      .where('id', '=', order.traveler.userId)
+      .executeTakeFirst();
+
+    const release = () =>
+      ctx.app.inject({
+        method: 'POST',
+        url: `/api/orders/${order.orderId}/release`,
+        headers: authHeader(order.shopper),
+        payload: { image_url: 'https://example.com/proof.jpg' },
+      });
+    const [r1, r2] = await Promise.all([release(), release()]);
+    expect(r1.statusCode).toBe(200);
+    expect(r2.statusCode).toBe(200);
+
+    const after = await ctx.db
+      .selectFrom('users')
+      .select(['delivered_count'])
+      .where('id', '=', order.traveler.userId)
+      .executeTakeFirst();
+    expect(Number(after?.delivered_count)).toBe(Number(before?.delivered_count) + 1);
+  });
+
   it('requires a delivery photo before releasing payment', async () => {
     const order = await createAcceptedOrder(ctx);
     await forceOrderStatus(ctx, order.orderId, 'purchased');

@@ -271,6 +271,19 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         throw new AppError('INVALID_STATUS', 409, 'delivery.mustBeInTransit');
       }
 
+      // A shopper unilaterally releasing funds mid-dispute would defeat the
+      // whole point of having a dispute process — an admin has to resolve it
+      // first.
+      const openDispute = await request.db
+        .selectFrom('disputes')
+        .select('id')
+        .where('order_id', '=', order.id)
+        .where('status', 'in', ['open', 'in_review'])
+        .executeTakeFirst();
+      if (openDispute) {
+        throw new AppError('INVALID_STATUS', 409, 'delivery.orderHasOpenDispute');
+      }
+
       // A photo of the item as received is required before payment is
       // released — unlike the traveler's shipping proof, this one gates
       // the transition.
@@ -281,7 +294,12 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       const now = new Date();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await request.db.transaction().execute(async (trx: any) => {
-        await trx
+        // Guarded by prior status — a concurrent double-release can't both
+        // fall through and double-increment delivered_count / double-notify
+        // below; the loser gets zero rows back and the transaction is a no-op
+        // (the request still replies success below, since the order really is
+        // delivered by then, just not by this particular call).
+        const released = await trx
           .updateTable('orders')
           .set({
             status: 'delivered',
@@ -290,7 +308,11 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
             updated_at: now,
           })
           .where('id', '=', order.id)
+          .where('status', '=', 'in_transit')
+          .returning('id')
           .execute();
+        if (released.length === 0) return;
+
         await trx
           .updateTable('users')
           .set({ delivered_count: sql`delivered_count + 1`, updated_at: now })

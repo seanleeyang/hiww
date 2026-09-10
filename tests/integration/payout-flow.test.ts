@@ -114,6 +114,31 @@ describe('payouts + reconciliation', () => {
     expect(res.statusCode).toBe(409);
   });
 
+  it('rejects a payout while the order has an open dispute', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+    await completeOrder(ctx, order); // → delivered
+
+    const dispute = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/disputes',
+      headers: authHeader(order.shopper),
+      payload: { order_id: order.orderId, reason: 'Item arrived damaged' },
+    });
+    expect(dispute.statusCode).toBe(201);
+
+    const payout = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/payout',
+      headers: authHeader(admin),
+      payload: { order_id: order.orderId, method: 'wise', reference: 'W-999' },
+    });
+    expect(payout.statusCode).toBe(409);
+
+    const stored = await ctx.db.selectFrom('payouts').select(['id']).where('order_id', '=', order.orderId).executeTakeFirst();
+    expect(stored).toBeUndefined();
+  });
+
   it('reconciliation and payout are admin-only', async () => {
     const plain = await createUser(ctx, { user_type: 'both' });
 

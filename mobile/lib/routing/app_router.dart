@@ -55,10 +55,13 @@ class _AuthRefresh extends ChangeNotifier {
         ref.invalidate(wantOffersProvider);
         ref.invalidate(orderProvider);
         ref.invalidate(orderIdByRequestProvider);
+        ref.invalidate(myOrdersProvider);
         ref.invalidate(myPublishedTripsProvider);
+        ref.invalidate(myTripsProvider);
         ref.invalidate(tripDetailProvider);
         ref.invalidate(notificationsProvider);
         ref.invalidate(inboxProvider);
+        ref.invalidate(orderMessagesProvider);
         ref.invalidate(feedProvider);
         ref.invalidate(routeMatchProvider);
         ref.invalidate(userReviewsProvider);

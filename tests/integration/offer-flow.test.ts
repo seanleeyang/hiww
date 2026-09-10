@@ -57,6 +57,31 @@ describe('offer flow', () => {
     expect(req?.status).toBe('accepted');
   });
 
+  it('a concurrent double-accept creates exactly one order, not two', async () => {
+    const shopper = await createUser(ctx, { user_type: 'shopper' });
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    await completeProfile(ctx, shopper);
+    await completeProfile(ctx, traveler);
+    const requestId = await createRequest(ctx, shopper);
+    const tripId = await createTrip(ctx, traveler);
+    const offerId = (await makeOffer(traveler, requestId, tripId)).json().data.id;
+
+    const accept = () =>
+      ctx.app.inject({
+        method: 'POST',
+        url: `/api/offers/${offerId}/accept`,
+        headers: authHeader(shopper),
+        payload: {},
+      });
+    const [r1, r2] = await Promise.all([accept(), accept()]);
+
+    const codes = [r1.statusCode, r2.statusCode].sort();
+    expect(codes).toEqual([200, 409]);
+
+    const orders = await ctx.db.selectFrom('orders').selectAll().where('offer_id', '=', offerId).execute();
+    expect(orders).toHaveLength(1);
+  });
+
   it('rejects the other pending offers when one is accepted', async () => {
     const shopper = await createUser(ctx, { user_type: 'shopper' });
     const t1 = await createUser(ctx, { user_type: 'traveler' });
