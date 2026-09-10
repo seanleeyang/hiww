@@ -185,10 +185,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/orders/:id/confirm',
-        builder: (_, s) => ConfirmReviewScreen(
-          orderId: s.pathParameters['id']!,
-          reviewOnly: s.uri.queryParameters['review'] == '1',
-        ),
+        builder: (_, s) => ConfirmReviewScreen(orderId: s.pathParameters['id']!),
       ),
       GoRoute(
         path: '/orders/:id/chat',

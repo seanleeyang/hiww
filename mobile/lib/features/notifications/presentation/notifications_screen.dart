@@ -137,6 +137,7 @@ class NotificationsScreen extends ConsumerWidget {
     'upload_reminder' => Icons.timer_outlined,
     'shipped' => Icons.local_shipping_outlined,
     'delivered' => Icons.check_circle_outline,
+    'payout_due' => Icons.account_balance_wallet_outlined,
     'payout_sent' => Icons.account_balance_wallet_outlined,
     'dispute_opened' => Icons.report_gmailerrorred_outlined,
     'dispute_resolved' => Icons.gavel_outlined,

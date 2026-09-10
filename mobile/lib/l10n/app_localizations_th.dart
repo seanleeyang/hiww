@@ -1095,10 +1095,6 @@ class AppLocalizationsTh extends AppLocalizations {
   String get hintDeliveryProofRequired => 'ต้องแนบก่อนปล่อยเงินให้นักเดินทาง';
 
   @override
-  String get errorDeliveryPhotoRequired =>
-      'กรุณาแนบรูปสินค้าที่คุณได้รับก่อนยืนยัน';
-
-  @override
   String noteUploadDaysLeft(int days) {
     return 'คุณเหลือเวลาอีก $days วันในการอัปโหลดรูปสินค้าและใบเสร็จก่อนทริปของคุณจะสิ้นสุด';
   }
@@ -1188,9 +1184,6 @@ class AppLocalizationsTh extends AppLocalizations {
   String get leaveReviewTitle => 'เขียนรีวิว';
 
   @override
-  String get confirmAndReviewTitle => 'ยืนยันและรีวิว';
-
-  @override
   String get fallbackTheTraveler => 'นักเดินทาง';
 
   @override
@@ -1202,12 +1195,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get hintShareHandover => 'เล่าว่าการส่งมอบเป็นอย่างไร (ไม่บังคับ)';
 
   @override
-  String get actionSubmitReview => 'ส่งรีวิว';
-
-  @override
-  String releaseNoteToName(String name) {
-    return 'การกระทำนี้จะปล่อยเงินที่ถือไว้ให้ $name';
-  }
+  String get actionClose => 'ปิด';
 
   @override
   String get errorDescribeProblem => 'กรุณาอธิบายปัญหา (อย่างน้อย 10 ตัวอักษร)';

@@ -1,4 +1,4 @@
-import { makeTestApp, closeTestApp, authHeader, type TestContext } from '../helpers/test-app';
+import { makeTestApp, closeTestApp, authHeader, createUser, type TestContext } from '../helpers/test-app';
 import { createAcceptedOrder, forceOrderStatus } from '../helpers/flows';
 
 describe('delivery and release flow', () => {
@@ -156,6 +156,33 @@ describe('delivery and release flow', () => {
     });
 
     expect(addProof.statusCode).toBe(403);
+  });
+
+  it('notifies every admin that a payout is now due once released', async () => {
+    const admin1 = await createUser(ctx, { admin: true });
+    const admin2 = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+
+    const release = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/release`,
+      headers: authHeader(order.shopper),
+      payload: { image_url: 'https://example.com/proof.jpg' },
+    });
+    expect(release.statusCode).toBe(200);
+
+    for (const admin of [admin1, admin2]) {
+      const res = await ctx.app.inject({ method: 'GET', url: '/api/notifications', headers: authHeader(admin) });
+      const items = res.json().data.items as Array<{ type: string; order_id: string }>;
+      expect(items.some((n) => n.type === 'payout_due' && n.order_id === order.orderId)).toBe(true);
+    }
   });
 
   it('requires a delivery photo before releasing payment', async () => {

@@ -204,6 +204,16 @@ const TEMPLATES: Record<string, Template> = {
     l === 'th'
       ? { subject: 'คำสั่งซื้อเสร็จสมบูรณ์', body: `คุณยืนยันการรับ "${p.item}" แล้ว แตะเพื่อรีวิวนักเดินทาง` }
       : { subject: 'Order complete', body: `You confirmed receipt of "${p.item}". Tap to leave the traveler a review.` },
+  payout_due: (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'ถึงกำหนดจ่ายเงินให้นักเดินทาง',
+          body: `ผู้ซื้อยืนยันว่าได้รับ "${p.item}" แล้ว (${p.amount}) กรุณาโอนเงินให้นักเดินทางและบันทึกการจ่ายเงินในคอนโซล`,
+        }
+      : {
+          subject: 'Payout now due',
+          body: `The shopper confirmed receipt of "${p.item}" (${p.amount}). Pay the traveler and record it in the console.`,
+        },
   payout_sent: (l, p) =>
     l === 'th'
       ? {

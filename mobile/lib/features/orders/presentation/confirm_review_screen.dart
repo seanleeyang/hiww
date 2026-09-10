@@ -6,7 +6,6 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/hero_image.dart';
-import '../../../ui/image_picker_field.dart';
 import '../../../ui/responsive_body.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
@@ -15,17 +14,13 @@ import '../../discovery/data/discovery_repository.dart';
 import '../../shared/data/reviews_repository.dart';
 import '../data/orders_repository.dart';
 
+/// Just the rating/review step — payment release (with its required
+/// proof-of-receipt photo) already happened on the order screen before
+/// this pushes, so there's nothing left to confirm here.
 class ConfirmReviewScreen extends ConsumerStatefulWidget {
-  const ConfirmReviewScreen({
-    super.key,
-    required this.orderId,
-    this.reviewOnly = false,
-  });
+  const ConfirmReviewScreen({super.key, required this.orderId});
 
   final String orderId;
-
-  /// When true the order is already delivered — just collect a rating.
-  final bool reviewOnly;
 
   @override
   ConsumerState<ConfirmReviewScreen> createState() =>
@@ -35,7 +30,6 @@ class ConfirmReviewScreen extends ConsumerStatefulWidget {
 class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
   final _comment = TextEditingController();
   int _rating = 5;
-  String? _deliveryPhotoUrl;
   bool _busy = false;
   String? _error;
 
@@ -45,14 +39,10 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
     super.dispose();
   }
 
-  Future<void> _submit(String counterpartyId) async {
+  Future<void> _close(String counterpartyId) async {
     final l10n = AppLocalizations.of(context)!;
     if (_rating < 1) {
       setState(() => _error = l10n.errorTapStarToRate);
-      return;
-    }
-    if (!widget.reviewOnly && _deliveryPhotoUrl == null) {
-      setState(() => _error = l10n.errorDeliveryPhotoRequired);
       return;
     }
     setState(() {
@@ -60,10 +50,6 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
       _error = null;
     });
     try {
-      final orders = ref.read(ordersRepositoryProvider);
-      if (!widget.reviewOnly) {
-        await orders.confirmReceived(widget.orderId, imageUrl: _deliveryPhotoUrl!);
-      }
       await ref
           .read(reviewsRepositoryProvider)
           .submit(
@@ -77,15 +63,8 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
       ref.invalidate(userReviewsProvider(counterpartyId));
       if (!mounted) return;
       context.pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.reviewOnly
-                ? l10n.infoThanksForReview
-                : l10n.infoPaymentReleased,
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.infoThanksForReview)));
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -101,9 +80,7 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
     final order = ref.watch(orderProvider(widget.orderId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.reviewOnly ? l10n.leaveReviewTitle : l10n.confirmAndReviewTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.leaveReviewTitle)),
       body: ResponsiveBody(
         child: AsyncValueView(
           value: order,
@@ -132,23 +109,6 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
                     ],
                   ),
                 ),
-                if (!widget.reviewOnly) ...[
-                  const SizedBox(height: 20),
-                  Text(l10n.labelDeliveryProof, style: Theme.of(context).textTheme.labelLarge),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.hintDeliveryProofRequired,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  ImagePickerField(
-                    value: _deliveryPhotoUrl,
-                    label: _busy ? l10n.actionUploading : l10n.actionUploadDeliveryPhoto,
-                    onChanged: (url) => setState(() => _deliveryPhotoUrl = url),
-                  ),
-                ],
                 const SizedBox(height: 24),
                 Text(
                   l10n.howWasName(name),
@@ -181,30 +141,15 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
                 FilledButton(
                   onPressed: _busy
                       ? null
-                      : () => _submit(o.counterparty?.id ?? ''),
+                      : () => _close(o.counterparty?.id ?? ''),
                   child: _busy
                       ? const SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(
-                          widget.reviewOnly
-                              ? l10n.actionSubmitReview
-                              : l10n.actionConfirmRelease(o.totalLabel),
-                        ),
+                      : Text(l10n.actionClose),
                 ),
-                if (!widget.reviewOnly) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.releaseNoteToName(name),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
               ],
             );
           },

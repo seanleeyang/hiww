@@ -325,6 +325,24 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
             orderId: order.id,
           },
         ]);
+
+        // Manual-money pilot: nothing pays the traveler out automatically —
+        // an admin has to notice and do it (see money/routes.ts's payout
+        // route). Without an active signal here they'd only find out by
+        // periodically checking the reconciliation dashboard, so every admin
+        // gets notified (and pushed to, if they have the app) the instant a
+        // payout becomes due.
+        const admins = await trx.selectFrom('users').select(['id']).where('role', '=', 'admin').execute();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await recordNotifications(
+          trx,
+          admins.map((a: any) => ({
+            userId: a.id,
+            type: 'payout_due' as const,
+            params: { item: order.item_description, amount: order.traveller_payout ?? order.total_price },
+            orderId: order.id,
+          }))
+        );
       });
 
       reply.send({

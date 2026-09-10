@@ -37,6 +37,19 @@ function chatDeletedColumnFor(order: any, userId: string): 'chat_deleted_by_shop
   return order.shopper_id === userId ? 'chat_deleted_by_shopper_at' : 'chat_deleted_by_traveler_at';
 }
 
+const CHAT_CLOSE_GRACE_MS = 24 * 60 * 60 * 1000;
+
+/** The chat stays open for a 24h grace period after delivery — the shopper
+ * and traveler often still need to coordinate right after handover (a
+ * missing accessory, a thank-you) — then locks for good. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isChatClosed(order: any): boolean {
+  if (order.status !== 'delivered') return false;
+  const deliveredAt = order.delivered_at ? new Date(order.delivered_at).getTime() : null;
+  if (!deliveredAt) return true;
+  return Date.now() - deliveredAt >= CHAT_CLOSE_GRACE_MS;
+}
+
 /**
  * Order-scoped messaging. A conversation is every message with the same
  * `order_id`; the inbox groups by order. Poll-based — no websockets in the pilot.
@@ -90,7 +103,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         data: {
           items,
           counterparty_typing: isCounterpartyTyping(request.params.id, request.userId),
-          closed: order.status === 'delivered',
+          closed: isChatClosed(order),
           deleted: false,
         },
         code: 'MESSAGES_LISTED',
@@ -107,9 +120,8 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         throw new AppError('VALIDATION_ERROR', 400, 'messages.invalidBody');
       }
       const order = await loadOrderForParticipant(request, request.params.id);
-      // The shopper confirming receipt (and releasing payment) is the
-      // natural end of the conversation — nothing left to coordinate on.
-      if (order.status === 'delivered') {
+      // A 24h grace period after delivery, then the conversation locks.
+      if (isChatClosed(order)) {
         throw new AppError('INVALID_STATUS', 409, 'messages.chatClosed');
       }
 
@@ -249,7 +261,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (request: any, reply: any) => {
       const order = await loadOrderForParticipant(request, request.params.id);
-      if (order.status !== 'delivered') {
+      if (!isChatClosed(order)) {
         throw new AppError('INVALID_STATUS', 409, 'messages.chatNotYetClosed');
       }
 

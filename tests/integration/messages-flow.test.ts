@@ -127,7 +127,27 @@ describe('messages / inbox flow', () => {
     expect(asTraveler.json().data.counterparty_typing).toBe(false);
   });
 
-  it('closes the chat once the shopper releases payment (order delivered)', async () => {
+  it('the chat stays open for a 24h grace period right after delivery', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await completeOrder(ctx, order);
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(list.json().data.closed).toBe(false);
+
+    const post = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+      payload: { body: 'Glad it arrived safe!' },
+    });
+    expect(post.statusCode).toBe(201);
+  });
+
+  it('closes the chat once the 24h grace period after delivery has passed', async () => {
     const order = await createAcceptedOrder(ctx);
     await ctx.app.inject({
       method: 'POST',
@@ -137,6 +157,11 @@ describe('messages / inbox flow', () => {
     });
 
     await completeOrder(ctx, order);
+    await ctx.db
+      .updateTable('orders')
+      .set({ delivered_at: new Date(Date.now() - 25 * 60 * 60 * 1000) })
+      .where('id', '=', order.orderId)
+      .execute();
 
     const list = await ctx.app.inject({
       method: 'GET',
@@ -165,6 +190,18 @@ describe('messages / inbox flow', () => {
     expect(del.statusCode).toBe(409);
   });
 
+  it('cannot delete a chat during the 24h grace period, even once delivered', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await completeOrder(ctx, order);
+
+    const del = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages/delete-chat`,
+      headers: authHeader(order.shopper),
+    });
+    expect(del.statusCode).toBe(409);
+  });
+
   it('deleting a closed chat hides it from just the deleter — not the other side', async () => {
     const order = await createAcceptedOrder(ctx);
     await ctx.app.inject({
@@ -174,6 +211,11 @@ describe('messages / inbox flow', () => {
       payload: { body: 'See you at pickup!' },
     });
     await completeOrder(ctx, order);
+    await ctx.db
+      .updateTable('orders')
+      .set({ delivered_at: new Date(Date.now() - 25 * 60 * 60 * 1000) })
+      .where('id', '=', order.orderId)
+      .execute();
 
     const del = await ctx.app.inject({
       method: 'POST',

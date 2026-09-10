@@ -458,7 +458,6 @@
   "labelShippingProof": "Shipping proof",
   "labelDeliveryProof": "Proof of receipt",
   "hintDeliveryProofRequired": "Required before payment is released to the traveler.",
-  "errorDeliveryPhotoRequired": "Add a photo of the item you received before confirming",
   "noteUploadDaysLeft": "{days, plural, =0{No days left to upload the item photo and receipt before your trip ends.} one{You have {days} day left to upload the item photo and receipt before your trip ends.} other{You have {days} days left to upload the item photo and receipt before your trip ends.}}",
   "@noteUploadDaysLeft": {
     "placeholders": { "days": { "type": "int" } }
@@ -499,18 +498,13 @@
   "infoThanksForReview": "Thanks for the review",
   "infoPaymentReleased": "Payment released — thank you!",
   "leaveReviewTitle": "Leave a review",
-  "confirmAndReviewTitle": "Confirm & review",
   "fallbackTheTraveler": "the traveler",
   "howWasName": "How was {name}?",
   "@howWasName": {
     "placeholders": { "name": { "type": "String" } }
   },
   "hintShareHandover": "Share how the handover went (optional)",
-  "actionSubmitReview": "Submit review",
-  "releaseNoteToName": "This releases the held payment to {name}.",
-  "@releaseNoteToName": {
-    "placeholders": { "name": { "type": "String" } }
-  },
+  "actionClose": "Close",
 
   "errorDescribeProblem": "Please describe the problem (at least 10 characters)",
   "infoReported": "Reported — the Hiww team will look into it",

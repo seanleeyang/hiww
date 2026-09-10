@@ -211,6 +211,7 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
   String? _itemPhotoUrl;
   String? _receiptUrl;
   String? _shippingProofUrl;
+  String? _deliveryProofUrl;
 
   Future<void> _run(Future<void> Function() action) async {
     setState(() => _busy = true);
@@ -218,6 +219,30 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
       await action();
       ref.invalidate(orderProvider(widget.order.id));
       ref.invalidate(myOrdersProvider);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Releases payment, then moves straight on to leaving a review — the
+  /// photo above is the only thing gating release, so there's nothing left
+  /// to confirm on the next screen.
+  Future<void> _confirmAndReview(String orderId, String imageUrl) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _busy = true);
+    try {
+      await ref.read(ordersRepositoryProvider).confirmReceived(orderId, imageUrl: imageUrl);
+      ref.invalidate(orderProvider(orderId));
+      ref.invalidate(myOrdersProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.infoPaymentReleased)));
+      context.push('/orders/$orderId/confirm');
     } on ApiException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -396,9 +421,26 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
           children: [
             note(l10n.noteOnWayConfirm),
             const SizedBox(height: 12),
+            Text(l10n.labelDeliveryProof, style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 4),
+            Text(
+              l10n.hintDeliveryProofRequired,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            ImagePickerField(
+              value: _deliveryProofUrl,
+              label: _busy ? l10n.actionUploading : l10n.actionUploadDeliveryPhoto,
+              onChanged: (url) => setState(() => _deliveryProofUrl = url),
+            ),
+            const SizedBox(height: 12),
             primary(
               l10n.actionConfirmRelease(o.totalLabel),
-              () => context.push('/orders/${o.id}/confirm'),
+              _deliveryProofUrl != null
+                  ? () => _confirmAndReview(o.id, _deliveryProofUrl!)
+                  : null,
             ),
           ],
         );
@@ -417,7 +459,7 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
         if (o.canReview) {
           return primary(
             l10n.actionRateCounterparty(o.counterparty?.fullName ?? l10n.fallbackTheOtherParty),
-            () => context.push('/orders/${o.id}/confirm?review=1'),
+            () => context.push('/orders/${o.id}/confirm'),
           );
         }
         return note(l10n.noteCompletedThanks);

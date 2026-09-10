@@ -1120,10 +1120,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Required before payment is released to the traveler.';
 
   @override
-  String get errorDeliveryPhotoRequired =>
-      'Add a photo of the item you received before confirming';
-
-  @override
   String noteUploadDaysLeft(int days) {
     String _temp0 = intl.Intl.pluralLogic(
       days,
@@ -1223,9 +1219,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leaveReviewTitle => 'Leave a review';
 
   @override
-  String get confirmAndReviewTitle => 'Confirm & review';
-
-  @override
   String get fallbackTheTraveler => 'the traveler';
 
   @override
@@ -1237,12 +1230,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintShareHandover => 'Share how the handover went (optional)';
 
   @override
-  String get actionSubmitReview => 'Submit review';
-
-  @override
-  String releaseNoteToName(String name) {
-    return 'This releases the held payment to $name.';
-  }
+  String get actionClose => 'Close';
 
   @override
   String get errorDescribeProblem =>

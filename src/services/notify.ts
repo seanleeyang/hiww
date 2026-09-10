@@ -21,6 +21,7 @@ export type NotificationType =
   | 'upload_reminder'
   | 'shipped'
   | 'delivered'
+  | 'payout_due'
   | 'payout_sent'
   | 'dispute_opened'
   | 'dispute_resolved'

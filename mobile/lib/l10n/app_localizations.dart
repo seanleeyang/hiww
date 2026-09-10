@@ -2042,12 +2042,6 @@ abstract class AppLocalizations {
   /// **'Required before payment is released to the traveler.'**
   String get hintDeliveryProofRequired;
 
-  /// No description provided for @errorDeliveryPhotoRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a photo of the item you received before confirming'**
-  String get errorDeliveryPhotoRequired;
-
   /// No description provided for @noteUploadDaysLeft.
   ///
   /// In en, this message translates to:
@@ -2204,12 +2198,6 @@ abstract class AppLocalizations {
   /// **'Leave a review'**
   String get leaveReviewTitle;
 
-  /// No description provided for @confirmAndReviewTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm & review'**
-  String get confirmAndReviewTitle;
-
   /// No description provided for @fallbackTheTraveler.
   ///
   /// In en, this message translates to:
@@ -2228,17 +2216,11 @@ abstract class AppLocalizations {
   /// **'Share how the handover went (optional)'**
   String get hintShareHandover;
 
-  /// No description provided for @actionSubmitReview.
+  /// No description provided for @actionClose.
   ///
   /// In en, this message translates to:
-  /// **'Submit review'**
-  String get actionSubmitReview;
-
-  /// No description provided for @releaseNoteToName.
-  ///
-  /// In en, this message translates to:
-  /// **'This releases the held payment to {name}.'**
-  String releaseNoteToName(String name);
+  /// **'Close'**
+  String get actionClose;
 
   /// No description provided for @errorDescribeProblem.
   ///
