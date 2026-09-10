@@ -314,6 +314,36 @@ describe('admin visibility: offers and reviews', () => {
     expect(offers.some((o) => o.id === order.offerId)).toBe(true);
   });
 
+  it('the dev-tools test-order endpoint produces a real, usable order', async () => {
+    const admin = await createUser(ctx, { admin: true });
+
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/admin/dev/create-test-order',
+      headers: authHeader(admin),
+    });
+    expect(res.statusCode).toBe(201);
+    const orderId = res.json().data.order_id as string;
+
+    const order = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${orderId}`,
+      headers: authHeader(admin),
+    });
+    expect(order.statusCode).toBe(200);
+    expect(order.json().data.status).toBe('pending_payment');
+  });
+
+  it('a non-admin cannot use the dev-tools test-order endpoint', async () => {
+    const plain = await createUser(ctx, { user_type: 'both' });
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/admin/dev/create-test-order',
+      headers: authHeader(plain),
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
   it('admin can hide and unhide a review; hiding removes it from the public list', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);

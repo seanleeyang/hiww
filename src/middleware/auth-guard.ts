@@ -80,6 +80,7 @@ export const ADMIN_ROUTES = new Set<string>([
   '/api/admin/order-reviews',
   '/api/admin/order-reviews/:id/hide',
   '/api/admin/order-reviews/:id/unhide',
+  '/api/admin/dev/create-test-order',
   '/api/compliance/kyc/approve',
   '/api/disputes/:id/resolve',
   '/api/ledger/:userId',
