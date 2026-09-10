@@ -1,7 +1,13 @@
 // End-to-end flow against a REAL running backend.
 //
-//   Terminal 1:  cd ..  &&  npm run dev
-//   Terminal 2:  flutter test integration_test/app_flow_test.dart
+//   Terminal 1:  cd ..  &&  npm run dev:e2e
+//   Terminal 2:  flutter test -d flutter-tester integration_test/app_flow_test.dart
+//
+// `npm run dev:e2e` drops, recreates and migrates a throwaway `<db>_e2e`
+// database, seeds the pilot admin this suite logs in as, and serves the API
+// on :3000 against it — so a run never touches the dev / demo database
+// (same treatment `npm test` gives the Jest suite). A plain `npm run dev`
+// also works but leaves this suite's users/orders in your dev database.
 //
 // Runs on the flutter-tester VM (no device/chromedriver needed): the real
 // widget tree, real go_router, real Dio over dart:io sockets. Only the token
@@ -130,28 +136,18 @@ Future<void> _verifyAndCompleteProfile(String token, {Map? debugOtp}) async {
 const _adminEmail = 'it-admin@example.com';
 const _adminPass = 'AdminPass123';
 
-/// Returns an admin bearer token. Logs in if the account exists, otherwise runs
-/// the repo's idempotent `create-admin` script (needs the API's working tree).
+/// Returns an admin bearer token. `npm run dev:e2e` seeds this account; if
+/// login fails the server was probably started a different way.
 Future<String> _adminToken() async {
   try {
     final r = await _api('POST', '/api/auth/login',
         body: {'email': _adminEmail, 'password': _adminPass});
     return r['token'] as String;
-  } catch (_) {
-    final res = await Process.run(
-      'npx',
-      ['tsx', 'scripts/create-admin.ts', _adminEmail, _adminPass],
-      workingDirectory: Directory.current.parent.path,
-      runInShell: true,
-    );
-    if (res.exitCode != 0) {
-      fail('Could not create the test admin. Run once:\n'
-          '  cd ..  &&  npm run create-admin $_adminEmail $_adminPass\n'
-          '${res.stdout}\n${res.stderr}');
-    }
-    final r = await _api('POST', '/api/auth/login',
-        body: {'email': _adminEmail, 'password': _adminPass});
-    return r['token'] as String;
+  } catch (e) {
+    fail('No admin account — start the API with `npm run dev:e2e` (it seeds '
+        '$_adminEmail), or run once:\n'
+        '  cd ..  &&  npm run create-admin $_adminEmail $_adminPass\n'
+        'Original error: $e');
   }
 }
 
@@ -320,7 +316,7 @@ void main() {
     } catch (e) {
       fail(
         'The Hiww API must be running on $_baseUrl for this test.\n'
-        '  cd ..  &&  npm run dev\n'
+        '  cd ..  &&  npm run dev:e2e\n'
         'Original error: $e',
       );
     }

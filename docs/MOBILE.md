@@ -88,7 +88,8 @@ reference mockup:
   (real go_router + Dio) against a running backend. Runs on the flutter-tester
   VM, no device/chromedriver:
   `flutter test -d flutter-tester integration_test/app_flow_test.dart` with the
-  API up (`npm run db:setup && npm run dev`). Two flows:
+  API up (`npm run dev:e2e` — throwaway `<db>_e2e`, seeds the admin). Now 7
+  flows; originally two:
   1. register → see a seeded trip on Browse → post a want → in `/api/requests/mine`
   2. open a want → accept an offer → land on the order → "I've sent the payment"
      → `/api/orders` shows `pending_payment` + `payment_claimed_at`

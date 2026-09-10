@@ -16,7 +16,7 @@ while three action buttons in the app were silently 400ing (see findings).
 Dio over sockets) against a running backend. Run:
 
 ```bash
-npm run db:setup && npm run dev          # terminal 1
+npm run dev:e2e                           # terminal 1 — throwaway <db>_e2e, seeds the admin
 cd mobile && flutter test -d flutter-tester integration_test/app_flow_test.dart
 ```
 
@@ -57,9 +57,10 @@ Status: **7/7 green.**
 ### Still open in Stage 1
 
 - [ ] Chat / messaging flow has no integration coverage.
-- [x] ~~Tests share the dev database~~ — `npm test` now drops + recreates
-      `<db>_test` and migrates it (jest `globalSetup` + `setupFiles`); the dev /
-      demo database is never touched.
+- [x] ~~Tests share the dev database~~ — `npm test` drops + recreates `<db>_test`
+      (jest `globalSetup` + `setupFiles`), and `npm run dev:e2e` does the same for
+      `<db>_e2e` before serving the Flutter suite (`scripts/serve-e2e.ts`, also
+      seeds the pilot admin). The dev / demo database is never touched by either.
 - [ ] Console verification is a manual headless drive, not a committed script.
 
 ## Stage 2 — operational safety for a money pilot
