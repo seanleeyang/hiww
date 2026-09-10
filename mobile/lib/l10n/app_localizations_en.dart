@@ -141,6 +141,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionForgotPassword => 'Forgot password?';
 
   @override
+  String get actionStaySignedIn => 'Stay signed in';
+
+  @override
   String get forgotPasswordTitle => 'Reset your password';
 
   @override
@@ -799,7 +802,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String dialogAcceptOfferBody(String price) {
-    return 'You will pay $price for the goods. An order is created and you\'ll be asked to pay.';
+    return 'You will pay $price for the item. An order is created and you\'ll be asked to pay.';
   }
 
   @override
@@ -870,7 +873,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelWhichTrip => 'Which trip';
 
   @override
-  String get fieldYourPriceForGoods => 'Your price for the goods';
+  String get fieldYourPriceForGoods => 'Your price for the item';
 
   @override
   String get labelDeliverBy => 'Deliver by';
@@ -1257,7 +1260,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get trustSettled => 'Payment for these goods has been settled.';
+  String get trustSettled => 'Payment for this item has been settled.';
 
   @override
   String get trustReleasedOnConfirm =>

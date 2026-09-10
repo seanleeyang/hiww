@@ -33,7 +33,11 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthUser> login({required String email, required String password}) async {
+  Future<AuthUser> login({
+    required String email,
+    required String password,
+    bool staySignedIn = true,
+  }) async {
     token = 'tok';
     return _user;
   }

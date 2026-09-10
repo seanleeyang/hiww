@@ -338,6 +338,12 @@ abstract class AppLocalizations {
   /// **'Forgot password?'**
   String get actionForgotPassword;
 
+  /// No description provided for @actionStaySignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay signed in'**
+  String get actionStaySignedIn;
+
   /// No description provided for @forgotPasswordTitle.
   ///
   /// In en, this message translates to:
@@ -1505,7 +1511,7 @@ abstract class AppLocalizations {
   /// No description provided for @dialogAcceptOfferBody.
   ///
   /// In en, this message translates to:
-  /// **'You will pay {price} for the goods. An order is created and you\'ll be asked to pay.'**
+  /// **'You will pay {price} for the item. An order is created and you\'ll be asked to pay.'**
   String dialogAcceptOfferBody(String price);
 
   /// No description provided for @priceBreakdownProductPrice.
@@ -1625,7 +1631,7 @@ abstract class AppLocalizations {
   /// No description provided for @fieldYourPriceForGoods.
   ///
   /// In en, this message translates to:
-  /// **'Your price for the goods'**
+  /// **'Your price for the item'**
   String get fieldYourPriceForGoods;
 
   /// No description provided for @labelDeliverBy.
@@ -2255,7 +2261,7 @@ abstract class AppLocalizations {
   /// No description provided for @trustSettled.
   ///
   /// In en, this message translates to:
-  /// **'Payment for these goods has been settled.'**
+  /// **'Payment for this item has been settled.'**
   String get trustSettled;
 
   /// No description provided for @trustReleasedOnConfirm.

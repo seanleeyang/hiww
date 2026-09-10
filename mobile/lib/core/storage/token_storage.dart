@@ -8,9 +8,29 @@ class TokenStorage {
   final FlutterSecureStorage _storage;
   static const _key = 'hiww_token';
 
-  Future<String?> read() => _storage.read(key: _key);
-  Future<void> write(String token) => _storage.write(key: _key, value: token);
-  Future<void> clear() => _storage.delete(key: _key);
+  /// Holds the token when the user unchecked "Stay signed in" at login — kept
+  /// for the rest of this app run but never written to disk, so a full app
+  /// restart signs them out again instead of coming back automatically.
+  String? _sessionOnly;
+
+  Future<String?> read() async => _sessionOnly ?? await _storage.read(key: _key);
+
+  /// [persist] false keeps the token in memory only (see [_sessionOnly])
+  /// instead of writing it to secure storage.
+  Future<void> write(String token, {bool persist = true}) async {
+    if (persist) {
+      _sessionOnly = null;
+      await _storage.write(key: _key, value: token);
+    } else {
+      _sessionOnly = token;
+      await _storage.delete(key: _key);
+    }
+  }
+
+  Future<void> clear() async {
+    _sessionOnly = null;
+    await _storage.delete(key: _key);
+  }
 }
 
 final tokenStorageProvider = Provider<TokenStorage>(

@@ -30,6 +30,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
   String? _tripId;
   DateTime? _deliverBy;
   bool _submitting = false;
+  bool _pricePrefilled = false;
   String? _error;
 
   @override
@@ -97,6 +98,13 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
     final l10n = AppLocalizations.of(context)!;
     final trips = ref.watch(myPublishedTripsProvider);
     final want = ref.watch(wantDetailProvider(widget.wantId)).valueOrNull?.want;
+    // Default to what the shopper already said they'd pay — the traveler can
+    // still change it, but starting from their budget is a better anchor
+    // than a blank field.
+    if (want != null && !_pricePrefilled) {
+      _pricePrefilled = true;
+      _price.text = want.budget;
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.makeOfferTitle)),

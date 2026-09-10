@@ -47,12 +47,13 @@ class AuthRepository {
   Future<AuthUser> login({
     required String email,
     required String password,
+    bool staySignedIn = true,
   }) async {
     final data = await _api.post('/api/auth/login', body: {
       'email': email,
       'password': password,
     });
-    await _storeToken(data);
+    await _storeToken(data, persist: staySignedIn);
     return me();
   }
 
@@ -116,12 +117,12 @@ class AuthRepository {
     return token != null && token.isNotEmpty;
   }
 
-  Future<void> _storeToken(Object? data) async {
+  Future<void> _storeToken(Object? data, {bool persist = true}) async {
     final token = data is Map ? data['token']?.toString() : null;
     if (token == null || token.isEmpty) {
       throw StateError('Auth response did not include a token');
     }
-    await _tokens.write(token);
+    await _tokens.write(token, persist: persist);
   }
 }
 

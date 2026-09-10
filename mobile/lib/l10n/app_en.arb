@@ -55,6 +55,7 @@
   "loginNewToHiww": "New to Hiww?",
   "actionCreateAccount": "Sign up",
   "actionForgotPassword": "Forgot password?",
+  "actionStaySignedIn": "Stay signed in",
 
   "forgotPasswordTitle": "Reset your password",
   "forgotPasswordSubtitle": "Enter your email and we'll send you a reset code.",
@@ -304,7 +305,7 @@
   "noOffersYetMessage": "No offers yet — travelers on this route will see it.",
   "labelYourOffer": "Your offer",
   "dialogAcceptOfferTitle": "Accept this offer?",
-  "dialogAcceptOfferBody": "You will pay {price} for the goods. An order is created and you'll be asked to pay.",
+  "dialogAcceptOfferBody": "You will pay {price} for the item. An order is created and you'll be asked to pay.",
   "@dialogAcceptOfferBody": {
     "placeholders": { "price": { "type": "String" } }
   },
@@ -331,7 +332,7 @@
   "emptyNeedTripTitle": "You need a trip first",
   "emptyNeedTripMessage": "Post a trip you can carry this item on, then make your offer.",
   "labelWhichTrip": "Which trip",
-  "fieldYourPriceForGoods": "Your price for the goods",
+  "fieldYourPriceForGoods": "Your price for the item",
   "labelDeliverBy": "Deliver by",
   "hintDeliverByFromReturn": "Must be on or after the trip's return date, {date}",
   "@hintDeliverByFromReturn": {
@@ -524,7 +525,7 @@
   "@trustHoldingTotal": {
     "placeholders": { "total": { "type": "String" } }
   },
-  "trustSettled": "Payment for these goods has been settled.",
+  "trustSettled": "Payment for this item has been settled.",
   "trustReleasedOnConfirm": "Released to the traveler when you confirm you have the item.",
   "trustReleasedOnConfirmTraveler": "Released to you once the shopper receives and confirms the item.",
   "actionHowProtectionWorks": "How payment protection works",

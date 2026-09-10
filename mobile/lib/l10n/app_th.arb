@@ -43,6 +43,7 @@
   "loginNewToHiww": "เพิ่งรู้จัก Hiww ใช่ไหม?",
   "actionCreateAccount": "สมัครสมาชิก",
   "actionForgotPassword": "ลืมรหัสผ่าน?",
+  "actionStaySignedIn": "ให้ฉันอยู่ในระบบ",
 
   "forgotPasswordTitle": "รีเซ็ตรหัสผ่านของคุณ",
   "forgotPasswordSubtitle": "กรอกอีเมลของคุณ แล้วเราจะส่งรหัสรีเซ็ตให้",

@@ -140,6 +140,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionForgotPassword => 'ลืมรหัสผ่าน?';
 
   @override
+  String get actionStaySignedIn => 'ให้ฉันอยู่ในระบบ';
+
+  @override
   String get forgotPasswordTitle => 'รีเซ็ตรหัสผ่านของคุณ';
 
   @override

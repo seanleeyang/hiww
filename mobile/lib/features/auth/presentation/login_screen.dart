@@ -21,6 +21,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _submitting = false;
+  bool _staySignedIn = true;
   String? _error;
 
   @override
@@ -37,9 +38,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _submitting = true;
       _error = null;
     });
-    await ref
-        .read(authControllerProvider.notifier)
-        .login(email: _email.text.trim(), password: _password.text);
+    await ref.read(authControllerProvider.notifier).login(
+          email: _email.text.trim(),
+          password: _password.text,
+          staySignedIn: _staySignedIn,
+        );
     if (!mounted) return;
     final state = ref.read(authControllerProvider);
     setState(() {
@@ -88,12 +91,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               validator: (v) =>
                   (v ?? '').length < 8 ? l10n.errorPasswordTooShort : null,
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _submitting ? null : () => context.push('/forgot-password'),
-                child: Text(l10n.actionForgotPassword),
-              ),
+            Row(
+              children: [
+                Checkbox(
+                  value: _staySignedIn,
+                  onChanged: _submitting
+                      ? null
+                      : (v) => setState(() => _staySignedIn = v ?? true),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _submitting
+                        ? null
+                        : () => setState(() => _staySignedIn = !_staySignedIn),
+                    child: Text(l10n.actionStaySignedIn),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _submitting ? null : () => context.push('/forgot-password'),
+                  child: Text(l10n.actionForgotPassword),
+                ),
+              ],
             ),
             if (_error != null) ...[
               const SizedBox(height: 14),

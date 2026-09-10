@@ -24,7 +24,11 @@ class _SignedOutRepository implements AuthRepository {
   Future<AuthUser> me() => throw UnimplementedError();
 
   @override
-  Future<AuthUser> login({required String email, required String password}) =>
+  Future<AuthUser> login({
+    required String email,
+    required String password,
+    bool staySignedIn = true,
+  }) =>
       throw UnimplementedError();
 
   @override

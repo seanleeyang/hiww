@@ -25,7 +25,11 @@ class _SignedInRepository implements AuthRepository {
   Future<AuthUser> me() async => _me;
 
   @override
-  Future<AuthUser> login({required String email, required String password}) =>
+  Future<AuthUser> login({
+    required String email,
+    required String password,
+    bool staySignedIn = true,
+  }) =>
       throw UnimplementedError();
 
   @override

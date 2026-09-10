@@ -34,9 +34,15 @@ class AuthController extends AsyncNotifier<AuthState> {
     }
   }
 
-  Future<void> login({required String email, required String password}) async {
+  Future<void> login({
+    required String email,
+    required String password,
+    bool staySignedIn = true,
+  }) async {
     state = await AsyncValue.guard<AuthState>(
-      () async => AuthSignedIn(await _repo.login(email: email, password: password)),
+      () async => AuthSignedIn(
+        await _repo.login(email: email, password: password, staySignedIn: staySignedIn),
+      ),
     );
   }
 
