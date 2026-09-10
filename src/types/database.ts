@@ -166,6 +166,8 @@ export interface OrdersTable {
   receipt_risk?: 'low' | 'medium' | 'high' | null;
   receipt_reviewed_at?: Date | null;
   shipped_at?: Date | null;
+  /** Traveler's optional photo/screenshot of the item being shipped (migration 033). */
+  shipping_proof_url?: string | null;
   delivered_at?: Date | null;
   /**
    * MVP pricing model split (migration 028) — see `src/services/pricing.ts`.

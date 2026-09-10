@@ -10,6 +10,10 @@ import { runReceiptCheck } from '@/services/receipt-check';
 
 const noteSchema = z.object({
   note: z.string().min(1).optional(),
+  /** Optional shipping evidence — a photo with the courier or a screenshot
+   * of the delivery app's booking page. Only meaningful on `/deliver`;
+   * harmless if present but unused on `/release`. */
+  shipping_proof_url: z.string().url().optional(),
 });
 
 /**
@@ -147,7 +151,12 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       const now = new Date();
       await request.db
         .updateTable('orders')
-        .set({ status: 'in_transit', shipped_at: now, updated_at: now })
+        .set({
+          status: 'in_transit',
+          shipped_at: now,
+          shipping_proof_url: parsed.data.shipping_proof_url ?? null,
+          updated_at: now,
+        })
         .where('id', '=', order.id)
         .execute();
 
@@ -156,7 +165,12 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         targetType: 'order',
         targetId: order.id,
         summary: `Traveler marked order ${order.id} shipped`,
-        metadata: { from_status: 'purchased', to_status: 'in_transit', note: parsed.data.note ?? null },
+        metadata: {
+          from_status: 'purchased',
+          to_status: 'in_transit',
+          note: parsed.data.note ?? null,
+          shipping_proof_url: parsed.data.shipping_proof_url ?? null,
+        },
       });
 
       await recordNotification(request.db, {

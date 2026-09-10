@@ -35,6 +35,7 @@ class Order {
     this.tripReturnDate,
     this.purchasedAt,
     this.shippedAt,
+    this.shippingProofUrl,
     this.deliveredAt,
     this.canReview = false,
     this.myReview,
@@ -77,6 +78,12 @@ class Order {
   final DateTime? tripReturnDate;
   final DateTime? purchasedAt;
   final DateTime? shippedAt;
+
+  /// Optional evidence the traveler shipped the item — a photo with the
+  /// courier (e.g. handed to a GrabBike rider) or a screenshot of the
+  /// delivery app's booking page. Unlike the purchase receipt, this doesn't
+  /// gate marking the order shipped.
+  final String? shippingProofUrl;
   final DateTime? deliveredAt;
   final bool canReview;
   final OrderReview? myReview;
@@ -128,6 +135,9 @@ class Order {
         tripReturnDate: parseDate(j['trip_return_date']),
         purchasedAt: parseDate(j['purchased_at']),
         shippedAt: parseDate(j['shipped_at']),
+        shippingProofUrl: (j['shipping_proof_url'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : j['shipping_proof_url'] as String,
         deliveredAt: parseDate(j['delivered_at']),
         canReview: j['can_review'] == true,
         myReview: j['my_review'] is Map

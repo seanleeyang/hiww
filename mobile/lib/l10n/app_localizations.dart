@@ -2000,6 +2000,12 @@ abstract class AppLocalizations {
   /// **'Submit'**
   String get actionSubmitPurchaseProof;
 
+  /// No description provided for @actionUploadShippingProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Add shipping proof (optional)'**
+  String get actionUploadShippingProof;
+
   /// No description provided for @labelItemPhoto.
   ///
   /// In en, this message translates to:
@@ -2011,6 +2017,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Receipt'**
   String get labelReceipt;
+
+  /// No description provided for @labelShippingProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping proof'**
+  String get labelShippingProof;
 
   /// No description provided for @noteUploadDaysLeft.
   ///
@@ -2401,6 +2413,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Purchase receipt'**
   String get purchaseReceiptTitle;
+
+  /// No description provided for @shippingProofTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping proof'**
+  String get shippingProofTitle;
 
   /// No description provided for @chatClosedBanner.
   ///

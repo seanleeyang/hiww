@@ -1098,10 +1098,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionSubmitPurchaseProof => 'Submit';
 
   @override
+  String get actionUploadShippingProof => 'Add shipping proof (optional)';
+
+  @override
   String get labelItemPhoto => 'Item photo';
 
   @override
   String get labelReceipt => 'Receipt';
+
+  @override
+  String get labelShippingProof => 'Shipping proof';
 
   @override
   String noteUploadDaysLeft(int days) {
@@ -1336,6 +1342,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get purchaseReceiptTitle => 'Purchase receipt';
+
+  @override
+  String get shippingProofTitle => 'Shipping proof';
 
   @override
   String get chatClosedBanner => 'This chat is closed — the order is complete.';

@@ -31,8 +31,14 @@ class OrdersRepository {
         'image_url': receiptImageUrl,
         'item_photo_url': ?itemPhotoUrl,
       });
-  Future<void> markShipped(String id) =>
-      _api.post('/api/orders/$id/deliver', body: {'note': 'Shipped'});
+  /// [shippingProofUrl] is optional — a photo with the courier or a
+  /// screenshot of the delivery app's booking page. Marking shipped still
+  /// works without it.
+  Future<void> markShipped(String id, {String? shippingProofUrl}) =>
+      _api.post('/api/orders/$id/deliver', body: {
+        'note': 'Shipped',
+        'shipping_proof_url': ?shippingProofUrl,
+      });
   Future<void> confirmReceived(String id) =>
       _api.post('/api/orders/$id/release', body: {'note': 'Received'});
 }

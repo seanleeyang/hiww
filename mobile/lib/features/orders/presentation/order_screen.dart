@@ -129,6 +129,10 @@ class OrderScreen extends ConsumerWidget {
                       at: o.purchasedAt,
                     ),
                   ],
+                  if (o.shippingProofUrl != null) ...[
+                    const SizedBox(height: 14),
+                    _ShippingProofCard(url: o.shippingProofUrl!, at: o.shippedAt),
+                  ],
                   const SizedBox(height: 14),
                   TrustPanel(order: o, isShopper: isShopper),
                   if (o.hasPricingBreakdown) ...[
@@ -202,6 +206,7 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
   bool _busy = false;
   String? _itemPhotoUrl;
   String? _receiptUrl;
+  String? _shippingProofUrl;
 
   Future<void> _run(Future<void> Function() action) async {
     setState(() => _busy = true);
@@ -343,9 +348,15 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
           children: [
             note(l10n.noteReceiptUploadedPostShip),
             const SizedBox(height: 12),
+            ImagePickerField(
+              value: _shippingProofUrl,
+              label: _busy ? l10n.actionUploading : l10n.actionUploadShippingProof,
+              onChanged: (url) => setState(() => _shippingProofUrl = url),
+            ),
+            const SizedBox(height: 12),
             primary(
               l10n.actionMarkShipped,
-              () => _run(() => repo.markShipped(o.id)),
+              () => _run(() => repo.markShipped(o.id, shippingProofUrl: _shippingProofUrl)),
             ),
           ],
         );
@@ -627,6 +638,57 @@ class _PurchaseProofCard extends StatelessWidget {
               borderRadius: 12,
               enableFullscreen: true,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Optional evidence the traveler shipped the item — a photo with the
+/// courier or a screenshot of the delivery app's booking page. Unlike the
+/// purchase receipt this is never required, so the card only shows up once
+/// one has actually been uploaded.
+class _ShippingProofCard extends StatelessWidget {
+  const _ShippingProofCard({required this.url, this.at});
+  final String url;
+  final DateTime? at;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.local_shipping_outlined,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.shippingProofTitle,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const Spacer(),
+              if (at != null)
+                Text(
+                  shortDate(at),
+                  style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          HeroImage(
+            url: url,
+            fallbackAsset: 'assets/images/electronics.jpg',
+            height: 150,
+            borderRadius: 12,
+            enableFullscreen: true,
+          ),
         ],
       ),
     );

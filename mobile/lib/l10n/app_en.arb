@@ -451,8 +451,10 @@
   "actionUploadReceipt": "Upload purchase receipt",
   "actionUploadItemPhoto": "Upload item photo",
   "actionSubmitPurchaseProof": "Submit",
+  "actionUploadShippingProof": "Add shipping proof (optional)",
   "labelItemPhoto": "Item photo",
   "labelReceipt": "Receipt",
+  "labelShippingProof": "Shipping proof",
   "noteUploadDaysLeft": "{days, plural, =0{No days left to upload the item photo and receipt before your trip ends.} one{You have {days} day left to upload the item photo and receipt before your trip ends.} other{You have {days} days left to upload the item photo and receipt before your trip ends.}}",
   "@noteUploadDaysLeft": {
     "placeholders": { "days": { "type": "int" } }
@@ -551,6 +553,7 @@
   "statusSent": "Sent",
   "statusRead": "Read",
   "purchaseReceiptTitle": "Purchase receipt",
+  "shippingProofTitle": "Shipping proof",
   "chatClosedBanner": "This chat is closed — the order is complete.",
   "chatDeletedMessage": "You deleted this conversation.",
   "actionDeleteChat": "Delete chat",

@@ -55,6 +55,48 @@ describe('delivery and release flow', () => {
     expect(ledger).toHaveLength(0);
   });
 
+  it('stores optional shipping proof when the traveler provides one', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+
+    const deliverResponse = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: { shipping_proof_url: 'https://example.com/grabbike.jpg' },
+    });
+
+    expect(deliverResponse.statusCode).toBe(200);
+    const afterDelivery = await ctx.db
+      .selectFrom('orders')
+      .selectAll()
+      .where('id', '=', order.orderId)
+      .executeTakeFirst();
+    expect(afterDelivery?.status).toBe('in_transit');
+    expect(afterDelivery?.shipping_proof_url).toBe('https://example.com/grabbike.jpg');
+  });
+
+  it('marking shipped without proof still works — it is optional, not required', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await forceOrderStatus(ctx, order.orderId, 'purchased');
+
+    const deliverResponse = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/deliver`,
+      headers: authHeader(order.traveler),
+      payload: {},
+    });
+
+    expect(deliverResponse.statusCode).toBe(200);
+    const afterDelivery = await ctx.db
+      .selectFrom('orders')
+      .selectAll()
+      .where('id', '=', order.orderId)
+      .executeTakeFirst();
+    expect(afterDelivery?.status).toBe('in_transit');
+    expect(afterDelivery?.shipping_proof_url).toBeNull();
+  });
+
   it('is idempotent: releasing an already-delivered order stays delivered', async () => {
     const order = await createAcceptedOrder(ctx);
     await forceOrderStatus(ctx, order.orderId, 'purchased');

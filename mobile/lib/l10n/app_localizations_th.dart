@@ -1074,10 +1074,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionSubmitPurchaseProof => 'ส่ง';
 
   @override
+  String get actionUploadShippingProof => 'แนบหลักฐานการจัดส่ง (ไม่บังคับ)';
+
+  @override
   String get labelItemPhoto => 'รูปสินค้า';
 
   @override
   String get labelReceipt => 'ใบเสร็จ';
+
+  @override
+  String get labelShippingProof => 'หลักฐานการจัดส่ง';
 
   @override
   String noteUploadDaysLeft(int days) {
@@ -1301,6 +1307,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get purchaseReceiptTitle => 'ใบเสร็จการซื้อ';
+
+  @override
+  String get shippingProofTitle => 'หลักฐานการจัดส่ง';
 
   @override
   String get chatClosedBanner => 'แชทนี้ปิดแล้ว — คำสั่งซื้อเสร็จสมบูรณ์แล้ว';
