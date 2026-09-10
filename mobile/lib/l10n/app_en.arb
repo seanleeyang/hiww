@@ -456,7 +456,7 @@
   "labelItemPhoto": "Item photo",
   "labelReceipt": "Receipt",
   "labelShippingProof": "Shipping proof",
-  "labelDeliveryProof": "Proof of receipt",
+  "labelDeliveryProof": "Proof of delivery",
   "hintDeliveryProofRequired": "Required before payment is released to the traveler.",
   "noteUploadDaysLeft": "{days, plural, =0{No days left to upload the item photo and receipt before your trip ends.} one{You have {days} day left to upload the item photo and receipt before your trip ends.} other{You have {days} days left to upload the item photo and receipt before your trip ends.}}",
   "@noteUploadDaysLeft": {
@@ -552,7 +552,7 @@
   "statusRead": "Read",
   "purchaseReceiptTitle": "Purchase receipt",
   "shippingProofTitle": "Shipping proof",
-  "deliveryProofTitle": "Proof of receipt",
+  "deliveryProofTitle": "Proof of delivery",
   "chatClosedBanner": "This chat is closed — the order is complete.",
   "chatDeletedMessage": "You deleted this conversation.",
   "actionDeleteChat": "Delete chat",

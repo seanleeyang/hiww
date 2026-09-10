@@ -2033,7 +2033,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelDeliveryProof.
   ///
   /// In en, this message translates to:
-  /// **'Proof of receipt'**
+  /// **'Proof of delivery'**
   String get labelDeliveryProof;
 
   /// No description provided for @hintDeliveryProofRequired.
@@ -2429,7 +2429,7 @@ abstract class AppLocalizations {
   /// No description provided for @deliveryProofTitle.
   ///
   /// In en, this message translates to:
-  /// **'Proof of receipt'**
+  /// **'Proof of delivery'**
   String get deliveryProofTitle;
 
   /// No description provided for @chatClosedBanner.

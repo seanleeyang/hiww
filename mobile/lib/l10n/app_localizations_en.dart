@@ -1113,7 +1113,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelShippingProof => 'Shipping proof';
 
   @override
-  String get labelDeliveryProof => 'Proof of receipt';
+  String get labelDeliveryProof => 'Proof of delivery';
 
   @override
   String get hintDeliveryProofRequired =>
@@ -1349,7 +1349,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shippingProofTitle => 'Shipping proof';
 
   @override
-  String get deliveryProofTitle => 'Proof of receipt';
+  String get deliveryProofTitle => 'Proof of delivery';
 
   @override
   String get chatClosedBanner => 'This chat is closed — the order is complete.';
