@@ -9,7 +9,7 @@ const evidenceSchema = z.object({
 });
 
 export async function registerEvidenceRoutes(app: FastifyInstance): Promise<void> {
-  app.post<{ Params: { id: string }; Body: unknown }>('/api/orders/:id/evidence', async (request: any, reply: any) => {
+  app.post<{ Params: { id: string }; Body: unknown }>('/api/orders/:id/evidence', async (request, reply) => {
     const parsed = evidenceSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'evidence.invalidPayload');
@@ -37,7 +37,7 @@ export async function registerEvidenceRoutes(app: FastifyInstance): Promise<void
     });
   });
 
-  app.get<{ Params: { id: string } }>('/api/orders/:id/evidence', async (request: any, reply: any) => {
+  app.get<{ Params: { id: string } }>('/api/orders/:id/evidence', async (request, reply) => {
     const order = await requireOrderParticipant(request.db, request.userId, request.params.id, 'evidence.onlyParticipantsView');
 
     const items = await request.db

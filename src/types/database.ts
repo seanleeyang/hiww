@@ -1,4 +1,16 @@
-import type { Generated } from 'kysely';
+import type { ColumnType, Generated } from 'kysely';
+
+/**
+ * A jsonb column that's written as a JSON string, not a raw JS value — the
+ * `pg` driver auto-serializes a plain *object* for a jsonb parameter, but
+ * NOT an array (writing one raw produces a Postgres array literal, not
+ * JSON, and errors as invalid jsonb input), so every array-shaped jsonb
+ * column in this schema is `JSON.stringify()`'d at its write site. `pg`
+ * still parses it back to `T` on read either way. See notify.ts's
+ * `params` column for the plain-object counterexample, which is NOT
+ * wrapped this way because it's written as a raw object.
+ */
+type JsonbArray<T> = ColumnType<T, string | undefined, string>;
 
 export interface UsersTable {
   id: string;
@@ -8,7 +20,7 @@ export interface UsersTable {
   kyc_status: Generated<'pending' | 'approved' | 'rejected'>;
   risk_status: Generated<'clear' | 'flagged' | 'restricted'>;
   role: Generated<'user' | 'admin'>;
-  password_hash?: string;
+  password_hash?: string | null;
   /** Profile + reputation (migration 007). */
   avatar_url?: string | null;
   home_city?: string | null;
@@ -117,7 +129,7 @@ export interface OffersTable {
   last_actor?: 'traveler' | 'shopper' | null;
   respond_by?: Date | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  price_history: Generated<Record<string, any>[]>;
+  price_history: JsonbArray<Record<string, any>[]>;
   created_at: Date;
   updated_at: Date;
 }
@@ -276,7 +288,7 @@ export interface MessagesTable {
   read_at?: Date | null;
   flag_risk?: 'medium' | 'high' | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  flag_reasons?: any[] | null;
+  flag_reasons?: ColumnType<any[] | null, string | null | undefined, string | null>;
   flag_summary?: string | null;
   flag_reviewed_at?: Date | null;
   hidden_at?: Date | null;

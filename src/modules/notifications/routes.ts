@@ -4,7 +4,6 @@ import { AppError } from '@/utils/helpers';
 import { renderNotification } from '@/i18n/notifications';
 import type { NotificationType } from '@/services/notify';
 import { sendUploadReminders } from '@/services/upload-reminder';
-import type { AppRequest } from '@/types/api';
 
 const readSchema = z.object({
   // Omit to mark everything read; pass an id to mark just that one.
@@ -23,7 +22,7 @@ export async function registerNotificationsRoutes(app: FastifyInstance): Promise
   app.get(
     '/api/notifications',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       if (!request.userId) {
         throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
       }
@@ -46,7 +45,7 @@ export async function registerNotificationsRoutes(app: FastifyInstance): Promise
         .limit(50)
         .execute();
 
-      const locale = (request as AppRequest).locale ?? 'en';
+      const locale = request.locale ?? 'en';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const items = rows.map(({ params, ...row }: any) => {
         if (!params) return row; // pre-migration row — keep its stored (English) text.
@@ -56,8 +55,7 @@ export async function registerNotificationsRoutes(app: FastifyInstance): Promise
 
       const unread = await request.db
         .selectFrom('notifications')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .select((eb: any) => eb.fn.count('id').as('count'))
+        .select((eb) => eb.fn.count('id').as('count'))
         .where('user_id', '=', request.userId)
         .where('read_at', 'is', null)
         .executeTakeFirst();
@@ -74,7 +72,7 @@ export async function registerNotificationsRoutes(app: FastifyInstance): Promise
   app.post<{ Body: unknown }>(
     '/api/notifications/read',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       if (!request.userId) {
         throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
       }

@@ -23,7 +23,7 @@ export async function registerDeviceRoutes(app: FastifyInstance): Promise<void> 
   app.post<{ Body: unknown }>(
     '/api/devices/register',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       if (!request.userId) {
         throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
       }
@@ -62,7 +62,7 @@ export async function registerDeviceRoutes(app: FastifyInstance): Promise<void> 
   app.post<{ Body: unknown }>(
     '/api/devices/unregister',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       if (!request.userId) {
         throw new AppError('AUTH_ERROR', 401, 'common.authRequired');
       }

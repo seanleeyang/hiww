@@ -48,12 +48,12 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
   app.get<{ Params: { id: string } }>(
     '/api/orders/:id/messages',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const order = await loadOrderForParticipant(request, request.params.id);
 
       // Deleting a closed chat only hides it from the deleter's own view —
       // the other party's copy, and the underlying rows, are untouched.
-      const deletedAt = order[chatDeletedColumnFor(order, request.userId)];
+      const deletedAt = order[chatDeletedColumnFor(order, request.userId!)];
       if (deletedAt) {
         reply.send({
           success: true,
@@ -83,7 +83,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const items = rows.map(({ hidden_at, image_url, ...row }: any) => ({
         ...row,
-        body: presentMessageBody({ ...row, hidden_at }, request.userId),
+        body: presentMessageBody({ ...row, hidden_at }, request.userId!),
         image_url: hidden_at ? null : image_url,
       }));
 
@@ -91,7 +91,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         success: true,
         data: {
           items,
-          counterparty_typing: isCounterpartyTyping(request.params.id, request.userId),
+          counterparty_typing: isCounterpartyTyping(request.params.id, request.userId!),
           closed: isChatClosed(order),
           deleted: false,
         },
@@ -103,7 +103,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string }; Body: unknown }>(
     '/api/orders/:id/messages',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = messageSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'messages.invalidBody');
@@ -150,7 +150,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         .values({
           id,
           order_id: request.params.id,
-          sender_id: request.userId,
+          sender_id: request.userId!,
           body: leak.body,
           image_url: imageUrl,
           created_at: new Date(),
@@ -190,7 +190,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         {
           id,
           order_id: request.params.id,
-          sender_id: request.userId,
+          sender_id: request.userId!,
           body: leak.body,
           image_url: imageUrl,
         },
@@ -216,9 +216,9 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string } }>(
     '/api/orders/:id/typing',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await loadOrderForParticipant(request, request.params.id);
-      recordTyping(request.params.id, request.userId);
+      recordTyping(request.params.id, request.userId!);
       reply.send({ success: true, data: { ok: true }, code: 'TYPING_RECORDED' });
     }
   );
@@ -226,14 +226,14 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string } }>(
     '/api/orders/:id/messages/read',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await loadOrderForParticipant(request, request.params.id);
 
       await request.db
         .updateTable('messages')
         .set({ read_at: new Date() })
         .where('order_id', '=', request.params.id)
-        .where('sender_id', '!=', request.userId)
+        .where('sender_id', '!=', request.userId!)
         .where('read_at', 'is', null)
         .execute();
 
@@ -248,7 +248,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string } }>(
     '/api/orders/:id/messages/delete-chat',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const order = await loadOrderForParticipant(request, request.params.id);
       if (!isChatClosed(order)) {
         throw new AppError('INVALID_STATUS', 409, 'messages.chatNotYetClosed');
@@ -256,7 +256,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
 
       await request.db
         .updateTable('orders')
-        .set({ [chatDeletedColumnFor(order, request.userId)]: new Date(), updated_at: new Date() })
+        .set({ [chatDeletedColumnFor(order, request.userId!)]: new Date(), updated_at: new Date() })
         .where('id', '=', request.params.id)
         .execute();
 
@@ -268,7 +268,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
   app.get(
     '/api/inbox',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const orders = await request.db
         .selectFrom('orders')
         .select([
@@ -288,7 +288,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const threads: any[] = [];
       for (const order of orders) {
-        if (order[chatDeletedColumnFor(order, request.userId)]) continue;
+        if (order[chatDeletedColumnFor(order, request.userId!)]) continue;
 
         const last = await request.db
           .selectFrom('messages')
@@ -299,14 +299,14 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           .executeTakeFirst();
         if (!last) continue;
         const { hidden_at, ...lastPublic } = last;
-        lastPublic.body = presentMessageBody({ ...last, hidden_at }, request.userId);
+        lastPublic.body = presentMessageBody({ ...last, hidden_at }, request.userId!);
         if (hidden_at) lastPublic.image_url = null;
 
         const unread = await request.db
           .selectFrom('messages')
-          .select((eb: any) => eb.fn.count('id').as('count'))
+          .select((eb) => eb.fn.count('id').as('count'))
           .where('order_id', '=', order.id)
-          .where('sender_id', '!=', request.userId)
+          .where('sender_id', '!=', request.userId!)
           .where('read_at', 'is', null)
           .executeTakeFirst();
 

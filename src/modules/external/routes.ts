@@ -10,7 +10,7 @@ const identityVerifySchema = z.object({
 });
 
 export async function registerExternalRoutes(app: FastifyInstance): Promise<void> {
-  app.post<{ Body: unknown }>('/api/identity/verify', async (request: any, reply: any) => {
+  app.post<{ Body: unknown }>('/api/identity/verify', async (request, reply) => {
     const parsed = identityVerifySchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'external.invalidPayload');

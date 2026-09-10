@@ -24,7 +24,7 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
   app.get<{ Querystring: { page?: string; limit?: string } }>(
     '/api/orders',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await expireOverduePayments(request.db);
 
       const page = Math.max(1, parseInt(request.query.page || '1', 10) || 1);
@@ -103,7 +103,7 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
   app.get<{ Params: { id: string } }>(
     '/api/orders/:id',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await expireOverduePayments(request.db);
 
       const order = await request.db
@@ -137,7 +137,7 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
           .selectFrom('reviews')
           .select(['id', 'rating', 'comment', 'created_at'])
           .where('order_id', '=', order.id)
-          .where('reviewer_id', '=', request.userId)
+          .where('reviewer_id', '=', request.userId!)
           .executeTakeFirst();
       }
 
@@ -183,7 +183,7 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
   app.post<{ Params: { id: string } }>(
     '/api/orders/:id/claim-payment',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await expireOverduePayments(request.db);
 
       const order = await request.db

@@ -37,7 +37,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { userId: string } }>(
     '/api/ledger/:userId',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const entries = await request.db
         .selectFrom('ledger_entries')
         .selectAll()
@@ -59,7 +59,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
     '/api/payments/initiate',
     moneyRoute,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const body = request.body as { order_id?: string };
       if (!body.order_id) {
         throw new AppError('VALIDATION_ERROR', 400, 'common.orderIdRequired');
@@ -92,7 +92,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
     '/api/payments/confirm',
     moneyRoute,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const body = request.body as { order_id?: string; payment_id?: string };
       if (!body.order_id) {
         throw new AppError('VALIDATION_ERROR', 400, 'common.orderIdRequired');
@@ -196,7 +196,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
     '/api/payments/payout',
     moneyRoute,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = payoutSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'money.invalidPayoutPayload');

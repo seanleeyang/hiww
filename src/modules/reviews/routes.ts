@@ -14,7 +14,7 @@ export async function registerReviewsRoutes(app: FastifyInstance): Promise<void>
   app.post<{ Params: { id: string }; Body: unknown }>(
     '/api/orders/:id/review',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = reviewSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'reviews.invalidReview');
@@ -45,7 +45,7 @@ export async function registerReviewsRoutes(app: FastifyInstance): Promise<void>
         .selectFrom('reviews')
         .select('id')
         .where('order_id', '=', order.id)
-        .where('reviewer_id', '=', request.userId)
+        .where('reviewer_id', '=', request.userId!)
         .executeTakeFirst();
       if (existing) {
         throw new AppError('ALREADY_REVIEWED', 409, 'reviews.alreadyReviewed');
@@ -86,7 +86,7 @@ export async function registerReviewsRoutes(app: FastifyInstance): Promise<void>
   app.get<{ Params: { id: string } }>(
     '/api/users/:id/reviews',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const user = await request.db
         .selectFrom('users')
         .select([...USER_SUMMARY_COLUMNS])

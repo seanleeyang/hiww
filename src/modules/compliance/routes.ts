@@ -14,7 +14,7 @@ const kycReviewSchema = z.object({
 });
 
 export async function registerComplianceRoutes(app: FastifyInstance): Promise<void> {
-  app.post<{ Body: unknown }>('/api/compliance/kyc/submit', async (request: any, reply: any) => {
+  app.post<{ Body: unknown }>('/api/compliance/kyc/submit', async (request, reply) => {
     const parsed = kycSubmitSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'compliance.invalidKycSubmission');
@@ -58,7 +58,7 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
     });
   });
 
-  app.post<{ Body: unknown }>('/api/compliance/kyc/approve', async (request: any, reply: any) => {
+  app.post<{ Body: unknown }>('/api/compliance/kyc/approve', async (request, reply) => {
     const parsed = kycReviewSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'common.invalidKycReviewPayload');

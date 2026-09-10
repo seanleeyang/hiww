@@ -9,7 +9,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: unknown }>(
     '/api/trips',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = createTripSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'trips.invalidTripData');
@@ -20,7 +20,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
         .insertInto('trips')
         .values({
           id: tripId,
-          traveler_id: request.userId,
+          traveler_id: request.userId!,
           departure_country: parsed.data.departure_country,
           arrival_country: parsed.data.arrival_country,
           departure_date: new Date(parsed.data.departure_date),
@@ -45,11 +45,11 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
   app.get(
     '/api/trips/mine',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const items = await request.db
         .selectFrom('trips')
         .selectAll()
-        .where('traveler_id', '=', request.userId)
+        .where('traveler_id', '=', request.userId!)
         .where('archived_at', 'is', null)
         .orderBy('created_at', 'desc')
         .execute();
@@ -60,7 +60,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Querystring: { page?: string; limit?: string } }>(
     '/api/trips',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const page = Math.max(1, parseInt(request.query.page || '1', 10) || 1);
       const limit = Math.min(100, Math.max(1, parseInt(request.query.limit || '20', 10) || 20));
       const offset = (page - 1) * limit;
@@ -82,7 +82,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { id: string } }>(
     '/api/trips/:id',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const trip = await request.db
         .selectFrom('trips')
         .selectAll()
@@ -110,7 +110,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
   app.patch<{ Params: { id: string }; Body: unknown }>(
     '/api/trips/:id',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const trip = await request.db
         .selectFrom('trips')
         .selectAll()
@@ -167,7 +167,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { id: string } }>(
     '/api/trips/:id/cancel',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const trip = await request.db
         .selectFrom('trips')
         .selectAll()
@@ -222,7 +222,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
   app.delete<{ Params: { id: string } }>(
     '/api/trips/:id',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const trip = await request.db
         .selectFrom('trips')
         .selectAll()
@@ -268,7 +268,7 @@ export async function registerTripsRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { id: string } }>(
     '/api/trips/:id/archive',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const trip = await request.db
         .selectFrom('trips')
         .select(['id', 'traveler_id', 'status'])

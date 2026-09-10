@@ -12,7 +12,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
   app.post<{ Body: unknown }>(
     '/api/requests',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = createRequestSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'requests.invalidRequestData');
@@ -38,7 +38,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         }
         // A direct request can turn straight into an order if the traveler
         // accepts it as-is, so the shopper needs to be reachable already.
-        await requireCompleteProfile(request.db, request.userId);
+        await requireCompleteProfile(request.db, request.userId!);
         targetTrip = trip;
       }
 
@@ -48,7 +48,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         .insertInto('requests')
         .values({
           id: requestId,
-          shopper_id: request.userId,
+          shopper_id: request.userId!,
           item_description: parsed.data.item_description,
           source_country: parsed.data.source_country,
           category: parsed.data.category,
@@ -122,11 +122,11 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
   app.get(
     '/api/requests/mine',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const items = await request.db
         .selectFrom('requests')
         .selectAll()
-        .where('shopper_id', '=', request.userId)
+        .where('shopper_id', '=', request.userId!)
         .where('archived_at', 'is', null)
         .orderBy('created_at', 'desc')
         .execute();
@@ -138,7 +138,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
   app.get<{ Querystring: { page?: string; limit?: string } }>(
     '/api/requests',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const page = Math.max(1, parseInt(request.query.page || '1', 10) || 1);
       const limit = Math.min(100, Math.max(1, parseInt(request.query.limit || '20', 10) || 20));
       const offset = (page - 1) * limit;
@@ -150,7 +150,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         .where('status', '=', 'open')
         .where('target_trip_id', 'is', null);
       if (request.userRole !== 'admin') {
-        base = base.where('shopper_id', '!=', request.userId);
+        base = base.where('shopper_id', '!=', request.userId!);
       }
 
       const items = await base
@@ -167,7 +167,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
   app.get<{ Params: { id: string } }>(
     '/api/requests/:id',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const itemRequest = await request.db
         .selectFrom('requests')
         .selectAll()
@@ -228,7 +228,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
   app.patch<{ Params: { id: string }; Body: unknown }>(
     '/api/requests/:id',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const itemRequest = await request.db
         .selectFrom('requests')
         .selectAll()
@@ -279,7 +279,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string } }>(
     '/api/requests/:id/cancel',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const itemRequest = await request.db
         .selectFrom('requests')
         .selectAll()
@@ -325,7 +325,7 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string } }>(
     '/api/requests/:id/archive',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const itemRequest = await request.db
         .selectFrom('requests')
         .select(['id', 'shopper_id', 'status'])

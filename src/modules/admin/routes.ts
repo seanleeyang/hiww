@@ -3,7 +3,7 @@ import { AppError } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 
 export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/api/admin/reviews', async (request: any, reply: any) => {
+  app.get('/api/admin/reviews', async (request, reply) => {
     try {
       const openDisputes = await request.db
         .selectFrom('disputes')
@@ -127,7 +127,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
 
   // Operator has looked at a flagged receipt — drop it from the review queue.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.post<{ Params: { id: string } }>('/api/admin/orders/:id/clear-receipt-flag', async (request: any, reply: any) => {
+  app.post<{ Params: { id: string } }>('/api/admin/orders/:id/clear-receipt-flag', async (request, reply) => {
     const order = await request.db
       .selectFrom('orders')
       .select(['id', 'receipt_risk'])
@@ -156,7 +156,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
 
   // Operator has looked at a flagged message — drop it from the review queue.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.post<{ Params: { id: string } }>('/api/admin/messages/:id/clear-flag', async (request: any, reply: any) => {
+  app.post<{ Params: { id: string } }>('/api/admin/messages/:id/clear-flag', async (request, reply) => {
     const message = await request.db
       .selectFrom('messages')
       .select(['id', 'flag_risk'])
@@ -188,7 +188,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   // All trips, most recent first — lets an operator find and remove a
   // problematic post regardless of its current status.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.get('/api/admin/trips', async (request: any, reply: any) => {
+  app.get('/api/admin/trips', async (request, reply) => {
     const trips = await request.db
       .selectFrom('trips')
       .innerJoin('users', 'users.id', 'trips.traveler_id')
@@ -219,7 +219,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   // problem post, not a routine cancel, so an operator can act even if the
   // trip has orders in flight (those still resolve independently).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/trips/:id/remove', async (request: any, reply: any) => {
+  app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/trips/:id/remove', async (request, reply) => {
     const trip = await request.db
       .selectFrom('trips')
       .select(['id', 'status'])
@@ -253,7 +253,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   // cancelled trips untouched, since those aren't showing anywhere anyway
   // and this is meant to clear the live listings, not rewrite history.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.post('/api/admin/trips/remove-all', async (request: any, reply: any) => {
+  app.post('/api/admin/trips/remove-all', async (request, reply) => {
     const now = new Date();
     const removed = await request.db
       .updateTable('trips')
@@ -275,7 +275,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
 
   // Same as above, for wants.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.get('/api/admin/requests', async (request: any, reply: any) => {
+  app.get('/api/admin/requests', async (request, reply) => {
     const requests = await request.db
       .selectFrom('requests')
       .innerJoin('users', 'users.id', 'requests.shopper_id')
@@ -301,7 +301,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/requests/:id/remove', async (request: any, reply: any) => {
+  app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/requests/:id/remove', async (request, reply) => {
     const itemRequest = await request.db
       .selectFrom('requests')
       .select(['id', 'status'])
@@ -337,7 +337,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   // Bulk version — cancels every want still visible in the app (open or
   // accepted). Leaves completed and already-cancelled wants untouched.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.post('/api/admin/requests/remove-all', async (request: any, reply: any) => {
+  app.post('/api/admin/requests/remove-all', async (request, reply) => {
     const now = new Date();
     const removed = await request.db
       .updateTable('requests')
@@ -358,7 +358,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.get('/api/admin/users', async (request: any, reply: any) => {
+  app.get('/api/admin/users', async (request, reply) => {
     const users = await request.db
       .selectFrom('users')
       .select(['id', 'email', 'full_name', 'user_type', 'role', 'kyc_status', 'risk_status', 'created_at'])
@@ -381,7 +381,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       before?: string;
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }>('/api/admin/audit', async (request: any, reply: any) => {
+  }>('/api/admin/audit', async (request, reply) => {
     const q = request.query;
     const limit = Math.min(200, Math.max(1, parseInt(q.limit || '50', 10) || 50));
 

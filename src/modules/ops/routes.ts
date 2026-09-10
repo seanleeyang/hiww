@@ -37,7 +37,7 @@ async function countUsersByType(request: any, userType: 'shopper' | 'traveler' |
 }
 
 export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/api/ops/overview', async (request: any, reply: any) => {
+  app.get('/api/ops/overview', async (request, reply) => {
     try {
       const [users, shoppers, travelers, trips, requests, orders, openRequests, publishedTrips, pendingOrders] = await Promise.all([
         countTable(request, 'users'),
@@ -75,7 +75,7 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
   // Money reconciliation for the manual-money pilot: what is owed in, what is
   // owed out, and what has settled. Admin-only (auth guard).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.get('/api/ops/reconciliation', async (request: any, reply: any) => {
+  app.get('/api/ops/reconciliation', async (request, reply) => {
     try {
       const awaitingPayment = await request.db
         .selectFrom('orders')

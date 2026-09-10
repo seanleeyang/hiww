@@ -29,8 +29,8 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
   app.get<{ Querystring: { type?: string; category?: string; country?: string; limit?: string } }>(
     '/api/discover/feed',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
-      const type = ['trips', 'wants'].includes(request.query.type) ? request.query.type : 'all';
+    async (request, reply) => {
+      const type = request.query.type && ['trips', 'wants'].includes(request.query.type) ? request.query.type : 'all';
       const category = (request.query.category || '').trim().toLowerCase();
       // Trips have no category of their own — a route (departure/arrival
       // country) is the dimension that actually applies to them.
@@ -147,7 +147,7 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
   app.get<{ Querystring: { source_country?: string; source_city?: string } }>(
     '/api/discover/route-match',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const country = (request.query.source_country || '').trim();
       if (!country) {
         reply.send({ success: true, data: { count: 0, sample: [] }, code: 'ROUTE_MATCH' });
@@ -169,7 +169,10 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
           'users.avatar_url as traveler_avatar_url',
         ])
         .where('trips.status', '=', 'published')
-        .where('trips.traveler_id', '!=', request.userId)
+        // Route-match isn't in PUBLIC_GET_ROUTES (unlike /api/discover/feed,
+        // which guards this same comparison for guests) — auth-guard already
+        // requires authentication here, so userId is always set.
+        .where('trips.traveler_id', '!=', request.userId!)
         .where('trips.return_date', '>=', new Date())
         .where((eb: any) =>
           eb.or([

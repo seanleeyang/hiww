@@ -167,7 +167,7 @@ async function verifySocialToken(
 }
 
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
-  app.post<{ Body: unknown }>('/api/auth/register', { config: authRouteConfig }, async (request: any, reply: any) => {
+  app.post<{ Body: unknown }>('/api/auth/register', { config: authRouteConfig }, async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidRegistration');
@@ -226,7 +226,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     });
   });
 
-  app.post<{ Body: unknown }>('/api/auth/login', { config: authRouteConfig }, async (request: any, reply: any) => {
+  app.post<{ Body: unknown }>('/api/auth/login', { config: authRouteConfig }, async (request, reply) => {
     const loginSchema = z.object({
       email: z.string().email(),
       password: z.string().min(8),
@@ -268,7 +268,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     '/api/auth/social',
     { config: authRouteConfig },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = socialLoginSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidSocialPayload');
@@ -378,7 +378,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     '/api/auth/forgot-password',
     { config: authRouteConfig },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = forgotPasswordSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidEmail');
@@ -404,7 +404,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     '/api/auth/reset-password',
     { config: authRouteConfig },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = resetPasswordSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidResetDetails');
@@ -486,11 +486,13 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
   // The signed-in user's own profile — the front-end calls this on load.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.get('/api/me', async (request: any, reply: any) => {
+  app.get('/api/me', async (request, reply) => {
+    // Auth-guard already requires authentication for this route (it's only
+    // VERIFICATION-exempt, not public) — userId is guaranteed set here.
     const me = await request.db
       .selectFrom('users')
       .select([...meColumns])
-      .where('id', '=', request.userId)
+      .where('id', '=', request.userId!)
       .executeTakeFirst();
 
     if (!me) {
@@ -502,7 +504,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
   // Edit your own profile (name, home city, avatar URL, phone, address).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app.patch('/api/me', async (request: any, reply: any) => {
+  app.patch('/api/me', async (request, reply) => {
     const parsed = profileUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidProfileUpdate');
@@ -519,12 +521,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (parsed.data.address_postal_code !== undefined) patch.address_postal_code = parsed.data.address_postal_code;
     if (parsed.data.address_country !== undefined) patch.address_country = parsed.data.address_country;
 
-    await request.db.updateTable('users').set(patch).where('id', '=', request.userId).execute();
+    await request.db.updateTable('users').set(patch).where('id', '=', request.userId!).execute();
 
     const me = await request.db
       .selectFrom('users')
       .select([...meColumns])
-      .where('id', '=', request.userId)
+      .where('id', '=', request.userId!)
       .executeTakeFirst();
 
     reply.send({ success: true, data: meResponse(me), code: 'ME_UPDATED' });
@@ -537,13 +539,13 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     '/api/auth/verify-otp',
     { config: authRouteConfig },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = verifyOtpSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidVerificationCode');
       }
 
-      const ok = await verifyOtp(request.db, request.userId, parsed.data.channel, parsed.data.code);
+      const ok = await verifyOtp(request.db, request.userId!, parsed.data.channel, parsed.data.code);
       if (!ok) {
         throw new AppError('INVALID_OTP', 400, 'common.otpInvalid');
       }
@@ -551,7 +553,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const me = await request.db
         .selectFrom('users')
         .select([...meColumns])
-        .where('id', '=', request.userId)
+        .where('id', '=', request.userId!)
         .executeTakeFirst();
 
       reply.send({ success: true, data: meResponse(me), code: 'OTP_VERIFIED' });
@@ -563,7 +565,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     '/api/auth/resend-otp',
     { config: authRouteConfig },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = resendOtpSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidChannel');
@@ -572,7 +574,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const me = await request.db
         .selectFrom('users')
         .select(['email', 'phone'])
-        .where('id', '=', request.userId)
+        .where('id', '=', request.userId!)
         .executeTakeFirst();
       if (!me) {
         throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
@@ -583,7 +585,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('VALIDATION_ERROR', 400, 'auth.noPhoneOnFile');
       }
 
-      const code = await issueOtp(request.db, request.userId, parsed.data.channel, destination);
+      const code = await issueOtp(request.db, request.userId!, parsed.data.channel, destination);
 
       reply.send({
         success: true,

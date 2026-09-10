@@ -16,7 +16,7 @@ const resolveSchema = z.object({
 });
 
 export async function registerDisputesRoutes(app: FastifyInstance): Promise<void> {
-  app.post<{ Body: unknown }>('/api/disputes', async (request: any, reply: any) => {
+  app.post<{ Body: unknown }>('/api/disputes', async (request, reply) => {
     const parsed = disputeSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'disputes.invalidPayload');
@@ -28,7 +28,7 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
       parsed.data.order_id,
       'disputes.onlyParticipantsCanOpen'
     );
-    const initiatorId = request.userId;
+    const initiatorId = request.userId!;
 
     const disputeId = generateId();
 
@@ -73,7 +73,7 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
     });
   });
 
-  app.post<{ Params: { id: string }; Body: unknown }>('/api/disputes/:id/resolve', async (request: any, reply: any) => {
+  app.post<{ Params: { id: string }; Body: unknown }>('/api/disputes/:id/resolve', async (request, reply) => {
     const parsed = resolveSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'common.invalidDisputeResolutionPayload');

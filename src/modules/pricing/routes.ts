@@ -19,7 +19,7 @@ export async function registerPricingRoutes(app: FastifyInstance): Promise<void>
   app.get<{ Querystring: { item_price?: string } }>(
     '/api/pricing/preview',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = previewQuerySchema.safeParse(request.query);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'pricing.invalidItemPrice');

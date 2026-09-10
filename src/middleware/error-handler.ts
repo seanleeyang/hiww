@@ -1,15 +1,13 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { AppError } from '@/utils/helpers';
 import { t } from '@/i18n/messages';
-import type { AppRequest } from '@/types/api';
 import type { ApiResponse } from '@/types/api';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registerErrorHandler(app: FastifyInstance): Promise<void> {
   app.setErrorHandler(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (error: any, request: FastifyRequest, reply: FastifyReply): void => {
-      const locale = (request as AppRequest).locale ?? 'en';
+      const locale = request.locale ?? 'en';
 
       if (error instanceof AppError) {
         void reply.status(error.statusCode).send({

@@ -37,14 +37,14 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
   app.post<{ Body: unknown }>(
     '/api/offers',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = createOfferSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'offers.invalidOfferData');
       }
 
       // An accepted offer becomes an order — the traveler needs to be reachable first.
-      await requireCompleteProfile(request.db, request.userId);
+      await requireCompleteProfile(request.db, request.userId!);
 
       const requestRow = await request.db
         .selectFrom('requests')
@@ -122,7 +122,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
   app.get(
     '/api/offers/mine',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await expireOverdueOffers(request.db);
 
       const items = await request.db
@@ -142,7 +142,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
           'requests.item_description as request_item',
           'requests.status as request_status',
         ])
-        .where('offers.traveler_id', '=', request.userId)
+        .where('offers.traveler_id', '=', request.userId!)
         .orderBy('offers.created_at', 'desc')
         .execute();
 
@@ -163,7 +163,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
   app.get(
     '/api/offers/negotiations',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await expireOverdueOffers(request.db);
 
       const columns = [
@@ -190,7 +190,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .innerJoin('requests', 'requests.id', 'offers.request_id')
         .innerJoin('users', 'users.id', 'requests.shopper_id')
         .select([...columns, 'users.full_name as counterparty_name'])
-        .where('offers.traveler_id', '=', request.userId)
+        .where('offers.traveler_id', '=', request.userId!)
         .execute();
 
       const asShopper = await request.db
@@ -198,7 +198,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .innerJoin('requests', 'requests.id', 'offers.request_id')
         .innerJoin('users', 'users.id', 'offers.traveler_id')
         .select([...columns, 'users.full_name as counterparty_name'])
-        .where('requests.shopper_id', '=', request.userId)
+        .where('requests.shopper_id', '=', request.userId!)
         .execute();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,7 +222,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
   app.get<{ Params: { id: string } }>(
     '/api/requests/:id/offers',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await expireOverdueOffers(request.db);
 
       const requestRow = await request.db
@@ -257,7 +257,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         .orderBy('offers.created_at', 'asc');
 
       if (!owns) {
-        q = q.where('offers.traveler_id', '=', request.userId);
+        q = q.where('offers.traveler_id', '=', request.userId!);
       }
 
       const items = await q.execute();
@@ -283,7 +283,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
     '/api/offers/:id/accept',
     { config: { rateLimit: { max: config.moneyRateLimitMax, timeWindow: config.rateLimitWindow } } },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await expireOverdueOffers(request.db);
 
       const offer = await request.db
@@ -307,7 +307,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
 
-      const callerRole = roleFor(offer, requestRow, request.userId);
+      const callerRole = roleFor(offer, requestRow, request.userId!);
       if (offer.last_actor === callerRole) {
         throw new AppError('INVALID_STATUS', 409, 'common.waitingOnOtherSide');
       }
@@ -447,7 +447,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
     '/api/offers/:id/counter',
     { config: { rateLimit: { max: config.moneyRateLimitMax, timeWindow: config.rateLimitWindow } } },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = counterOfferSchema.safeParse(request.body);
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'offers.invalidCounterPrice');
@@ -479,7 +479,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         throw new AppError('INVALID_STATUS', 409, 'offers.wantNoLongerOpen');
       }
 
-      const callerRole = roleFor(offer, requestRow, request.userId);
+      const callerRole = roleFor(offer, requestRow, request.userId!);
       if (offer.last_actor === callerRole) {
         throw new AppError('INVALID_STATUS', 409, 'common.waitingOnOtherSide');
       }
@@ -545,7 +545,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
   app.post<{ Params: { id: string } }>(
     '/api/offers/:id/reject',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       await expireOverdueOffers(request.db);
 
       const offer = await request.db
@@ -569,7 +569,7 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
         throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
 
-      const callerRole = roleFor(offer, requestRow, request.userId);
+      const callerRole = roleFor(offer, requestRow, request.userId!);
       if (offer.last_actor === callerRole) {
         throw new AppError('INVALID_STATUS', 409, 'common.waitingOnOtherSide');
       }

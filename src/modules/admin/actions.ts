@@ -19,7 +19,7 @@ const flagUserSchema = z.object({
 });
 
 export async function registerAdminActionRoutes(app: FastifyInstance): Promise<void> {
-  app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/disputes/:id/resolve', async (request: any, reply: any) => {
+  app.post<{ Params: { id: string }; Body: unknown }>('/api/admin/disputes/:id/resolve', async (request, reply) => {
     const parsed = resolveDisputeSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'adminActions.invalidDisputeResolution');
@@ -76,7 +76,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
     });
   });
 
-  app.post<{ Params: { userId: string }; Body: unknown }>('/api/admin/users/:userId/kyc-review', async (request: any, reply: any) => {
+  app.post<{ Params: { userId: string }; Body: unknown }>('/api/admin/users/:userId/kyc-review', async (request, reply) => {
     const parsed = reviewKycSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'common.invalidKycReviewPayload');
@@ -120,7 +120,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
     });
   });
 
-  app.post<{ Params: { userId: string }; Body: unknown }>('/api/admin/users/:userId/flag', async (request: any, reply: any) => {
+  app.post<{ Params: { userId: string }; Body: unknown }>('/api/admin/users/:userId/flag', async (request, reply) => {
     const parsed = flagUserSchema.safeParse(request.body);
     if (!parsed.success) {
       throw new AppError('VALIDATION_ERROR', 400, 'adminActions.invalidRiskFlag');

@@ -33,7 +33,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string }; Body: unknown }>(
     '/api/orders/:id/purchase-proof',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = purchaseProofSchema.safeParse(request.body || {});
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'delivery.receiptUrlRequired');
@@ -127,7 +127,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string }; Body: unknown }>(
     '/api/orders/:id/deliver',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = noteSchema.safeParse(request.body || {});
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'delivery.invalidDeliveryPayload');
@@ -211,7 +211,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string }; Body: unknown }>(
     '/api/orders/:id/shipping-proof',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = shippingProofSchema.safeParse(request.body || {});
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'delivery.shippingProofUrlRequired');
@@ -266,7 +266,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
   app.post<{ Params: { id: string }; Body: unknown }>(
     '/api/orders/:id/release',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (request: any, reply: any) => {
+    async (request, reply) => {
       const parsed = releaseSchema.safeParse(request.body || {});
       if (!parsed.success) {
         throw new AppError('VALIDATION_ERROR', 400, 'delivery.invalidReleasePayload');
