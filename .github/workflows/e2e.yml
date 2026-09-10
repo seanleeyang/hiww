@@ -1,0 +1,98 @@
+name: E2E (app + API)
+
+# Runs the Flutter end-to-end suite (mobile/integration_test/app_flow_test.dart)
+# against a real API: `npm run dev:e2e` boots the backend on a throwaway
+# `<db>_e2e` database, then `flutter test` drives the real widget tree over
+# sockets on the headless flutter-tester VM (no emulator needed).
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'migrations/**'
+      - 'mobile/**'
+      - 'scripts/serve-e2e.ts'
+      - 'package.json'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'migrations/**'
+      - 'mobile/**'
+      - 'scripts/serve-e2e.ts'
+      - 'package.json'
+      - '.github/workflows/e2e.yml'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: hiww
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d hiww"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hiww
+      JWT_SECRET: ci-only-secret-ci-only-secret-0123456789
+      MANUAL_MONEY_PILOT: 'true'
+      PAYMENT_PROVIDER: mock
+      IDENTITY_PROVIDER: mock
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install API dependencies
+        run: npm ci
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2' # matches deploy-web.yml
+          channel: stable
+          cache: true
+
+      - name: Install app dependencies
+        run: flutter pub get
+        working-directory: mobile
+
+      - name: Start the API on a throwaway database
+        run: |
+          nohup npm run dev:e2e > "$RUNNER_TEMP/api.log" 2>&1 &
+          disown || true
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000/health >/dev/null; then
+              echo "API is healthy"; exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API never became healthy"
+          cat "$RUNNER_TEMP/api.log"
+          exit 1
+
+      - name: Run the app e2e suite
+        run: flutter test -d flutter-tester integration_test/app_flow_test.dart
+        working-directory: mobile
+
+      - name: API logs
+        if: always()
+        run: cat "$RUNNER_TEMP/api.log" || true
