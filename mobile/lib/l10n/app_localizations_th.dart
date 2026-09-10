@@ -48,6 +48,18 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String get ordersTabRequestedPlain => 'ขอไว้';
+
+  @override
+  String get ordersTabInTransitPlain => 'กำลังส่ง';
+
+  @override
+  String get ordersTabReceivedPlain => 'ได้รับแล้ว';
+
+  @override
+  String get ordersTabInactivePlain => 'ไม่ใช้งาน';
+
+  @override
   String get emptyOrdersBucketTitle => 'ยังไม่มีรายการ';
 
   @override
@@ -439,6 +451,15 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get emptyNoWantsMessage =>
       'ไม่มีรายการต้องการที่ตรงกับตัวกรองนี้ ลองกลับมาดูใหม่ภายหลัง หรือลงรายการต้องการของคุณเอง';
+
+  @override
+  String get errorGenericTitle => 'เกิดข้อผิดพลาด';
+
+  @override
+  String get errorPleaseTryAgain => 'กรุณาลองใหม่อีกครั้ง';
+
+  @override
+  String get actionRetry => 'ลองใหม่';
 
   @override
   String get actionRemove => 'ลบ';
@@ -1121,6 +1142,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String actionConfirmRelease(String total) {
     return 'ยืนยันและปล่อยเงิน $total';
   }
+
+  @override
+  String dialogReleasePaymentTitle(String total) {
+    return 'ปล่อยเงิน $total ใช่ไหม?';
+  }
+
+  @override
+  String get dialogReleasePaymentBody =>
+      'การดำเนินการนี้จะโอนเงินให้นักเดินทาง กรุณาทำเมื่อคุณได้รับสินค้าแล้วเท่านั้น — ไม่สามารถยกเลิกได้จากแอป';
+
+  @override
+  String get actionRelease => 'ปล่อยเงิน';
 
   @override
   String get ratedLabel => 'คุณให้คะแนน';

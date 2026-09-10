@@ -118,7 +118,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       final signedInState = auth.valueOrNull;
       if (signedInState is AuthSignedIn) {
         final onPreAuthPage = _preAuthRoutes.contains(loc) || loc == '/onboarding';
-        if (onPreAuthPage || loc == '/splash') return '/browse';
+        if (onPreAuthPage || loc == '/splash') {
+          // Send the guest back to the trip/want/order they were looking at
+          // when they were prompted to sign in, if any — see guest_guard.dart
+          // and LandingScreen/LoginScreen/RegisterScreen, which set and carry
+          // this. Falls back to Browse for a plain "Log in" tap with nothing
+          // to return to, or if the value looks unsafe (must be an internal
+          // path, and not another pre-auth page — never redirect in a loop).
+          final returnTo = state.uri.queryParameters['returnTo'];
+          if (returnTo != null &&
+              returnTo.startsWith('/') &&
+              !_preAuthRoutes.contains(Uri.parse(returnTo).path)) {
+            return returnTo;
+          }
+          return '/browse';
+        }
         // Unverified users browse freely rather than being force-redirected
         // here — a gated action shows a "Before You Proceed" prompt instead
         // (see ApiClient's VERIFICATION_REQUIRED interception). /verify is

@@ -426,33 +426,16 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
     }
     if (!mounted) return;
 
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.dialogAcceptOfferTitle),
-        content: pricing == null
-            ? Text(l10n.dialogAcceptOfferBody(o.priceLabel))
-            : _PriceBreakdown(pricing: pricing),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FilledButton(
-                onPressed: () => context.pop(true),
-                child: Text(l10n.actionAccept),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => context.pop(false),
-                child: Text(l10n.actionCancel),
-              ),
-            ],
-          ),
-        ],
-      ),
+    final ok = await showConfirmDialog(
+      context,
+      title: l10n.dialogAcceptOfferTitle,
+      body: pricing == null
+          ? Text(l10n.dialogAcceptOfferBody(o.priceLabel))
+          : _PriceBreakdown(pricing: pricing),
+      confirmLabel: l10n.actionAccept,
+      cancelLabel: l10n.actionCancel,
     );
-    if (ok != true) return;
+    if (!ok) return;
     try {
       final orderId = await ref.read(offersRepositoryProvider).accept(o.id);
       ref.invalidate(myWantsProvider);

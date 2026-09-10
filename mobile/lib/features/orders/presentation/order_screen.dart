@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/breakdown_row.dart';
 import '../../../ui/busy_filled_button.dart';
+import '../../../ui/confirm_dialog.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/marketplace_bits.dart';
@@ -230,6 +231,22 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
     }
   }
 
+  /// The single highest-stakes tap in the app — it irreversibly releases
+  /// escrowed payment — so it gets the same "are you sure" every other
+  /// destructive/committing action in the app gets, unlike before.
+  Future<void> _confirmRelease(String orderId, String totalLabel, String imageUrl) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showConfirmDialog(
+      context,
+      title: l10n.dialogReleasePaymentTitle(totalLabel),
+      body: Text(l10n.dialogReleasePaymentBody),
+      confirmLabel: l10n.actionRelease,
+      cancelLabel: l10n.actionCancel,
+    );
+    if (!ok || !mounted) return;
+    await _confirmAndReview(orderId, imageUrl);
+  }
+
   /// Releases payment, then moves straight on to leaving a review — the
   /// photo above is the only thing gating release, so there's nothing left
   /// to confirm on the next screen.
@@ -432,7 +449,7 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
             primary(
               l10n.actionConfirmRelease(o.totalLabel),
               _deliveryProofUrl != null
-                  ? () => _confirmAndReview(o.id, _deliveryProofUrl!)
+                  ? () => _confirmRelease(o.id, o.totalLabel, _deliveryProofUrl!)
                   : null,
             ),
           ],

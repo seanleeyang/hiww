@@ -48,6 +48,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get ordersTabRequestedPlain => 'Requested';
+
+  @override
+  String get ordersTabInTransitPlain => 'In Transit';
+
+  @override
+  String get ordersTabReceivedPlain => 'Received';
+
+  @override
+  String get ordersTabInactivePlain => 'Inactive';
+
+  @override
   String get emptyOrdersBucketTitle => 'Nothing here yet';
 
   @override
@@ -442,6 +454,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get emptyNoWantsMessage =>
       'No wants match this filter. Check back soon, or post a want of your own.';
+
+  @override
+  String get errorGenericTitle => 'Something went wrong';
+
+  @override
+  String get errorPleaseTryAgain => 'Please try again.';
+
+  @override
+  String get actionRetry => 'Retry';
 
   @override
   String get actionRemove => 'Remove';
@@ -1156,6 +1177,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String actionConfirmRelease(String total) {
     return 'Confirm & release $total';
   }
+
+  @override
+  String dialogReleasePaymentTitle(String total) {
+    return 'Release $total?';
+  }
+
+  @override
+  String get dialogReleasePaymentBody =>
+      'This sends the traveler their payout. Only do this once you have the item in hand — it can\'t be undone from the app.';
+
+  @override
+  String get actionRelease => 'Release payment';
 
   @override
   String get ratedLabel => 'You rated';

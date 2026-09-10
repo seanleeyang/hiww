@@ -158,6 +158,30 @@ abstract class AppLocalizations {
   /// **'{count} Inactive'**
   String ordersTabInactive(int count);
 
+  /// No description provided for @ordersTabRequestedPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get ordersTabRequestedPlain;
+
+  /// No description provided for @ordersTabInTransitPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'In Transit'**
+  String get ordersTabInTransitPlain;
+
+  /// No description provided for @ordersTabReceivedPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get ordersTabReceivedPlain;
+
+  /// No description provided for @ordersTabInactivePlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get ordersTabInactivePlain;
+
   /// No description provided for @emptyOrdersBucketTitle.
   ///
   /// In en, this message translates to:
@@ -889,6 +913,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No wants match this filter. Check back soon, or post a want of your own.'**
   String get emptyNoWantsMessage;
+
+  /// No description provided for @errorGenericTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get errorGenericTitle;
+
+  /// No description provided for @errorPleaseTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again.'**
+  String get errorPleaseTryAgain;
+
+  /// No description provided for @actionRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get actionRetry;
 
   /// No description provided for @actionRemove.
   ///
@@ -2083,6 +2125,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm & release {total}'**
   String actionConfirmRelease(String total);
+
+  /// No description provided for @dialogReleasePaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Release {total}?'**
+  String dialogReleasePaymentTitle(String total);
+
+  /// No description provided for @dialogReleasePaymentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This sends the traveler their payout. Only do this once you have the item in hand — it can\'t be undone from the app.'**
+  String get dialogReleasePaymentBody;
+
+  /// No description provided for @actionRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Release payment'**
+  String get actionRelease;
 
   /// No description provided for @ratedLabel.
   ///

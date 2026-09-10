@@ -23,6 +23,10 @@
   "@ordersTabInactive": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "ordersTabRequestedPlain": "Requested",
+  "ordersTabInTransitPlain": "In Transit",
+  "ordersTabReceivedPlain": "Received",
+  "ordersTabInactivePlain": "Inactive",
   "emptyOrdersBucketTitle": "Nothing here yet",
   "emptyOrdersBucketMessage": "Orders at this stage will show up here.",
   "tripsTabActive": "Active",
@@ -167,6 +171,9 @@
   "emptyNoTripsMessage": "No travelers heading this way yet. Check back soon, or post your own trip if you're the one traveling.",
   "emptyNoWantsTitle": "Nothing here yet",
   "emptyNoWantsMessage": "No wants match this filter. Check back soon, or post a want of your own.",
+  "errorGenericTitle": "Something went wrong",
+  "errorPleaseTryAgain": "Please try again.",
+  "actionRetry": "Retry",
 
   "actionRemove": "Remove",
   "actionCancel": "Cancel",
@@ -471,6 +478,12 @@
   "@actionConfirmRelease": {
     "placeholders": { "total": { "type": "String" } }
   },
+  "dialogReleasePaymentTitle": "Release {total}?",
+  "@dialogReleasePaymentTitle": {
+    "placeholders": { "total": { "type": "String" } }
+  },
+  "dialogReleasePaymentBody": "This sends the traveler their payout. Only do this once you have the item in hand — it can't be undone from the app.",
+  "actionRelease": "Release payment",
   "ratedLabel": "You rated",
   "actionRateCounterparty": "Rate {name}",
   "@actionRateCounterparty": {

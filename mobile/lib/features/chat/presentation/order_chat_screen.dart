@@ -10,6 +10,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
+import '../../../ui/confirm_dialog.dart';
 import '../../../ui/fullscreen_image_viewer.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../orders/data/orders_repository.dart';
@@ -141,34 +142,15 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
 
   Future<void> _deleteChat() async {
     final l10n = AppLocalizations.of(context)!;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.dialogDeleteChatTitle),
-        content: Text(l10n.dialogDeleteChatBody),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(dialogContext).colorScheme.error,
-                ),
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(l10n.actionDeleteChat),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(l10n.actionCancel),
-              ),
-            ],
-          ),
-        ],
-      ),
+    final ok = await showConfirmDialog(
+      context,
+      title: l10n.dialogDeleteChatTitle,
+      body: Text(l10n.dialogDeleteChatBody),
+      confirmLabel: l10n.actionDeleteChat,
+      cancelLabel: l10n.actionCancel,
+      destructive: true,
     );
-    if (ok != true) return;
+    if (!ok) return;
 
     setState(() => _deletingChat = true);
     try {

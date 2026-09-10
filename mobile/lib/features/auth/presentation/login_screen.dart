@@ -59,6 +59,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
+    final registerRoute =
+        returnTo == null ? '/register' : '/register?returnTo=${Uri.encodeComponent(returnTo)}';
     return AuthScaffold(
       title: l10n.loginTitle,
       subtitle: l10n.loginSubtitle,
@@ -134,7 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         children: [
           Text(l10n.loginNewToHiww),
           TextButton(
-            onPressed: _submitting ? null : () => context.go('/register'),
+            onPressed: _submitting ? null : () => context.go(registerRoute),
             child: Text(l10n.actionCreateAccount),
           ),
         ],

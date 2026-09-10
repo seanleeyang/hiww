@@ -16,6 +16,10 @@ class LandingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
+    String withReturnTo(String path) => returnTo == null
+        ? path
+        : '$path?returnTo=${Uri.encodeComponent(returnTo)}';
 
     return Scaffold(
       body: SafeArea(
@@ -53,14 +57,14 @@ class LandingScreen extends StatelessWidget {
                           children: [
                             Expanded(
                               child: FilledButton(
-                                onPressed: () => context.push('/register'),
+                                onPressed: () => context.push(withReturnTo('/register')),
                                 child: Text(l10n.actionCreateAccountButton),
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: OutlinedButton(
-                                onPressed: () => context.push('/login'),
+                                onPressed: () => context.push(withReturnTo('/login')),
                                 child: Text(l10n.actionLogIn),
                               ),
                             ),

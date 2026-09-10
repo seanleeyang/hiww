@@ -30,7 +30,9 @@ class ConfirmReviewScreen extends ConsumerStatefulWidget {
 
 class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
   final _comment = TextEditingController();
-  int _rating = 5;
+  // Starts unrated so a user who never taps a star can't accidentally
+  // submit a perfect score — the guard in _close() requires a real choice.
+  int _rating = 0;
   bool _busy = false;
   String? _error;
 

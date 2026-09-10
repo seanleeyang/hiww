@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/async_value_view.dart';
 import '../../../ui/badged_fab.dart';
 import '../../../ui/confirm_dialog.dart';
 import '../../../ui/empty_state.dart';
@@ -157,61 +158,17 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
     final negotiationsAsync = ref.watch(negotiationsProvider);
     final orderMapAsync = ref.watch(orderIdByRequestProvider);
     final me = ref.watch(currentUserProvider);
-
-    final wants = wantsAsync.valueOrNull;
-    final orders = ordersAsync.valueOrNull;
-    final negotiations = negotiationsAsync.valueOrNull;
-    final orderMap = orderMapAsync.valueOrNull;
+    final combined = combine4(wantsAsync, ordersAsync, negotiationsAsync, orderMapAsync);
+    final combinedValue = combined.valueOrNull;
+    final buckets = combinedValue == null
+        ? null
+        : _bucket(combinedValue.$1, combinedValue.$2, combinedValue.$3, combinedValue.$4);
 
     void refreshAll() {
       ref.invalidate(myWantsProvider);
       ref.invalidate(myOrdersProvider);
       ref.invalidate(negotiationsProvider);
       ref.invalidate(orderIdByRequestProvider);
-    }
-
-    Widget body;
-    _Buckets? buckets;
-    if (wants == null || orders == null || negotiations == null || orderMap == null) {
-      final err = wantsAsync.error ?? ordersAsync.error;
-      body = err != null
-          ? EmptyState(
-              icon: Icons.cloud_off_outlined,
-              title: 'Something went wrong',
-              message: err is ApiException ? err.message : 'Please try again.',
-              action: FilledButton.tonal(onPressed: refreshAll, child: const Text('Retry')),
-            )
-          // FeedSkeleton is a plain Column (not a ListView) — it needs a
-          // scrollable ancestor of its own here, unlike its other use inside
-          // a CustomScrollView's SliverToBoxAdapter on the Home screen.
-          : const SingleChildScrollView(child: FeedSkeleton());
-    } else {
-      buckets = _bucket(wants, orders, negotiations, orderMap);
-      body = TabBarView(
-        controller: _tabController,
-        children: [
-          _EntryList(
-            entries: buckets.requested,
-            me: me,
-            emptyIcon: Icons.receipt_long_outlined,
-            emptyTitle: l10n.emptyMyWantsTitle,
-            emptyMessage: l10n.emptyMyWantsMessage,
-            emptyAction: FilledButton(
-              onPressed: () => showCreateOrderSheet(context),
-              child: Text(l10n.actionPostAWant),
-            ),
-          ),
-          _OrderList(orders: buckets.inTransit, me: me),
-          _OrderList(orders: buckets.received, me: me),
-          _EntryList(
-            entries: buckets.inactive,
-            me: me,
-            emptyIcon: Icons.inventory_2_outlined,
-            emptyTitle: l10n.emptyOrdersBucketTitle,
-            emptyMessage: l10n.emptyOrdersBucketMessage,
-          ),
-        ],
-      );
     }
 
     return Scaffold(
@@ -226,14 +183,49 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: [
-              Tab(text: l10n.ordersTabRequested(buckets?.requested.length ?? 0)),
-              Tab(text: l10n.ordersTabInTransit(buckets?.inTransit.length ?? 0)),
-              Tab(text: l10n.ordersTabReceived(buckets?.received.length ?? 0)),
-              Tab(text: l10n.ordersTabInactive(buckets?.inactive.length ?? 0)),
+              Tab(text: buckets == null ? l10n.ordersTabRequestedPlain : l10n.ordersTabRequested(buckets.requested.length)),
+              Tab(text: buckets == null ? l10n.ordersTabInTransitPlain : l10n.ordersTabInTransit(buckets.inTransit.length)),
+              Tab(text: buckets == null ? l10n.ordersTabReceivedPlain : l10n.ordersTabReceived(buckets.received.length)),
+              Tab(text: buckets == null ? l10n.ordersTabInactivePlain : l10n.ordersTabInactive(buckets.inactive.length)),
             ],
           ),
           Expanded(
-            child: RefreshIndicator(onRefresh: () async => refreshAll(), child: body),
+            child: RefreshIndicator(
+              onRefresh: () async => refreshAll(),
+              child: AsyncValueView(
+                value: combined,
+                onRetry: refreshAll,
+                // FeedSkeleton is a plain Column (not a ListView) — it needs
+                // a scrollable ancestor of its own here, unlike its other use
+                // inside a CustomScrollView's SliverToBoxAdapter on Home.
+                loading: (context) => const SingleChildScrollView(child: FeedSkeleton()),
+                data: (_) => TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _EntryList(
+                      entries: buckets!.requested,
+                      me: me,
+                      emptyIcon: Icons.receipt_long_outlined,
+                      emptyTitle: l10n.emptyMyWantsTitle,
+                      emptyMessage: l10n.emptyMyWantsMessage,
+                      emptyAction: FilledButton(
+                        onPressed: () => showCreateOrderSheet(context),
+                        child: Text(l10n.actionPostAWant),
+                      ),
+                    ),
+                    _OrderList(orders: buckets.inTransit, me: me),
+                    _OrderList(orders: buckets.received, me: me),
+                    _EntryList(
+                      entries: buckets.inactive,
+                      me: me,
+                      emptyIcon: Icons.inventory_2_outlined,
+                      emptyTitle: l10n.emptyOrdersBucketTitle,
+                      emptyMessage: l10n.emptyOrdersBucketMessage,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

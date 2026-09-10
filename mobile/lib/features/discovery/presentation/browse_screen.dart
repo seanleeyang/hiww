@@ -226,6 +226,9 @@ class _TripsBrowseTab extends ConsumerWidget {
             emptyIcon: Icons.flight_outlined,
             emptyTitle: l10n.emptyNoTripsTitle,
             emptyMessage: l10n.emptyNoTripsMessage,
+            errorTitle: l10n.errorGenericTitle,
+            errorFallbackMessage: l10n.errorPleaseTryAgain,
+            retryLabel: l10n.actionRetry,
             sort: (rawItems) => _sortedTrips(rawItems, sort),
             itemBuilder: (context, item) {
               if (item.trip == null) return const SizedBox.shrink();
@@ -308,6 +311,9 @@ class _WantsBrowseTab extends ConsumerWidget {
             emptyIcon: Icons.explore_off_outlined,
             emptyTitle: l10n.emptyNoWantsTitle,
             emptyMessage: l10n.emptyNoWantsMessage,
+            errorTitle: l10n.errorGenericTitle,
+            errorFallbackMessage: l10n.errorPleaseTryAgain,
+            retryLabel: l10n.actionRetry,
             sort: (rawItems) => _sortedWants(rawItems, sort),
             itemBuilder: (context, item) {
               if (item.want == null) return const SizedBox.shrink();
@@ -336,6 +342,9 @@ List<Widget> _feedSlivers({
   required IconData emptyIcon,
   required String emptyTitle,
   required String emptyMessage,
+  required String errorTitle,
+  required String errorFallbackMessage,
+  required String retryLabel,
   required List<FeedItem> Function(List<FeedItem> rawItems) sort,
   required Widget Function(BuildContext context, FeedItem item) itemBuilder,
 }) {
@@ -370,11 +379,11 @@ List<Widget> _feedSlivers({
       error: (err, _) => SliverToBoxAdapter(
         child: EmptyState(
           icon: Icons.cloud_off_outlined,
-          title: 'Something went wrong',
-          message: err is ApiException ? err.message : 'Please try again.',
+          title: errorTitle,
+          message: err is ApiException ? err.message : errorFallbackMessage,
           action: FilledButton.tonal(
             onPressed: onRetry,
-            child: const Text('Retry'),
+            child: Text(retryLabel),
           ),
         ),
       ),
