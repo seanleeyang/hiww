@@ -4,7 +4,7 @@ import { AppError, generateId } from '@/utils/helpers';
 
 const registerSchema = z.object({
   token: z.string().trim().min(1).max(4096),
-  platform: z.enum(['android', 'web']),
+  platform: z.enum(['android', 'web', 'ios']),
 });
 
 const unregisterSchema = z.object({

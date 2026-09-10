@@ -11,15 +11,20 @@ import 'push_repository.dart';
 /// or an unsupported platform should all degrade to "no push", never crash
 /// the app or block sign-in.
 ///
-/// Only wired up for Android and Web in this pilot — see
-/// `firebase_options.dart` for why iOS isn't included yet.
+/// iOS is included here but stays a no-op in practice until
+/// `firebase_options.dart`'s `ios` placeholder is replaced with a real
+/// config — `getToken()` throws on the placeholder, which the catch below
+/// just swallows like any other unconfigured-project failure.
 class PushService {
   PushService(this._ref);
   final Ref _ref;
 
   String? _registeredToken;
 
-  bool get supportsPush => kIsWeb || defaultTargetPlatform == TargetPlatform.android;
+  bool get supportsPush =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
 
   /// Firebase Web Push VAPID key (Project settings -> Cloud Messaging ->
   /// Web configuration), required for `getToken()` to succeed on Web.
@@ -38,10 +43,12 @@ class PushService {
           : messaging.getToken());
       if (token == null || token == _registeredToken) return;
 
-      await _ref.read(pushRepositoryProvider).registerToken(
-            token: token,
-            platform: kIsWeb ? 'web' : 'android',
-          );
+      final platform = kIsWeb
+          ? 'web'
+          : defaultTargetPlatform == TargetPlatform.iOS
+              ? 'ios'
+              : 'android';
+      await _ref.read(pushRepositoryProvider).registerToken(token: token, platform: platform);
       _registeredToken = token;
     } catch (_) {
       // No Firebase project configured yet, permission plumbing missing on

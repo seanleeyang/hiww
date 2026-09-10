@@ -74,5 +74,9 @@
 		<string>Hiww needs photo access so you can attach a picture to a want, trip or your profile.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>Hiww saves photos to your library so you can view them later without an internet connection.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+		</array>
 	</dict>
 </plist>
