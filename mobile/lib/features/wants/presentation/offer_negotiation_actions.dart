@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/api/api_exception.dart';
@@ -46,6 +48,24 @@ class OfferNegotiationActions extends StatefulWidget {
 class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
   bool _busy = false;
   String? _error;
+  Timer? _countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ticks the "respond within"/"waiting" countdown text live rather than
+    // only updating on the next full refresh — purely visual, the actual
+    // expiry only ever happens server-side (see offer-expiry.ts).
+    _countdownTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && widget.offer.respondBy != null) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _run(Future<void> Function() action) async {
     setState(() {

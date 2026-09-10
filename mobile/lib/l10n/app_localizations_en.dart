@@ -1352,7 +1352,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryProofTitle => 'Proof of delivery';
 
   @override
-  String get chatClosedBanner => 'This chat is closed — the order is complete.';
+  String get chatClosedBanner => 'This chat is closed.';
+
+  @override
+  String chatClosingSoonBanner(String countdown) {
+    return 'This chat will close in $countdown.';
+  }
 
   @override
   String get chatDeletedMessage => 'You deleted this conversation.';

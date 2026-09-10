@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_client.dart';
+import '../../../core/format.dart';
 import '../domain/message.dart';
 
 class ChatRepository {
@@ -27,6 +28,7 @@ class ChatRepository {
       counterpartyTyping: map['counterparty_typing'] == true,
       closed: map['closed'] == true,
       deleted: map['deleted'] == true,
+      closesAt: parseDate(map['closes_at']),
     );
   }
 

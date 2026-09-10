@@ -1316,7 +1316,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get deliveryProofTitle => 'หลักฐานการรับสินค้า';
 
   @override
-  String get chatClosedBanner => 'แชทนี้ปิดแล้ว — คำสั่งซื้อเสร็จสมบูรณ์แล้ว';
+  String get chatClosedBanner => 'แชทนี้ปิดแล้ว';
+
+  @override
+  String chatClosingSoonBanner(String countdown) {
+    return 'แชทนี้จะปิดใน $countdown';
+  }
 
   @override
   String get chatDeletedMessage => 'คุณลบการสนทนานี้แล้ว';

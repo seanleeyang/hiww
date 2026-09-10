@@ -169,6 +169,22 @@ describe('AI chat moderation', () => {
     expect(body).toContain('[number hidden]');
   });
 
+  it('a bare "ID: ______" handle is redacted even without naming an app', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, 'ID: xyz123, add me there');
+    expect(res.json().data.warning).toBeTruthy();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const body = list.json().data.items[0].body as string;
+    expect(body).not.toContain('xyz123');
+    expect(body).toContain('[hidden]');
+  });
+
   it('a message the AI check calls high-risk is hidden from both participants', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);

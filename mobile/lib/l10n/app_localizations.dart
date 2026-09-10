@@ -2435,8 +2435,14 @@ abstract class AppLocalizations {
   /// No description provided for @chatClosedBanner.
   ///
   /// In en, this message translates to:
-  /// **'This chat is closed — the order is complete.'**
+  /// **'This chat is closed.'**
   String get chatClosedBanner;
+
+  /// No description provided for @chatClosingSoonBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat will close in {countdown}.'**
+  String chatClosingSoonBanner(String countdown);
 
   /// No description provided for @chatDeletedMessage.
   ///

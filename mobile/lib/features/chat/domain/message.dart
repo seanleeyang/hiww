@@ -41,18 +41,24 @@ class ChatFeed {
     required this.counterpartyTyping,
     this.closed = false,
     this.deleted = false,
+    this.closesAt,
   });
 
   final List<Message> messages;
   final bool counterpartyTyping;
 
-  /// The order reached `delivered` — the shopper released payment, so
-  /// there's nothing left to coordinate on and new messages are rejected.
+  /// The order reached `delivered` or `cancelled` and the 24h grace period
+  /// has passed — nothing left to coordinate on, so new messages are rejected.
   final bool closed;
 
   /// The viewer deleted this (closed) chat from their own view — `messages`
   /// is empty in that case; the counterparty's copy is unaffected.
   final bool deleted;
+
+  /// Set once the order is delivered/cancelled but still within the 24h
+  /// grace period — when the chat will actually lock. Null while there's
+  /// still an active negotiation/transaction, or once already closed.
+  final DateTime? closesAt;
 }
 
 class InboxThread {

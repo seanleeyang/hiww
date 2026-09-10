@@ -180,6 +180,56 @@ describe('messages / inbox flow', () => {
     expect(post.statusCode).toBe(409);
   });
 
+  it('the chat stays open, with a closes_at countdown, for 24h after the order is cancelled', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await ctx.db
+      .updateTable('orders')
+      .set({ status: 'cancelled', cancelled_at: new Date() })
+      .where('id', '=', order.orderId)
+      .execute();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(list.json().data.closed).toBe(false);
+    expect(list.json().data.closes_at).toBeTruthy();
+
+    const post = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+      payload: { body: 'Sorry this fell through!' },
+    });
+    expect(post.statusCode).toBe(201);
+  });
+
+  it('closes the chat once the 24h grace period after cancellation has passed', async () => {
+    const order = await createAcceptedOrder(ctx);
+    await ctx.db
+      .updateTable('orders')
+      .set({ status: 'cancelled', cancelled_at: new Date(Date.now() - 25 * 60 * 60 * 1000) })
+      .where('id', '=', order.orderId)
+      .execute();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(list.json().data.closed).toBe(true);
+    expect(list.json().data.closes_at).toBeNull();
+
+    const post = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+      payload: { body: 'too late' },
+    });
+    expect(post.statusCode).toBe(409);
+  });
+
   it('cannot delete a chat before the order is delivered', async () => {
     const order = await createAcceptedOrder(ctx);
     const del = await ctx.app.inject({

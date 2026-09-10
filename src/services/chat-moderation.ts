@@ -3,6 +3,8 @@ import type { Database } from '@/types/database';
 import { getChatModerationAnalyzer } from '@/services/ai';
 import { recordAudit } from '@/services/audit';
 import { recordNotification } from '@/services/notify';
+import { t } from '@/i18n/messages';
+import type { SupportedLocale } from '@/i18n/locale';
 
 const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> = [
   {
@@ -38,6 +40,14 @@ const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> 
     placeholder: '[hidden]',
   },
   {
+    // "ID: xyz123" / "my id is xyz123" / "username: xyz" / "add me: xyz" —
+    // the generic way people share a handle for an app without naming the
+    // app itself, so the named-app pattern above alone misses it.
+    re: /\b(?:my\s+)?(?:id|username|handle|contact)\s*(?:is|:)\s*[\w.+-]{2,}/gi,
+    reason: 'mentions a possible username/ID for off-platform contact',
+    placeholder: '[hidden]',
+  },
+  {
     re: /\b(pay(ment)?\s*(me|directly|outside)|cash only|skip the app|off[- ]platform|outside (of )?the app)\b/gi,
     reason: 'suggests paying outside the app',
     placeholder: '[hidden]',
@@ -47,7 +57,7 @@ const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> 
   // characters, so a boundary assertion would fail to match a Thai keyword
   // embedded naturally in a longer sentence with no surrounding whitespace.
   {
-    re: /ไลน์ไอดี|แอดไลน์|ไลน์|เทเลแกรม|วอทส์?แอพ|วีแชท|ไอจี|อินสตาแกรม/g,
+    re: /ไลน์ไอดี|แอดไลน์|ไลน์|เทเลแกรม|วอทส์?แอพ|วีแชท|ไอจี|อินสตาแกรม|ไอดี/g,
     reason: 'mentions an outside messaging app (Thai)',
     placeholder: '[hidden]',
   },
@@ -113,24 +123,17 @@ export function redactLeakage(body: string): MessageRedaction {
   return { body: redacted, flagged: reasons.size > 0, reasons: [...reasons] };
 }
 
-export const LEAKAGE_WARNING =
-  "We removed contact details or off-platform payment mentions from your message to keep everyone safe — the rest still sent. Messages are reviewed for anything else that looks unsafe.";
-
-export const QR_WARNING =
-  "We removed a QR code from your photo — sharing payment or contact QR codes isn't allowed here. Messages are reviewed for anything else that looks unsafe.";
-
-/** Shown in place of a message an operator or the AI check pulled after the fact. */
-export const HIDDEN_TO_SENDER =
-  "Your message was removed — it didn't meet Hiww's chat guidelines and is under review.";
-export const HIDDEN_TO_OTHERS = "A message was removed — it didn't meet Hiww's chat guidelines.";
+export const leakageWarning = (locale: SupportedLocale): string => t(locale, 'messages.leakageWarning');
+export const qrWarning = (locale: SupportedLocale): string => t(locale, 'messages.qrWarning');
 
 /** What a participant should see instead of the raw body, if anything. */
 export function presentMessageBody(
   message: { body: string; hidden_at?: Date | string | null; sender_id: string },
-  viewerId: string
+  viewerId: string,
+  locale: SupportedLocale
 ): string {
   if (!message.hidden_at) return message.body;
-  return message.sender_id === viewerId ? HIDDEN_TO_SENDER : HIDDEN_TO_OTHERS;
+  return t(locale, message.sender_id === viewerId ? 'messages.hiddenToSender' : 'messages.hiddenToOthers');
 }
 
 interface MessageForCheck {

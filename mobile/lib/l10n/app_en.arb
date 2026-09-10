@@ -553,7 +553,11 @@
   "purchaseReceiptTitle": "Purchase receipt",
   "shippingProofTitle": "Shipping proof",
   "deliveryProofTitle": "Proof of delivery",
-  "chatClosedBanner": "This chat is closed — the order is complete.",
+  "chatClosedBanner": "This chat is closed.",
+  "chatClosingSoonBanner": "This chat will close in {countdown}.",
+  "@chatClosingSoonBanner": {
+    "placeholders": { "countdown": { "type": "String" } }
+  },
   "chatDeletedMessage": "You deleted this conversation.",
   "actionDeleteChat": "Delete chat",
   "dialogDeleteChatTitle": "Delete this chat?",

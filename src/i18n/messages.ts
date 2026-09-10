@@ -116,6 +116,22 @@ const MESSAGES: Record<string, Entry> = {
     en: 'You can delete this chat once the order is complete',
     th: 'คุณสามารถลบแชทนี้ได้เมื่อคำสั่งซื้อเสร็จสมบูรณ์แล้ว',
   },
+  'messages.leakageWarning': {
+    en: "We removed contact details or off-platform payment mentions from your message to keep everyone safe — the rest still sent. Messages are reviewed for anything else that looks unsafe.",
+    th: 'เราได้ลบข้อมูลติดต่อหรือข้อความเกี่ยวกับการชำระเงินนอกแพลตฟอร์มออกจากข้อความของคุณเพื่อความปลอดภัย — ส่วนที่เหลือถูกส่งแล้ว ข้อความจะถูกตรวจสอบหากมีสิ่งอื่นที่ดูไม่ปลอดภัย',
+  },
+  'messages.qrWarning': {
+    en: "We removed a QR code from your photo — sharing payment or contact QR codes isn't allowed here. Messages are reviewed for anything else that looks unsafe.",
+    th: 'เราได้ลบ QR โค้ดออกจากรูปภาพของคุณ — ไม่อนุญาตให้แชร์ QR โค้ดสำหรับชำระเงินหรือติดต่อที่นี่ ข้อความจะถูกตรวจสอบหากมีสิ่งอื่นที่ดูไม่ปลอดภัย',
+  },
+  'messages.hiddenToSender': {
+    en: "Your message was removed — it didn't meet Hiww's chat guidelines and is under review.",
+    th: 'ข้อความของคุณถูกลบออก — ไม่เป็นไปตามแนวทางการแชทของ Hiww และอยู่ระหว่างการตรวจสอบ',
+  },
+  'messages.hiddenToOthers': {
+    en: "A message was removed — it didn't meet Hiww's chat guidelines.",
+    th: 'ข้อความหนึ่งถูกลบออก — ไม่เป็นไปตามแนวทางการแชทของ Hiww',
+  },
 
   // modules/money/routes.ts
   'money.notImplemented': {

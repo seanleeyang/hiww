@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -193,6 +194,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     final feedValue = feed.valueOrNull;
     final closed = feedValue?.closed ?? false;
     final deleted = feedValue?.deleted ?? false;
+    final closesAt = feedValue?.closesAt;
 
     // Mark read whenever new inbound messages land.
     ref.listen(orderMessagesProvider(widget.orderId), (_, next) {
@@ -257,7 +259,9 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-            ),
+            )
+          else if (closesAt != null && !deleted)
+            _ChatClosingSoonBanner(orderId: widget.orderId, closesAt: closesAt),
           Expanded(
             child: AsyncValueView(
               value: feed,
@@ -325,6 +329,61 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
               onTextChanged: _onComposerChanged,
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// A ticking "this chat will close in Xh Xm" banner shown once the order has
+/// been delivered or cancelled but the 24h grace period hasn't elapsed yet
+/// (see `chatClosesAt` in `src/modules/messages/routes.ts`). Purely visual on
+/// a timer — the actual lock only ever happens server-side, so once the
+/// countdown hits zero this just refetches once to pick up the real state.
+class _ChatClosingSoonBanner extends ConsumerStatefulWidget {
+  const _ChatClosingSoonBanner({required this.orderId, required this.closesAt});
+  final String orderId;
+  final DateTime closesAt;
+
+  @override
+  ConsumerState<_ChatClosingSoonBanner> createState() => _ChatClosingSoonBannerState();
+}
+
+class _ChatClosingSoonBannerState extends ConsumerState<_ChatClosingSoonBanner> {
+  Timer? _timer;
+  bool _refreshedOnExpiry = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!mounted) return;
+      if (DateTime.now().isAfter(widget.closesAt) && !_refreshedOnExpiry) {
+        _refreshedOnExpiry = true;
+        ref.invalidate(orderMessagesProvider(widget.orderId));
+      }
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      child: Text(
+        l10n.chatClosingSoonBanner(countdown(widget.closesAt)),
+        style: TextStyle(
+          fontSize: 12,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

@@ -6,8 +6,8 @@ import { recordAudit, actorFromRequest } from '@/services/audit';
 import {
   redactLeakage,
   presentMessageBody,
-  LEAKAGE_WARNING,
-  QR_WARNING,
+  leakageWarning,
+  qrWarning,
   runChatModerationCheck,
 } from '@/services/chat-moderation';
 import { detectQrCode } from '@/services/qr-check';
@@ -28,15 +28,33 @@ function chatDeletedColumnFor(order: any, userId: string): 'chat_deleted_by_shop
 
 const CHAT_CLOSE_GRACE_MS = 24 * 60 * 60 * 1000;
 
-/** The chat stays open for a 24h grace period after delivery — the shopper
- * and traveler often still need to coordinate right after handover (a
- * missing accessory, a thank-you) — then locks for good. */
+/**
+ * The chat stays open for a 24h grace period after the deal is over — either
+ * `delivered` (the shopper and traveler often still need to coordinate right
+ * after handover — a missing accessory, a thank-you) or `cancelled` (nothing
+ * left to negotiate) — then locks for good. Any other status means there's
+ * still an active negotiation/transaction, so the chat never closes.
+ * Returns null while the chat isn't closing at all.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function chatClosesAt(order: any): Date | null {
+  const endedAt =
+    order.status === 'delivered'
+      ? order.delivered_at
+      : order.status === 'cancelled'
+        ? order.cancelled_at
+        : null;
+  if (order.status !== 'delivered' && order.status !== 'cancelled') return null;
+  // Ended but missing the expected timestamp (shouldn't happen) — treat as
+  // already closed rather than leaving the chat open indefinitely.
+  if (!endedAt) return new Date(0);
+  return new Date(new Date(endedAt).getTime() + CHAT_CLOSE_GRACE_MS);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isChatClosed(order: any): boolean {
-  if (order.status !== 'delivered') return false;
-  const deliveredAt = order.delivered_at ? new Date(order.delivered_at).getTime() : null;
-  if (!deliveredAt) return true;
-  return Date.now() - deliveredAt >= CHAT_CLOSE_GRACE_MS;
+  const closesAt = chatClosesAt(order);
+  return closesAt !== null && Date.now() >= closesAt.getTime();
 }
 
 /**
@@ -80,19 +98,22 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         .orderBy('messages.created_at', 'asc')
         .execute();
 
+      const locale = request.locale ?? 'en';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const items = rows.map(({ hidden_at, image_url, ...row }: any) => ({
         ...row,
-        body: presentMessageBody({ ...row, hidden_at }, request.userId!),
+        body: presentMessageBody({ ...row, hidden_at }, request.userId!, locale),
         image_url: hidden_at ? null : image_url,
       }));
 
+      const closesAt = chatClosesAt(order);
       reply.send({
         success: true,
         data: {
           items,
           counterparty_typing: isCounterpartyTyping(request.params.id, request.userId!),
           closed: isChatClosed(order),
+          closes_at: closesAt && closesAt.getTime() > Date.now() ? closesAt.toISOString() : null,
           deleted: false,
         },
         code: 'MESSAGES_LISTED',
@@ -202,9 +223,13 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         await moderation;
       }
 
+      const locale = request.locale ?? 'en';
       reply.status(201).send({
         success: true,
-        data: { id, warning: qrFound ? QR_WARNING : leak.flagged ? LEAKAGE_WARNING : null },
+        data: {
+          id,
+          warning: qrFound ? qrWarning(locale) : leak.flagged ? leakageWarning(locale) : null,
+        },
         code: 'MESSAGE_SENT',
       });
     }
@@ -299,7 +324,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           .executeTakeFirst();
         if (!last) continue;
         const { hidden_at, ...lastPublic } = last;
-        lastPublic.body = presentMessageBody({ ...last, hidden_at }, request.userId!);
+        lastPublic.body = presentMessageBody({ ...last, hidden_at }, request.userId!, request.locale ?? 'en');
         if (hidden_at) lastPublic.image_url = null;
 
         const unread = await request.db
