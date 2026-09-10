@@ -60,7 +60,9 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       }
 
       const now = new Date();
-      await request.db
+      // Guarded by prior status — a concurrent duplicate call can't both fall
+      // through and both run the AI receipt check / send a notification below.
+      const purchased = await request.db
         .updateTable('orders')
         .set({
           status: 'purchased',
@@ -70,7 +72,13 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
           updated_at: now,
         })
         .where('id', '=', order.id)
+        .where('status', '=', 'confirmed')
+        .returning('id')
         .execute();
+      if (purchased.length === 0) {
+        reply.send({ success: true, data: { order_id: order.id, status: 'purchased' }, code: 'PURCHASE_RECORDED' });
+        return;
+      }
 
       await recordAudit(request.db, actorFromRequest(request), {
         action: 'order.purchase_proof',
@@ -149,7 +157,9 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
       }
 
       const now = new Date();
-      await request.db
+      // Guarded by prior status — a concurrent duplicate call no-ops instead
+      // of double-sending the "shipped" notification below.
+      const shipped = await request.db
         .updateTable('orders')
         .set({
           status: 'in_transit',
@@ -158,7 +168,13 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
           updated_at: now,
         })
         .where('id', '=', order.id)
+        .where('status', '=', 'purchased')
+        .returning('id')
         .execute();
+      if (shipped.length === 0) {
+        reply.send({ success: true, data: { order_id: order.id, status: 'in_transit' }, code: 'ORDER_MARKED_DELIVERED' });
+        return;
+      }
 
       await recordAudit(request.db, actorFromRequest(request), {
         action: 'order.ship',
@@ -217,11 +233,19 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
         throw new AppError('INVALID_STATUS', 409, 'delivery.mustBeInTransitToAddShippingProof');
       }
 
-      await request.db
+      // Guarded by status too — if the order raced to `delivered` between the
+      // check above and this write, don't set a shipping-proof URL on an
+      // order that's already past that stage.
+      const updated = await request.db
         .updateTable('orders')
         .set({ shipping_proof_url: parsed.data.image_url, updated_at: new Date() })
         .where('id', '=', order.id)
+        .where('status', '=', 'in_transit')
+        .returning('id')
         .execute();
+      if (updated.length === 0) {
+        throw new AppError('INVALID_STATUS', 409, 'delivery.mustBeInTransitToAddShippingProof');
+      }
 
       await recordAudit(request.db, actorFromRequest(request), {
         action: 'order.shipping_proof',

@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
 import { getIdentityProvider } from '@/services/providers';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const identityVerifySchema = z.object({
   document_type: z.enum(['passport', 'id_card', 'drivers_license']),
@@ -38,6 +39,18 @@ export async function registerExternalRoutes(app: FastifyInstance): Promise<void
       .set({ kyc_status: verification.status === 'verified' ? 'approved' : 'rejected', updated_at: new Date() })
       .where('id', '=', user.id)
       .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'kyc.submit',
+      targetType: 'user',
+      targetId: user.id,
+      summary: `Identity verification submitted via provider (${parsed.data.document_type}) — result: ${verification.status}`,
+      metadata: {
+        document_type: parsed.data.document_type,
+        document_id: parsed.data.document_id,
+        provider_result: verification.status,
+      },
+    });
 
     reply.send({
       success: true,

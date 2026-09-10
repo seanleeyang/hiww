@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const kycSubmitSchema = z.object({
   document_type: z.enum(['passport', 'id_card', 'drivers_license']),
@@ -39,6 +40,16 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
       .set({ kyc_status: 'pending', updated_at: new Date() })
       .where('id', '=', user.id)
       .execute();
+
+    // Nothing else persists what was actually submitted — the audit log is
+    // the only record of it for a reviewer to check against.
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'kyc.submit',
+      targetType: 'user',
+      targetId: user.id,
+      summary: `KYC documents submitted for review (${parsed.data.document_type})`,
+      metadata: { document_type: parsed.data.document_type, document_id: parsed.data.document_id },
+    });
 
     reply.status(201).send({
       success: true,

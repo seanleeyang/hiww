@@ -35,7 +35,13 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       throw new AppError('NOT_FOUND', 404, 'common.disputeNotFound');
     }
 
-    await request.db
+    if (dispute.status !== 'open') {
+      throw new AppError('INVALID_STATUS', 409, 'disputes.notOpen');
+    }
+
+    // Guarded by prior status — two concurrent resolve calls (e.g. two admin
+    // tabs) can't both fall through and both write/re-notify.
+    const resolved = await request.db
       .updateTable('disputes')
       .set({
         status: parsed.data.status,
@@ -43,7 +49,12 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
         updated_at: new Date(),
       })
       .where('id', '=', dispute.id)
+      .where('status', '=', 'open')
+      .returning('id')
       .execute();
+    if (resolved.length === 0) {
+      throw new AppError('INVALID_STATUS', 409, 'disputes.notOpen');
+    }
 
     await recordAudit(request.db, actorFromRequest(request), {
       action: 'dispute.resolve',

@@ -41,17 +41,25 @@ const PUBLIC_GET_ROUTES = new Set<string>([
  * `src/services/otp/`).
  */
 const VERIFICATION_EXEMPT_ROUTES = new Set<string>([
-  '/api/me',
   '/api/auth/verify-otp',
   '/api/auth/resend-otp',
 ]);
+
+/** Same idea, but only for GET — `PATCH /api/me` (editing a profile field)
+ * still requires full verification, only *seeing* your own status doesn't. */
+const VERIFICATION_EXEMPT_GET_ROUTES = new Set<string>(['/api/me']);
 
 /**
  * Routes that require `users.role = 'admin'`. These are the staff-only controls:
  * moving money, reviewing KYC, resolving disputes, flagging accounts and
  * reading operational dashboards.
  */
-const ADMIN_ROUTES = new Set<string>([
+// Exported so tests/integration/admin-route-gating.test.ts can assert every
+// entry is actually 403'd for a non-admin — the fragile part of this
+// allowlist design is that a route renamed/added without a matching entry
+// here silently fails open (becomes an ordinary authenticated request, no
+// error), so that test is the backstop that catches drift.
+export const ADMIN_ROUTES = new Set<string>([
   '/api/admin/reviews',
   '/api/admin/users',
   '/api/admin/audit',
@@ -128,7 +136,10 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
       throw new AppError('ADMIN_REQUIRED', 403, 'authGuard.adminRequired');
     }
 
-    if (!VERIFICATION_EXEMPT_ROUTES.has(routeUrl) && (!actor?.email_verified_at || !actor?.phone_verified_at)) {
+    const verificationExempt =
+      VERIFICATION_EXEMPT_ROUTES.has(routeUrl) ||
+      (request.method === 'GET' && VERIFICATION_EXEMPT_GET_ROUTES.has(routeUrl));
+    if (!verificationExempt && (!actor?.email_verified_at || !actor?.phone_verified_at)) {
       throw new AppError('VERIFICATION_REQUIRED', 403, 'authGuard.verificationRequired');
     }
   });

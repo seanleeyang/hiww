@@ -99,7 +99,9 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
       throw new AppError('INVALID_STATUS', 409, 'disputes.notOpen');
     }
 
-    await request.db
+    // Guarded by prior status — two concurrent resolve calls (e.g. two admin
+    // tabs) can't both fall through and both write/notify.
+    const resolved = await request.db
       .updateTable('disputes')
       .set({
         status: parsed.data.status,
@@ -107,7 +109,12 @@ export async function registerDisputesRoutes(app: FastifyInstance): Promise<void
         updated_at: new Date(),
       })
       .where('id', '=', dispute.id)
+      .where('status', '=', 'open')
+      .returning('id')
       .execute();
+    if (resolved.length === 0) {
+      throw new AppError('INVALID_STATUS', 409, 'disputes.notOpen');
+    }
 
     await recordAudit(request.db, actorFromRequest(request), {
       action: 'dispute.resolve',

@@ -97,6 +97,59 @@ describe('"Request from this trip" — direct requests stay private', () => {
     ).toBe(false);
   });
 
+  it('blocks direct GET by id for anyone but the shopper, the target trip\'s traveler, or an admin', async () => {
+    const { sean, passakorn, tripId } = await setup();
+    const stranger = await createUser(ctx, { user_type: 'shopper' });
+    const admin = await createUser(ctx, { admin: true });
+
+    const created = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/requests',
+      headers: authHeader(passakorn),
+      payload: {
+        item_description: 'Only Sean should ever see this by id',
+        source_country: 'JP',
+        category: 'other',
+        estimated_weight_kg: 1,
+        budget: '50.00',
+        destination_country: 'TH',
+        target_trip_id: tripId,
+      },
+    });
+    const requestId = created.json().data.id as string;
+
+    const asStranger = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/requests/${requestId}`,
+      headers: authHeader(stranger),
+    });
+    expect(asStranger.statusCode).toBe(404);
+
+    const asGuest = await ctx.app.inject({ method: 'GET', url: `/api/requests/${requestId}` });
+    expect(asGuest.statusCode).toBe(404);
+
+    const asShopper = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/requests/${requestId}`,
+      headers: authHeader(passakorn),
+    });
+    expect(asShopper.statusCode).toBe(200);
+
+    const asTargetTraveler = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/requests/${requestId}`,
+      headers: authHeader(sean),
+    });
+    expect(asTargetTraveler.statusCode).toBe(200);
+
+    const asAdmin = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/requests/${requestId}`,
+      headers: authHeader(admin),
+    });
+    expect(asAdmin.statusCode).toBe(200);
+  });
+
   it('blocks a different traveler from offering on a want targeted at someone else\'s trip', async () => {
     const { passakorn, tripId } = await setup();
     const otherTraveler = await createUser(ctx, { user_type: 'traveler' });

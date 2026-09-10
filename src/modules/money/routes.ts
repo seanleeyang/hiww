@@ -112,10 +112,14 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
 
       // Idempotent: only the first confirm transitions the order. Repeats are a
       // no-op that report the current state rather than moving money twice.
+      // `already_confirmed` is only true if the order genuinely was confirmed
+      // at some point — an order that expired unpaid and was auto-cancelled
+      // (see expireOverduePayments above) never was, even though it's also
+      // not `pending_payment` anymore.
       if (order.status !== 'pending_payment') {
         reply.send({
           success: true,
-          data: { status: order.status, order_id: order.id, already_confirmed: order.status !== 'pending_payment' },
+          data: { status: order.status, order_id: order.id, already_confirmed: order.status !== 'cancelled' },
           code: 'PAYMENT_ALREADY_RECORDED',
         });
         return;
@@ -128,11 +132,25 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
       }
 
       const now = new Date();
-      await request.db
+      // Guarded by prior status so two concurrent confirms can't both fall
+      // through and both transition — the loser gets zero rows back and
+      // no-ops (the order really is confirmed by the time it replies, just
+      // not by this particular call).
+      const confirmed = await request.db
         .updateTable('orders')
         .set({ status: 'confirmed', confirmed_at: now, updated_at: now })
         .where('id', '=', order.id)
+        .where('status', '=', 'pending_payment')
+        .returning('id')
         .execute();
+      if (confirmed.length === 0) {
+        reply.send({
+          success: true,
+          data: { status: 'confirmed', order_id: order.id, already_confirmed: true },
+          code: 'PAYMENT_ALREADY_RECORDED',
+        });
+        return;
+      }
 
       await recordAudit(request.db, actorFromRequest(request), {
         action: 'payment.confirm',

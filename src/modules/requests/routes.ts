@@ -178,6 +178,39 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
       }
 
+      // A want sent via "Request from this trip" is private between the
+      // shopper and that one trip's traveler — nobody else can see it, even
+      // by id (it's already excluded from every browse/feed query, and
+      // offers/routes.ts enforces the same rule for offering on it). 404
+      // rather than 403 so a non-party can't even confirm it exists.
+      //
+      // This route is in PUBLIC_GET_ROUTES (guests can view a plain want), so
+      // the auth guard never resolves `request.userRole` for it — the admin
+      // check has to do its own lookup rather than trusting that field here.
+      if (itemRequest.target_trip_id && itemRequest.shopper_id !== request.userId) {
+        const targetTrip = request.userId
+          ? await request.db
+              .selectFrom('trips')
+              .select('traveler_id')
+              .where('id', '=', itemRequest.target_trip_id)
+              .executeTakeFirst()
+          : undefined;
+        const isTargetTraveler = Boolean(request.userId) && targetTrip?.traveler_id === request.userId;
+        const isAdmin =
+          !isTargetTraveler && request.userId
+            ? (
+                await request.db
+                  .selectFrom('users')
+                  .select('role')
+                  .where('id', '=', request.userId)
+                  .executeTakeFirst()
+              )?.role === 'admin'
+            : false;
+        if (!isTargetTraveler && !isAdmin) {
+          throw new AppError('NOT_FOUND', 404, 'common.requestNotFound');
+        }
+      }
+
       const shopper = await request.db
         .selectFrom('users')
         .select([...USER_SUMMARY_COLUMNS])

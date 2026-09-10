@@ -46,6 +46,17 @@ describe('OTP verification at registration', () => {
     const trips = await ctx.app.inject({ method: 'GET', url: '/api/trips', headers });
     expect(trips.statusCode).toBe(403);
     expect(trips.json().code).toBe('VERIFICATION_REQUIRED');
+
+    // The exemption is GET-only — editing the profile still requires full
+    // verification, even though *viewing* it doesn't.
+    const patch = await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers,
+      payload: { full_name: 'New Name' },
+    });
+    expect(patch.statusCode).toBe(403);
+    expect(patch.json().code).toBe('VERIFICATION_REQUIRED');
   });
 
   it('rejects a wrong or already-consumed code', async () => {

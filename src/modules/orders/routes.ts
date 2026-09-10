@@ -206,26 +206,32 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         );
       }
 
-      await request.db
+      // Guarded so a double-tap/concurrent duplicate can't both fall through
+      // and both notify the traveler.
+      const claimed = await request.db
         .updateTable('orders')
         .set({ payment_claimed_at: new Date(), updated_at: new Date() })
         .where('id', '=', order.id)
+        .where('payment_claimed_at', 'is', null)
+        .returning('id')
         .execute();
 
-      await recordAudit(request.db, actorFromRequest(request), {
-        action: 'order.payment_claim',
-        targetType: 'order',
-        targetId: order.id,
-        summary: `Shopper reported paying for order ${order.id} (${order.total_price}) — awaiting confirmation`,
-        metadata: { total_price: order.total_price, shopper_id: order.shopper_id },
-      });
+      if (claimed.length > 0) {
+        await recordAudit(request.db, actorFromRequest(request), {
+          action: 'order.payment_claim',
+          targetType: 'order',
+          targetId: order.id,
+          summary: `Shopper reported paying for order ${order.id} (${order.total_price}) — awaiting confirmation`,
+          metadata: { total_price: order.total_price, shopper_id: order.shopper_id },
+        });
 
-      await recordNotification(request.db, {
-        userId: order.traveler_id,
-        type: 'payment_claimed',
-        params: { item: order.item_description },
-        orderId: order.id,
-      });
+        await recordNotification(request.db, {
+          userId: order.traveler_id,
+          type: 'payment_claimed',
+          params: { item: order.item_description },
+          orderId: order.id,
+        });
+      }
 
       reply.send({
         success: true,

@@ -23,6 +23,7 @@ export type AuditAction =
   | 'order.payout'
   | 'dispute.open'
   | 'dispute.resolve'
+  | 'kyc.submit'
   | 'kyc.review'
   | 'user.flag'
   | 'user.password_reset'
