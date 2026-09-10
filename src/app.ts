@@ -6,6 +6,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import type { Kysely } from 'kysely';
 import { config } from '@/config/env';
 import { createDatabase } from '@/db/connection';
@@ -46,8 +47,12 @@ function loadStatic(file: string): string {
     return `<!doctype html><meta charset="utf-8"><title>Hiww</title><p>${file} not found. The API is still running.</p>`;
   }
 }
-const CONSOLE_HTML = loadStatic('admin.html');
 const APP_HTML = loadStatic('app.html');
+// The admin console is a built React app (admin-web/) — its index.html is
+// copied to public/admin/ at Docker build time (see Dockerfile). Loaded here
+// only as the SPA-routing fallback; the actual JS/CSS bundle is served as
+// static files by @fastify/static below.
+const ADMIN_INDEX_HTML = loadStatic('admin/index.html');
 
 export interface BuildAppOptions {
   /**
@@ -85,8 +90,10 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const ownsDb = options.db === undefined;
 
   await app.register(cors, { origin: true });
-  // CSP is disabled so the single-file local console (public/admin.html) works.
-  // The API serves only JSON; revisit this when there is a real hosted frontend.
+  // CSP is disabled so the single-file user web app (public/app.html, with
+  // its inline <script>) works. The admin console (admin-web/) is a real
+  // built app with no inline scripts and could run under a real CSP —
+  // revisit this once app.html is retired too.
   // CORP is relaxed to cross-origin so the web app (a different origin) can load
   // uploaded images from `/uploads/*`; CORS is already `origin: true`.
   await app.register(helmet, {
@@ -122,13 +129,27 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     });
   });
 
-  // Static pages that talk to this API: the operator console and the user app.
+  // Static pages that talk to this API: the user app (single HTML file) and
+  // the admin console (a built React app — real JS/CSS assets, served from
+  // disk; client-side routes like /admin/orders/<id> fall back to its
+  // index.html via the notFoundHandler below).
   const html = (body: string) => async (_request: unknown, reply: FastifyReply): Promise<void> => {
     void reply.type('text/html; charset=utf-8').send(body);
   };
   app.get('/', html(APP_HTML));
   app.get('/app', html(APP_HTML));
-  app.get('/admin', html(CONSOLE_HTML));
+  await app.register(fastifyStatic, {
+    root: join(process.cwd(), 'public', 'admin'),
+    prefix: '/admin/',
+    decorateReply: false,
+  });
+  app.setNotFoundHandler((request, reply) => {
+    if (request.method === 'GET' && request.url.startsWith('/admin')) {
+      void reply.type('text/html; charset=utf-8').send(ADMIN_INDEX_HTML);
+      return;
+    }
+    void reply.status(404).send({ success: false, error: 'Not found', code: 'NOT_FOUND' });
+  });
 
   await registerAuthRoutes(app);
   await registerTripsRoutes(app);

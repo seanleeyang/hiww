@@ -1,4 +1,4 @@
-# --- build stage -------------------------------------------------------------
+# --- backend build stage -----------------------------------------------------
 FROM node:20-alpine AS build
 WORKDIR /app
 
@@ -6,6 +6,16 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+RUN npm run build
+
+# --- admin console build stage ------------------------------------------------
+FROM node:20-alpine AS admin-build
+WORKDIR /app/admin-web
+
+COPY admin-web/package*.json ./
+RUN npm ci
+
+COPY admin-web/ .
 RUN npm run build
 
 # --- runtime stage ----------------------------------------------------------
@@ -28,6 +38,11 @@ COPY --from=build /app/migrations ./migrations
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/reset-db.ts ./reset-db.ts
 COPY --from=build /app/tsconfig.json ./tsconfig.json
+
+# The admin console (a real React/Vite app — see admin-web/) is built
+# separately above and its static output copied in here, served under
+# /admin/* by @fastify/static (see src/app.ts).
+COPY --from=admin-build /app/admin-web/dist ./public/admin
 
 # uploads/ is created at boot (registerUploadRoutes) and must be writable by
 # the unprivileged `node` user this container drops to below; everything

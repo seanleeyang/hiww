@@ -11,7 +11,7 @@ describe('operator console', () => {
     await closeTestApp(ctx);
   });
 
-  it('serves the user app at / and /app, and the console at /admin, without auth', async () => {
+  it('serves the user app at / and /app, and the admin console at /admin, without auth', async () => {
     for (const url of ['/', '/app', '/admin']) {
       const res = await ctx.app.inject({ method: 'GET', url });
       expect(res.statusCode).toBe(200);
@@ -19,9 +19,23 @@ describe('operator console', () => {
       expect(res.body).toContain('Hiww');
     }
     const console = await ctx.app.inject({ method: 'GET', url: '/admin' });
-    expect(console.body).toContain('Pilot Console');
+    expect(console.body).toContain('Hiww Admin');
     const app = await ctx.app.inject({ method: 'GET', url: '/app' });
     expect(app.body).toContain('Browse requests');
+  });
+
+  it('falls back to the admin shell for a client-side route with no matching static file', async () => {
+    const res = await ctx.app.inject({ method: 'GET', url: '/admin/orders/some-fake-id' });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('text/html');
+    expect(res.body).toContain('Hiww Admin');
+  });
+
+  it('a genuinely unmatched API route still gets a normal JSON 404, not the admin shell', async () => {
+    const res = await ctx.app.inject({ method: 'GET', url: '/api/does-not-exist' });
+    expect(res.statusCode).toBe(404);
+    expect(res.headers['content-type']).toContain('application/json');
+    expect(res.json()).toMatchObject({ success: false, code: 'NOT_FOUND' });
   });
 
   it('GET /api/admin/users lists users for an admin and is blocked otherwise', async () => {

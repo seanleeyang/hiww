@@ -15,3 +15,6 @@ coverage/
 *.swo
 *~
 .idea/
+# Built admin console (admin-web/) — copied here by the Dockerfile at image
+# build time, never committed. See admin-web/README.md for local dev.
+/public/admin/

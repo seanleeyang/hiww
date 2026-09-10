@@ -16,9 +16,15 @@ const PUBLIC_ROUTES = new Set<string>([
   '/api/auth/reset-password',
   '/',
   '/app',
-  '/admin',
   // Static serving of user-uploaded images (@fastify/static wildcard route).
   '/uploads/*',
+  // The built admin console (React app) — its JS/CSS/index.html need no
+  // token to load; auth is enforced only on the /api/admin/* calls it makes
+  // once loaded. A client-side route with no matching static file (e.g.
+  // /admin/orders/<id>) falls through to the app's notFoundHandler, which
+  // Fastify's routing never resolves to a route at all — the guard already
+  // treats any unmatched route as public (see `matchedRoute` below).
+  '/admin/*',
 ]);
 
 /**

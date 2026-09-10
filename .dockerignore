@@ -20,3 +20,7 @@ uploads
 *.md
 postman
 *.postman_collection.json
+
+# admin-web is built in its own Docker stage (see Dockerfile) — a stale
+# local build under public/admin must never leak into the image.
+public/admin
