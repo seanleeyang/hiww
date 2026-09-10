@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -201,15 +200,14 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
       builder: (context) => SimpleDialog(
         title: Text(widget.label),
         children: [
-          if (!kIsWeb)
-            SimpleDialogOption(
-              onPressed: () =>
-                  Navigator.pop(context, const _SheetChoice.camera()),
-              child: const _MenuRow(
-                icon: Icons.photo_camera_outlined,
-                label: 'Take a photo',
-              ),
+          SimpleDialogOption(
+            onPressed: () =>
+                Navigator.pop(context, const _SheetChoice.camera()),
+            child: const _MenuRow(
+              icon: Icons.photo_camera_outlined,
+              label: 'Take a photo',
             ),
+          ),
           SimpleDialogOption(
             onPressed: () =>
                 Navigator.pop(context, const _SheetChoice.gallery()),
