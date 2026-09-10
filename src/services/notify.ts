@@ -2,6 +2,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from '@/types/database';
 import { generateId } from '@/utils/helpers';
 import { renderNotification } from '@/i18n/notifications';
+import { sendPush } from '@/services/push-notify';
 
 /**
  * Canonical notification event kinds. The mobile app switches on these for the
@@ -39,9 +40,13 @@ export interface NotificationInput {
 }
 
 /**
- * Append one in-app notification. Best-effort, exactly like {@link recordAudit}:
- * a delivery failure must never break the state change that triggered it, so
- * callers `await` it but errors are swallowed with a warning.
+ * Append one in-app notification and fire a "hard" push alongside it — every
+ * event that shows up in the notification feed also reaches the user's
+ * device even with the app closed, without each call site having to
+ * remember to wire push separately. Best-effort, exactly like
+ * {@link recordAudit}: a delivery failure must never break the state change
+ * that triggered it, so callers `await` it but errors are swallowed with a
+ * warning.
  *
  * Pass the same `db`/`trx` the action ran on so the row commits atomically with
  * it where a transaction is in play.
@@ -51,9 +56,9 @@ export async function recordNotification(
   db: Kysely<Database> | any,
   input: NotificationInput
 ): Promise<void> {
+  const link = input.link ?? (input.orderId ? `/orders/${input.orderId}` : null);
+  const { subject, body } = renderNotification('en', input.type, input.params);
   try {
-    const link = input.link ?? (input.orderId ? `/orders/${input.orderId}` : null);
-    const { subject, body } = renderNotification('en', input.type, input.params);
     await db
       .insertInto('notifications')
       .values({
@@ -72,6 +77,10 @@ export async function recordNotification(
     // eslint-disable-next-line no-console
     console.warn('[notify] failed to record', input.type, input.userId, err);
   }
+
+  // Push is independent of the in-app row above succeeding — a device
+  // should still be alerted even if, say, the insert raced a bad state.
+  await sendPush(db, input.userId, { title: subject, body, data: { link: link ?? '' } });
 }
 
 /** Fan a single event out to several recipients. */

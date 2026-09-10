@@ -5,8 +5,6 @@ import { AppError, generateId } from '@/utils/helpers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
-import { renderNotification } from '@/i18n/notifications';
-import { sendPush } from '@/services/push-notify';
 import { requireCompleteProfile } from '@/utils/profile-guard';
 import { expireOverdueOffers } from '@/services/offer-expiry';
 import { calculatePricing } from '@/services/pricing';
@@ -412,18 +410,6 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             orderId,
           },
         ]);
-      });
-
-      // The payment countdown starts the instant this order exists — the
-      // shopper gets a "hard" push here too, not just the in-app feed,
-      // since they need to know to pay even with the app fully closed.
-      // Done after the transaction commits: it's a network call to an
-      // external provider and shouldn't hold the DB transaction open.
-      const shopperPush = renderNotification('en', 'offer_accepted', shopperNotificationParams);
-      await sendPush(request.db, requestRow.shopper_id, {
-        title: shopperPush.subject,
-        body: shopperPush.body,
-        data: { link: `/orders/${orderId}` },
       });
 
       reply.send({ success: true, data: { order_id: orderId, offer_id: offer.id }, code: 'OFFER_ACCEPTED' });

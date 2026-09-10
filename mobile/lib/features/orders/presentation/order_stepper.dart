@@ -32,11 +32,16 @@ class OrderStepper extends StatelessWidget {
 
   /// Most stages represent an ongoing state — "Bought" stays a dot (not a
   /// tick) for as long as the traveler is carrying the item, only ticking
-  /// once the *next* action (shipping) happens. "Paid" (index 1) has no
-  /// such in-between state: it's a discrete event that's done the instant
-  /// payment is confirmed, so it ticks immediately rather than waiting for
-  /// the order to move past it.
-  bool _isDone(int index) => index == 1 ? _reached >= 1 : index < _reached;
+  /// once the *next* action (shipping) happens. "Accepted" (index 0) and
+  /// "Paid" (index 1) have no such in-between state: an order can't exist
+  /// at all unless an offer was already accepted, so index 0 is always
+  /// done; "Paid" is done the instant payment is confirmed, so it ticks
+  /// immediately too rather than waiting for the order to move past it.
+  bool _isDone(int index) => switch (index) {
+        0 => true,
+        1 => _reached >= 1,
+        _ => index < _reached,
+      };
 
   /// The first not-yet-done stage — normally just `_reached`, except once
   /// the Paid exception above ticks early, in which case the active stage

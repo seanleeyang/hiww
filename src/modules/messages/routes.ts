@@ -12,6 +12,7 @@ import {
 } from '@/services/chat-moderation';
 import { detectQrCode } from '@/services/qr-check';
 import { recordTyping, isCounterpartyTyping } from '@/services/typing';
+import { sendPush } from '@/services/push-notify';
 import { config } from '@/config/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -166,6 +167,17 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
           metadata: { risk: 'medium', reasons: leak.reasons, original_body: parsed.data.body },
         });
       }
+
+      // Chat isn't recorded in the notifications feed (Inbox already has its
+      // own Messages tab), but it gets the same "hard" push everything else
+      // does — a reply while the app is closed is exactly what push exists
+      // for. Best-effort, uses the already-redacted body.
+      const recipientId = order.shopper_id === request.userId ? order.traveler_id : order.shopper_id;
+      await sendPush(request.db, recipientId, {
+        title: `New message about "${order.item_description}"`,
+        body: leak.body ? leak.body.slice(0, 120) : 'Sent a photo',
+        data: { link: `/orders/${request.params.id}/chat` },
+      });
 
       // Runs after the response so it never slows down sending. Checks the
       // already-redacted text and, if present, the photo (never a QR photo —
