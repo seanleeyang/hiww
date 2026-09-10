@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
@@ -33,6 +34,7 @@ class TripFeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final showEarnBadge =
         earnMin != null && earnMax != null && (double.tryParse(earnMax!) ?? 0) >= _earnBadgeFloor;
     return SoftCard(
@@ -70,13 +72,16 @@ class TripFeedCard extends StatelessWidget {
                 Row(
                   children: [
                     if (trip.maxWeightKg > 0)
-                      IconLine(Icons.luggage_outlined,
-                          '${trip.maxWeightKg.toStringAsFixed(trip.maxWeightKg % 1 == 0 ? 0 : 1)} kg free'),
+                      IconLine(
+                        Icons.luggage_outlined,
+                        l10n.feedTripWeightFree(
+                          trip.maxWeightKg.toStringAsFixed(trip.maxWeightKg % 1 == 0 ? 0 : 1),
+                        ),
+                      ),
                     if (trip.maxWeightKg > 0 && matchCount > 0)
                       const SizedBox(width: 14),
                     if (matchCount > 0)
-                      IconLine(Icons.favorite_outline,
-                          '${pluralize(matchCount, 'want')} on this route'),
+                      IconLine(Icons.favorite_outline, l10n.feedTripMatchCount(matchCount)),
                   ],
                 ),
               ],
@@ -104,6 +109,7 @@ class WantFeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     return SoftCard(
       onTap: onTap,
@@ -115,7 +121,7 @@ class WantFeedCard extends StatelessWidget {
               if (shopper != null)
                 Expanded(child: AvatarRating(user: shopper!, dense: true)),
               Text(
-                'wants from ${want.sourceLabel}',
+                l10n.feedWantSourceLabel(want.sourceLabel),
                 style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
               ),
             ],
@@ -154,7 +160,7 @@ class WantFeedCard extends StatelessWidget {
                       spacing: 12,
                       runSpacing: 4,
                       children: [
-                        IconLine(Icons.sell_outlined, 'Budget ${want.budgetLabel}'),
+                        IconLine(Icons.sell_outlined, l10n.feedWantBudgetLabel(want.budgetLabel)),
                         if (want.needByLabel != null)
                           IconLine(Icons.event_outlined, want.needByLabel!),
                       ],
@@ -166,9 +172,7 @@ class WantFeedCard extends StatelessWidget {
           ),
           if (matchCount > 0) ...[
             const SizedBox(height: 12),
-            RouteMatchHint(
-              text: '${pluralize(matchCount, 'traveler')} on this route',
-            ),
+            RouteMatchHint(text: l10n.feedWantMatchCount(matchCount)),
           ],
         ],
       ),

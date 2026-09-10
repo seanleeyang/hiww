@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
@@ -136,9 +137,14 @@ class _WeekdayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final locale = AppLocalizations.of(context)!.localeName;
     // DateTime.weekday is 1=Mon..7=Sun; start the header on Sunday to match
-    // the grid below, which lays out Sunday-first weeks.
-    const labels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    // the grid below, which lays out Sunday-first weeks. 2024-01-07 was a
+    // Sunday, used here purely as a reference date to format weekday names.
+    final labels = [
+      for (var i = 0; i < 7; i++)
+        DateFormat('E', locale).format(DateTime(2024, 1, 7 + i)).toUpperCase(),
+    ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(
@@ -174,17 +180,13 @@ class _MonthGrid extends StatelessWidget {
   final DateTime? end;
   final ValueChanged<DateTime> onTapDay;
 
-  static const _monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
-
   bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final locale = AppLocalizations.of(context)!.localeName;
     final firstOfMonth = DateTime(month.year, month.month);
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     // weekday: 1=Mon..7=Sun -> convert to 0=Sun..6=Sat leading blanks.
@@ -200,7 +202,7 @@ class _MonthGrid extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            '${_monthNames[month.month - 1]} ${month.year}',
+            DateFormat('MMMM y', locale).format(month),
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           ),
         ),

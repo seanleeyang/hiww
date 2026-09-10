@@ -866,6 +866,36 @@ abstract class AppLocalizations {
   /// **'Post your trip'**
   String get heroTravelCta;
 
+  /// No description provided for @feedTripWeightFree.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} kg free'**
+  String feedTripWeightFree(String weight);
+
+  /// No description provided for @feedTripMatchCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 want on this route} other{{count} wants on this route}}'**
+  String feedTripMatchCount(num count);
+
+  /// No description provided for @feedWantSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'wants from {source}'**
+  String feedWantSourceLabel(String source);
+
+  /// No description provided for @feedWantBudgetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget {budget}'**
+  String feedWantBudgetLabel(String budget);
+
+  /// No description provided for @feedWantMatchCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 traveler on this route} other{{count} travelers on this route}}'**
+  String feedWantMatchCount(num count);
+
   /// No description provided for @tooltipSort.
   ///
   /// In en, this message translates to:

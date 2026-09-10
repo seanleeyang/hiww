@@ -430,6 +430,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get heroTravelCta => 'Post your trip';
 
   @override
+  String feedTripWeightFree(String weight) {
+    return '$weight kg free';
+  }
+
+  @override
+  String feedTripMatchCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wants on this route',
+      one: '1 want on this route',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String feedWantSourceLabel(String source) {
+    return 'wants from $source';
+  }
+
+  @override
+  String feedWantBudgetLabel(String budget) {
+    return 'Budget $budget';
+  }
+
+  @override
+  String feedWantMatchCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers on this route',
+      one: '1 traveler on this route',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get tooltipSort => 'Sort';
 
   @override

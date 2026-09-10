@@ -14,9 +14,10 @@ import '../../discovery/data/discovery_repository.dart';
 import '../data/wants_repository.dart';
 import '../domain/want.dart';
 
-/// Edits an existing want in place. Creating a new want is a separate,
-/// full-screen flow — see `create_order_screen.dart` (`CreateOrderScreen` +
-/// `WantSummaryScreen`, reached via `/wants/new`).
+/// Edits an existing want in place — a single-page sheet, since editing
+/// doesn't need the form+Summary review ceremony of creating one from
+/// scratch. Creating a new want is a separate two-page bottom sheet — see
+/// `create_order_sheet.dart`'s `showCreateOrderSheet`.
 Future<void> showEditWantSheet(BuildContext context, {required Want existing}) {
   return showModalBottomSheet<void>(
     context: context,

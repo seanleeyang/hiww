@@ -4,10 +4,13 @@ import 'package:hiww_mobile/features/discovery/presentation/feed_cards.dart';
 import 'package:hiww_mobile/features/shared/domain/user_summary.dart';
 import 'package:hiww_mobile/features/trips/domain/trip.dart';
 import 'package:hiww_mobile/features/wants/domain/want.dart';
+import 'package:hiww_mobile/l10n/app_localizations.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
       theme: hiwwTheme(Brightness.light),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: SingleChildScrollView(child: child)),
     );
 

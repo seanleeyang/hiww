@@ -87,6 +87,17 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   String? _error;
   bool _submitting = false;
 
+  final _photoKey = GlobalKey();
+  final _titleKey = GlobalKey();
+  final _detailsKey = GlobalKey();
+  final _buyInKey = GlobalKey();
+  final _deliverToKey = GlobalKey();
+  String? _photoError;
+  String? _titleError;
+  String? _detailsError;
+  String? _buyInError;
+  String? _deliverToError;
+
   bool get _isDirectRequest => widget.targetTripId != null;
 
   /// `_category` stores the lowercase id (e.g. "beauty") CategoryChips uses
@@ -128,49 +139,44 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
     super.dispose();
   }
 
-  /// Returns whether every required field is filled; sets [_error] as a
-  /// side effect (to the first missing/invalid one) either way.
+  /// Returns whether every required field is filled; sets each field's own
+  /// error message as a side effect and scrolls to the first invalid one.
   bool _validate() {
     final l10n = AppLocalizations.of(context)!;
     final title = _title.text.trim();
     final details = _details.text.trim();
-    if (_photoUrl == null || _photoUrl!.isEmpty) {
-      _error = l10n.errorPhotoRequired;
+
+    _photoError = (_photoUrl == null || _photoUrl!.isEmpty) ? l10n.errorPhotoRequired : null;
+    _titleError = title.isEmpty
+        ? l10n.errorWantTitleBlank
+        : (title.length < 3 ? l10n.errorWantTitleTooShort : null);
+    _detailsError = details.isEmpty
+        ? l10n.errorWantDetailsBlank
+        : (details.length < 10 ? l10n.errorWantDetailsTooShort : null);
+    _buyInError = _country.isEmpty
+        ? l10n.errorBuyInCountryRequired
+        : (!_cityIsChosen ? l10n.errorBuyInCityRequired : null);
+    _deliverToError = _destCountry.isEmpty
+        ? l10n.errorDeliverToCountryRequired
+        : (_destCityValue.isEmpty ? l10n.errorDeliverToCityRequired : null);
+
+    GlobalKey? firstInvalid;
+    if (_photoError != null) firstInvalid ??= _photoKey;
+    if (_titleError != null) firstInvalid ??= _titleKey;
+    if (_detailsError != null) firstInvalid ??= _detailsKey;
+    if (_buyInError != null) firstInvalid ??= _buyInKey;
+    if (_deliverToError != null) firstInvalid ??= _deliverToKey;
+
+    final scrollTarget = firstInvalid;
+    if (scrollTarget != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = scrollTarget.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), alignment: 0.2);
+        }
+      });
       return false;
     }
-    if (title.isEmpty) {
-      _error = l10n.errorWantTitleBlank;
-      return false;
-    }
-    if (title.length < 3) {
-      _error = l10n.errorWantTitleTooShort;
-      return false;
-    }
-    if (details.isEmpty) {
-      _error = l10n.errorWantDetailsBlank;
-      return false;
-    }
-    if (details.length < 10) {
-      _error = l10n.errorWantDetailsTooShort;
-      return false;
-    }
-    if (_country.isEmpty) {
-      _error = l10n.errorBuyInCountryRequired;
-      return false;
-    }
-    if (!_cityIsChosen) {
-      _error = l10n.errorBuyInCityRequired;
-      return false;
-    }
-    if (_destCountry.isEmpty) {
-      _error = l10n.errorDeliverToCountryRequired;
-      return false;
-    }
-    if (_destCityValue.isEmpty) {
-      _error = l10n.errorDeliverToCityRequired;
-      return false;
-    }
-    _error = null;
     return true;
   }
 
@@ -358,18 +364,36 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          ImagePickerField(
-            value: _photoUrl,
-            onChanged: (url) => setState(() => _photoUrl = url),
-            label: l10n.fieldPhoto,
+          Column(
+            key: _photoKey,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ImagePickerField(
+                value: _photoUrl,
+                onChanged: (url) => setState(() {
+                  _photoUrl = url;
+                  _photoError = null;
+                }),
+                label: l10n.fieldPhoto,
+              ),
+              if (_photoError != null) ...[
+                const SizedBox(height: 4),
+                Text(_photoError!, style: TextStyle(color: scheme.error, fontSize: 12)),
+              ],
+            ],
           ),
           const SizedBox(height: 12),
           TextField(
+            key: _titleKey,
             controller: _title,
             textCapitalization: TextCapitalization.words,
+            onChanged: (_) {
+              if (_titleError != null) setState(() => _titleError = null);
+            },
             decoration: InputDecoration(
               labelText: l10n.fieldItem,
               hintText: l10n.hintItemExample,
+              errorText: _titleError,
             ),
           ),
           const SizedBox(height: 14),
@@ -386,9 +410,13 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
           ),
           const SizedBox(height: 8),
           TextField(
+            key: _detailsKey,
             controller: _details,
             maxLines: 2,
-            decoration: InputDecoration(hintText: l10n.hintDetails),
+            onChanged: (_) {
+              if (_detailsError != null) setState(() => _detailsError = null);
+            },
+            decoration: InputDecoration(hintText: l10n.hintDetails, errorText: _detailsError),
           ),
           const SizedBox(height: 14),
           Text(l10n.labelCategory, style: Theme.of(context).textTheme.labelLarge),
@@ -459,6 +487,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
           Text(l10n.labelBuyIn, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           Row(
+            key: _buyInKey,
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
@@ -473,6 +502,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                     _country = v ?? unselected;
                     _cityChoice = unselected;
                     _cityCustom.clear();
+                    _buyInError = null;
                   }),
                 ),
               ),
@@ -492,7 +522,10 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   ],
                   onChanged: _country.isEmpty
                       ? null
-                      : (v) => setState(() => _cityChoice = v ?? unselected),
+                      : (v) => setState(() {
+                            _cityChoice = v ?? unselected;
+                            _buyInError = null;
+                          }),
                 ),
               ),
             ],
@@ -501,11 +534,18 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
             const SizedBox(height: 8),
             TextField(
               controller: _cityCustom,
+              onChanged: (_) {
+                if (_buyInError != null) setState(() => _buyInError = null);
+              },
               decoration: InputDecoration(
                 labelText: l10n.fieldCity,
                 hintText: l10n.hintCityCustom,
               ),
             ),
+          ],
+          if (_buyInError != null) ...[
+            const SizedBox(height: 4),
+            Text(_buyInError!, style: TextStyle(color: scheme.error, fontSize: 12)),
           ],
           if (routeMatch != null) ...[
             const SizedBox(height: 4),
@@ -541,6 +581,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
           Text(l10n.labelDeliverTo, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           Row(
+            key: _deliverToKey,
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
@@ -555,6 +596,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                     _destCountry = v ?? unselected;
                     _destCityChoice = unselected;
                     _destCityCustom.clear();
+                    _deliverToError = null;
                   }),
                 ),
               ),
@@ -573,7 +615,10 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   ],
                   onChanged: _destCountry.isEmpty
                       ? null
-                      : (v) => setState(() => _destCityChoice = v ?? unselected),
+                      : (v) => setState(() {
+                            _destCityChoice = v ?? unselected;
+                            _deliverToError = null;
+                          }),
                 ),
               ),
             ],
@@ -582,11 +627,18 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
             const SizedBox(height: 8),
             TextField(
               controller: _destCityCustom,
+              onChanged: (_) {
+                if (_deliverToError != null) setState(() => _deliverToError = null);
+              },
               decoration: InputDecoration(
                 labelText: l10n.fieldCity,
                 hintText: l10n.hintCityCustom,
               ),
             ),
+          ],
+          if (_deliverToError != null) ...[
+            const SizedBox(height: 4),
+            Text(_deliverToError!, style: TextStyle(color: scheme.error, fontSize: 12)),
           ],
           const SizedBox(height: 18),
           Text(l10n.labelBudget, style: Theme.of(context).textTheme.labelLarge),
@@ -601,10 +653,6 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
               l10n.budgetTotalNote(_qty),
               style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
-          ],
-          if (_error != null && _page == 0) ...[
-            const SizedBox(height: 12),
-            Text(_error!, style: TextStyle(color: scheme.error)),
           ],
           const SizedBox(height: 18),
           FilledButton(

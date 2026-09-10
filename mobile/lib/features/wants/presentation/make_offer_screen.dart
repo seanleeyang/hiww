@@ -18,6 +18,10 @@ import '../data/offers_repository.dart';
 import '../data/wants_repository.dart';
 import '../domain/want.dart';
 
+/// A full-screen push route, not a bottom sheet — reached by drilling into
+/// an existing want, and it's a single price field, so it doesn't need the
+/// sheet-with-Summary-review treatment the two "create from scratch via FAB"
+/// flows use (`create_order_sheet.dart`, `add_trip_sheet.dart`).
 class MakeOfferScreen extends ConsumerStatefulWidget {
   const MakeOfferScreen({super.key, required this.wantId});
   final String wantId;

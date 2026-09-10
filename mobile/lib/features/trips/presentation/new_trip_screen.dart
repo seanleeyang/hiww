@@ -37,6 +37,11 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
   bool _submitting = false;
   String? _error;
 
+  final _datesKey = GlobalKey();
+  final _weightItemsKey = GlobalKey();
+  String? _datesError;
+  String? _weightItemsError;
+
   @override
   void dispose() {
     _fromCity.dispose();
@@ -51,19 +56,34 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
     final l10n = AppLocalizations.of(context)!;
     final weight = double.tryParse(_weight.text.trim());
     final items = int.tryParse(_items.text.trim());
+
+    String? datesError;
     if (_depart == null || _ret == null) {
-      setState(() => _error = l10n.errorPickTravelDates);
+      datesError = l10n.errorPickTravelDates;
+    } else if (!_ret!.isAfter(_depart!)) {
+      datesError = l10n.errorReturnAfterDeparture;
+    }
+    final weightItemsError =
+        (weight == null || weight <= 0 || items == null || items <= 0) ? l10n.errorEnterWeightAndItems : null;
+
+    if (datesError != null || weightItemsError != null) {
+      setState(() {
+        _datesError = datesError;
+        _weightItemsError = weightItemsError;
+      });
+      final target = datesError != null ? _datesKey : _weightItemsKey;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = target.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), alignment: 0.2);
+        }
+      });
       return;
     }
-    if (weight == null || weight <= 0 || items == null || items <= 0) {
-      setState(() => _error = l10n.errorEnterWeightAndItems);
-      return;
-    }
-    if (!_ret!.isAfter(_depart!)) {
-      setState(() => _error = l10n.errorReturnAfterDeparture);
-      return;
-    }
+
     setState(() {
+      _datesError = null;
+      _weightItemsError = null;
       _submitting = true;
       _error = null;
     });
@@ -75,8 +95,8 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
             arrivalCity: _toCity.text.trim(),
             departureDate: _depart!,
             returnDate: _ret!,
-            maxWeightKg: weight,
-            maxItems: items,
+            maxWeightKg: weight!,
+            maxItems: items!,
             note: _note.text.trim(),
             coverImageUrl: _coverUrl,
           );
@@ -170,34 +190,59 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
           const SizedBox(height: 14),
           _countryRow(l10n.labelTo, widget.existing.arrivalCountry, _toCity),
           const SizedBox(height: 14),
-          Row(
+          Column(
+            key: _datesKey,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: _dateField(
-                  l10n.labelDeparture,
-                  _depart,
-                  (d) => setState(() => _depart = d),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _dateField(
+                      l10n.labelDeparture,
+                      _depart,
+                      (d) => setState(() {
+                        _depart = d;
+                        _datesError = null;
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _dateField(
+                      l10n.labelReturn,
+                      _ret,
+                      (d) => setState(() {
+                        _ret = d;
+                        _datesError = null;
+                      }),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _dateField(
-                  l10n.labelReturn,
-                  _ret,
-                  (d) => setState(() => _ret = d),
+              if (_datesError != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  _datesError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 14),
           Row(
+            key: _weightItemsKey,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: TextField(
                   controller: _weight,
                   keyboardType: TextInputType.number,
+                  onChanged: (_) {
+                    if (_weightItemsError != null) setState(() => _weightItemsError = null);
+                  },
                   decoration: InputDecoration(
                     labelText: l10n.fieldSpareWeightKg,
+                    errorText: _weightItemsError,
                   ),
                 ),
               ),
@@ -206,6 +251,9 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
                 child: TextField(
                   controller: _items,
                   keyboardType: TextInputType.number,
+                  onChanged: (_) {
+                    if (_weightItemsError != null) setState(() => _weightItemsError = null);
+                  },
                   decoration: InputDecoration(labelText: l10n.fieldMaxItems),
                 ),
               ),

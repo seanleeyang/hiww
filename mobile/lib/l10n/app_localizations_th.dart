@@ -427,6 +427,41 @@ class AppLocalizationsTh extends AppLocalizations {
   String get heroTravelCta => 'ลงทริปของคุณ';
 
   @override
+  String feedTripWeightFree(String weight) {
+    return 'ว่าง $weight กก.';
+  }
+
+  @override
+  String feedTripMatchCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'มีรายการต้องการ $count รายการบนเส้นทางนี้',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String feedWantSourceLabel(String source) {
+    return 'ต้องการจาก $source';
+  }
+
+  @override
+  String feedWantBudgetLabel(String budget) {
+    return 'งบประมาณ $budget';
+  }
+
+  @override
+  String feedWantMatchCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'มีนักเดินทาง $count คนบนเส้นทางนี้',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get tooltipSort => 'เรียงลำดับ';
 
   @override

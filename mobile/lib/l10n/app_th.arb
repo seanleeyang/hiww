@@ -136,6 +136,17 @@
   "heroTravelGreetingGuest": "สวัสดี พร้อมสร้างรายได้จากทริปหน้าหรือยัง?",
   "heroTravelTagline": "พกสินค้าเพิ่มอีกนิดให้ผู้ซื้อบนเส้นทางของคุณ แล้วรับเงินจากมัน",
   "heroTravelCta": "ลงทริปของคุณ",
+  "feedTripWeightFree": "ว่าง {weight} กก.",
+  "feedTripMatchCount": "{count, plural, other{มีรายการต้องการ {count} รายการบนเส้นทางนี้}}",
+  "@feedTripMatchCount": {
+    "placeholders": { "count": {} }
+  },
+  "feedWantSourceLabel": "ต้องการจาก {source}",
+  "feedWantBudgetLabel": "งบประมาณ {budget}",
+  "feedWantMatchCount": "{count, plural, other{มีนักเดินทาง {count} คนบนเส้นทางนี้}}",
+  "@feedWantMatchCount": {
+    "placeholders": { "count": {} }
+  },
   "tooltipSort": "เรียงลำดับ",
   "sortNewestPosted": "ลงล่าสุด",
   "sortDepartingSoonest": "ออกเดินทางเร็วที่สุด",

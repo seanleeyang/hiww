@@ -163,6 +163,26 @@
   "heroTravelGreetingGuest": "Hi there, ready to earn on your next trip?",
   "heroTravelTagline": "Carry a few extra items for shoppers on your route and get paid for it.",
   "heroTravelCta": "Post your trip",
+  "feedTripWeightFree": "{weight} kg free",
+  "@feedTripWeightFree": {
+    "placeholders": { "weight": { "type": "String" } }
+  },
+  "feedTripMatchCount": "{count, plural, =1{1 want on this route} other{{count} wants on this route}}",
+  "@feedTripMatchCount": {
+    "placeholders": { "count": {} }
+  },
+  "feedWantSourceLabel": "wants from {source}",
+  "@feedWantSourceLabel": {
+    "placeholders": { "source": { "type": "String" } }
+  },
+  "feedWantBudgetLabel": "Budget {budget}",
+  "@feedWantBudgetLabel": {
+    "placeholders": { "budget": { "type": "String" } }
+  },
+  "feedWantMatchCount": "{count, plural, =1{1 traveler on this route} other{{count} travelers on this route}}",
+  "@feedWantMatchCount": {
+    "placeholders": { "count": {} }
+  },
   "tooltipSort": "Sort",
   "sortNewestPosted": "Newest posted",
   "sortDepartingSoonest": "Departing soonest",

@@ -14,9 +14,13 @@ import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
 import 'date_range_sheet.dart';
 
-/// Posting a new trip is a near-full-height bottom sheet, matching the
-/// Create Order flow's presentation. Editing an existing trip is a separate,
-/// simpler full-screen flow — see `new_trip_screen.dart`'s `EditTripScreen`.
+/// Posting a new trip is a near-full-height bottom sheet with two swipeable
+/// pages — the form, then a Summary review — matching the Post a Want flow's
+/// presentation (`create_order_sheet.dart`). Both are the app's "create from
+/// scratch" flows reached via a prominent FAB, so they share this shape;
+/// editing an existing trip is reached by drilling into a trip you already
+/// posted, so it stays a simpler single-page full-screen form instead — see
+/// `new_trip_screen.dart`'s `EditTripScreen`.
 Future<void> showAddTripSheet(
   BuildContext context, {
   String? fromCountry,
@@ -63,6 +67,9 @@ class _AddTripSheet extends ConsumerStatefulWidget {
 }
 
 class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
+  final _pageController = PageController();
+  int _page = 0;
+
   final _note = TextEditingController();
   final _weight = TextEditingController(text: '8');
   final _items = TextEditingController(text: '5');
@@ -82,6 +89,11 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
   bool _submitting = false;
   String? _error;
 
+  final _datesKey = GlobalKey();
+  final _weightItemsKey = GlobalKey();
+  String? _datesError;
+  String? _weightItemsError;
+
   String _cityValueFor(String choice, TextEditingController custom) {
     if (choice == othersCity) return custom.text.trim();
     if (choice == unselected || choice == anyCity) return '';
@@ -90,6 +102,7 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _fromCityCustom.dispose();
     _toCityCustom.dispose();
     _note.dispose();
@@ -99,45 +112,107 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
   }
 
   Future<void> _pickDates() async {
-    final picked = await showDateRangeSheet(context, initialStart: _depart, initialEnd: _ret);
+    final picked = await showDateRangeSheet(
+      context,
+      initialStart: _depart,
+      initialEnd: _ret,
+    );
     if (picked == null) return;
     final (start, end) = picked;
     setState(() {
       _depart = start;
       _ret = end;
+      _datesError = null;
     });
   }
 
-  Future<void> _submit() async {
+  /// Returns whether every required field is filled; sets each field's own
+  /// error message and scrolls to the first invalid one as a side effect.
+  bool _validateForm() {
     final l10n = AppLocalizations.of(context)!;
     final weight = double.tryParse(_weight.text.trim());
     final items = int.tryParse(_items.text.trim());
+
+    String? datesError;
     if (_depart == null || _ret == null) {
-      setState(() => _error = l10n.errorPickTravelDates);
-      return;
+      datesError = l10n.errorPickTravelDates;
+    } else if (!_ret!.isAfter(_depart!)) {
+      datesError = l10n.errorReturnAfterDeparture;
     }
-    if (weight == null || weight <= 0 || items == null || items <= 0) {
-      setState(() => _error = l10n.errorEnterWeightAndItems);
-      return;
+    final weightItemsError =
+        (weight == null || weight <= 0 || items == null || items <= 0)
+        ? l10n.errorEnterWeightAndItems
+        : null;
+
+    setState(() {
+      _datesError = datesError;
+      _weightItemsError = weightItemsError;
+    });
+
+    if (datesError != null || weightItemsError != null) {
+      final target = datesError != null ? _datesKey : _weightItemsKey;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = target.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 300),
+            alignment: 0.2,
+          );
+        }
+      });
+      return false;
     }
-    if (!_ret!.isAfter(_depart!)) {
-      setState(() => _error = l10n.errorReturnAfterDeparture);
-      return;
+    return true;
+  }
+
+  void _next() {
+    if (_validateForm()) {
+      _pageController.animateToPage(
+        1,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeInOut,
+      );
     }
+  }
+
+  void _goToPage(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  /// Swiping straight to the Summary page bypasses the "Next" button, so
+  /// validate here too — bounce back to the form (with errors showing) if
+  /// something required is still missing.
+  void _onPageChanged(int index) {
+    if (index == 1 && !_validateForm()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _goToPage(0);
+      });
+    }
+    setState(() => _page = index);
+  }
+
+  Future<void> _submit() async {
     setState(() {
       _submitting = true;
       _error = null;
     });
     try {
-      final id = await ref.read(tripsRepositoryProvider).create(
+      final id = await ref
+          .read(tripsRepositoryProvider)
+          .create(
             departureCountry: _from,
             arrivalCountry: _to,
             departureCity: _cityValueFor(_fromCityChoice, _fromCityCustom),
             arrivalCity: _cityValueFor(_toCityChoice, _toCityCustom),
             departureDate: _depart!,
             returnDate: _ret!,
-            maxWeightKg: weight,
-            maxItems: items,
+            maxWeightKg: double.parse(_weight.text.trim()),
+            maxItems: int.parse(_items.text.trim()),
             note: _note.text.trim(),
             coverImageUrl: _coverUrl,
           );
@@ -167,12 +242,23 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
             padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
             child: Row(
               children: [
-                const SizedBox(width: 48),
+                SizedBox(
+                  width: 48,
+                  child: _page == 1
+                      ? IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => _goToPage(0),
+                        )
+                      : null,
+                ),
                 Expanded(
                   child: Text(
-                    l10n.actionPostATrip,
+                    _page == 0 ? l10n.actionPostATrip : l10n.summaryScreenTitle,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -183,107 +269,246 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
             ),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 24),
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              children: [
+                _buildFormPage(context, l10n),
+                _buildSummaryPage(context, l10n),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormPage(BuildContext context, AppLocalizations l10n) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        MediaQuery.viewInsetsOf(context).bottom + 24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.labelFrom, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 8),
+          _countryCityRow(
+            country: _from,
+            onCountryChanged: (v) => setState(() {
+              _from = v;
+              _fromCityChoice = unselected;
+              _fromCityCustom.clear();
+            }),
+            cityChoice: _fromCityChoice,
+            onCityChoiceChanged: (v) => setState(() => _fromCityChoice = v),
+            customCityController: _fromCityCustom,
+            keyPrefix: 'from',
+          ),
+          const SizedBox(height: 18),
+          Text(l10n.labelTo, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 8),
+          _countryCityRow(
+            country: _to,
+            onCountryChanged: (v) => setState(() {
+              _to = v;
+              _toCityChoice = unselected;
+              _toCityCustom.clear();
+            }),
+            cityChoice: _toCityChoice,
+            onCityChoiceChanged: (v) => setState(() => _toCityChoice = v),
+            customCityController: _toCityCustom,
+            keyPrefix: 'to',
+          ),
+          const SizedBox(height: 18),
+          Text(
+            l10n.labelTravelDates,
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 8),
+          Column(
+            key: _datesKey,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await _pickDates();
+                  if (_datesError != null) setState(() => _datesError = null);
+                },
+                icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                label: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    (_depart != null && _ret != null)
+                        ? '${shortDate(_depart)} – ${shortDate(_ret)}'
+                        : l10n.labelTravelDates,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  alignment: Alignment.centerLeft,
+                  side: _datesError != null
+                      ? BorderSide(color: Theme.of(context).colorScheme.error)
+                      : null,
+                ),
+              ),
+              if (_datesError != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  _datesError!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            key: _weightItemsKey,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _weight,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) {
+                    if (_weightItemsError != null) {
+                      setState(() => _weightItemsError = null);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    labelText: l10n.fieldSpareWeightKg,
+                    errorText: _weightItemsError,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _items,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) {
+                    if (_weightItemsError != null) {
+                      setState(() => _weightItemsError = null);
+                    }
+                  },
+                  decoration: InputDecoration(labelText: l10n.fieldMaxItems),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _note,
+            maxLines: 2,
+            decoration: InputDecoration(
+              labelText: l10n.fieldNoteOptional,
+              hintText: l10n.hintNoteTrip,
+            ),
+          ),
+          const SizedBox(height: 14),
+          ImagePickerField(
+            value: _coverUrl,
+            onChanged: (url) => setState(() => _coverUrl = url),
+            label: l10n.fieldCoverPhotoOptional,
+          ),
+          const SizedBox(height: 22),
+          FilledButton(onPressed: _next, child: Text(l10n.actionNext)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryPage(BuildContext context, AppLocalizations l10n) {
+    final scheme = Theme.of(context).colorScheme;
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        MediaQuery.viewInsetsOf(context).bottom + 24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_coverUrl != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                _coverUrl!,
+                height: 140,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.labelFrom, style: Theme.of(context).textTheme.labelLarge),
-                  const SizedBox(height: 8),
-                  _countryCityRow(
-                    country: _from,
-                    onCountryChanged: (v) => setState(() {
-                      _from = v;
-                      _fromCityChoice = unselected;
-                      _fromCityCustom.clear();
-                    }),
-                    cityChoice: _fromCityChoice,
-                    onCityChoiceChanged: (v) => setState(() => _fromCityChoice = v),
-                    customCityController: _fromCityCustom,
-                    keyPrefix: 'from',
-                  ),
-                  const SizedBox(height: 18),
-                  Text(l10n.labelTo, style: Theme.of(context).textTheme.labelLarge),
-                  const SizedBox(height: 8),
-                  _countryCityRow(
-                    country: _to,
-                    onCountryChanged: (v) => setState(() {
-                      _to = v;
-                      _toCityChoice = unselected;
-                      _toCityCustom.clear();
-                    }),
-                    cityChoice: _toCityChoice,
-                    onCityChoiceChanged: (v) => setState(() => _toCityChoice = v),
-                    customCityController: _toCityCustom,
-                    keyPrefix: 'to',
-                  ),
-                  const SizedBox(height: 18),
-                  Text(l10n.labelTravelDates, style: Theme.of(context).textTheme.labelLarge),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: _pickDates,
-                    icon: const Icon(Icons.calendar_today_outlined, size: 18),
-                    label: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        (_depart != null && _ret != null)
-                            ? '${shortDate(_depart)} – ${shortDate(_ret)}'
-                            : l10n.labelTravelDates,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      alignment: Alignment.centerLeft,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
                   Row(
                     children: [
+                      const Icon(Icons.flight_takeoff, size: 18),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: TextField(
-                          controller: _weight,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(labelText: l10n.fieldSpareWeightKg),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _items,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(labelText: l10n.fieldMaxItems),
+                        child: Text(
+                          '${countryName(_from)} → ${countryName(_to)}',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: _note,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      labelText: l10n.fieldNoteOptional,
-                      hintText: l10n.hintNoteTrip,
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(Icons.event_outlined, size: 18),
+                      const SizedBox(width: 10),
+                      Text('${shortDate(_depart)} – ${shortDate(_ret)}'),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(Icons.luggage_outlined, size: 18),
+                      const SizedBox(width: 10),
+                      Text(
+                        '${_weight.text.trim()} kg · ${_items.text.trim()} ${l10n.fieldMaxItems}',
+                      ),
+                    ],
+                  ),
+                  if (_note.text.trim().isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.notes_outlined, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text(_note.text.trim())),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  ImagePickerField(
-                    value: _coverUrl,
-                    onChanged: (url) => setState(() => _coverUrl = url),
-                    label: l10n.fieldCoverPhotoOptional,
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 14),
-                    Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   ],
-                  const SizedBox(height: 22),
-                  BusyFilledButton(
-                    busy: _submitting,
-                    label: l10n.actionPostTrip,
-                    onPressed: _submit,
-                  ),
                 ],
               ),
             ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 14),
+            Text(_error!, style: TextStyle(color: scheme.error)),
+          ],
+          const SizedBox(height: 20),
+          BusyFilledButton(
+            busy: _submitting,
+            label: l10n.actionPostTrip,
+            onPressed: _submit,
           ),
         ],
       ),
@@ -310,7 +535,8 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                 isExpanded: true,
                 decoration: InputDecoration(labelText: l10n.labelCountry),
                 items: [
-                  for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
+                  for (final c in kLiveCountries)
+                    DropdownMenuItem(value: c.code, child: Text(c.name)),
                 ],
                 onChanged: (v) => onCountryChanged(v ?? country),
               ),
@@ -323,11 +549,22 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                 isExpanded: true,
                 decoration: InputDecoration(labelText: l10n.fieldCity),
                 items: [
-                  DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
-                  DropdownMenuItem(value: anyCity, child: Text(l10n.cityOptionAny)),
-                  for (final c in kCities.where((c) => c.countryCode == country))
+                  DropdownMenuItem(
+                    value: unselected,
+                    child: Text(l10n.selectOption),
+                  ),
+                  DropdownMenuItem(
+                    value: anyCity,
+                    child: Text(l10n.cityOptionAny),
+                  ),
+                  for (final c in kCities.where(
+                    (c) => c.countryCode == country,
+                  ))
                     DropdownMenuItem(value: c.city, child: Text(c.city)),
-                  DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
+                  DropdownMenuItem(
+                    value: othersCity,
+                    child: Text(l10n.cityOptionOthers),
+                  ),
                 ],
                 onChanged: (v) => onCityChoiceChanged(v ?? unselected),
               ),
