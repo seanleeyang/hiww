@@ -10,6 +10,7 @@ import '../../../ui/country_picker_field.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/initials_avatar.dart';
 import '../../../ui/phone_field.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/section_header.dart';
 import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
@@ -364,15 +365,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 ),
               ],
               const SizedBox(height: 18),
-              FilledButton(
-                onPressed: _busy ? null : _save,
-                child: _busy
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.actionSave),
+              BusyFilledButton(
+                busy: _busy,
+                label: l10n.actionSave,
+                onPressed: _save,
               ),
             ],
           ),
@@ -533,15 +529,10 @@ class _KycCardState extends ConsumerState<_KycCard> {
                 ),
               ],
               const SizedBox(height: 12),
-              FilledButton(
-                onPressed: _submitting ? null : _submit,
-                child: _submitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.actionSubmitForReview),
+              BusyFilledButton(
+                busy: _submitting,
+                label: l10n.actionSubmitForReview,
+                onPressed: _submit,
               ),
             ],
           ],

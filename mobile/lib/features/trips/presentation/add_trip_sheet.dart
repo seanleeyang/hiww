@@ -8,6 +8,7 @@ import '../../../core/city_choice.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
 import '../data/trips_repository.dart';
@@ -275,15 +276,10 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                     Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   ],
                   const SizedBox(height: 22),
-                  FilledButton(
-                    onPressed: _submitting ? null : _submit,
-                    child: _submitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.actionPostTrip),
+                  BusyFilledButton(
+                    busy: _submitting,
+                    label: l10n.actionPostTrip,
+                    onPressed: _submit,
                   ),
                 ],
               ),

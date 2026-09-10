@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../data/disputes_repository.dart';
 import '../data/orders_repository.dart';
 
@@ -97,14 +98,10 @@ class _ReportProblemSheetState extends ConsumerState<_ReportProblemSheet> {
                   style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
             const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _busy ? null : _submit,
-              child: _busy
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l10n.actionSubmitReport),
+            BusyFilledButton(
+              busy: _busy,
+              label: l10n.actionSubmitReport,
+              onPressed: _submit,
             ),
           ],
         ),

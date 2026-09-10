@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/phone_field.dart';
 import '../application/auth_controller.dart';
 import '../domain/auth_user.dart';
@@ -148,14 +149,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
             const SizedBox(height: 22),
-            FilledButton(
-              onPressed: _submitting ? null : _submit,
-              child: _submitting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l10n.actionCreateAccountButton),
+            BusyFilledButton(
+              busy: _submitting,
+              label: l10n.actionCreateAccountButton,
+              onPressed: _submit,
             ),
           ],
         ),

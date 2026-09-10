@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../application/auth_controller.dart';
 import 'auth_form_field.dart';
 import 'auth_scaffold.dart';
@@ -175,11 +176,11 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
-              onPressed: _busy ? null : _verify,
-              child: _busy
-                  ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l10n.actionVerify),
+            child: BusyFilledButton(
+              busy: _busy,
+              label: l10n.actionVerify,
+              onPressed: _verify,
+              spinnerSize: 18,
             ),
           ),
           Align(

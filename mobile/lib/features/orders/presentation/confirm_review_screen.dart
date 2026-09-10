@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/responsive_body.dart';
 import '../../../ui/soft_card.dart';
@@ -138,17 +139,10 @@ class _ConfirmReviewScreenState extends ConsumerState<ConfirmReviewScreen> {
                   ),
                 ],
                 const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: _busy
-                      ? null
-                      : () => _close(o.counterparty?.id ?? ''),
-                  child: _busy
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(l10n.actionClose),
+                BusyFilledButton(
+                  busy: _busy,
+                  label: l10n.actionClose,
+                  onPressed: () => _close(o.counterparty?.id ?? ''),
                 ),
               ],
             );

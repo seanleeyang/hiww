@@ -6,6 +6,7 @@ import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/budget_stepper.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/qty_stepper.dart';
@@ -247,15 +248,10 @@ class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
               ),
             ],
             const SizedBox(height: 18),
-            FilledButton(
-              onPressed: _submitting ? null : _submit,
-              child: _submitting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(l10n.actionSaveChanges),
+            BusyFilledButton(
+              busy: _submitting,
+              label: l10n.actionSaveChanges,
+              onPressed: _submit,
             ),
           ],
         ),

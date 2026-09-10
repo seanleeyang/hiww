@@ -7,6 +7,7 @@ import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/soft_card.dart';
@@ -208,14 +209,10 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
                     style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
               const SizedBox(height: 22),
-              FilledButton(
-                onPressed: _submitting ? null : _submit,
-                child: _submitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(l10n.actionSendOffer),
+              BusyFilledButton(
+                busy: _submitting,
+                label: l10n.actionSendOffer,
+                onPressed: _submit,
               ),
             ],
           );

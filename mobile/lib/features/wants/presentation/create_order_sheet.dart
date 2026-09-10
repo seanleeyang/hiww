@@ -12,6 +12,7 @@ import '../../../ui/breakdown_row.dart';
 import '../../../ui/budget_stepper.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/image_picker_field.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/marketplace_bits.dart';
 import '../../../ui/qty_stepper.dart';
 import '../../../ui/soft_card.dart';
@@ -721,15 +722,10 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
             Text(_error!, style: TextStyle(color: scheme.error)),
           ],
           const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _submitting ? null : _submit,
-            child: _submitting
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(_isDirectRequest ? l10n.actionSendRequest : l10n.actionPostMyWant),
+          BusyFilledButton(
+            busy: _submitting,
+            label: _isDirectRequest ? l10n.actionSendRequest : l10n.actionPostMyWant,
+            onPressed: _submit,
           ),
         ],
       ),

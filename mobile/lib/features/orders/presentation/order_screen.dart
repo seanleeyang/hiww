@@ -9,6 +9,7 @@ import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/breakdown_row.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/hero_image.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/marketplace_bits.dart';
@@ -264,16 +265,8 @@ class _ActionBlockState extends ConsumerState<_ActionBlock> {
     );
 
     Widget note(String t) => Text(t, style: muted);
-    Widget primary(String label, VoidCallback? onTap) => FilledButton(
-      onPressed: _busy ? null : onTap,
-      child: _busy
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Text(label),
-    );
+    Widget primary(String label, VoidCallback? onTap) =>
+        BusyFilledButton(busy: _busy, label: label, onPressed: onTap);
 
     switch (o.status) {
       case 'pending_payment':

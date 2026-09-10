@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/busy_filled_button.dart';
 import '../../../ui/confirm_dialog.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../discovery/data/discovery_repository.dart';
@@ -233,15 +234,10 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
             ),
           ],
           const SizedBox(height: 22),
-          FilledButton(
-            onPressed: _submitting ? null : _submit,
-            child: _submitting
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.actionSaveChanges),
+          BusyFilledButton(
+            busy: _submitting,
+            label: l10n.actionSaveChanges,
+            onPressed: _submit,
           ),
         ],
       ),
