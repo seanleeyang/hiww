@@ -448,6 +448,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorEnterDocumentNumber => 'กรอกหมายเลขเอกสารของคุณ';
 
   @override
+  String get errorEnterValidThaiId =>
+      'กรอกเลขบัตรประจำตัวประชาชน 13 หลักของคุณ';
+
+  @override
   String get fieldFirstNameOnDocument => 'ชื่อจริง (ตามเอกสาร)';
 
   @override

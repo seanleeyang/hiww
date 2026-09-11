@@ -162,6 +162,7 @@
   "docIdCard": "Thai National ID Card",
   "fieldDocumentNumber": "Document number",
   "errorEnterDocumentNumber": "Enter your document number",
+  "errorEnterValidThaiId": "Enter your 13-digit Thai National ID number",
   "fieldFirstNameOnDocument": "First name (as on document)",
   "fieldLastNameOnDocument": "Last name (as on document)",
   "errorEnterNameOnDocument": "Enter your first and last name as they appear on your document",

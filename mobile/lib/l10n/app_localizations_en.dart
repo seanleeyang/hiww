@@ -451,6 +451,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorEnterDocumentNumber => 'Enter your document number';
 
   @override
+  String get errorEnterValidThaiId =>
+      'Enter your 13-digit Thai National ID number';
+
+  @override
   String get fieldFirstNameOnDocument => 'First name (as on document)';
 
   @override

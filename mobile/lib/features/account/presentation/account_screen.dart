@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/password_policy.dart';
+import '../../../core/thai_id_formatter.dart';
 import '../../../core/world_countries.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_colors.dart';
@@ -636,7 +637,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
   final _address = TextEditingController();
-  String _docType = 'passport';
+  String _docType = 'id_card';
   String? _photoUrl;
   String? _selfieUrl;
   bool _expanded = false;
@@ -658,7 +659,12 @@ class _KycCardState extends ConsumerState<_KycCard> {
       setState(() => _error = l10n.errorEnterNameOnDocument);
       return;
     }
-    if (_docId.text.trim().length < 3) {
+    if (_docType == 'id_card') {
+      if (_docId.text.replaceAll(RegExp(r'\D'), '').length != 13) {
+        setState(() => _error = l10n.errorEnterValidThaiId);
+        return;
+      }
+    } else if (_docId.text.trim().length < 3) {
       setState(() => _error = l10n.errorEnterDocumentNumber);
       return;
     }
@@ -763,7 +769,16 @@ class _KycCardState extends ConsumerState<_KycCard> {
                     child: Text(l10n.docIdCard),
                   ),
                 ],
-                onChanged: (v) => setState(() => _docType = v ?? 'passport'),
+                onChanged: (v) => setState(() {
+                  final wasIdCard = _docType == 'id_card';
+                  _docType = v ?? 'id_card';
+                  final nowIdCard = _docType == 'id_card';
+                  if (nowIdCard && !wasIdCard) {
+                    _docId.text = formatThaiNationalId(_docId.text);
+                  } else if (!nowIdCard && wasIdCard) {
+                    _docId.text = _docId.text.replaceAll('-', '');
+                  }
+                }),
               ),
               const SizedBox(height: 12),
               Row(
@@ -786,7 +801,13 @@ class _KycCardState extends ConsumerState<_KycCard> {
               const SizedBox(height: 12),
               TextField(
                 controller: _docId,
-                decoration: InputDecoration(labelText: l10n.fieldDocumentNumber),
+                decoration: InputDecoration(
+                  labelText: l10n.fieldDocumentNumber,
+                  hintText: _docType == 'id_card' ? '1-2345-67890-12-3' : null,
+                ),
+                keyboardType: _docType == 'id_card' ? TextInputType.number : TextInputType.text,
+                inputFormatters:
+                    _docType == 'id_card' ? [ThaiNationalIdInputFormatter()] : null,
               ),
               const SizedBox(height: 12),
               TextField(

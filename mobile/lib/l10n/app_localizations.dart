@@ -920,6 +920,12 @@ abstract class AppLocalizations {
   /// **'Enter your document number'**
   String get errorEnterDocumentNumber;
 
+  /// No description provided for @errorEnterValidThaiId.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your 13-digit Thai National ID number'**
+  String get errorEnterValidThaiId;
+
   /// No description provided for @fieldFirstNameOnDocument.
   ///
   /// In en, this message translates to:

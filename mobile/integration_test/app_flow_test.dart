@@ -805,8 +805,10 @@ void main() {
     await tester.enterText(
         find.widgetWithText(TextField, 'Last name (as on document)'),
         'Testuser');
+    // Document type defaults to Thai National ID Card, whose number field
+    // auto-formats digits into the standard 1-4-5-2-1 hyphenated grouping.
     await tester.enterText(
-        find.widgetWithText(TextField, 'Document number'), 'X1234567');
+        find.widgetWithText(TextField, 'Document number'), '1234567890123');
     await tester.enterText(
         find.widgetWithText(TextField, 'Address (as on document)'),
         '123 Test St, Bangkok');

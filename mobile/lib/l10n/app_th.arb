@@ -144,6 +144,7 @@
   "docIdCard": "บัตรประจำตัวประชาชนไทย",
   "fieldDocumentNumber": "หมายเลขเอกสาร",
   "errorEnterDocumentNumber": "กรอกหมายเลขเอกสารของคุณ",
+  "errorEnterValidThaiId": "กรอกเลขบัตรประจำตัวประชาชน 13 หลักของคุณ",
   "fieldFirstNameOnDocument": "ชื่อจริง (ตามเอกสาร)",
   "fieldLastNameOnDocument": "นามสกุล (ตามเอกสาร)",
   "errorEnterNameOnDocument": "กรอกชื่อและนามสกุลตามที่ปรากฏบนเอกสารของคุณ",
