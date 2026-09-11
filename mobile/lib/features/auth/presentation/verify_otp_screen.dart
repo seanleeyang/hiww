@@ -10,14 +10,40 @@ import '../application/auth_controller.dart';
 import 'auth_form_field.dart';
 import 'auth_scaffold.dart';
 
+/// True for as long as [VerifyOtpScreen] is on screen — checked by
+/// `showVerificationRequiredDialog` so background polling (the unread chat/
+/// notification counts, which keep hitting a gated endpoint every 15-20s
+/// regardless of the current screen) can't pop that dialog up over this one
+/// mid-verification, e.g. right after confirming email while phone is still
+/// outstanding. A plain module-level flag rather than inspecting router
+/// state, which proved unreliable for a route reached via `push`.
+bool isVerifyScreenActive = false;
+
 /// Shown right after registration until both `email` and `phone` are
 /// confirmed — the backend blocks every other route until then (see
 /// `src/middleware/auth-guard.ts`'s VERIFICATION_EXEMPT_ROUTES).
-class VerifyOtpScreen extends ConsumerWidget {
+class VerifyOtpScreen extends ConsumerStatefulWidget {
   const VerifyOtpScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VerifyOtpScreen> createState() => _VerifyOtpScreenState();
+}
+
+class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
+  @override
+  void initState() {
+    super.initState();
+    isVerifyScreenActive = true;
+  }
+
+  @override
+  void dispose() {
+    isVerifyScreenActive = false;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final l10n = AppLocalizations.of(context)!;
 
