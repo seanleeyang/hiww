@@ -609,6 +609,20 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidProfileUpdate');
     }
 
+    const current = await request.db
+      .selectFrom('users')
+      .select(['phone'])
+      .where('id', '=', request.userId!)
+      .executeTakeFirst();
+    if (!current) {
+      throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
+    }
+
+    // A changed number was never actually proven to belong to this user —
+    // the old verification doesn't carry over. `null` counts as a change
+    // too (clearing the phone clears its verification with it).
+    const phoneChanged = parsed.data.phone !== undefined && parsed.data.phone !== current.phone;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const patch: Record<string, any> = { updated_at: new Date() };
     if (parsed.data.full_name !== undefined) patch.full_name = parsed.data.full_name;
@@ -620,7 +634,30 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (parsed.data.address_postal_code !== undefined) patch.address_postal_code = parsed.data.address_postal_code;
     if (parsed.data.address_country !== undefined) patch.address_country = parsed.data.address_country;
 
+    // Re-issue a phone OTP immediately, same as registration, rather than
+    // leaving the account unverified with no code in flight. `/api/me`
+    // itself stays verification-exempt, so this save still succeeds even
+    // though it just invalidated the phone — every *other* route now 403s
+    // with VERIFICATION_REQUIRED until the new number is confirmed (see
+    // the auth guard).
+    let debugOtp: string | undefined;
+    if (phoneChanged) {
+      patch.phone_verified_at = null;
+      if (parsed.data.phone) {
+        debugOtp = await issueOtp(request.db, request.userId!, 'phone', parsed.data.phone);
+      }
+    }
+
     await request.db.updateTable('users').set(patch).where('id', '=', request.userId!).execute();
+
+    if (phoneChanged) {
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'user.phone_changed',
+        targetType: 'user',
+        targetId: request.userId!,
+        summary: 'Phone number changed — re-verification required',
+      });
+    }
 
     const me = await request.db
       .selectFrom('users')
@@ -628,7 +665,11 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       .where('id', '=', request.userId!)
       .executeTakeFirst();
 
-    reply.send({ success: true, data: meResponse(me), code: 'ME_UPDATED' });
+    reply.send({
+      success: true,
+      data: { ...meResponse(me), ...(isMockOtp() && debugOtp ? { debug_otp: debugOtp } : {}) },
+      code: 'ME_UPDATED',
+    });
   });
 
   // Confirm a code sent at registration (or via resend, below). Every route

@@ -878,6 +878,75 @@ void main() {
     expect(relogin['token'], isNotNull);
   });
 
+  testWidgets(
+      'changing the phone number in Edit Profile requires re-verification',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final user = await _register('phonechange', stamp, type: 'both');
+
+    await tester.pumpWidget(
+      ProviderScope(
+          overrides: _appOverrides(user['token'] as String),
+          child: const HiwwApp()),
+    );
+
+    await _pumpUntil(tester, find.byTooltip('Account'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.byTooltip('Account'));
+
+    await _pumpUntil(tester, find.widgetWithText(TextButton, 'Edit'),
+        timeout: const Duration(seconds: 20));
+    await _tap(tester, find.widgetWithText(TextButton, 'Edit'));
+
+    await _pumpUntil(
+        tester, find.widgetWithText(TextField, 'Phone number'));
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Phone number'), '99 999 9999');
+    await _tap(tester, _button('Save'));
+
+    // Saving pops the Edit Profile sheet and prompts re-verification via a
+    // snackbar rather than silently leaving the account looking verified
+    // for a number that was never actually confirmed.
+    await _pumpUntil(
+        tester, find.textContaining('needs to be verified'),
+        timeout: const Duration(seconds: 20));
+    await _tap(tester, find.byType(SnackBarAction));
+
+    // Lands on /verify with only the phone channel unconfirmed — email
+    // stays verified, so its section renders no code field at all, leaving
+    // exactly one `TextFormField` (the phone code entry) in the tree. Its
+    // floating label isn't matched by find.text()/widgetWithText() (an
+    // InputDecorator animated-label quirk), so target the field directly.
+    await _pumpUntil(tester, find.text('Verify your account'),
+        timeout: const Duration(seconds: 20));
+    // The phone channel's initState fires a resend automatically and
+    // autofills the code once it resolves (see VerifyOtpScreen) — wait for
+    // the dev-code notice, not just the field's existence, or Verify gets
+    // tapped while the code is still empty and silently no-ops.
+    await _pumpUntil(tester, find.textContaining('dev code'),
+        timeout: const Duration(seconds: 20));
+    await _tap(tester, _button('Verify'));
+
+    // Now fully verified again — leaves /verify explicitly once nothing's
+    // outstanding (see VerifyOtpScreen's _verify()). Wherever exactly it
+    // lands (back on the account screen it was pushed from, or Browse if
+    // the redirect rule also fires), the verify screen itself is gone.
+    final deadline = DateTime.now().add(const Duration(seconds: 20));
+    while (DateTime.now().isBefore(deadline) &&
+        find.text('Verify your account').evaluate().isNotEmpty) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+    expect(find.text('Verify your account'), findsNothing);
+
+    final me = await _api('GET', '/api/me', token: user['token'] as String);
+    expect(me['phone'], '+66 99 999 9999');
+    expect(me['phone_verified_at'], isNotNull);
+  });
+
   testWidgets('traveler marks a confirmed order shipped', (tester) async {
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1.0;

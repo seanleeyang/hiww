@@ -317,6 +317,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get infoNewCodeSent => 'A new code was sent.';
 
   @override
+  String get infoPhoneNeedsVerification =>
+      'Your new phone number needs to be verified.';
+
+  @override
   String get accountTitle => 'Account';
 
   @override

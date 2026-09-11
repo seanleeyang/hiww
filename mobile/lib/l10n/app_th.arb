@@ -100,6 +100,7 @@
   "actionResendCode": "ส่งรหัสอีกครั้ง",
   "actionSending": "กำลังส่ง…",
   "infoNewCodeSent": "ส่งรหัสใหม่แล้ว",
+  "infoPhoneNeedsVerification": "ต้องยืนยันหมายเลขโทรศัพท์ใหม่ของคุณ",
 
   "accountTitle": "บัญชี",
   "actionEdit": "แก้ไข",

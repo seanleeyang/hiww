@@ -314,6 +314,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get infoNewCodeSent => 'ส่งรหัสใหม่แล้ว';
 
   @override
+  String get infoPhoneNeedsVerification =>
+      'ต้องยืนยันหมายเลขโทรศัพท์ใหม่ของคุณ';
+
+  @override
   String get accountTitle => 'บัญชี';
 
   @override

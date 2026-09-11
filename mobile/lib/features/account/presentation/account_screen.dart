@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/navigation.dart';
 import '../../../core/password_policy.dart';
 import '../../../core/world_countries.dart';
 import '../../../l10n/app_localizations.dart';
@@ -273,6 +274,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       _busy = true;
       _error = null;
     });
+    final wasPhoneVerified = widget.user.phoneVerified;
     try {
       await ref
           .read(accountRepositoryProvider)
@@ -288,7 +290,29 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           );
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      // A changed phone number was never actually proven to belong to this
+      // user, so the backend resets its verification and issues a fresh
+      // OTP (src/modules/auth/routes.ts's PATCH /api/me) — steer them to
+      // /verify right away instead of letting them discover the gate later
+      // on some unrelated action.
+      final nowUnverified = wasPhoneVerified && !(ref.read(currentUserProvider)?.phoneVerified ?? true);
       Navigator.of(context).pop();
+      if (nowUnverified) {
+        final ctx = rootNavigatorKey.currentContext;
+        if (ctx != null && ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(
+              content: Text(l10n.infoPhoneNeedsVerification),
+              duration: const Duration(seconds: 8),
+              action: SnackBarAction(
+                label: l10n.actionVerify,
+                onPressed: () => ctx.push('/verify'),
+              ),
+            ),
+          );
+        }
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {

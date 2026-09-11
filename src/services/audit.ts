@@ -30,6 +30,7 @@ export type AuditAction =
   | 'user.flag'
   | 'user.password_reset'
   | 'user.password_change'
+  | 'user.phone_changed'
   | 'user.reclaimed_via_social_link'
   | 'message.flag'
   | 'message.flag_cleared'

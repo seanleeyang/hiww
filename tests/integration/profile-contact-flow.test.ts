@@ -133,12 +133,16 @@ describe('profile contact details + completeness gate', () => {
     expect(blocked.statusCode).toBe(403);
     expect(blocked.json().code).toBe('PROFILE_INCOMPLETE');
 
+    // Same phone number the shopper already registered with (createUser's
+    // default) — this test is about the address fields being missing, not
+    // about a phone *change*, which now re-triggers verification (see
+    // profile-flow.test.ts) and would 403 this accept-offer call below.
     await ctx.app.inject({
       method: 'PATCH',
       url: '/api/me',
       headers: authHeader(shopper),
       payload: {
-        phone: '+1 555 0199',
+        phone: '+1 555 0100',
         address_street: '2 Elm St',
         address_city: 'Shelbyville',
         address_postal_code: '54321',

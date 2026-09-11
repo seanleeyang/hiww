@@ -662,6 +662,12 @@ abstract class AppLocalizations {
   /// **'A new code was sent.'**
   String get infoNewCodeSent;
 
+  /// No description provided for @infoPhoneNeedsVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new phone number needs to be verified.'**
+  String get infoPhoneNeedsVerification;
+
   /// No description provided for @accountTitle.
   ///
   /// In en, this message translates to:

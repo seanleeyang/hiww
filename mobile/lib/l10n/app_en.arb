@@ -118,6 +118,7 @@
   "actionResendCode": "Resend code",
   "actionSending": "Sending…",
   "infoNewCodeSent": "A new code was sent.",
+  "infoPhoneNeedsVerification": "Your new phone number needs to be verified.",
 
   "accountTitle": "Account",
   "actionEdit": "Edit",

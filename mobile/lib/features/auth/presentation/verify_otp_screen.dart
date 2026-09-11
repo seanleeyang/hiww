@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/navigation.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/busy_filled_button.dart';
 import '../application/auth_controller.dart';
@@ -95,6 +97,20 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
       await ref
           .read(authControllerProvider.notifier)
           .verifyOtp(channel: widget.channel, code: _code.text.trim());
+      if (!mounted) return;
+      // Fully verified now (both channels) — leave explicitly rather than
+      // relying solely on the router's passive redirect listener, which
+      // doesn't reliably fire for a `/verify` reached via `push` (as both
+      // the verification-gate dialog and a profile-triggered re-verify
+      // prompt do). Goes to Browse unconditionally rather than popping —
+      // simpler and always well-defined, whether `/verify` was reached as
+      // the very first screen (e.g. right after registration) or pushed on
+      // top of another page.
+      final stillNeedsVerification = ref.read(currentUserProvider)?.needsVerification ?? true;
+      if (!stillNeedsVerification) {
+        final ctx = rootNavigatorKey.currentContext;
+        if (ctx != null && ctx.mounted) ctx.go('/browse');
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _error = e.message);
