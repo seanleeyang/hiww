@@ -126,11 +126,17 @@ class _DialCodeSearchDialogState extends State<_DialCodeSearchDialog> {
   @override
   Widget build(BuildContext context) {
     final q = _query.text.trim().toLowerCase();
-    final results = q.isEmpty
+    final matches = q.isEmpty
         ? kWorldCountries
         : kWorldCountries
             .where((c) => c.name.toLowerCase().contains(q) || c.dial.contains(q))
             .toList();
+    // Thailand first — this is a Thailand-based pilot, so it's who almost
+    // everyone is picking, and it's otherwise buried mid-alphabet.
+    final results = [
+      ...matches.where((c) => c.code == 'TH'),
+      ...matches.where((c) => c.code != 'TH'),
+    ];
 
     return Dialog(
       child: ConstrainedBox(
