@@ -17,6 +17,11 @@ void main() {
       'rating_count': 12,
       'delivered_count': 9,
       'pilot': {'manual_money': true, 'payment_instructions': 'PromptPay ...'},
+      'gender': 'female',
+      'date_of_birth': '1990-01-15T00:00:00.000Z',
+      'address_street2': 'Unit 4B',
+      'address_district': 'Watthana',
+      'address_subdistrict': 'Khlong Toei Nuea',
     });
 
     expect(user.firstName, 'Ada');
@@ -27,6 +32,11 @@ void main() {
     expect(user.ratingAvg, 4.7);
     expect(user.deliveredCount, 9);
     expect(user.pilot!.manualMoney, true);
+    expect(user.gender, 'female');
+    expect(user.dateOfBirth, '1990-01-15');
+    expect(user.addressStreet2, 'Unit 4B');
+    expect(user.addressDistrict, 'Watthana');
+    expect(user.addressSubdistrict, 'Khlong Toei Nuea');
   });
 
   test('tolerates a minimal payload (pre-D2 backend)', () {

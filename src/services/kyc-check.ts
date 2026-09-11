@@ -5,9 +5,8 @@ import { recordAudit } from '@/services/audit';
 
 interface UserForKycCheck {
   id: string;
-  kyc_document_type: 'passport' | 'id_card' | 'drivers_license';
+  kyc_document_type: 'passport' | 'id_card';
   kyc_document_photo_url: string;
-  kyc_document_photo_back_url?: string | null;
   kyc_selfie_photo_url: string;
   kyc_first_name: string;
   kyc_last_name: string;
@@ -34,7 +33,6 @@ export async function runKycCheck(
     const analysis = await getKycAnalyzer().analyze({
       documentType: user.kyc_document_type,
       documentPhotoUrl: user.kyc_document_photo_url,
-      documentPhotoBackUrl: user.kyc_document_photo_back_url,
       selfiePhotoUrl: user.kyc_selfie_photo_url,
       submittedFirstName: user.kyc_first_name,
       submittedLastName: user.kyc_last_name,

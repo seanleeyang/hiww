@@ -18,6 +18,7 @@ import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/status_pill.dart';
+import '../../../ui/thai_address_picker.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
 import '../data/account_repository.dart';
@@ -183,6 +184,9 @@ class _ContactDetailsCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final addressParts = [
       user.addressStreet,
+      user.addressStreet2,
+      user.addressSubdistrict,
+      user.addressDistrict,
       user.addressCity,
       user.addressPostalCode,
       worldCountryName(user.addressCountry),
@@ -193,6 +197,16 @@ class _ContactDetailsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeader(l10n.sectionContactDelivery),
+          _ContactRow(
+            icon: Icons.person_outline,
+            label: _genderAndBirthdayLabel(l10n, user) ?? l10n.fieldGender,
+          ),
+          const SizedBox(height: 8),
+          _ContactRow(
+            icon: Icons.email_outlined,
+            label: user.email,
+          ),
+          const SizedBox(height: 8),
           _ContactRow(
             icon: Icons.phone_outlined,
             label: (user.phone ?? '').trim().isEmpty ? l10n.accountAddPhone : user.phone!,
@@ -205,6 +219,17 @@ class _ContactDetailsCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String? _genderAndBirthdayLabel(AppLocalizations l10n, AuthUser user) {
+    final gender = switch (user.gender) {
+      'male' => l10n.genderMale,
+      'female' => l10n.genderFemale,
+      'prefer_not_to_say' => l10n.genderPreferNotToSay,
+      _ => null,
+    };
+    final parts = [gender, user.dateOfBirth].whereType<String>().toList();
+    return parts.isEmpty ? null : parts.join(' · ');
   }
 }
 
@@ -242,25 +267,55 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 }
 
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
-  late final _name = TextEditingController(text: widget.user.fullName);
+  late final _firstName = TextEditingController(text: _splitName(widget.user.fullName).$1);
+  late final _surname = TextEditingController(text: _splitName(widget.user.fullName).$2);
   late final _city = TextEditingController(text: widget.user.homeCity ?? '');
   late final _addressStreet = TextEditingController(text: widget.user.addressStreet ?? '');
+  late final _addressStreet2 = TextEditingController(text: widget.user.addressStreet2 ?? '');
   late final _addressCity = TextEditingController(text: widget.user.addressCity ?? '');
+  late final _addressDistrict = TextEditingController(text: widget.user.addressDistrict ?? '');
+  late final _addressSubdistrict =
+      TextEditingController(text: widget.user.addressSubdistrict ?? '');
   late final _addressPostalCode =
       TextEditingController(text: widget.user.addressPostalCode ?? '');
   late String? _addressCountry = widget.user.addressCountry;
   late String? _avatarUrl = widget.user.avatarUrl;
+  late String? _gender = widget.user.gender;
+  late DateTime? _dateOfBirth =
+      widget.user.dateOfBirth == null ? null : DateTime.tryParse(widget.user.dateOfBirth!);
   bool _busy = false;
   String? _error;
 
+  static (String, String) _splitName(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return ('', '');
+    return (parts.first, parts.length > 1 ? parts.sublist(1).join(' ') : '');
+  }
+
   @override
   void dispose() {
-    _name.dispose();
+    _firstName.dispose();
+    _surname.dispose();
     _city.dispose();
     _addressStreet.dispose();
+    _addressStreet2.dispose();
     _addressCity.dispose();
+    _addressDistrict.dispose();
+    _addressSubdistrict.dispose();
     _addressPostalCode.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickBirthday() async {
+    final now = DateTime.now();
+    final maxDate = DateTime(now.year - 18, now.month, now.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dateOfBirth ?? DateTime(now.year - 25, now.month, now.day),
+      firstDate: DateTime(now.year - 120),
+      lastDate: maxDate,
+    );
+    if (picked != null) setState(() => _dateOfBirth = picked);
   }
 
   // Closes this sheet, then pushes the dedicated single-purpose screen for
@@ -275,8 +330,13 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   }
 
   Future<void> _save() async {
-    if (_name.text.trim().length < 2) {
-      setState(() => _error = AppLocalizations.of(context)!.errorEnterName);
+    final l10n = AppLocalizations.of(context)!;
+    if (_firstName.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorEnterFirstName);
+      return;
+    }
+    if (_surname.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorEnterSurname);
       return;
     }
     setState(() {
@@ -287,10 +347,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       await ref
           .read(accountRepositoryProvider)
           .updateProfile(
-            fullName: _name.text.trim(),
+            fullName: '${_firstName.text.trim()} ${_surname.text.trim()}',
             homeCity: _city.text.trim(),
             avatarUrl: _avatarUrl ?? '',
+            gender: _gender ?? '',
+            dateOfBirth: _dateOfBirth == null ? '' : _isoDate(_dateOfBirth!),
             addressStreet: _addressStreet.text.trim(),
+            addressStreet2: _addressStreet2.text.trim(),
+            addressDistrict: _addressDistrict.text.trim(),
+            addressSubdistrict: _addressSubdistrict.text.trim(),
             addressCity: _addressCity.text.trim(),
             addressPostalCode: _addressPostalCode.text.trim(),
             addressCountry: _addressCountry ?? '',
@@ -306,6 +371,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       });
     }
   }
+
+  static String _isoDate(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -327,10 +395,49 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 circle: true,
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: _name,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(labelText: l10n.fieldFullName),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _firstName,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(labelText: l10n.fieldFirstName),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _surname,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(labelText: l10n.fieldSurname),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _gender,
+                decoration: InputDecoration(labelText: l10n.fieldGender),
+                items: [
+                  DropdownMenuItem(value: 'male', child: Text(l10n.genderMale)),
+                  DropdownMenuItem(value: 'female', child: Text(l10n.genderFemale)),
+                  DropdownMenuItem(
+                    value: 'prefer_not_to_say',
+                    child: Text(l10n.genderPreferNotToSay),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _gender = v),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: _pickBirthday,
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: l10n.fieldBirthday,
+                    suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
+                  ),
+                  child: Text(_dateOfBirth == null ? '—' : _isoDate(_dateOfBirth!)),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -362,34 +469,66 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 onChange: () => _goToChange(ContactChannel.phone),
               ),
               const SizedBox(height: 12),
+              CountryPickerField(
+                value: _addressCountry,
+                onChanged: (v) => setState(() => _addressCountry = v),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 controller: _addressStreet,
                 decoration: InputDecoration(labelText: l10n.fieldStreetAddress),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextField(
-                      controller: _addressCity,
-                      decoration: InputDecoration(labelText: l10n.fieldCity),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: _addressPostalCode,
-                      decoration: InputDecoration(labelText: l10n.fieldPostalCode),
-                    ),
-                  ),
-                ],
+              TextField(
+                controller: _addressStreet2,
+                decoration: InputDecoration(labelText: l10n.fieldStreetAddress2),
               ),
               const SizedBox(height: 12),
-              CountryPickerField(
-                value: _addressCountry,
-                onChanged: (v) => setState(() => _addressCountry = v),
-              ),
+              if (_addressCountry == 'TH')
+                ThaiAddressPicker(
+                  province: _addressCity.text,
+                  district: _addressDistrict.text,
+                  subdistrict: _addressSubdistrict.text,
+                  postalCode: _addressPostalCode.text,
+                  provinceLabel: l10n.fieldProvince,
+                  districtLabel: l10n.fieldDistrict,
+                  subdistrictLabel: l10n.fieldSubdistrict,
+                  postalCodeLabel: l10n.fieldPostalCode,
+                  onChanged: ({
+                    required province,
+                    required district,
+                    required subdistrict,
+                    required postalCode,
+                  }) {
+                    setState(() {
+                      _addressCity.text = province;
+                      _addressDistrict.text = district;
+                      _addressSubdistrict.text = subdistrict;
+                      _addressPostalCode.text = postalCode;
+                    });
+                  },
+                )
+              else ...[
+                TextField(
+                  controller: _addressCity,
+                  decoration: InputDecoration(labelText: l10n.fieldCity),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _addressDistrict,
+                  decoration: InputDecoration(labelText: l10n.fieldDistrict),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _addressSubdistrict,
+                  decoration: InputDecoration(labelText: l10n.fieldSubdistrict),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _addressPostalCode,
+                  decoration: InputDecoration(labelText: l10n.fieldPostalCode),
+                ),
+              ],
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(
@@ -493,10 +632,8 @@ class _KycCardState extends ConsumerState<_KycCard> {
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
   final _address = TextEditingController();
-  final _contactNumber = TextEditingController();
   String _docType = 'passport';
   String? _photoUrl;
-  String? _photoBackUrl;
   String? _selfieUrl;
   bool _expanded = false;
   bool _submitting = false;
@@ -508,7 +645,6 @@ class _KycCardState extends ConsumerState<_KycCard> {
     _firstName.dispose();
     _lastName.dispose();
     _address.dispose();
-    _contactNumber.dispose();
     super.dispose();
   }
 
@@ -524,10 +660,6 @@ class _KycCardState extends ConsumerState<_KycCard> {
     }
     if (_address.text.trim().length < 3) {
       setState(() => _error = l10n.errorEnterAddressOnDocument);
-      return;
-    }
-    if (_contactNumber.text.trim().length < 3) {
-      setState(() => _error = l10n.errorEnterContactNumber);
       return;
     }
     if (_photoUrl == null) {
@@ -549,10 +681,8 @@ class _KycCardState extends ConsumerState<_KycCard> {
             firstName: _firstName.text.trim(),
             lastName: _lastName.text.trim(),
             address: _address.text.trim(),
-            contactNumber: _contactNumber.text.trim(),
             documentPhotoUrl: _photoUrl!,
             selfiePhotoUrl: _selfieUrl!,
-            documentPhotoBackUrl: _photoBackUrl,
           );
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
@@ -563,13 +693,12 @@ class _KycCardState extends ConsumerState<_KycCard> {
         _firstName.clear();
         _lastName.clear();
         _address.clear();
-        _contactNumber.clear();
         _photoUrl = null;
-        _photoBackUrl = null;
         _selfieUrl = null;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.infoSubmittedForReview)),
+      await showDialog<void>(
+        context: context,
+        builder: (_) => _KycSubmittedDialog(l10n: l10n),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -612,9 +741,6 @@ class _KycCardState extends ConsumerState<_KycCard> {
                     _firstName.text = parts.first;
                     if (parts.length > 1) _lastName.text = parts.sublist(1).join(' ');
                   }
-                  if (_contactNumber.text.isEmpty && user.phone != null) {
-                    _contactNumber.text = user.phone!;
-                  }
                 }),
                 child: Text(
                   user.kycStatus == 'pending'
@@ -631,10 +757,6 @@ class _KycCardState extends ConsumerState<_KycCard> {
                   DropdownMenuItem(
                     value: 'id_card',
                     child: Text(l10n.docIdCard),
-                  ),
-                  DropdownMenuItem(
-                    value: 'drivers_license',
-                    child: Text(l10n.docDriversLicense),
                   ),
                 ],
                 onChanged: (v) => setState(() => _docType = v ?? 'passport'),
@@ -669,22 +791,10 @@ class _KycCardState extends ConsumerState<_KycCard> {
                 maxLines: 2,
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _contactNumber,
-                decoration: InputDecoration(labelText: l10n.fieldContactNumber),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 12),
               ImagePickerField(
                 value: _photoUrl,
                 onChanged: (url) => setState(() => _photoUrl = url),
                 label: l10n.fieldDocumentPhoto,
-              ),
-              const SizedBox(height: 12),
-              ImagePickerField(
-                value: _photoBackUrl,
-                onChanged: (url) => setState(() => _photoBackUrl = url),
-                label: l10n.fieldDocumentPhotoBackOptional,
               ),
               const SizedBox(height: 12),
               ImagePickerField(
@@ -709,6 +819,34 @@ class _KycCardState extends ConsumerState<_KycCard> {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Shown once a KYC submission goes through, alongside the `kyc_submitted`
+/// notification recorded server-side — this is the immediate, in-the-moment
+/// confirmation; the notification is there for whenever the user next opens
+/// the inbox. Closed only by its explicit X, never a tap-outside dismiss, so
+/// it isn't missed.
+class _KycSubmittedDialog extends StatelessWidget {
+  const _KycSubmittedDialog({required this.l10n});
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          Expanded(child: Text(l10n.kycSubmittedDialogTitle)),
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: l10n.actionClose,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+      titlePadding: const EdgeInsets.fromLTRB(24, 16, 8, 0),
+      content: Text(l10n.kycSubmittedDialogBody),
     );
   }
 }

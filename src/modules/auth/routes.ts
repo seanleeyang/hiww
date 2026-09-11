@@ -561,7 +561,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     'rating_count',
     'delivered_count',
     'phone',
+    'gender',
+    'date_of_birth',
     'address_street',
+    'address_street2',
+    'address_subdistrict',
+    'address_district',
     'address_city',
     'address_postal_code',
     'address_country',
@@ -645,7 +650,14 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (parsed.data.avatar_url !== undefined) patch.avatar_url = parsed.data.avatar_url;
     if (parsed.data.email !== undefined) patch.email = parsed.data.email;
     if (parsed.data.phone !== undefined) patch.phone = parsed.data.phone;
+    if (parsed.data.gender !== undefined) patch.gender = parsed.data.gender;
+    if (parsed.data.date_of_birth !== undefined) patch.date_of_birth = parsed.data.date_of_birth;
     if (parsed.data.address_street !== undefined) patch.address_street = parsed.data.address_street;
+    if (parsed.data.address_street2 !== undefined) patch.address_street2 = parsed.data.address_street2;
+    if (parsed.data.address_subdistrict !== undefined) {
+      patch.address_subdistrict = parsed.data.address_subdistrict;
+    }
+    if (parsed.data.address_district !== undefined) patch.address_district = parsed.data.address_district;
     if (parsed.data.address_city !== undefined) patch.address_city = parsed.data.address_city;
     if (parsed.data.address_postal_code !== undefined) patch.address_postal_code = parsed.data.address_postal_code;
     if (parsed.data.address_country !== undefined) patch.address_country = parsed.data.address_country;

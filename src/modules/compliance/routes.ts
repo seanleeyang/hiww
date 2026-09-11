@@ -7,16 +7,13 @@ import { recordNotification } from '@/services/notify';
 import { runKycCheck } from '@/services/kyc-check';
 
 const kycSubmitSchema = z.object({
-  document_type: z.enum(['passport', 'id_card', 'drivers_license']),
+  document_type: z.enum(['passport', 'id_card']),
   document_id: z.string().min(3),
-  /** As printed on the document — may differ from the account's own full_name/phone (nicknames, married names, a different contact number), so an admin needs to see both. */
+  /** As printed on the document — may differ from the account's own full_name (nicknames, married names), so an admin needs to see both. */
   first_name: z.string().min(1),
   last_name: z.string().min(1),
   address: z.string().min(3),
-  contact_number: z.string().min(3),
   document_photo_url: z.string().url(),
-  /** Optional second page — a passport's visa stamp page, or the back of a card. */
-  document_photo_back_url: z.string().url().optional(),
   /** Photo of the user holding the document, for the AI face-match check. */
   selfie_photo_url: z.string().url(),
 });
@@ -58,9 +55,7 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
         kyc_first_name: parsed.data.first_name,
         kyc_last_name: parsed.data.last_name,
         kyc_address: parsed.data.address,
-        kyc_contact_number: parsed.data.contact_number,
         kyc_document_photo_url: parsed.data.document_photo_url,
-        kyc_document_photo_back_url: parsed.data.document_photo_back_url ?? null,
         kyc_selfie_photo_url: parsed.data.selfie_photo_url,
         // A fresh submission invalidates whatever the previous AI pass said.
         kyc_ai_analysis: null,
@@ -95,7 +90,6 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
       id: user.id,
       kyc_document_type: parsed.data.document_type,
       kyc_document_photo_url: parsed.data.document_photo_url,
-      kyc_document_photo_back_url: parsed.data.document_photo_back_url ?? null,
       kyc_selfie_photo_url: parsed.data.selfie_photo_url,
       kyc_first_name: parsed.data.first_name,
       kyc_last_name: parsed.data.last_name,

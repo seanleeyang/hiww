@@ -794,7 +794,7 @@ void main() {
         timeout: const Duration(seconds: 40));
     await _tap(tester, find.byTooltip('Account'));
 
-    await _pumpUntil(tester, find.text('ID check'),
+    await _pumpUntil(tester, find.text('Identity Verification'),
         timeout: const Duration(seconds: 20));
     await _tap(
         tester, find.widgetWithText(FilledButton, 'Update ID details'));
@@ -810,14 +810,13 @@ void main() {
     await tester.enterText(
         find.widgetWithText(TextField, 'Address (as on document)'),
         '123 Test St, Bangkok');
-    await tester.enterText(
-        find.widgetWithText(TextField, 'Contact number'), '+66 81 234 5678');
     await _pickPhoto(tester, 'Add a photo of the document');
     await _pickPhoto(tester, 'Add a selfie holding the document');
-    await _tap(tester, _button('Submit for review'));
+    await _tap(tester, _button('Start Verification'));
 
-    await _pumpUntil(tester, find.textContaining('Submitted for review'),
+    await _pumpUntil(tester, find.text('Submitted for verification'),
         timeout: const Duration(seconds: 30));
+    await _tap(tester, find.byIcon(Icons.close));
 
     final queue =
         await _api('GET', '/api/admin/reviews', token: await _adminToken());

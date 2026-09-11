@@ -10,11 +10,9 @@ export type KycRisk = 'low' | 'medium' | 'high';
 export type FieldMatch = 'match' | 'mismatch' | 'unclear';
 
 export interface KycAnalysisInput {
-  documentType: 'passport' | 'id_card' | 'drivers_license';
+  documentType: 'passport' | 'id_card';
   /** Public URL of the front of the document. */
   documentPhotoUrl: string;
-  /** Public URL of a second page, if attached (visa stamp page, back of a card). */
-  documentPhotoBackUrl?: string | null;
   /** Public URL of the user holding the document, for a face-match check. */
   selfiePhotoUrl: string;
   submittedFirstName: string;

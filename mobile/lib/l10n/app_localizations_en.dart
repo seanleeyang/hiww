@@ -105,9 +105,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldPassword => 'Password';
 
   @override
-  String get fieldFullName => 'Full name';
-
-  @override
   String get fieldFirstName => 'First name';
 
   @override
@@ -128,9 +125,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorPasswordNotAlphanumeric =>
       'Must contain both letters and numbers';
-
-  @override
-  String get errorEnterFullName => 'Enter your full name';
 
   @override
   String get errorEnterFirstName => 'Enter your first name';
@@ -355,7 +349,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionAddDetails => 'Add details';
 
   @override
-  String get sectionContactDelivery => 'Contact & delivery';
+  String get sectionContactDelivery => 'Personal information';
 
   @override
   String get accountAddPhone => 'Add a phone number';
@@ -377,16 +371,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'Required before your first order. Only visible to Hiww and the other person on an order — never shown publicly.';
 
   @override
-  String get fieldStreetAddress => 'Street address';
+  String get fieldStreetAddress => 'Street address 1';
+
+  @override
+  String get fieldStreetAddress2 => 'Street address 2 (optional)';
 
   @override
   String get fieldCity => 'City';
 
   @override
+  String get fieldProvince => 'Province';
+
+  @override
+  String get fieldDistrict => 'District';
+
+  @override
+  String get fieldSubdistrict => 'Sub-district';
+
+  @override
   String get fieldPostalCode => 'Postal code';
 
   @override
-  String get errorEnterName => 'Enter your name';
+  String get fieldGender => 'Gender';
+
+  @override
+  String get genderMale => 'Male';
+
+  @override
+  String get genderFemale => 'Female';
+
+  @override
+  String get genderPreferNotToSay => 'Prefer not to say';
+
+  @override
+  String get fieldBirthday => 'Birthday';
+
+  @override
+  String get errorSelectBirthday => 'Select your birthday';
 
   @override
   String get actionSave => 'Save';
@@ -399,7 +420,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Card payments are off during the pilot. You pay by bank transfer and the Hiww team confirms once the money lands.';
 
   @override
-  String get kycSectionTitle => 'ID check';
+  String get kycSectionTitle => 'Identity Verification';
 
   @override
   String get kycVerified => 'Your identity has been verified.';
@@ -421,10 +442,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get docPassport => 'Passport';
 
   @override
-  String get docIdCard => 'National ID card';
-
-  @override
-  String get docDriversLicense => 'Driver\'s licence';
+  String get docIdCard => 'Thai National ID Card';
 
   @override
   String get fieldDocumentNumber => 'Document number';
@@ -450,20 +468,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the address as it appears on your document';
 
   @override
-  String get fieldContactNumber => 'Contact number';
-
-  @override
-  String get errorEnterContactNumber => 'Enter a contact number';
-
-  @override
   String get fieldDocumentPhoto => 'Add a photo of the document';
 
   @override
   String get errorDocumentPhotoRequired => 'Add a photo of your document';
-
-  @override
-  String get fieldDocumentPhotoBackOptional =>
-      'Add a second page (optional) — e.g. a visa stamp page, or the back of a card';
 
   @override
   String get fieldSelfieWithDocument => 'Add a selfie holding the document';
@@ -473,10 +481,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add a selfie of yourself holding the document';
 
   @override
-  String get actionSubmitForReview => 'Submit for review';
+  String get actionSubmitForReview => 'Start Verification';
 
   @override
   String get infoSubmittedForReview => 'Submitted for review';
+
+  @override
+  String get kycSubmittedDialogTitle => 'Submitted for verification';
+
+  @override
+  String get kycSubmittedDialogBody =>
+      'Thanks — our team will verify your details shortly. We\'ll let you know once it\'s reviewed.';
 
   @override
   String get actionLogOut => 'Log out';

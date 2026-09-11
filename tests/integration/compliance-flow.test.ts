@@ -6,7 +6,6 @@ const submitPayload = {
   first_name: 'Jane',
   last_name: 'Traveler',
   address: '123 Sukhumvit Rd, Bangkok',
-  contact_number: '+66 81 234 5678',
   document_photo_url: 'https://example.com/uploads/id-front.jpg',
   selfie_photo_url: 'https://example.com/uploads/selfie.jpg',
 };
@@ -55,7 +54,7 @@ describe('compliance / KYC flow', () => {
   it('rejects a submission missing any required field', async () => {
     const user = await createUser(ctx, { user_type: 'traveler' });
 
-    for (const omit of ['first_name', 'last_name', 'address', 'contact_number', 'document_photo_url', 'selfie_photo_url']) {
+    for (const omit of ['first_name', 'last_name', 'address', 'document_photo_url', 'selfie_photo_url']) {
       const payload = { ...submitPayload } as Record<string, unknown>;
       delete payload[omit];
       const res = await ctx.app.inject({
@@ -76,10 +75,7 @@ describe('compliance / KYC flow', () => {
       method: 'POST',
       url: '/api/compliance/kyc/submit',
       headers: authHeader(user),
-      payload: {
-        ...submitPayload,
-        document_photo_back_url: 'https://example.com/uploads/visa-page.jpg',
-      },
+      payload: submitPayload,
     });
     expect(submit.statusCode).toBe(201);
 
@@ -93,9 +89,7 @@ describe('compliance / KYC flow', () => {
     expect(row?.kyc_first_name).toBe('Jane');
     expect(row?.kyc_last_name).toBe('Traveler');
     expect(row?.kyc_address).toBe('123 Sukhumvit Rd, Bangkok');
-    expect(row?.kyc_contact_number).toBe('+66 81 234 5678');
     expect(row?.kyc_document_photo_url).toBe('https://example.com/uploads/id-front.jpg');
-    expect(row?.kyc_document_photo_back_url).toBe('https://example.com/uploads/visa-page.jpg');
     expect(row?.kyc_selfie_photo_url).toBe('https://example.com/uploads/selfie.jpg');
     expect(row?.kyc_submitted_at).not.toBeNull();
 
@@ -110,9 +104,7 @@ describe('compliance / KYC flow', () => {
     expect(entry?.first_name).toBe('Jane');
     expect(entry?.last_name).toBe('Traveler');
     expect(entry?.address).toBe('123 Sukhumvit Rd, Bangkok');
-    expect(entry?.contact_number).toBe('+66 81 234 5678');
     expect(entry?.document_photo_url).toBe('https://example.com/uploads/id-front.jpg');
-    expect(entry?.document_photo_back_url).toBe('https://example.com/uploads/visa-page.jpg');
     expect(entry?.selfie_photo_url).toBe('https://example.com/uploads/selfie.jpg');
   });
 

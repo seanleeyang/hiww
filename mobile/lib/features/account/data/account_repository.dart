@@ -13,10 +13,8 @@ class AccountRepository {
     required String firstName,
     required String lastName,
     required String address,
-    required String contactNumber,
     required String documentPhotoUrl,
     required String selfiePhotoUrl,
-    String? documentPhotoBackUrl,
   }) async {
     final body = <String, dynamic>{
       'document_type': documentType,
@@ -24,11 +22,9 @@ class AccountRepository {
       'first_name': firstName,
       'last_name': lastName,
       'address': address,
-      'contact_number': contactNumber,
       'document_photo_url': documentPhotoUrl,
       'selfie_photo_url': selfiePhotoUrl,
     };
-    if (documentPhotoBackUrl != null) body['document_photo_back_url'] = documentPhotoBackUrl;
     await _api.post('/api/compliance/kyc/submit', body: body);
   }
 
@@ -38,7 +34,12 @@ class AccountRepository {
     String? avatarUrl,
     String? email,
     String? phone,
+    String? gender,
+    String? dateOfBirth,
     String? addressStreet,
+    String? addressStreet2,
+    String? addressDistrict,
+    String? addressSubdistrict,
     String? addressCity,
     String? addressPostalCode,
     String? addressCountry,
@@ -49,7 +50,18 @@ class AccountRepository {
     if (avatarUrl != null) body['avatar_url'] = avatarUrl.isEmpty ? null : avatarUrl;
     if (email != null) body['email'] = email;
     if (phone != null) body['phone'] = phone.isEmpty ? null : phone;
+    if (gender != null) body['gender'] = gender.isEmpty ? null : gender;
+    if (dateOfBirth != null) body['date_of_birth'] = dateOfBirth.isEmpty ? null : dateOfBirth;
     if (addressStreet != null) body['address_street'] = addressStreet.isEmpty ? null : addressStreet;
+    if (addressStreet2 != null) {
+      body['address_street2'] = addressStreet2.isEmpty ? null : addressStreet2;
+    }
+    if (addressDistrict != null) {
+      body['address_district'] = addressDistrict.isEmpty ? null : addressDistrict;
+    }
+    if (addressSubdistrict != null) {
+      body['address_subdistrict'] = addressSubdistrict.isEmpty ? null : addressSubdistrict;
+    }
     if (addressCity != null) body['address_city'] = addressCity.isEmpty ? null : addressCity;
     if (addressPostalCode != null) {
       body['address_postal_code'] = addressPostalCode.isEmpty ? null : addressPostalCode;

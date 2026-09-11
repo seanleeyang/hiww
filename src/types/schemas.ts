@@ -150,6 +150,27 @@ export const passwordSchema = z
   .refine((v) => /[a-zA-Z]/.test(v), 'Password must contain at least one letter')
   .refine((v) => /[0-9]/.test(v), 'Password must contain at least one number');
 
+const MIN_AGE_YEARS = 18;
+
+/** True if [isoDate] (YYYY-MM-DD) is at least [MIN_AGE_YEARS] years before today. */
+function isAtLeast18(isoDate: string): boolean {
+  const dob = new Date(`${isoDate}T00:00:00Z`);
+  if (Number.isNaN(dob.getTime())) return false;
+  const now = new Date();
+  let age = now.getUTCFullYear() - dob.getUTCFullYear();
+  const hadBirthdayThisYear =
+    now.getUTCMonth() > dob.getUTCMonth() ||
+    (now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() >= dob.getUTCDate());
+  if (!hadBirthdayThisYear) age -= 1;
+  return age >= MIN_AGE_YEARS;
+}
+
+const dateOfBirthSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid date')
+  .refine((v) => !Number.isNaN(new Date(`${v}T00:00:00Z`).getTime()), 'Enter a valid date')
+  .refine(isAtLeast18, 'You must be at least 18 years old');
+
 export const profileUpdateSchema = z
   .object({
     full_name: z.string().trim().min(2).max(120).optional(),
@@ -157,7 +178,12 @@ export const profileUpdateSchema = z
     avatar_url: z.string().trim().url().max(2048).nullable().optional(),
     email: z.string().trim().email().optional(),
     phone: phoneSchema.nullable().optional(),
+    gender: z.enum(['male', 'female', 'prefer_not_to_say']).nullable().optional(),
+    date_of_birth: dateOfBirthSchema.nullable().optional(),
     address_street: optionalContactText(200),
+    address_street2: optionalContactText(200),
+    address_subdistrict: optionalContactText(120),
+    address_district: optionalContactText(120),
     address_city: optionalContactText(120),
     address_postal_code: optionalContactText(20),
     address_country: optionalContactText(120),

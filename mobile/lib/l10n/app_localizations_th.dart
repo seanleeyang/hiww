@@ -104,9 +104,6 @@ class AppLocalizationsTh extends AppLocalizations {
   String get fieldPassword => 'รหัสผ่าน';
 
   @override
-  String get fieldFullName => 'ชื่อ-นามสกุล';
-
-  @override
   String get fieldFirstName => 'ชื่อจริง';
 
   @override
@@ -126,9 +123,6 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get errorPasswordNotAlphanumeric => 'ต้องมีทั้งตัวอักษรและตัวเลข';
-
-  @override
-  String get errorEnterFullName => 'กรอกชื่อ-นามสกุลของคุณ';
 
   @override
   String get errorEnterFirstName => 'กรอกชื่อจริงของคุณ';
@@ -352,7 +346,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionAddDetails => 'เพิ่มข้อมูล';
 
   @override
-  String get sectionContactDelivery => 'ข้อมูลติดต่อและจัดส่ง';
+  String get sectionContactDelivery => 'ข้อมูลส่วนตัว';
 
   @override
   String get accountAddPhone => 'เพิ่มเบอร์โทรศัพท์';
@@ -374,16 +368,43 @@ class AppLocalizationsTh extends AppLocalizations {
       'จำเป็นต้องกรอกก่อนคำสั่งซื้อแรกของคุณ ข้อมูลนี้ Hiww และอีกฝ่ายในคำสั่งซื้อเท่านั้นที่เห็นได้ — จะไม่แสดงต่อสาธารณะ';
 
   @override
-  String get fieldStreetAddress => 'ที่อยู่ (ถนน)';
+  String get fieldStreetAddress => 'ที่อยู่ บรรทัดที่ 1';
+
+  @override
+  String get fieldStreetAddress2 => 'ที่อยู่ บรรทัดที่ 2 (ไม่บังคับ)';
 
   @override
   String get fieldCity => 'เมือง';
 
   @override
+  String get fieldProvince => 'จังหวัด';
+
+  @override
+  String get fieldDistrict => 'อำเภอ/เขต';
+
+  @override
+  String get fieldSubdistrict => 'ตำบล/แขวง';
+
+  @override
   String get fieldPostalCode => 'รหัสไปรษณีย์';
 
   @override
-  String get errorEnterName => 'กรอกชื่อของคุณ';
+  String get fieldGender => 'เพศ';
+
+  @override
+  String get genderMale => 'ชาย';
+
+  @override
+  String get genderFemale => 'หญิง';
+
+  @override
+  String get genderPreferNotToSay => 'ไม่ระบุ';
+
+  @override
+  String get fieldBirthday => 'วันเกิด';
+
+  @override
+  String get errorSelectBirthday => 'เลือกวันเกิดของคุณ';
 
   @override
   String get actionSave => 'บันทึก';
@@ -396,7 +417,7 @@ class AppLocalizationsTh extends AppLocalizations {
       'การชำระเงินด้วยบัตรถูกปิดใช้งานในช่วงนำร่อง คุณชำระเงินผ่านการโอนเงินธนาคาร และทีมงาน Hiww จะยืนยันเมื่อได้รับเงินแล้ว';
 
   @override
-  String get kycSectionTitle => 'ตรวจสอบตัวตน';
+  String get kycSectionTitle => 'ยืนยันตัวตน';
 
   @override
   String get kycVerified => 'ยืนยันตัวตนของคุณเรียบร้อยแล้ว';
@@ -418,10 +439,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get docPassport => 'หนังสือเดินทาง';
 
   @override
-  String get docIdCard => 'บัตรประจำตัวประชาชน';
-
-  @override
-  String get docDriversLicense => 'ใบขับขี่';
+  String get docIdCard => 'บัตรประจำตัวประชาชนไทย';
 
   @override
   String get fieldDocumentNumber => 'หมายเลขเอกสาร';
@@ -447,20 +465,10 @@ class AppLocalizationsTh extends AppLocalizations {
       'กรอกที่อยู่ตามที่ปรากฏบนเอกสารของคุณ';
 
   @override
-  String get fieldContactNumber => 'เบอร์ติดต่อ';
-
-  @override
-  String get errorEnterContactNumber => 'กรอกเบอร์ติดต่อ';
-
-  @override
   String get fieldDocumentPhoto => 'แนบรูปถ่ายเอกสาร';
 
   @override
   String get errorDocumentPhotoRequired => 'แนบรูปถ่ายเอกสารของคุณ';
-
-  @override
-  String get fieldDocumentPhotoBackOptional =>
-      'แนบหน้าที่สอง (ไม่บังคับ) — เช่น หน้าประทับตราวีซ่า หรือด้านหลังบัตร';
 
   @override
   String get fieldSelfieWithDocument => 'แนบรูปเซลฟี่ถือเอกสาร';
@@ -469,10 +477,17 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorSelfiePhotoRequired => 'แนบรูปเซลฟี่ของคุณขณะถือเอกสาร';
 
   @override
-  String get actionSubmitForReview => 'ส่งเพื่อตรวจสอบ';
+  String get actionSubmitForReview => 'เริ่มการยืนยันตัวตน';
 
   @override
   String get infoSubmittedForReview => 'ส่งเพื่อตรวจสอบแล้ว';
+
+  @override
+  String get kycSubmittedDialogTitle => 'ส่งเพื่อยืนยันตัวตนแล้ว';
+
+  @override
+  String get kycSubmittedDialogBody =>
+      'ขอบคุณ — ทีมงานของเราจะตรวจสอบข้อมูลของคุณในเร็ว ๆ นี้ เราจะแจ้งให้คุณทราบเมื่อตรวจสอบเสร็จแล้ว';
 
   @override
   String get actionLogOut => 'ออกจากระบบ';

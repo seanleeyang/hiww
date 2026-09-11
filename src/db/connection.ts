@@ -1,7 +1,15 @@
-import { Pool, type PoolConfig } from 'pg';
+import { Pool, type PoolConfig, types as pgTypes } from 'pg';
 import { Kysely, PostgresDialect } from 'kysely';
 import type { Database } from '@/types/database';
 import { config } from '@/config/env';
+
+// `pg`'s default DATE (oid 1082) parser builds a JS Date at local midnight.
+// Serialising that via `.toISOString()` on a server not running in UTC
+// shifts the calendar date by a day — a real risk for `users.date_of_birth`
+// (age is checked against it). Keep it as the plain 'YYYY-MM-DD' string
+// Postgres already returns; nothing in this codebase wants a Date object
+// for a date-only column.
+pgTypes.setTypeParser(1082, (value) => value);
 
 /**
  * Managed Postgres (Neon, Render, Supabase, RDS…) requires TLS. `pg` does not

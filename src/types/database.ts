@@ -18,17 +18,14 @@ export interface UsersTable {
   full_name: string;
   user_type: 'shopper' | 'traveler' | 'both';
   kyc_status: Generated<'pending' | 'approved' | 'rejected'>;
-  /** What was actually submitted for ID check (migration 039), form split + AI check added in 040 — a photo of the document plus the details printed on it, for an admin (AI-assisted) to compare against the account. */
-  kyc_document_type?: 'passport' | 'id_card' | 'drivers_license' | null;
+  /** What was actually submitted for ID check (migration 039), form split + AI check added in 040, contact number + back-of-card dropped in 041 — a photo of the document plus the details printed on it, for an admin (AI-assisted) to compare against the account. */
+  kyc_document_type?: 'passport' | 'id_card' | null;
   kyc_document_id?: string | null;
   kyc_first_name?: string | null;
   kyc_last_name?: string | null;
   /** Address exactly as printed on the document — may differ from the account's own delivery address. */
   kyc_address?: string | null;
-  kyc_contact_number?: string | null;
   kyc_document_photo_url?: string | null;
-  /** Optional second page — a passport's visa stamp page, or the back of a card. */
-  kyc_document_photo_back_url?: string | null;
   /** Photo of the user holding the document, for a face-match check against the document photo. */
   kyc_selfie_photo_url?: string | null;
   /** Advisory AI cross-check (migration 040) — never sets kyc_status itself, a human always makes the final call. */
@@ -48,9 +45,19 @@ export interface UsersTable {
   /** Contact + delivery details (migration 018), all private (self-view only). */
   phone?: string | null;
   address_street?: string | null;
+  /** Street address, line 2 (migration 041) — apartment/unit/floor etc. */
+  address_street2?: string | null;
+  /** Sub-district (ตำบล/แขวง) and district (อำเภอ/เขต) — migration 041, mainly meaningful for Thai addresses; free text either way so a non-Thai address can leave them blank or use them loosely. */
+  address_subdistrict?: string | null;
+  address_district?: string | null;
+  /** Province for a Thai address; city/state more generally for others. */
   address_city?: string | null;
   address_postal_code?: string | null;
   address_country?: string | null;
+  /** Personal information (migration 041). */
+  gender?: 'male' | 'female' | 'prefer_not_to_say' | null;
+  /** DATE column, read back as a plain 'YYYY-MM-DD' string — see src/db/connection.ts's type parser. */
+  date_of_birth?: string | null;
   /**
    * Set once the matching OTP is confirmed (migration 020). Null on a fresh
    * registration; existing rows were grandfathered to `created_at` when this

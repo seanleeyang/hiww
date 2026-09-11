@@ -19,8 +19,6 @@ function docTypeLabel(type: NonNullable<KycItem['document_type']>): string {
       return 'Passport';
     case 'id_card':
       return 'ID card';
-    case 'drivers_license':
-      return "Driver's license";
   }
 }
 
@@ -88,19 +86,11 @@ export function IdChecksPage() {
                   </p>
                 )}
                 {item.address && <p className="muted" style={{ margin: '4px 0' }}>Address: {item.address}</p>}
-                {item.contact_number && (
-                  <p className="muted" style={{ margin: '4px 0' }}>Contact: {item.contact_number}</p>
-                )}
-                {(item.document_photo_url || item.document_photo_back_url || item.selfie_photo_url) && (
+                {(item.document_photo_url || item.selfie_photo_url) && (
                   <p style={{ margin: '4px 0', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     {item.document_photo_url && (
                       <a href={item.document_photo_url} target="_blank" rel="noreferrer">
                         View document photo
-                      </a>
-                    )}
-                    {item.document_photo_back_url && (
-                      <a href={item.document_photo_back_url} target="_blank" rel="noreferrer">
-                        View second page
                       </a>
                     )}
                     {item.selfie_photo_url && (

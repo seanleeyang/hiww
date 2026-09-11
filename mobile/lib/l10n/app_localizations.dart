@@ -266,12 +266,6 @@ abstract class AppLocalizations {
   /// **'Password'**
   String get fieldPassword;
 
-  /// No description provided for @fieldFullName.
-  ///
-  /// In en, this message translates to:
-  /// **'Full name'**
-  String get fieldFullName;
-
   /// No description provided for @fieldFirstName.
   ///
   /// In en, this message translates to:
@@ -313,12 +307,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Must contain both letters and numbers'**
   String get errorPasswordNotAlphanumeric;
-
-  /// No description provided for @errorEnterFullName.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your full name'**
-  String get errorEnterFullName;
 
   /// No description provided for @errorEnterFirstName.
   ///
@@ -737,7 +725,7 @@ abstract class AppLocalizations {
   /// No description provided for @sectionContactDelivery.
   ///
   /// In en, this message translates to:
-  /// **'Contact & delivery'**
+  /// **'Personal information'**
   String get sectionContactDelivery;
 
   /// No description provided for @accountAddPhone.
@@ -779,8 +767,14 @@ abstract class AppLocalizations {
   /// No description provided for @fieldStreetAddress.
   ///
   /// In en, this message translates to:
-  /// **'Street address'**
+  /// **'Street address 1'**
   String get fieldStreetAddress;
+
+  /// No description provided for @fieldStreetAddress2.
+  ///
+  /// In en, this message translates to:
+  /// **'Street address 2 (optional)'**
+  String get fieldStreetAddress2;
 
   /// No description provided for @fieldCity.
   ///
@@ -788,17 +782,65 @@ abstract class AppLocalizations {
   /// **'City'**
   String get fieldCity;
 
+  /// No description provided for @fieldProvince.
+  ///
+  /// In en, this message translates to:
+  /// **'Province'**
+  String get fieldProvince;
+
+  /// No description provided for @fieldDistrict.
+  ///
+  /// In en, this message translates to:
+  /// **'District'**
+  String get fieldDistrict;
+
+  /// No description provided for @fieldSubdistrict.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-district'**
+  String get fieldSubdistrict;
+
   /// No description provided for @fieldPostalCode.
   ///
   /// In en, this message translates to:
   /// **'Postal code'**
   String get fieldPostalCode;
 
-  /// No description provided for @errorEnterName.
+  /// No description provided for @fieldGender.
   ///
   /// In en, this message translates to:
-  /// **'Enter your name'**
-  String get errorEnterName;
+  /// **'Gender'**
+  String get fieldGender;
+
+  /// No description provided for @genderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get genderMale;
+
+  /// No description provided for @genderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get genderFemale;
+
+  /// No description provided for @genderPreferNotToSay.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer not to say'**
+  String get genderPreferNotToSay;
+
+  /// No description provided for @fieldBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Birthday'**
+  String get fieldBirthday;
+
+  /// No description provided for @errorSelectBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your birthday'**
+  String get errorSelectBirthday;
 
   /// No description provided for @actionSave.
   ///
@@ -821,7 +863,7 @@ abstract class AppLocalizations {
   /// No description provided for @kycSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'ID check'**
+  /// **'Identity Verification'**
   String get kycSectionTitle;
 
   /// No description provided for @kycVerified.
@@ -863,14 +905,8 @@ abstract class AppLocalizations {
   /// No description provided for @docIdCard.
   ///
   /// In en, this message translates to:
-  /// **'National ID card'**
+  /// **'Thai National ID Card'**
   String get docIdCard;
-
-  /// No description provided for @docDriversLicense.
-  ///
-  /// In en, this message translates to:
-  /// **'Driver\'s licence'**
-  String get docDriversLicense;
 
   /// No description provided for @fieldDocumentNumber.
   ///
@@ -914,18 +950,6 @@ abstract class AppLocalizations {
   /// **'Enter the address as it appears on your document'**
   String get errorEnterAddressOnDocument;
 
-  /// No description provided for @fieldContactNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Contact number'**
-  String get fieldContactNumber;
-
-  /// No description provided for @errorEnterContactNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a contact number'**
-  String get errorEnterContactNumber;
-
   /// No description provided for @fieldDocumentPhoto.
   ///
   /// In en, this message translates to:
@@ -937,12 +961,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a photo of your document'**
   String get errorDocumentPhotoRequired;
-
-  /// No description provided for @fieldDocumentPhotoBackOptional.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a second page (optional) — e.g. a visa stamp page, or the back of a card'**
-  String get fieldDocumentPhotoBackOptional;
 
   /// No description provided for @fieldSelfieWithDocument.
   ///
@@ -959,7 +977,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionSubmitForReview.
   ///
   /// In en, this message translates to:
-  /// **'Submit for review'**
+  /// **'Start Verification'**
   String get actionSubmitForReview;
 
   /// No description provided for @infoSubmittedForReview.
@@ -967,6 +985,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Submitted for review'**
   String get infoSubmittedForReview;
+
+  /// No description provided for @kycSubmittedDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted for verification'**
+  String get kycSubmittedDialogTitle;
+
+  /// No description provided for @kycSubmittedDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks — our team will verify your details shortly. We\'ll let you know once it\'s reviewed.'**
+  String get kycSubmittedDialogBody;
 
   /// No description provided for @actionLogOut.
   ///

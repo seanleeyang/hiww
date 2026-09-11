@@ -43,7 +43,12 @@ class AuthUser {
     this.deliveredCount = 0,
     this.pilot,
     this.phone,
+    this.gender,
+    this.dateOfBirth,
     this.addressStreet,
+    this.addressStreet2,
+    this.addressDistrict,
+    this.addressSubdistrict,
     this.addressCity,
     this.addressPostalCode,
     this.addressCountry,
@@ -70,7 +75,22 @@ class AuthUser {
 
   /// Private contact/delivery details.
   final String? phone;
+
+  /// 'male' | 'female' | 'prefer_not_to_say'.
+  final String? gender;
+
+  /// ISO date (yyyy-MM-dd).
+  final String? dateOfBirth;
   final String? addressStreet;
+  final String? addressStreet2;
+
+  /// District (Thailand: amphoe); free text for non-Thai addresses.
+  final String? addressDistrict;
+
+  /// Sub-district (Thailand: tambon); free text for non-Thai addresses.
+  final String? addressSubdistrict;
+
+  /// City for most countries; province for a Thai address.
   final String? addressCity;
   final String? addressPostalCode;
   final String? addressCountry;
@@ -118,7 +138,12 @@ class AuthUser {
             ? PilotInfo.fromJson(Map<String, dynamic>.from(json['pilot'] as Map))
             : null,
         phone: json['phone'] as String?,
+        gender: json['gender'] as String?,
+        dateOfBirth: json['date_of_birth']?.toString().substring(0, 10),
         addressStreet: json['address_street'] as String?,
+        addressStreet2: json['address_street2'] as String?,
+        addressDistrict: json['address_district'] as String?,
+        addressSubdistrict: json['address_subdistrict'] as String?,
         addressCity: json['address_city'] as String?,
         addressPostalCode: json['address_postal_code'] as String?,
         addressCountry: json['address_country'] as String?,

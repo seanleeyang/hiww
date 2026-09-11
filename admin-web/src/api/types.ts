@@ -157,16 +157,13 @@ export type QueueItem =
       user_id: string;
       email: string;
       full_name: string;
-      document_type: 'passport' | 'id_card' | 'drivers_license' | null;
+      document_type: 'passport' | 'id_card' | null;
       document_id: string | null;
-      /** Name/address/contact as filled in on the form — may differ from the account's own. */
+      /** Name/address as filled in on the form — may differ from the account's own. */
       first_name: string | null;
       last_name: string | null;
       address: string | null;
-      contact_number: string | null;
       document_photo_url: string | null;
-      /** Optional second page — a passport's visa stamp page, or the back of a card. */
-      document_photo_back_url: string | null;
       /** Photo of the user holding the document, for the AI face-match check. */
       selfie_photo_url: string | null;
       /** Advisory AI cross-check — never sets `status` itself. */

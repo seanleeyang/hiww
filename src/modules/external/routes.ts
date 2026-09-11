@@ -5,7 +5,7 @@ import { getIdentityProvider } from '@/services/providers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const identityVerifySchema = z.object({
-  document_type: z.enum(['passport', 'id_card', 'drivers_license']),
+  document_type: z.enum(['passport', 'id_card']),
   document_id: z.string().min(3),
 });
 

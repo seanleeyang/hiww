@@ -3,10 +3,10 @@ import type { FieldMatch, KycAnalysis, KycAnalysisInput, KycAnalyzer, KycRisk } 
 import { fetchImage } from './fetch-image';
 
 const SYSTEM = `You review identity-check submissions for a cross-border shopping marketplace pilot.
-A user has photographed their ID document (passport, national ID card, or driver's license) and a
-selfie of themselves holding that same document, and typed in the name/ID number/address they claim
-the document shows. Your job is to help a human operator spot problems — you never make the final
-call, and nothing you say alone approves or rejects anyone.
+A user has photographed their ID document (passport or national ID card) and a selfie of themselves
+holding that same document, and typed in the name/ID number/address they claim the document shows.
+Your job is to help a human operator spot problems — you never make the final call, and nothing you
+say alone approves or rejects anyone.
 
 Documents come from many countries and can be printed in any script. Read and interpret the document
 regardless of language, but write "extracted" values in the same script/language they're printed in
@@ -58,7 +58,6 @@ export class ClaudeKycAnalyzer implements KycAnalyzer {
 
   async analyze(input: KycAnalysisInput): Promise<KycAnalysis> {
     const document = await fetchImage(input.documentPhotoUrl);
-    const documentBack = input.documentPhotoBackUrl ? await fetchImage(input.documentPhotoBackUrl) : null;
     const selfie = await fetchImage(input.selfiePhotoUrl);
 
     const userText = [
@@ -67,12 +66,10 @@ export class ClaudeKycAnalyzer implements KycAnalyzer {
       `Submitted last name: ${input.submittedLastName}`,
       `Submitted document number: ${input.submittedDocumentId}`,
       `Submitted address: ${input.submittedAddress}`,
-      documentBack
-        ? 'The first image is the front of the document, the second is a second page of it (e.g. a visa stamp page, or the back of a card), and the third is the selfie holding the document. Analyse all three.'
-        : 'The first image is the document, the second is the selfie holding it. Analyse both.',
+      'The first image is the document, the second is the selfie holding it. Analyse both.',
     ].join('\n');
 
-    const images = [document, ...(documentBack ? [documentBack] : []), selfie];
+    const images = [document, selfie];
 
     const response = await this.client.beta.messages.create({
       model: this.model,

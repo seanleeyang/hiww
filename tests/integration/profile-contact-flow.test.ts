@@ -35,6 +35,50 @@ describe('profile contact details + completeness gate', () => {
     expect(me.json().data.address_country).toBe('US');
   });
 
+  it('lets a user set gender, date of birth, and the extended Thai address fields', async () => {
+    const user = await createUser(ctx, { user_type: 'shopper' });
+
+    const patch = await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers: authHeader(user),
+      payload: {
+        gender: 'female',
+        date_of_birth: '1990-05-20',
+        address_street: '99/1 Sukhumvit Rd',
+        address_street2: 'Floor 4',
+        address_subdistrict: 'Khlong Toei Nuea',
+        address_district: 'Watthana',
+        address_city: 'Bangkok',
+        address_postal_code: '10110',
+        address_country: 'TH',
+      },
+    });
+    expect(patch.statusCode).toBe(200);
+    expect(patch.json().data.gender).toBe('female');
+    expect(patch.json().data.address_subdistrict).toBe('Khlong Toei Nuea');
+    expect(patch.json().data.address_district).toBe('Watthana');
+
+    const me = await ctx.app.inject({ method: 'GET', url: '/api/me', headers: authHeader(user) });
+    expect(me.json().data.address_street2).toBe('Floor 4');
+    expect(me.json().data.date_of_birth).toBe('1990-05-20');
+  });
+
+  it('rejects a date of birth under 18 years old', async () => {
+    const user = await createUser(ctx, { user_type: 'shopper' });
+    const underage = new Date();
+    underage.setUTCFullYear(underage.getUTCFullYear() - 17);
+    const dob = underage.toISOString().slice(0, 10);
+
+    const res = await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers: authHeader(user),
+      payload: { date_of_birth: dob },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
   it('rejects an invalid phone number', async () => {
     const user = await createUser(ctx, { user_type: 'shopper' });
     const res = await ctx.app.inject({
