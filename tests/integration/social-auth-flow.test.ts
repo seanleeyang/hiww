@@ -34,8 +34,9 @@ describe('POST /api/auth/social', () => {
   });
 
   it('501s a provider with no configured credentials, rather than crashing', async () => {
-    // GOOGLE_CLIENT_ID is unset in the test environment by default, and
-    // apple/facebook/line have no verification implemented yet at all.
+    // GOOGLE_CLIENT_ID/LINE_CHANNEL_ID/FACEBOOK_APP_ID are all unset in the
+    // test environment by default, and apple has no verification implemented
+    // at all yet.
     for (const provider of ['google', 'apple', 'facebook', 'line']) {
       const res = await ctx.app.inject({
         method: 'POST',

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/facebook_auth.dart';
 import '../../../core/google_web_button.dart';
 import '../../../core/line_auth.dart';
 import '../../../core/social_auth_config.dart';
@@ -9,9 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../application/google_auth_controller.dart';
 
 /// LINE/Facebook/Google sign-in buttons, shared by the landing, login and
-/// register screens. Google and LINE are wired to real sign-in flows;
-/// Facebook isn't yet — that needs credentials only the project owner can
-/// obtain (see the go-live plan), so its button just explains that.
+/// register screens. All three are wired to real sign-in flows.
 class SocialAuthButtons extends ConsumerWidget {
   const SocialAuthButtons({super.key});
 
@@ -79,7 +78,9 @@ class SocialAuthButtons extends ConsumerWidget {
             SizedBox(
               height: buttonHeight,
               child: FilledButton.icon(
-                onPressed: () => _notConfigured(context, l10n.providerFacebook),
+                onPressed: kIsWeb
+                    ? () => startFacebookLogin(facebookAppId)
+                    : () => _notConfigured(context, l10n.providerFacebook),
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF1877F2),
                   foregroundColor: Colors.white,

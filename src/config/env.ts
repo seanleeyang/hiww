@@ -196,4 +196,17 @@ export const config = {
    */
   lineChannelId: process.env.LINE_CHANNEL_ID || '',
   lineChannelSecret: process.env.LINE_CHANNEL_SECRET || '',
+  /**
+   * Facebook Login. Same OAuth authorization-code redirect shape as LINE
+   * above (Facebook has no client-side ID token either) — the mobile app
+   * sends the `code` it got back from Facebook, and the backend exchanges
+   * it for an access token via the Graph API using the app secret (never
+   * exposed to the client), then calls `/me` with that token to get the
+   * verified identity. `facebookRedirectUri`s equivalent must be registered
+   * as a Valid OAuth Redirect URI under the app's Authentication use case
+   * (developers.facebook.com → your app → Use cases → Authentication →
+   * Settings) for both the deployed origin and local dev.
+   */
+  facebookAppId: process.env.FACEBOOK_APP_ID || '',
+  facebookAppSecret: process.env.FACEBOOK_APP_SECRET || '',
 };

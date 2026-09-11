@@ -11,3 +11,9 @@ const googleClientId =
 /// above, it identifies the app but proves nothing on its own; the LINE
 /// Channel *Secret* stays server-side only (`LINE_CHANNEL_SECRET`).
 const lineChannelId = '2011511111';
+
+/// Facebook App ID (developers.facebook.com → your app → Settings → Basic →
+/// App ID). Also safe to embed — like the two above, it identifies the app
+/// but proves nothing on its own; the App *Secret* stays server-side only
+/// (`FACEBOOK_APP_SECRET`).
+const facebookAppId = '2131221744465635';

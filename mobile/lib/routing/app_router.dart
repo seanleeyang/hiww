@@ -6,6 +6,7 @@ import '../core/navigation.dart';
 import '../features/account/presentation/account_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
+import '../features/auth/presentation/facebook_callback_screen.dart';
 import '../features/auth/presentation/line_callback_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
@@ -97,6 +98,7 @@ const _preAuthRoutes = {
   '/forgot-password',
   '/reset-password',
   '/line-callback',
+  '/facebook-callback',
 };
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -165,6 +167,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/line-callback',
         builder: (_, s) => LineCallbackScreen(
+          code: s.uri.queryParameters['code'],
+          state: s.uri.queryParameters['state'],
+          error: s.uri.queryParameters['error'],
+        ),
+      ),
+      GoRoute(
+        path: '/facebook-callback',
+        builder: (_, s) => FacebookCallbackScreen(
           code: s.uri.queryParameters['code'],
           state: s.uri.queryParameters['state'],
           error: s.uri.queryParameters['error'],

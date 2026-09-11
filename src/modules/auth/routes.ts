@@ -138,6 +138,58 @@ async function verifyLineToken(code: string, redirectUri: string | undefined): P
   }
 }
 
+// Facebook has no client-side ID token like Google's — same OAuth
+// authorization-code redirect shape as LINE above, but via the Graph API
+// instead of a dedicated /verify endpoint: we exchange the code for an
+// access token ourselves (using the app secret, never exposed to the
+// client), which is already trust-anchored by that exchange, then read the
+// identity straight off `/me` with that token.
+async function verifyFacebookToken(code: string, redirectUri: string | undefined): Promise<VerifiedIdentity> {
+  if (!config.facebookAppId || !config.facebookAppSecret) {
+    throw new AppError('NOT_IMPLEMENTED', 501, 'auth.socialProviderNotConfigured');
+  }
+  if (!redirectUri) {
+    throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidSocialPayload');
+  }
+
+  try {
+    const tokenUrl = new URL('https://graph.facebook.com/v21.0/oauth/access_token');
+    tokenUrl.searchParams.set('client_id', config.facebookAppId);
+    tokenUrl.searchParams.set('client_secret', config.facebookAppSecret);
+    tokenUrl.searchParams.set('redirect_uri', redirectUri);
+    tokenUrl.searchParams.set('code', code);
+    const tokenRes = await fetch(tokenUrl);
+    if (!tokenRes.ok) throw new Error(`facebook token exchange failed: ${tokenRes.status}`);
+    const tokenBody = (await tokenRes.json()) as { access_token?: string };
+    if (!tokenBody.access_token) throw new Error('missing access_token in facebook token response');
+
+    const meUrl = new URL('https://graph.facebook.com/me');
+    meUrl.searchParams.set('fields', 'id,name,email');
+    meUrl.searchParams.set('access_token', tokenBody.access_token);
+    const meRes = await fetch(meUrl);
+    if (!meRes.ok) throw new Error(`facebook /me failed: ${meRes.status}`);
+    const me = (await meRes.json()) as { id?: string; name?: string; email?: string };
+    if (!me.id) throw new Error('missing id in facebook /me response');
+
+    // Facebook only returns `email` if the user has one on file and
+    // consented to the `email` permission — without it there's nothing to
+    // key a `users.email` row on, same gap as LINE's optional email grant.
+    if (!me.email) {
+      throw new AppError('VALIDATION_ERROR', 400, 'auth.socialEmailRequired');
+    }
+
+    return {
+      providerId: me.id,
+      email: me.email,
+      emailVerified: true,
+      fullName: me.name ?? null,
+    };
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    throw new AppError('AUTH_ERROR', 401, 'auth.invalidSocialToken');
+  }
+}
+
 let verifierOverride:
   | ((
       provider: 'google' | 'apple' | 'facebook' | 'line',
@@ -163,6 +215,7 @@ async function verifySocialToken(
   if (verifierOverride) return verifierOverride(provider, token, redirectUri);
   if (provider === 'google') return verifyGoogleToken(token);
   if (provider === 'line') return verifyLineToken(token, redirectUri);
+  if (provider === 'facebook') return verifyFacebookToken(token, redirectUri);
   throw new AppError('NOT_IMPLEMENTED', 501, 'auth.socialProviderNotConfigured');
 }
 

@@ -144,9 +144,10 @@ Real payment/identity providers were never swapped in (still mock/manual —
 `MANUAL_MONEY_PILOT`); everything below shipped on top of the deployed stack
 without changing that. See `[[go-live-readiness]]` memory for full detail —
 highlights: real push notifications (Android + Web via Firebase, iOS
-scaffolded but blocked on Apple Developer enrollment + a Mac), Google + LINE
-social sign-in (Facebook still stubbed, needs a Facebook for Developers app),
-required purchase/delivery photo proof at both ends of the handoff, offer
+scaffolded but blocked on Apple Developer enrollment + a Mac), Google + LINE +
+Facebook social sign-in (Apple still stubbed, needs a $99/yr Apple Developer
+Program membership), required purchase/delivery photo proof at both ends of
+the handoff, offer
 negotiation (counter/decline, capped at 2 rounds), payment-timeout
 auto-cancel, AI receipt check + AI chat moderation (Claude), phone/OTP
 verification at registration, and a full bottom-nav/UX redesign (Home /

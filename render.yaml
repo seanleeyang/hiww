@@ -90,6 +90,10 @@ services:
         sync: false
       - key: LINE_CHANNEL_SECRET
         sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false
 
       # Push notifications via Firebase Cloud Messaging. Without these the
       # app falls back to the mock sender (logs instead of sending).
