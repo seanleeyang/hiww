@@ -52,13 +52,6 @@ class AccountScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.accountTitle),
         leading: BackButton(onPressed: () => context.go('/browse')),
-        actions: [
-          if (user != null)
-            TextButton(
-              onPressed: () => _showEditProfile(context, ref, user),
-              child: Text(l10n.actionEdit),
-            ),
-        ],
       ),
       body: AsyncValueView(
         value: authState,
@@ -117,7 +110,10 @@ class AccountScreen extends ConsumerWidget {
                   ),
                 ],
                 const SizedBox(height: 16),
-                _ContactDetailsCard(user: user),
+                _ContactDetailsCard(
+                  user: user,
+                  onEdit: () => _showEditProfile(context, ref, user),
+                ),
                 const SizedBox(height: 16),
                 const _KycCard(),
                 const SizedBox(height: 16),
@@ -176,8 +172,9 @@ class _IncompleteProfileCard extends StatelessWidget {
 }
 
 class _ContactDetailsCard extends StatelessWidget {
-  const _ContactDetailsCard({required this.user});
+  const _ContactDetailsCard({required this.user, required this.onEdit});
   final AuthUser user;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +193,14 @@ class _ContactDetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionHeader(l10n.sectionContactDelivery),
+          SectionHeader(
+            l10n.sectionContactDelivery,
+            action: TextButton.icon(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(l10n.actionEdit),
+            ),
+          ),
           _ContactRow(
             icon: Icons.person_outline,
             label: _genderAndBirthdayLabel(l10n, user) ?? l10n.fieldGender,
