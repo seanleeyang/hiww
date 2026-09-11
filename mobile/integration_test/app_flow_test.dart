@@ -849,10 +849,18 @@ void main() {
         timeout: const Duration(seconds: 40));
     await _tap(tester, find.byTooltip('Account'));
 
-    await _pumpUntil(tester, find.text('Change password'),
+    await _pumpUntil(tester, find.widgetWithText(TextButton, 'Edit'),
         timeout: const Duration(seconds: 20));
-    await _tap(
-        tester, find.widgetWithText(FilledButton, 'Change password'));
+    await _tap(tester, find.widgetWithText(TextButton, 'Edit'));
+
+    // Password is the third locked row in the Edit Profile sheet, after
+    // Email and Phone — its Change button opens a dedicated screen, same
+    // shape as the phone/email Change flow but without an OTP step.
+    await _pumpUntil(
+        tester, find.widgetWithText(TextButton, 'Change'),
+        timeout: const Duration(seconds: 20));
+    await _tap(tester, find.widgetWithText(TextButton, 'Change').at(2));
+
     await _pumpUntil(
         tester, find.widgetWithText(TextField, 'Current password'));
     await tester.enterText(
@@ -863,9 +871,12 @@ void main() {
     await tester.enterText(
         find.widgetWithText(TextField, 'Confirm password'),
         'BrandNewPass456!');
-    await _tap(tester, _button('Change password'));
+    await _tap(tester, _button('Save'));
 
-    await _pumpUntil(tester, find.textContaining('Password changed'),
+    // Saving pops straight back to Account — no OTP step for a password
+    // change, unlike phone/email.
+    await _pumpUntil(
+        tester, find.widgetWithText(TextButton, 'Edit'),
         timeout: const Duration(seconds: 30));
 
     // The old password no longer works; the new one does.

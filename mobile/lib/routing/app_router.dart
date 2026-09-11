@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/navigation.dart';
 import '../features/account/presentation/account_screen.dart';
 import '../features/account/presentation/change_contact_screen.dart';
+import '../features/account/presentation/change_password_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/facebook_callback_screen.dart';
@@ -200,6 +201,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/account/change-email',
         builder: (_, _) => const ChangeContactScreen(channel: ContactChannel.email),
+      ),
+      GoRoute(
+        path: '/account/change-password',
+        builder: (_, _) => const ChangePasswordScreen(),
       ),
       GoRoute(
         path: '/trips/:id/edit',
