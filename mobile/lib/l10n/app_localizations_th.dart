@@ -354,6 +354,22 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorEnterDocumentNumber => 'กรอกหมายเลขเอกสารของคุณ';
 
   @override
+  String get fieldNameOnDocument => 'ชื่อบนเอกสาร';
+
+  @override
+  String get errorEnterNameOnDocument => 'กรอกชื่อตามที่ปรากฏบนเอกสารของคุณ';
+
+  @override
+  String get fieldDocumentPhoto => 'แนบรูปถ่ายเอกสาร';
+
+  @override
+  String get errorDocumentPhotoRequired => 'แนบรูปถ่ายเอกสารของคุณ';
+
+  @override
+  String get fieldDocumentPhotoBackOptional =>
+      'แนบหน้าที่สอง (ไม่บังคับ) — เช่น หน้าประทับตราวีซ่า หรือด้านหลังบัตร';
+
+  @override
   String get actionSubmitForReview => 'ส่งเพื่อตรวจสอบ';
 
   @override

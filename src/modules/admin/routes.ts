@@ -14,7 +14,19 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
 
       const pendingKyc = await request.db
         .selectFrom('users')
-        .select(['id', 'email', 'full_name', 'kyc_status', 'created_at'])
+        .select([
+          'id',
+          'email',
+          'full_name',
+          'kyc_status',
+          'kyc_document_type',
+          'kyc_document_id',
+          'kyc_document_name',
+          'kyc_document_photo_url',
+          'kyc_document_photo_back_url',
+          'kyc_submitted_at',
+          'created_at',
+        ])
         .where('kyc_status', 'in', ['pending', 'rejected'])
         .orderBy('created_at', 'desc')
         .execute();
@@ -78,6 +90,12 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           user_id: user.id,
           email: user.email,
           full_name: user.full_name,
+          document_type: user.kyc_document_type ?? null,
+          document_id: user.kyc_document_id ?? null,
+          document_name: user.kyc_document_name ?? null,
+          document_photo_url: user.kyc_document_photo_url ?? null,
+          document_photo_back_url: user.kyc_document_photo_back_url ?? null,
+          submitted_at: user.kyc_submitted_at ?? null,
           created_at: user.created_at,
         })),
         ...flaggedReceipts.map((order: any) => ({

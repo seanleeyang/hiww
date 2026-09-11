@@ -740,6 +740,36 @@ abstract class AppLocalizations {
   /// **'Enter your document number'**
   String get errorEnterDocumentNumber;
 
+  /// No description provided for @fieldNameOnDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on document'**
+  String get fieldNameOnDocument;
+
+  /// No description provided for @errorEnterNameOnDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the name as it appears on your document'**
+  String get errorEnterNameOnDocument;
+
+  /// No description provided for @fieldDocumentPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo of the document'**
+  String get fieldDocumentPhoto;
+
+  /// No description provided for @errorDocumentPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo of your document'**
+  String get errorDocumentPhotoRequired;
+
+  /// No description provided for @fieldDocumentPhotoBackOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a second page (optional) — e.g. a visa stamp page, or the back of a card'**
+  String get fieldDocumentPhotoBackOptional;
+
   /// No description provided for @actionSubmitForReview.
   ///
   /// In en, this message translates to:

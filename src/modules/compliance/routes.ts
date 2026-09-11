@@ -6,6 +6,11 @@ import { recordAudit, actorFromRequest } from '@/services/audit';
 const kycSubmitSchema = z.object({
   document_type: z.enum(['passport', 'id_card', 'drivers_license']),
   document_id: z.string().min(3),
+  /** Name exactly as printed on the document — may differ from the account's own full_name (nicknames, married names, etc.), so an admin needs to see both. */
+  document_name: z.string().min(2),
+  document_photo_url: z.string().url(),
+  /** Optional second page — a passport's visa stamp page, or the back of a card. */
+  document_photo_back_url: z.string().url().optional(),
 });
 
 const kycReviewSchema = z.object({
@@ -35,20 +40,32 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
       throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
     }
 
+    const now = new Date();
     await request.db
       .updateTable('users')
-      .set({ kyc_status: 'pending', updated_at: new Date() })
+      .set({
+        kyc_status: 'pending',
+        kyc_document_type: parsed.data.document_type,
+        kyc_document_id: parsed.data.document_id,
+        kyc_document_name: parsed.data.document_name,
+        kyc_document_photo_url: parsed.data.document_photo_url,
+        kyc_document_photo_back_url: parsed.data.document_photo_back_url ?? null,
+        kyc_submitted_at: now,
+        updated_at: now,
+      })
       .where('id', '=', user.id)
       .execute();
 
-    // Nothing else persists what was actually submitted — the audit log is
-    // the only record of it for a reviewer to check against.
     await recordAudit(request.db, actorFromRequest(request), {
       action: 'kyc.submit',
       targetType: 'user',
       targetId: user.id,
       summary: `KYC documents submitted for review (${parsed.data.document_type})`,
-      metadata: { document_type: parsed.data.document_type, document_id: parsed.data.document_id },
+      metadata: {
+        document_type: parsed.data.document_type,
+        document_id: parsed.data.document_id,
+        document_name: parsed.data.document_name,
+      },
     });
 
     reply.status(201).send({

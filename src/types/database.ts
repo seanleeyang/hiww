@@ -18,6 +18,14 @@ export interface UsersTable {
   full_name: string;
   user_type: 'shopper' | 'traveler' | 'both';
   kyc_status: Generated<'pending' | 'approved' | 'rejected'>;
+  /** What was actually submitted for ID check (migration 039) — a photo of the document plus the name printed on it, for an admin to compare against the account. */
+  kyc_document_type?: 'passport' | 'id_card' | 'drivers_license' | null;
+  kyc_document_id?: string | null;
+  kyc_document_name?: string | null;
+  kyc_document_photo_url?: string | null;
+  /** Optional second page — a passport's visa stamp page, or the back of a card. */
+  kyc_document_photo_back_url?: string | null;
+  kyc_submitted_at?: Date | null;
   risk_status: Generated<'clear' | 'flagged' | 'restricted'>;
   role: Generated<'user' | 'admin'>;
   password_hash?: string | null;

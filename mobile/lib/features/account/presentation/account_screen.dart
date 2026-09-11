@@ -437,7 +437,10 @@ class _KycCard extends ConsumerStatefulWidget {
 
 class _KycCardState extends ConsumerState<_KycCard> {
   final _docId = TextEditingController();
+  final _docName = TextEditingController();
   String _docType = 'passport';
+  String? _photoUrl;
+  String? _photoBackUrl;
   bool _expanded = false;
   bool _submitting = false;
   String? _error;
@@ -445,12 +448,22 @@ class _KycCardState extends ConsumerState<_KycCard> {
   @override
   void dispose() {
     _docId.dispose();
+    _docName.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_docName.text.trim().length < 2) {
+      setState(() => _error = l10n.errorEnterNameOnDocument);
+      return;
+    }
     if (_docId.text.trim().length < 3) {
-      setState(() => _error = AppLocalizations.of(context)!.errorEnterDocumentNumber);
+      setState(() => _error = l10n.errorEnterDocumentNumber);
+      return;
+    }
+    if (_photoUrl == null) {
+      setState(() => _error = l10n.errorDocumentPhotoRequired);
       return;
     }
     setState(() {
@@ -458,18 +471,25 @@ class _KycCardState extends ConsumerState<_KycCard> {
       _error = null;
     });
     try {
-      await ref
-          .read(accountRepositoryProvider)
-          .submitKyc(documentType: _docType, documentId: _docId.text.trim());
+      await ref.read(accountRepositoryProvider).submitKyc(
+            documentType: _docType,
+            documentId: _docId.text.trim(),
+            documentName: _docName.text.trim(),
+            documentPhotoUrl: _photoUrl!,
+            documentPhotoBackUrl: _photoBackUrl,
+          );
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
       setState(() {
         _submitting = false;
         _expanded = false;
         _docId.clear();
+        _docName.clear();
+        _photoUrl = null;
+        _photoBackUrl = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.infoSubmittedForReview)),
+        SnackBar(content: Text(l10n.infoSubmittedForReview)),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -505,7 +525,10 @@ class _KycCardState extends ConsumerState<_KycCard> {
             const SizedBox(height: 12),
             if (!_expanded)
               FilledButton.tonal(
-                onPressed: () => setState(() => _expanded = true),
+                onPressed: () => setState(() {
+                  _expanded = true;
+                  if (_docName.text.isEmpty) _docName.text = user.fullName;
+                }),
                 child: Text(
                   user.kycStatus == 'pending'
                       ? l10n.actionUpdateIdDetails
@@ -531,8 +554,25 @@ class _KycCardState extends ConsumerState<_KycCard> {
               ),
               const SizedBox(height: 12),
               TextField(
+                controller: _docName,
+                decoration: InputDecoration(labelText: l10n.fieldNameOnDocument),
+              ),
+              const SizedBox(height: 12),
+              TextField(
                 controller: _docId,
                 decoration: InputDecoration(labelText: l10n.fieldDocumentNumber),
+              ),
+              const SizedBox(height: 12),
+              ImagePickerField(
+                value: _photoUrl,
+                onChanged: (url) => setState(() => _photoUrl = url),
+                label: l10n.fieldDocumentPhoto,
+              ),
+              const SizedBox(height: 12),
+              ImagePickerField(
+                value: _photoBackUrl,
+                onChanged: (url) => setState(() => _photoBackUrl = url),
+                label: l10n.fieldDocumentPhotoBackOptional,
               ),
               if (_error != null) ...[
                 const SizedBox(height: 8),

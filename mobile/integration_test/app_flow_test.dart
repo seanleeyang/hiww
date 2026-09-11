@@ -797,9 +797,12 @@ void main() {
     await _tap(
         tester, find.widgetWithText(FilledButton, 'Update ID details'));
     await _pumpUntil(
-        tester, find.widgetWithText(TextField, 'Document number'));
+        tester, find.widgetWithText(TextField, 'Name on document'));
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Name on document'), 'Kyc Testuser');
     await tester.enterText(
         find.widgetWithText(TextField, 'Document number'), 'X1234567');
+    await _pickPhoto(tester, 'Add a photo of the document');
     await _tap(tester, _button('Submit for review'));
 
     await _pumpUntil(tester, find.textContaining('Submitted for review'),

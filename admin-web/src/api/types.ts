@@ -157,6 +157,14 @@ export type QueueItem =
       user_id: string;
       email: string;
       full_name: string;
+      document_type: 'passport' | 'id_card' | 'drivers_license' | null;
+      document_id: string | null;
+      /** Name as printed on the document — may differ from the account's own full_name. */
+      document_name: string | null;
+      document_photo_url: string | null;
+      /** Optional second page — a passport's visa stamp page, or the back of a card. */
+      document_photo_back_url: string | null;
+      submitted_at: string | null;
       created_at: string;
     }
   | {

@@ -10,6 +10,17 @@ import { dateTime } from '../lib/format';
 
 type KycItem = Extract<QueueItem, { type: 'kyc' }>;
 
+function docTypeLabel(type: NonNullable<KycItem['document_type']>): string {
+  switch (type) {
+    case 'passport':
+      return 'Passport';
+    case 'id_card':
+      return 'ID card';
+    case 'drivers_license':
+      return "Driver's license";
+  }
+}
+
 export function IdChecksPage() {
   const qc = useQueryClient();
   const toast = useToast();
@@ -46,6 +57,36 @@ export function IdChecksPage() {
                 <p className="muted" style={{ margin: '4px 0' }}>
                   {item.email} · {dateTime(item.created_at)}
                 </p>
+                {item.document_type && (
+                  <p style={{ margin: '4px 0' }}>
+                    {docTypeLabel(item.document_type)}
+                    {item.document_id ? ` · ${item.document_id}` : ''}
+                  </p>
+                )}
+                {item.document_name && item.document_name !== item.full_name && (
+                  <p className="muted" style={{ margin: '4px 0' }}>
+                    Name on document: {item.document_name}
+                  </p>
+                )}
+                {(item.document_photo_url || item.document_photo_back_url) && (
+                  <p style={{ margin: '4px 0', display: 'flex', gap: 12 }}>
+                    {item.document_photo_url && (
+                      <a href={item.document_photo_url} target="_blank" rel="noreferrer">
+                        View document photo
+                      </a>
+                    )}
+                    {item.document_photo_back_url && (
+                      <a href={item.document_photo_back_url} target="_blank" rel="noreferrer">
+                        View second page
+                      </a>
+                    )}
+                  </p>
+                )}
+                {!item.document_photo_url && (
+                  <p className="muted" style={{ margin: '4px 0' }}>
+                    No document photo on file — submitted before this was required.
+                  </p>
+                )}
               </div>
               <div className="btn-row" style={{ flexShrink: 0 }}>
                 <button

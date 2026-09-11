@@ -10,11 +10,18 @@ class AccountRepository {
   Future<void> submitKyc({
     required String documentType,
     required String documentId,
+    required String documentName,
+    required String documentPhotoUrl,
+    String? documentPhotoBackUrl,
   }) async {
-    await _api.post('/api/compliance/kyc/submit', body: {
+    final body = <String, dynamic>{
       'document_type': documentType,
       'document_id': documentId,
-    });
+      'document_name': documentName,
+      'document_photo_url': documentPhotoUrl,
+    };
+    if (documentPhotoBackUrl != null) body['document_photo_back_url'] = documentPhotoBackUrl;
+    await _api.post('/api/compliance/kyc/submit', body: body);
   }
 
   Future<void> updateProfile({

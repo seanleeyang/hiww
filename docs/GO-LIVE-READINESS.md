@@ -142,7 +142,16 @@ which is a nice-to-have, not a pilot blocker.
 
 Real payment/identity providers were never swapped in (still mock/manual —
 `MANUAL_MONEY_PILOT`); everything below shipped on top of the deployed stack
-without changing that. See `[[go-live-readiness]]` memory for full detail —
+without changing that. **KYC decision**: real NDID integration needs a formal
+RP membership with the consortium (not a self-service signup, unlike the
+OAuth providers below), so the interim path is a real manual-review upgrade
+instead — a required photo of the ID document (+ optional second page, e.g. a
+passport's visa stamp page) and the name as printed on it now persist to the
+user row and surface in the admin console's ID-checks queue for a human
+reviewer, replacing the old free-text-only submission that only ever landed
+in the audit log. `NdidIdentityProvider`/`getIdentityProvider()` remain as
+unused scaffolding (`src/services/providers/`) for if/when real NDID
+membership is pursued. See `[[go-live-readiness]]` memory for full detail —
 highlights: real push notifications (Android + Web via Firebase, iOS
 scaffolded but blocked on Apple Developer enrollment + a Mac), Google + LINE +
 Facebook social sign-in (Apple still stubbed, needs a $99/yr Apple Developer

@@ -356,6 +356,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorEnterDocumentNumber => 'Enter your document number';
 
   @override
+  String get fieldNameOnDocument => 'Name on document';
+
+  @override
+  String get errorEnterNameOnDocument =>
+      'Enter the name as it appears on your document';
+
+  @override
+  String get fieldDocumentPhoto => 'Add a photo of the document';
+
+  @override
+  String get errorDocumentPhotoRequired => 'Add a photo of your document';
+
+  @override
+  String get fieldDocumentPhotoBackOptional =>
+      'Add a second page (optional) — e.g. a visa stamp page, or the back of a card';
+
+  @override
   String get actionSubmitForReview => 'Submit for review';
 
   @override
