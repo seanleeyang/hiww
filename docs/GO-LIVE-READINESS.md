@@ -114,11 +114,41 @@ Full steps in `docs/DEPLOY.md`.
       logging, `trustProxy`, and managed-Postgres TLS. `render.yaml` wires
       `DATABASE_URL` / `JWT_SECRET` / `PUBLIC_BASE_URL` /
       `PILOT_PAYMENT_INSTRUCTIONS` / `MANUAL_MONEY_PILOT`.
-- [ ] **You:** push to GitHub, create the Neon project, apply the Render
-      blueprint, paste the two secrets, create the first admin (`docs/DEPLOY.md`).
-- [ ] Move `uploads/` off local disk to **Cloudflare R2** (10 GB free) — on the
-      free Render plan the disk is ephemeral, so images are lost on redeploy
-      until this lands.
-- [ ] Re-run both persona walk-throughs against the deployed URL.
-- [ ] Uptime pinger on `/health` (free Render service sleeps after 15 min).
-- [ ] Health-check alerting + error/log shipping.
+- [x] Pushed to GitHub, Neon project created, Render blueprint applied, secrets
+      set, first admin created. **Live: https://hiww-api.onrender.com**
+      (admin console at `/admin`).
+- [x] `uploads/` moved off local disk to **Cloudflare R2** (bucket
+      `hiww-uploads`, public dev subdomain, CORS policy applied) —
+      `src/services/storage/` picks R2 over local disk once `UPLOADS_BACKEND=r2`
+      and the 5 `R2_*` vars are set. Deployed and verified.
+- [x] Both persona walk-throughs re-run against the deployed URL: app side at
+      **https://hiww.pages.dev** (Cloudflare Pages) end to end, and
+      `scripts/pilot-smoke-test.ps1` against the live API + Neon (full order
+      lifecycle, security checks, idempotent payment confirm, dispute
+      open+resolve — all passed).
+- [x] Uptime pinger: UptimeRobot HTTP(s) monitor on `/health` every 5 min, email
+      alert contact on down/up (see `docs/DEPLOY.md`, "Uptime monitoring &
+      alerting"). `/health` is now DB-aware (`select 1`, 503 on failure), not
+      just a liveness check.
+- [ ] Structured logs go to stdout as JSON in production and are captured by
+      Render's own log viewer, but there is no dedicated log-shipping sink
+      (e.g. Datadog/Logtail) or error-rate alerting beyond the uptime pinger —
+      acceptable at pilot scale, worth revisiting if volume grows.
+
+**Stage 3 is complete** except the log-shipping/error-alerting item above,
+which is a nice-to-have, not a pilot blocker.
+
+## Since Stage 3: real vendor integrations and feature work
+
+Real payment/identity providers were never swapped in (still mock/manual —
+`MANUAL_MONEY_PILOT`); everything below shipped on top of the deployed stack
+without changing that. See `[[go-live-readiness]]` memory for full detail —
+highlights: real push notifications (Android + Web via Firebase, iOS
+scaffolded but blocked on Apple Developer enrollment + a Mac), Google + LINE
+social sign-in (Facebook still stubbed, needs a Facebook for Developers app),
+required purchase/delivery photo proof at both ends of the handoff, offer
+negotiation (counter/decline, capped at 2 rounds), payment-timeout
+auto-cancel, AI receipt check + AI chat moderation (Claude), phone/OTP
+verification at registration, and a full bottom-nav/UX redesign (Home /
+Orders / Trips / Inbox) now covered by Flutter + Playwright e2e suites running
+in CI (`.github/workflows/e2e.yml`).
