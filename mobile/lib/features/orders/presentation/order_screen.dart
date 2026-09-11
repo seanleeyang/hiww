@@ -79,8 +79,16 @@ class OrderScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              o.itemDescription,
+                              o.displayTitle,
                               style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              o.itemDescription,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
                             ),
                             const SizedBox(height: 6),
                             Row(
@@ -103,6 +111,10 @@ class OrderScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  if (o.productUrl != null) ...[
+                    const SizedBox(height: 8),
+                    IconLine(Icons.link, l10n.wantProductUrlLine(o.productUrl!)),
+                  ],
                   const SizedBox(height: 14),
                   if (o.counterparty != null)
                     SoftCard(

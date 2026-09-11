@@ -124,6 +124,10 @@ class WantDetailScreen extends ConsumerWidget {
                           const SizedBox(height: 6),
                           IconLine(Icons.event_outlined, want.needByLabel!),
                         ],
+                        if (want.productUrl != null) ...[
+                          const SizedBox(height: 6),
+                          IconLine(Icons.link, l10n.wantProductUrlLine(want.productUrl!)),
+                        ],
                       ],
                     ),
                   ),

@@ -21,6 +21,8 @@ class Order {
     required this.totalPrice,
     required this.fees,
     required this.status,
+    this.title,
+    this.productUrl,
     this.requestId,
     this.counterparty,
     this.requestImageUrl,
@@ -53,6 +55,11 @@ class Order {
   final String totalPrice;
   final String fees;
   final String status;
+
+  /// Copied from the source want at accept-offer time — null for orders
+  /// created before this existed, or if the want never had one.
+  final String? title;
+  final String? productUrl;
 
   /// MVP pricing model split — null for orders created before it shipped;
   /// callers should fall back to [totalPrice]/[fees] in that case.
@@ -93,6 +100,8 @@ class Order {
   final bool canReview;
   final OrderReview? myReview;
 
+  String get displayTitle => (title != null && title!.isNotEmpty) ? title! : itemDescription;
+
   String get totalLabel => money(totalPrice);
   String get feesLabel => money(fees);
 
@@ -120,6 +129,8 @@ class Order {
         totalPrice: (j['total_price'] ?? '0').toString(),
         fees: (j['fees'] ?? '0').toString(),
         status: (j['status'] ?? 'pending_payment').toString(),
+        title: _s(j['title']),
+        productUrl: _s(j['product_url']),
         requestId: j['request_id']?.toString(),
         counterparty: UserSummary.fromJson(j['counterparty']),
         requestImageUrl: (j['request_image_url'] as String?)?.trim().isEmpty ?? true

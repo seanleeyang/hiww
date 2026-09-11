@@ -376,6 +376,8 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             request_id: requestRow.id,
             offer_id: offer.id,
             item_description: requestRow.item_description,
+            title: requestRow.title ?? null,
+            product_url: requestRow.product_url ?? null,
             quantity,
             unit_price: unitPrice,
             total_price: pricing.itemPrice,

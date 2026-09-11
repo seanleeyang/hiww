@@ -142,6 +142,9 @@ export interface OrdersTable {
   request_id?: string;
   offer_id?: string;
   item_description: string;
+  /** Copied from the source request at accept-offer time (migration 038) — the request itself may change or be gone later. */
+  title?: string | null;
+  product_url?: string | null;
   quantity: number;
   unit_price: string; // Decimal as string
   total_price: string; // Decimal as string

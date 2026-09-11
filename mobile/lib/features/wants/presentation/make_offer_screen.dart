@@ -245,11 +245,20 @@ class _WantContextCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           ),
+          const SizedBox(height: 4),
+          Text(
+            want.itemDescription,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
           const SizedBox(height: 8),
           Wrap(spacing: 12, runSpacing: 4, children: [
             IconLine(Icons.public, l10n.wantBuyInLine(want.sourceCity ?? countryName(want.sourceCountry))),
             if (want.destinationLabel != null)
               IconLine(Icons.local_shipping_outlined, l10n.wantDeliverToLine(want.destinationLabel!)),
+            if (want.productUrl != null)
+              IconLine(Icons.link, l10n.wantProductUrlLine(want.productUrl!)),
           ]),
         ],
       ),
