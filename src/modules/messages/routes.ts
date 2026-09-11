@@ -8,7 +8,9 @@ import {
   presentMessageBody,
   leakageWarning,
   qrWarning,
+  profanityWarning,
   runChatModerationCheck,
+  PROFANITY_REASONS,
 } from '@/services/chat-moderation';
 import { detectQrCode } from '@/services/qr-check';
 import { recordTyping, isCounterpartyTyping } from '@/services/typing';
@@ -224,11 +226,19 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       }
 
       const locale = request.locale ?? 'en';
+      // Profanity gets its own warning, distinct from the contact-leakage
+      // one — both can fire on the same message (e.g. a slur next to a
+      // phone number), in which case the sender sees both.
+      const warnings: string[] = [];
+      if (qrFound) warnings.push(qrWarning(locale));
+      if (leak.profanityFlagged) warnings.push(profanityWarning(locale));
+      if (leak.reasons.some((r) => !PROFANITY_REASONS.has(r))) warnings.push(leakageWarning(locale));
+
       reply.status(201).send({
         success: true,
         data: {
           id,
-          warning: qrFound ? qrWarning(locale) : leak.flagged ? leakageWarning(locale) : null,
+          warning: warnings.length ? warnings.join(' ') : null,
         },
         code: 'MESSAGE_SENT',
       });

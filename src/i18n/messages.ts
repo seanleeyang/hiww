@@ -132,6 +132,10 @@ const MESSAGES: Record<string, Entry> = {
     en: "We removed a QR code from your photo — sharing payment or contact QR codes isn't allowed here. Messages are reviewed for anything else that looks unsafe.",
     th: 'เราได้ลบ QR โค้ดออกจากรูปภาพของคุณ — ไม่อนุญาตให้แชร์ QR โค้ดสำหรับชำระเงินหรือติดต่อที่นี่ ข้อความจะถูกตรวจสอบหากมีสิ่งอื่นที่ดูไม่ปลอดภัย',
   },
+  'messages.profanityWarning': {
+    en: 'We removed offensive language from your message to keep the conversation respectful — the rest still sent.',
+    th: 'เราได้ลบคำหยาบคายออกจากข้อความของคุณเพื่อให้การสนทนาสุภาพ — ส่วนที่เหลือถูกส่งแล้ว',
+  },
   'messages.hiddenToSender': {
     en: "Your message was removed — it didn't meet Hiww's chat guidelines and is under review.",
     th: 'ข้อความของคุณถูกลบออก — ไม่เป็นไปตามแนวทางการแชทของ Hiww และอยู่ระหว่างการตรวจสอบ',

@@ -34,6 +34,74 @@ const BRAND_NAMES = [
 const spacedLetters = (word: string): string => word.split('').join('[\\s.\\-_]*');
 const BRAND_RE = new RegExp(`\\b(?:${BRAND_NAMES.map(spacedLetters).join('|')})\\b`, 'gi');
 
+// Not exhaustive — a baseline of the clearest swear words/slurs and their
+// common inflections, spelled out flat (rather than built from a root +
+// regex-alternation suffix) so `spacedLetters` can safely split each one
+// letter-by-letter without corrupting embedded regex syntax, and so a
+// trailing wildcard can't over-match (a `\w*` tail on just the "ass" root
+// would also swallow "assassin", "assume", etc. — not a real risk with each
+// inflection listed and double-`\b`-anchored individually).
+const PROFANITY_EN_WORDS = [
+  'fuck',
+  'fucking',
+  'fucker',
+  'fuckers',
+  'motherfucker',
+  'motherfuckers',
+  'shit',
+  'shitty',
+  'shits',
+  'bullshit',
+  'bitch',
+  'bitches',
+  'bitchy',
+  'asshole',
+  'assholes',
+  'ass',
+  'bastard',
+  'bastards',
+  'cunt',
+  'cunts',
+  'dick',
+  'dickhead',
+  'dickheads',
+  'pussy',
+  'pussies',
+  'slut',
+  'sluts',
+  'whore',
+  'whores',
+  'nigger',
+  'niggers',
+  'nigga',
+  'niggas',
+  'faggot',
+  'faggots',
+  'fag',
+  'fags',
+  'retard',
+  'retards',
+  'retarded',
+  'dumbass',
+  'jackass',
+  'twat',
+  'wanker',
+  'prick',
+  'pricks',
+];
+const PROFANITY_EN_RE = new RegExp(`\\b(?:${PROFANITY_EN_WORDS.map(spacedLetters).join('|')})\\b`, 'gi');
+
+// Thai profanity — no `\b`, same reasoning as the Thai patterns further
+// down (Thai has no spaces between words, and \b/\w are ASCII-only in JS
+// regex). Deliberately excludes bare สัตว์ ("animal") and ควาย ("buffalo",
+// a mild insult) — both are ordinary words with common innocent uses (pet
+// products, food) — only the unambiguous insult compounds are included.
+const PROFANITY_TH_RE =
+  /ไอ้เหี้ย|ไอเหี้ย|อีเหี้ย|เหี้ย|ไอ้สัตว์|ไอสัตว์|อีสัตว์|สัส|ควย|เย็ด|กระหรี่|ตอแหล|ส้นตีน|อีดอก|เชี่ย|เชี้ย|แตด|หี/g;
+
+/** Reasons that come from the profanity patterns, not the leakage ones — used to pick which warning(s) to show. */
+export const PROFANITY_REASONS = new Set(['contains profanity', 'contains profanity (Thai)']);
+
 const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> = [
   {
     // A run of 9+ digits with any single-character separators (dash, dot,
@@ -104,7 +172,10 @@ const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> 
   // characters, so a boundary assertion would fail to match a Thai keyword
   // embedded naturally in a longer sentence with no surrounding whitespace.
   {
-    re: /ไลน์ไอดี|แอดไลน์|ไลน์|เทเลแกรม|วอทส์?แอพ|วีแชท|ไอจี|อินสตาแกรม|ไอดี/g,
+    // Includes short forms (อจ for IG, ฟบ/เฟส for Facebook, ตต for TikTok) —
+    // same "worth the occasional false positive" trade-off as the English
+    // short forms above.
+    re: /ไลน์ไอดี|แอดไลน์|ไลน์|เทเลแกรม|วอทส์?แอพ|วีแชท|ไอจี|อจ|อินสตาแกรม|เฟซบุ๊ก|เฟสบุ๊ค|เฟสบุ๊ก|เฟสบุค|เฟส|ฟบ|ติ๊กต๊อก|ตั้กต๊อก|ตต|ไอดี/g,
     reason: 'mentions an outside messaging app (Thai)',
     placeholder: '[hidden]',
   },
@@ -118,6 +189,16 @@ const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> 
     reason: 'suggests paying outside the app (Thai)',
     placeholder: '[hidden]',
   },
+  {
+    re: PROFANITY_EN_RE,
+    reason: 'contains profanity',
+    placeholder: '[language warning]',
+  },
+  {
+    re: PROFANITY_TH_RE,
+    reason: 'contains profanity (Thai)',
+    placeholder: '[language warning]',
+  },
 ];
 
 export interface MessageRedaction {
@@ -125,6 +206,8 @@ export interface MessageRedaction {
   body: string;
   flagged: boolean;
   reasons: string[];
+  /** True if any reason came from the profanity patterns — lets the caller show a distinct warning from the contact-leakage one. */
+  profanityFlagged: boolean;
 }
 
 /**
@@ -167,11 +250,17 @@ export function redactLeakage(body: string): MessageRedaction {
     redacted = redacted.replace(SHORT_NUMBER_RE, '[number hidden]');
   }
 
-  return { body: redacted, flagged: reasons.size > 0, reasons: [...reasons] };
+  return {
+    body: redacted,
+    flagged: reasons.size > 0,
+    reasons: [...reasons],
+    profanityFlagged: [...reasons].some((r) => PROFANITY_REASONS.has(r)),
+  };
 }
 
 export const leakageWarning = (locale: SupportedLocale): string => t(locale, 'messages.leakageWarning');
 export const qrWarning = (locale: SupportedLocale): string => t(locale, 'messages.qrWarning');
+export const profanityWarning = (locale: SupportedLocale): string => t(locale, 'messages.profanityWarning');
 
 /** What a participant should see instead of the raw body, if anything. */
 export function presentMessageBody(

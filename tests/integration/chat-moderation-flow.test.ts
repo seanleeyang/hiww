@@ -246,6 +246,79 @@ describe('AI chat moderation', () => {
     }
   });
 
+  it('Thai social brand names and their short forms are redacted too', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const cases = ['แอดติ๊กต๊อกหน่อย', 'มีเฟสบุคไหม', 'ขอเฟสหน่อย', 'ขอฟบหน่อยครับ', 'ขออจหน่อยครับ'];
+
+    for (const body of cases) {
+      const res = await send(order, body);
+      expect(res.json().data.warning).toBeTruthy();
+    }
+  });
+
+  it('profanity in English is redacted with its own distinct warning', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, "what the fuck is taking so long, you asshole");
+    expect(res.json().data.warning).toBeTruthy();
+    expect(res.json().data.warning).toContain('offensive language');
+    expect(res.json().data.warning).not.toContain('contact details');
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const body = list.json().data.items[0].body as string;
+    expect(body).not.toMatch(/fuck|asshole/i);
+    expect(body).toContain('[language warning]');
+    expect(body).toContain('what the');
+  });
+
+  it('profanity in Thai is redacted the same way', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, 'ไอเหี้ยส่งของช้ามาก');
+    expect(res.json().data.warning).toBeTruthy();
+    expect(res.json().data.warning).toContain('offensive language');
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const body = list.json().data.items[0].body as string;
+    expect(body).not.toContain('เหี้ย');
+    expect(body).toContain('[language warning]');
+  });
+
+  it('a message with both profanity and a leaked contact gets both warnings', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, "fuck this, just add me on line xyz123");
+    const warning = res.json().data.warning as string;
+    expect(warning).toContain('offensive language');
+    expect(warning).toContain('contact details');
+  });
+
+  it('everyday words that happen to contain a profanity substring are left alone', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    // "assassin", "class", "grass" etc. must not trip the "ass" entry.
+    const res = await send(order, 'this class is full of grass and an assassin figurine');
+    expect(res.json().data.warning).toBeNull();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(list.json().data.items[0].body).toBe(
+      'this class is full of grass and an assassin figurine'
+    );
+  });
+
   it('a message the AI check calls high-risk is hidden from both participants', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);
