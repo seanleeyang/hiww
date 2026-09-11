@@ -6,6 +6,34 @@ import { recordNotification } from '@/services/notify';
 import { t } from '@/i18n/messages';
 import type { SupportedLocale } from '@/i18n/locale';
 
+// Named social/messaging brands, including short forms (fb, ig, wa) and
+// letter-by-letter spelling-out (e.g. "L I N E", "w.a.") as an evasion
+// dodge. Each letter is joined by an optional run of space/dot/dash/
+// underscore, so "facebook" also matches "f a c e b o o k" or "f.a.c.e.b.o.o.k"
+// with the same pattern. Requiring \b at both ends keeps this from firing
+// inside ordinary words — e.g. "off by" never matches the "fb" entry because
+// the "b" there isn't its own word ("by" continues past it).
+const BRAND_NAMES = [
+  'whatsapp',
+  'wa',
+  'line',
+  'telegram',
+  'wechat',
+  'kakaotalk',
+  'kakao',
+  'viber',
+  'signal',
+  'messenger',
+  'discord',
+  'snapchat',
+  'instagram',
+  'ig',
+  'facebook',
+  'fb',
+];
+const spacedLetters = (word: string): string => word.split('').join('[\\s.\\-_]*');
+const BRAND_RE = new RegExp(`\\b(?:${BRAND_NAMES.map(spacedLetters).join('|')})\\b`, 'gi');
+
 const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> = [
   {
     // A run of 9+ digits with any single-character separators (dash, dot,
@@ -27,7 +55,7 @@ const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> 
     // Named apps as standalone words — "line" alone is ambiguous English, but
     // catching it is worth the occasional false positive (a redaction is
     // cheap; a missed leakage attempt isn't).
-    re: /\b(whatsapp|line|telegram|wechat|kakao(?:talk)?|viber|signal(?:\s*app)?|messenger|discord|snapchat|instagram)\b/gi,
+    re: BRAND_RE,
     reason: 'mentions an outside messaging app',
     placeholder: '[hidden]',
   },
@@ -40,10 +68,29 @@ const LEAK_PATTERNS: Array<{ re: RegExp; reason: string; placeholder: string }> 
     placeholder: '[hidden]',
   },
   {
-    // "ID: xyz123" / "my id is xyz123" / "username: xyz" / "add me: xyz" —
-    // the generic way people share a handle for an app without naming the
-    // app itself, so the named-app pattern above alone misses it.
-    re: /\b(?:my\s+)?(?:id|username|handle|contact)\s*(?:is|:)\s*[\w.+-]{2,}/gi,
+    // "username xyz" — the generic way people share a handle for an app
+    // without naming the app itself. A bare space (no "is"/":") is enough
+    // here — "username" isn't used in ordinary English the way "handle" or
+    // "contact" are ("I can handle this", "contact info" are common phrases;
+    // "username info" isn't), so it's safe to catch without a separator.
+    re: /\b(?:my\s+)?username(?:\s*(?:is|[:=-])\s*|\s+)[\w.+-]{2,}/gi,
+    reason: 'mentions a possible username/ID for off-platform contact',
+    placeholder: '[hidden]',
+  },
+  {
+    // "handle"/"contact" both need an explicit separator — both are common
+    // English on their own ("I can handle this", "contact info"), so a bare
+    // space after them would false-positive constantly.
+    re: /\b(?:my\s+)?(?:handle|contact)\s*(?:is|[:=-])\s*[\w.+-]{2,}/gi,
+    reason: 'mentions a possible username/ID for off-platform contact',
+    placeholder: '[hidden]',
+  },
+  {
+    // Same idea for bare "id", kept separate because "id" alone collides with
+    // the common no-apostrophe typing of "I'd" ("id like", "id love", "id
+    // rather") — skip only those specific continuations so "ID johndoe123" /
+    // "ID: johndoe123" / "my id is johndoe123" still all get caught.
+    re: /\b(?:my\s+)?id(?:\s*(?:is|[:=-])\s*|\s+)(?!(?:like|love|want|need|rather|prefer|say|think|guess|suggest|recommend|really)\b)[\w.+-]{2,}/gi,
     reason: 'mentions a possible username/ID for off-platform contact',
     placeholder: '[hidden]',
   },

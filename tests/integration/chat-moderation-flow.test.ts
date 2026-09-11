@@ -185,6 +185,67 @@ describe('AI chat moderation', () => {
     expect(body).toContain('[hidden]');
   });
 
+  it('a bare "ID johndoe123" with no colon is redacted too', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, 'ID johndoe123 add me there');
+    expect(res.json().data.warning).toBeTruthy();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const body = list.json().data.items[0].body as string;
+    expect(body).not.toContain('johndoe123');
+    expect(body).toContain('[hidden]');
+  });
+
+  it('"id like"/"id love" (the no-apostrophe "I\'d") is left alone, not redacted', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const res = await send(order, "id like to know when it ships, id love an update");
+    expect(res.json().data.warning).toBeNull();
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    expect(list.json().data.items[0].body).toBe(
+      "id like to know when it ships, id love an update"
+    );
+  });
+
+  it('social brand names, short forms, and spelled-out letters are all redacted', async () => {
+    const order = await createAcceptedOrder(ctx);
+
+    const cases = [
+      'find me on Facebook',
+      'just fb me',
+      "here's my IG",
+      "here's my instagram",
+      'add me on WA',
+      'f a c e b o o k dot com slash me',
+      'L I N E id is xyz',
+    ];
+
+    for (const body of cases) {
+      const res = await send(order, body);
+      expect(res.json().data.warning).toBeTruthy();
+    }
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const bodies = list.json().data.items.map((m: { body: string }) => m.body as string);
+    for (const body of bodies) {
+      expect(body.toLowerCase()).not.toMatch(/facebook|instagram|whatsapp/);
+    }
+  });
+
   it('a message the AI check calls high-risk is hidden from both participants', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);
