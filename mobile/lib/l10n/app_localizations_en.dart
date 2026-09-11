@@ -123,6 +123,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorPasswordTooShort => 'At least 8 characters';
 
   @override
+  String get errorPasswordTooLong => '128 characters or fewer';
+
+  @override
+  String get errorPasswordNotAlphanumeric =>
+      'Must contain both letters and numbers';
+
+  @override
   String get errorEnterFullName => 'Enter your full name';
 
   @override
@@ -136,6 +143,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPasswordsDontMatch => 'Passwords don\'t match';
+
+  @override
+  String get passwordStrengthWeak => 'Weak';
+
+  @override
+  String get passwordStrengthFair => 'Fair';
+
+  @override
+  String get passwordStrengthGood => 'Good';
+
+  @override
+  String get passwordStrengthStrong => 'Strong';
+
+  @override
+  String get passwordRequirementsTitle => 'Password requirements';
+
+  @override
+  String get passwordRequirementLength => 'Must contain at least 8 characters';
+
+  @override
+  String get passwordRequirementAlphanumeric =>
+      'Must be alphanumerical (letters and numbers)';
+
+  @override
+  String get passwordRequirementSpecialAllowed =>
+      'Special characters allowed (not required)';
 
   @override
   String get actionLogIn => 'Log in';
@@ -192,6 +225,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorResetPasswordFailed =>
       'Could not reset your password. Please try again.';
+
+  @override
+  String get fieldCurrentPassword => 'Current password';
+
+  @override
+  String get errorEnterCurrentPassword => 'Enter your current password';
+
+  @override
+  String get actionChangePassword => 'Change password';
+
+  @override
+  String get infoPasswordChanged => 'Password changed';
+
+  @override
+  String get errorChangePasswordFailed =>
+      'Could not change your password. Please try again.';
 
   @override
   String get rememberedPassword => 'Remembered your password?';

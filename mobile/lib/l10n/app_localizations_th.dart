@@ -122,6 +122,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorPasswordTooShort => 'อย่างน้อย 8 ตัวอักษร';
 
   @override
+  String get errorPasswordTooLong => 'ไม่เกิน 128 ตัวอักษร';
+
+  @override
+  String get errorPasswordNotAlphanumeric => 'ต้องมีทั้งตัวอักษรและตัวเลข';
+
+  @override
   String get errorEnterFullName => 'กรอกชื่อ-นามสกุลของคุณ';
 
   @override
@@ -135,6 +141,32 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get errorPasswordsDontMatch => 'รหัสผ่านไม่ตรงกัน';
+
+  @override
+  String get passwordStrengthWeak => 'อ่อน';
+
+  @override
+  String get passwordStrengthFair => 'พอใช้';
+
+  @override
+  String get passwordStrengthGood => 'ดี';
+
+  @override
+  String get passwordStrengthStrong => 'แข็งแรง';
+
+  @override
+  String get passwordRequirementsTitle => 'ข้อกำหนดรหัสผ่าน';
+
+  @override
+  String get passwordRequirementLength => 'ต้องมีอย่างน้อย 8 ตัวอักษร';
+
+  @override
+  String get passwordRequirementAlphanumeric =>
+      'ต้องเป็นตัวอักษรและตัวเลขผสมกัน';
+
+  @override
+  String get passwordRequirementSpecialAllowed =>
+      'อนุญาตให้ใช้อักขระพิเศษ (ไม่บังคับ)';
 
   @override
   String get actionLogIn => 'เข้าสู่ระบบ';
@@ -191,6 +223,22 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get errorResetPasswordFailed =>
       'รีเซ็ตรหัสผ่านไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+
+  @override
+  String get fieldCurrentPassword => 'รหัสผ่านปัจจุบัน';
+
+  @override
+  String get errorEnterCurrentPassword => 'กรอกรหัสผ่านปัจจุบันของคุณ';
+
+  @override
+  String get actionChangePassword => 'เปลี่ยนรหัสผ่าน';
+
+  @override
+  String get infoPasswordChanged => 'เปลี่ยนรหัสผ่านแล้ว';
+
+  @override
+  String get errorChangePasswordFailed =>
+      'เปลี่ยนรหัสผ่านไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
 
   @override
   String get rememberedPassword => 'จำรหัสผ่านได้แล้วใช่ไหม?';

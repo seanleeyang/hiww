@@ -302,6 +302,18 @@ abstract class AppLocalizations {
   /// **'At least 8 characters'**
   String get errorPasswordTooShort;
 
+  /// No description provided for @errorPasswordTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'128 characters or fewer'**
+  String get errorPasswordTooLong;
+
+  /// No description provided for @errorPasswordNotAlphanumeric.
+  ///
+  /// In en, this message translates to:
+  /// **'Must contain both letters and numbers'**
+  String get errorPasswordNotAlphanumeric;
+
   /// No description provided for @errorEnterFullName.
   ///
   /// In en, this message translates to:
@@ -331,6 +343,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Passwords don\'t match'**
   String get errorPasswordsDontMatch;
+
+  /// No description provided for @passwordStrengthWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get passwordStrengthWeak;
+
+  /// No description provided for @passwordStrengthFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get passwordStrengthFair;
+
+  /// No description provided for @passwordStrengthGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get passwordStrengthGood;
+
+  /// No description provided for @passwordStrengthStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get passwordStrengthStrong;
+
+  /// No description provided for @passwordRequirementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password requirements'**
+  String get passwordRequirementsTitle;
+
+  /// No description provided for @passwordRequirementLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Must contain at least 8 characters'**
+  String get passwordRequirementLength;
+
+  /// No description provided for @passwordRequirementAlphanumeric.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be alphanumerical (letters and numbers)'**
+  String get passwordRequirementAlphanumeric;
+
+  /// No description provided for @passwordRequirementSpecialAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Special characters allowed (not required)'**
+  String get passwordRequirementSpecialAllowed;
 
   /// No description provided for @actionLogIn.
   ///
@@ -433,6 +493,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not reset your password. Please try again.'**
   String get errorResetPasswordFailed;
+
+  /// No description provided for @fieldCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get fieldCurrentPassword;
+
+  /// No description provided for @errorEnterCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current password'**
+  String get errorEnterCurrentPassword;
+
+  /// No description provided for @actionChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get actionChangePassword;
+
+  /// No description provided for @infoPasswordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed'**
+  String get infoPasswordChanged;
+
+  /// No description provided for @errorChangePasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change your password. Please try again.'**
+  String get errorChangePasswordFailed;
 
   /// No description provided for @rememberedPassword.
   ///

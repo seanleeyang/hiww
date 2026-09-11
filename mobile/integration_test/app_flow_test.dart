@@ -829,6 +829,55 @@ void main() {
     );
   });
 
+  testWidgets('a user changes their password from the account screen',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final user = await _register('changepw', stamp, type: 'both');
+
+    await tester.pumpWidget(
+      ProviderScope(
+          overrides: _appOverrides(user['token'] as String),
+          child: const HiwwApp()),
+    );
+
+    await _pumpUntil(tester, find.byTooltip('Account'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.byTooltip('Account'));
+
+    await _pumpUntil(tester, find.text('Change password'),
+        timeout: const Duration(seconds: 20));
+    await _tap(
+        tester, find.widgetWithText(FilledButton, 'Change password'));
+    await _pumpUntil(
+        tester, find.widgetWithText(TextField, 'Current password'));
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Current password'),
+        'SecurePass123!');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'New password'), 'BrandNewPass456!');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Confirm password'),
+        'BrandNewPass456!');
+    await _tap(tester, _button('Change password'));
+
+    await _pumpUntil(tester, find.textContaining('Password changed'),
+        timeout: const Duration(seconds: 30));
+
+    // The old password no longer works; the new one does.
+    await expectLater(
+      _api('POST', '/api/auth/login',
+          body: {'email': user['email'], 'password': 'SecurePass123!'}),
+      throwsA(isA<HttpException>()),
+    );
+    final relogin = await _api('POST', '/api/auth/login',
+        body: {'email': user['email'], 'password': 'BrandNewPass456!'});
+    expect(relogin['token'], isNotNull);
+  });
+
   testWidgets('traveler marks a confirmed order shipped', (tester) async {
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1.0;

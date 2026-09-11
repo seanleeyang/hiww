@@ -4,7 +4,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { AppError, generateId } from '@/utils/helpers';
 import { hashPassword, signToken, verifyPassword } from '@/utils/auth';
 import { config } from '@/config/env';
-import { profileUpdateSchema, phoneSchema } from '@/types/schemas';
+import { profileUpdateSchema, phoneSchema, passwordSchema } from '@/types/schemas';
 import { toUserSummary } from '@/utils/user-summary';
 import { issueOtp, verifyOtp, isMockOtp } from '@/services/otp';
 import { recordAudit, actorFromRequest } from '@/services/audit';
@@ -19,7 +19,7 @@ const registerSchema = z.object({
   full_name: z.string().min(2),
   user_type: z.enum(['shopper', 'traveler', 'both']),
   phone: phoneSchema,
-  password: z.string().min(8),
+  password: passwordSchema,
 });
 
 const verifyOtpSchema = z.object({
@@ -38,7 +38,12 @@ const forgotPasswordSchema = z.object({
 const resetPasswordSchema = z.object({
   email: z.string().email(),
   code: z.string().trim().length(6),
-  new_password: z.string().min(8),
+  new_password: passwordSchema,
+});
+
+const changePasswordSchema = z.object({
+  current_password: z.string().min(1),
+  new_password: passwordSchema,
 });
 
 const socialLoginSchema = z.object({
@@ -498,6 +503,47 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         data: { userId: user.id, email: user.email, token },
         code: 'PASSWORD_RESET',
       });
+    }
+  );
+
+  // Change password while signed in — proves identity via the current
+  // password rather than an OTP (that's what /forgot-password is for).
+  // Auth-guard already requires authentication for this route; userId is
+  // guaranteed set here.
+  app.post<{ Body: unknown }>(
+    '/api/auth/change-password',
+    { config: authRouteConfig },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (request, reply) => {
+      const parsed = changePasswordSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'auth.invalidChangePassword');
+      }
+
+      const user = await request.db
+        .selectFrom('users')
+        .select(['id', 'email', 'password_hash'])
+        .where('id', '=', request.userId!)
+        .executeTakeFirst();
+
+      if (!user || !verifyPassword(parsed.data.current_password, user.password_hash)) {
+        throw new AppError('AUTH_ERROR', 401, 'auth.currentPasswordIncorrect');
+      }
+
+      await request.db
+        .updateTable('users')
+        .set({ password_hash: hashPassword(parsed.data.new_password), updated_at: new Date() })
+        .where('id', '=', user.id)
+        .execute();
+
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'user.password_change',
+        targetType: 'user',
+        targetId: user.id,
+        summary: 'Password changed from account settings',
+      });
+
+      reply.send({ success: true, data: { userId: user.id }, code: 'PASSWORD_CHANGED' });
     }
   );
 

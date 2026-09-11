@@ -85,6 +85,12 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {}
+
+  @override
   Future<void> logout() async {
     loggedOut = true;
     token = null;

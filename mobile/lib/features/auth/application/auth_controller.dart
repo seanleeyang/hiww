@@ -106,6 +106,15 @@ class AuthController extends AsyncNotifier<AuthState> {
     state = AsyncData(AuthSignedIn(user));
   }
 
+  /// Throws [ApiException] on a wrong current password or a new one that
+  /// fails the strength policy — callers show it inline. Doesn't touch
+  /// [state]: the session token is untouched by a password change.
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) =>
+      _repo.changePassword(currentPassword: currentPassword, newPassword: newPassword);
+
   Future<void> logout() async {
     await _repo.logout();
     state = const AsyncData(AuthSignedOut());

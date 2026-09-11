@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/password_policy.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/busy_filled_button.dart';
+import '../../../ui/password_requirements_info.dart';
+import '../../../ui/password_strength_bar.dart';
 import '../../../ui/phone_field.dart';
 import '../application/auth_controller.dart';
 import '../domain/auth_user.dart';
@@ -138,9 +141,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               label: l10n.fieldPassword,
               obscureText: true,
               autofillHints: const [AutofillHints.newPassword],
-              validator: (v) =>
-                  (v ?? '').length < 8 ? l10n.errorPasswordTooShort : null,
+              suffixIcon: const PasswordRequirementsInfo(),
+              onChanged: (_) => setState(() {}),
+              validator: (v) => validateNewPassword(v, l10n),
             ),
+            PasswordStrengthBar(password: _password.text),
             const SizedBox(height: 14),
             AuthFormField(
               controller: _confirmPassword,

@@ -68,6 +68,11 @@ const MESSAGES: Record<string, Entry> = {
   'auth.invalidCredentials': { en: 'Invalid email or password', th: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' },
   'auth.invalidEmail': { en: 'Invalid email', th: 'อีเมลไม่ถูกต้อง' },
   'auth.invalidResetDetails': { en: 'Invalid reset details', th: 'ข้อมูลรีเซ็ตรหัสผ่านไม่ถูกต้อง' },
+  'auth.invalidChangePassword': {
+    en: 'Password must be 8-128 characters and contain both letters and numbers',
+    th: 'รหัสผ่านต้องมี 8-128 ตัวอักษร และประกอบด้วยตัวอักษรและตัวเลข',
+  },
+  'auth.currentPasswordIncorrect': { en: 'Current password is incorrect', th: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' },
   'auth.invalidProfileUpdate': { en: 'Invalid profile update', th: 'ข้อมูลอัปเดตโปรไฟล์ไม่ถูกต้อง' },
   'auth.invalidVerificationCode': { en: 'Invalid verification code', th: 'รหัสยืนยันไม่ถูกต้อง' },
   'auth.invalidChannel': { en: 'Invalid channel', th: 'ช่องทางไม่ถูกต้อง' },

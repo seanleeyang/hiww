@@ -69,6 +69,13 @@ class _SignedOutRepository implements AuthRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> logout() async {}
 }
 

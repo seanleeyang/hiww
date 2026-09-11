@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/password_policy.dart';
 import '../../../core/world_countries.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 import '../../../ui/country_picker_field.dart';
 import '../../../ui/image_picker_field.dart';
 import '../../../ui/initials_avatar.dart';
+import '../../../ui/password_requirements_info.dart';
+import '../../../ui/password_strength_bar.dart';
 import '../../../ui/phone_field.dart';
 import '../../../ui/busy_filled_button.dart';
 import '../../../ui/section_header.dart';
@@ -116,6 +119,8 @@ class AccountScreen extends ConsumerWidget {
                 _ContactDetailsCard(user: user),
                 const SizedBox(height: 16),
                 const _KycCard(),
+                const SizedBox(height: 16),
+                const _ChangePasswordCard(),
                 if (user.pilot?.manualMoney ?? false) ...[
                   const SizedBox(height: 12),
                   _PilotCard(instructions: user.pilot!.paymentInstructions),
@@ -653,6 +658,131 @@ class _KycCardState extends ConsumerState<_KycCard> {
                 onPressed: _submit,
               ),
             ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ChangePasswordCard extends ConsumerStatefulWidget {
+  const _ChangePasswordCard();
+
+  @override
+  ConsumerState<_ChangePasswordCard> createState() => _ChangePasswordCardState();
+}
+
+class _ChangePasswordCardState extends ConsumerState<_ChangePasswordCard> {
+  final _currentPassword = TextEditingController();
+  final _newPassword = TextEditingController();
+  final _confirmPassword = TextEditingController();
+  bool _expanded = false;
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _currentPassword.dispose();
+    _newPassword.dispose();
+    _confirmPassword.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_currentPassword.text.isEmpty) {
+      setState(() => _error = l10n.errorEnterCurrentPassword);
+      return;
+    }
+    final policyError = validateNewPassword(_newPassword.text, l10n);
+    if (policyError != null) {
+      setState(() => _error = policyError);
+      return;
+    }
+    if (_confirmPassword.text != _newPassword.text) {
+      setState(() => _error = l10n.errorPasswordsDontMatch);
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authControllerProvider.notifier).changePassword(
+            currentPassword: _currentPassword.text,
+            newPassword: _newPassword.text,
+          );
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _expanded = false;
+        _currentPassword.clear();
+        _newPassword.clear();
+        _confirmPassword.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.infoPasswordChanged)),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(l10n.actionChangePassword),
+          const SizedBox(height: 12),
+          if (!_expanded)
+            FilledButton.tonal(
+              onPressed: () => setState(() => _expanded = true),
+              child: Text(l10n.actionChangePassword),
+            )
+          else ...[
+            TextField(
+              controller: _currentPassword,
+              obscureText: true,
+              decoration: InputDecoration(labelText: l10n.fieldCurrentPassword),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _newPassword,
+              obscureText: true,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: l10n.fieldNewPassword,
+                suffixIcon: const PasswordRequirementsInfo(),
+              ),
+            ),
+            PasswordStrengthBar(password: _newPassword.text),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _confirmPassword,
+              obscureText: true,
+              decoration: InputDecoration(labelText: l10n.fieldConfirmPassword),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+            const SizedBox(height: 12),
+            BusyFilledButton(
+              busy: _submitting,
+              label: l10n.actionChangePassword,
+              onPressed: _submit,
+            ),
           ],
         ],
       ),

@@ -29,6 +29,7 @@ export type AuditAction =
   | 'kyc.ai_check_failed'
   | 'user.flag'
   | 'user.password_reset'
+  | 'user.password_change'
   | 'user.reclaimed_via_social_link'
   | 'message.flag'
   | 'message.flag_cleared'

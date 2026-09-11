@@ -11,6 +11,8 @@ class AuthFormField extends StatelessWidget {
     this.obscureText = false,
     this.autofillHints,
     this.onFieldSubmitted,
+    this.onChanged,
+    this.suffixIcon,
   });
 
   final TextEditingController controller;
@@ -20,6 +22,8 @@ class AuthFormField extends StatelessWidget {
   final bool obscureText;
   final Iterable<String>? autofillHints;
   final void Function(String)? onFieldSubmitted;
+  final void Function(String)? onChanged;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +34,8 @@ class AuthFormField extends StatelessWidget {
       obscureText: obscureText,
       autofillHints: autofillHints,
       onFieldSubmitted: onFieldSubmitted,
-      decoration: InputDecoration(labelText: label),
+      onChanged: onChanged,
+      decoration: InputDecoration(labelText: label, suffixIcon: suffixIcon),
     );
   }
 }

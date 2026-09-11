@@ -116,6 +116,43 @@ describe('auth and protected route flow', () => {
     expect(response.statusCode).toBe(401);
   });
 
+  it('rejects registration passwords that fail the strength policy', async () => {
+    const cases = [
+      { password: 'short1', reason: 'under 8 characters' },
+      { password: 'alllettersnodigits', reason: 'no digit' },
+      { password: '12345678', reason: 'no letter' },
+    ];
+    for (const { password } of cases) {
+      const res = await ctx.app.inject({
+        method: 'POST',
+        url: '/api/auth/register',
+        payload: {
+          email: `weak-${randomUUID()}@example.com`,
+          full_name: 'Weak Password',
+          user_type: 'shopper',
+          phone: '+1 555 0100',
+          password,
+        },
+      });
+      expect(res.statusCode).toBe(400);
+    }
+  });
+
+  it('accepts an 8+ character password mixing letters and digits, special characters optional', async () => {
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        email: `strongenough-${randomUUID()}@example.com`,
+        full_name: 'Strong Enough',
+        user_type: 'shopper',
+        phone: '+1 555 0100',
+        password: 'letters123', // no special character — must still pass
+      },
+    });
+    expect(res.statusCode).toBe(201);
+  });
+
   it('rejects a login with the wrong password', async () => {
     const user = await createUser(ctx, { user_type: 'both' });
 

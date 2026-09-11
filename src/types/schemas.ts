@@ -130,6 +130,26 @@ const PHONE_REGEX = /^\+?[0-9 ()-]{6,20}$/;
  * optional one in `profileUpdateSchema` below. */
 export const phoneSchema = z.string().trim().regex(PHONE_REGEX, 'Enter a valid phone number');
 
+/**
+ * Password policy for anywhere a password is being *set* (register, reset,
+ * change) — never applied to login, since existing accounts may predate
+ * this policy or have a password that no longer satisfies it. Minimum 8 /
+ * maximum 128 (long passphrases are fine — length matters more than an
+ * arbitrary short cap), and must mix letters with digits; special
+ * characters are allowed but never required. This mirrors the common
+ * baseline most consumer sites still enforce, even though the newest NIST
+ * 800-63B guidance (Rev. 4, 2025) has moved away from mandating character-
+ * mix rules in favor of length + breach-list checks — no breach-list
+ * infrastructure exists here, so a composition floor is the practical
+ * stand-in.
+ */
+export const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .max(128, 'Password must be at most 128 characters')
+  .refine((v) => /[a-zA-Z]/.test(v), 'Password must contain at least one letter')
+  .refine((v) => /[0-9]/.test(v), 'Password must contain at least one number');
+
 export const profileUpdateSchema = z
   .object({
     full_name: z.string().trim().min(2).max(120).optional(),
