@@ -25,7 +25,6 @@ import '../features/orders/data/orders_repository.dart';
 import '../features/orders/presentation/confirm_review_screen.dart';
 import '../features/orders/presentation/my_orders_screen.dart';
 import '../features/orders/presentation/order_screen.dart';
-import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/data/reviews_repository.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/splash_screen.dart';
@@ -193,7 +192,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/verify', builder: (_, _) => const VerifyOtpScreen()),
       GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
-      GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(
         path: '/trips/:id/edit',
         builder: (_, s) => EditTripScreen(existing: s.extra as Trip),

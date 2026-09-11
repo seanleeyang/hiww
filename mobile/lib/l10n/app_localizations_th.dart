@@ -95,13 +95,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionMarkAllRead => 'อ่านทั้งหมดแล้ว';
 
   @override
-  String get tooltipSettings => 'ตั้งค่า';
-
-  @override
   String get tooltipAccount => 'บัญชี';
-
-  @override
-  String get settingsTitle => 'ตั้งค่า';
 
   @override
   String get fieldEmail => 'อีเมล';
@@ -111,6 +105,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get fieldFullName => 'ชื่อ-นามสกุล';
+
+  @override
+  String get fieldFirstName => 'ชื่อจริง';
+
+  @override
+  String get fieldSurname => 'นามสกุล';
 
   @override
   String get fieldConfirmPassword => 'ยืนยันรหัสผ่าน';
@@ -123,6 +123,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get errorEnterFullName => 'กรอกชื่อ-นามสกุลของคุณ';
+
+  @override
+  String get errorEnterFirstName => 'กรอกชื่อจริงของคุณ';
+
+  @override
+  String get errorEnterSurname => 'กรอกนามสกุลของคุณ';
 
   @override
   String get errorEnterPhone => 'กรอกเบอร์โทรศัพท์ของคุณ';
@@ -400,9 +406,6 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get actionLogOut => 'ออกจากระบบ';
-
-  @override
-  String get settingsLanguage => 'ภาษา';
 
   @override
   String get languageEnglish => 'English';

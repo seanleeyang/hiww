@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../ui/brand_mark.dart';
 import '../../ui/initials_avatar.dart';
+import '../../ui/language_toggle.dart';
 import '../auth/application/auth_controller.dart';
 import '../chat/data/chat_repository.dart';
 import '../notifications/data/notifications_repository.dart';
@@ -72,12 +73,9 @@ class AppShell extends ConsumerWidget {
       title: const BrandMark(),
       titleSpacing: 16,
       actions: [
-        Tooltip(
-          message: l10n.tooltipSettings,
-          child: IconButton(
-            onPressed: () => context.push('/settings'),
-            icon: const Icon(Icons.settings_outlined),
-          ),
+        const Padding(
+          padding: EdgeInsets.only(right: 12),
+          child: LanguageToggle(),
         ),
         if (signedIn)
           Padding(

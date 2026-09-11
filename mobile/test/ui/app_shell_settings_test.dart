@@ -74,7 +74,7 @@ class _SignedInRepository implements AuthRepository {
 }
 
 void main() {
-  testWidgets('app bar shows settings and profile; settings holds the language toggle',
+  testWidgets('app bar shows the language toggle directly and the account avatar',
       (tester) async {
     // The browse screen's feed/notification streams hit a real (unreachable)
     // network in this test, so their AsyncValueView stays in a spinning
@@ -94,28 +94,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     // Signed-in launch lands on Browse, inside the shell app bar. The bell
-    // is gone — notifications now live inside the Inbox tab instead.
+    // is gone — notifications now live inside the Inbox tab instead. The
+    // language toggle (rendered as one "English | ไทย" rich-text widget, see
+    // LanguageToggle) is right there in the app bar (top right) instead of
+    // buried behind a settings gear + a whole extra screen, which no longer
+    // exists at all.
     expect(find.byIcon(Icons.notifications_none), findsNothing);
-    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.settings_outlined), findsNothing);
+    expect(find.textContaining('English'), findsOneWidget);
+    expect(find.textContaining('ไทย'), findsOneWidget);
     expect(find.byTooltip('Account'), findsOneWidget);
-
-    // Account screen no longer carries the language toggle.
-    await tester.tap(find.byTooltip('Account'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Language'), findsNothing);
-    expect(find.widgetWithText(SegmentedButton<String>, 'English'), findsNothing);
-
-    // Back to Browse, then into the new Settings screen.
-    await tester.tap(find.byType(BackButton));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.byIcon(Icons.settings_outlined));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.text('Settings'), findsWidgets);
-    expect(find.text('Language'), findsOneWidget);
-    expect(find.widgetWithText(SegmentedButton<String>, 'English'), findsOneWidget);
   });
 }

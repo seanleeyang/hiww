@@ -21,7 +21,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _name = TextEditingController();
+  final _firstName = TextEditingController();
+  final _surname = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirmPassword = TextEditingController();
@@ -32,7 +33,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
-    _name.dispose();
+    _firstName.dispose();
+    _surname.dispose();
     _email.dispose();
     _password.dispose();
     _confirmPassword.dispose();
@@ -51,7 +53,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _error = null;
     });
     await ref.read(authControllerProvider.notifier).register(
-          fullName: _name.text.trim(),
+          fullName: '${_firstName.text.trim()} ${_surname.text.trim()}',
           email: _email.text.trim(),
           password: _password.text,
           userType: _userType,
@@ -91,12 +93,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           children: [
             const SocialAuthButtons(),
             const SocialAuthDivider(),
-            AuthFormField(
-              controller: _name,
-              label: l10n.fieldFullName,
-              autofillHints: const [AutofillHints.name],
-              validator: (v) =>
-                  (v?.trim() ?? '').length < 2 ? l10n.errorEnterFullName : null,
+            Row(
+              children: [
+                Expanded(
+                  child: AuthFormField(
+                    controller: _firstName,
+                    label: l10n.fieldFirstName,
+                    autofillHints: const [AutofillHints.givenName],
+                    validator: (v) =>
+                        (v?.trim() ?? '').isEmpty ? l10n.errorEnterFirstName : null,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: AuthFormField(
+                    controller: _surname,
+                    label: l10n.fieldSurname,
+                    autofillHints: const [AutofillHints.familyName],
+                    validator: (v) =>
+                        (v?.trim() ?? '').isEmpty ? l10n.errorEnterSurname : null,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 14),
             AuthFormField(

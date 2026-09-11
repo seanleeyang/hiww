@@ -248,23 +248,11 @@ abstract class AppLocalizations {
   /// **'Mark all read'**
   String get actionMarkAllRead;
 
-  /// No description provided for @tooltipSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get tooltipSettings;
-
   /// No description provided for @tooltipAccount.
   ///
   /// In en, this message translates to:
   /// **'Account'**
   String get tooltipAccount;
-
-  /// No description provided for @settingsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get settingsTitle;
 
   /// No description provided for @fieldEmail.
   ///
@@ -283,6 +271,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Full name'**
   String get fieldFullName;
+
+  /// No description provided for @fieldFirstName.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get fieldFirstName;
+
+  /// No description provided for @fieldSurname.
+  ///
+  /// In en, this message translates to:
+  /// **'Surname'**
+  String get fieldSurname;
 
   /// No description provided for @fieldConfirmPassword.
   ///
@@ -307,6 +307,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your full name'**
   String get errorEnterFullName;
+
+  /// No description provided for @errorEnterFirstName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your first name'**
+  String get errorEnterFirstName;
+
+  /// No description provided for @errorEnterSurname.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your surname'**
+  String get errorEnterSurname;
 
   /// No description provided for @errorEnterPhone.
   ///
@@ -829,12 +841,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log out'**
   String get actionLogOut;
-
-  /// No description provided for @settingsLanguage.
-  ///
-  /// In en, this message translates to:
-  /// **'Language'**
-  String get settingsLanguage;
 
   /// No description provided for @languageEnglish.
   ///

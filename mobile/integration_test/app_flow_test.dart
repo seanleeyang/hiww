@@ -357,7 +357,9 @@ void main() {
 
     final shopperEmail = 'it-shopper-$stamp@example.com';
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Full name'), 'Sam Shopper');
+        find.widgetWithText(TextFormField, 'First name'), 'Sam');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Surname'), 'Shopper');
     await tester.enterText(
         find.widgetWithText(TextFormField, 'Email'), shopperEmail);
     await tester.enterText(

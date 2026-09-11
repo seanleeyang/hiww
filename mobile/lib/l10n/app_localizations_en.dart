@@ -96,13 +96,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionMarkAllRead => 'Mark all read';
 
   @override
-  String get tooltipSettings => 'Settings';
-
-  @override
   String get tooltipAccount => 'Account';
-
-  @override
-  String get settingsTitle => 'Settings';
 
   @override
   String get fieldEmail => 'Email';
@@ -112,6 +106,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fieldFullName => 'Full name';
+
+  @override
+  String get fieldFirstName => 'First name';
+
+  @override
+  String get fieldSurname => 'Surname';
 
   @override
   String get fieldConfirmPassword => 'Confirm password';
@@ -124,6 +124,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorEnterFullName => 'Enter your full name';
+
+  @override
+  String get errorEnterFirstName => 'Enter your first name';
+
+  @override
+  String get errorEnterSurname => 'Enter your surname';
 
   @override
   String get errorEnterPhone => 'Enter your phone number';
@@ -403,9 +409,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionLogOut => 'Log out';
-
-  @override
-  String get settingsLanguage => 'Language';
 
   @override
   String get languageEnglish => 'English';
