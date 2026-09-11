@@ -879,7 +879,7 @@ void main() {
   });
 
   testWidgets(
-      'changing the phone number in Edit Profile requires re-verification',
+      'changing the phone number via the dedicated Change flow requires re-verification',
       (tester) async {
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1.0;
@@ -902,20 +902,23 @@ void main() {
         timeout: const Duration(seconds: 20));
     await _tap(tester, find.widgetWithText(TextButton, 'Edit'));
 
+    // The Edit Profile sheet shows phone/email as locked rows (Email first,
+    // then Phone), each with its own "Change" button — changing either is a
+    // dedicated single-purpose flow, deliberately not bundled with the rest
+    // of the form's Save.
+    await _pumpUntil(
+        tester, find.widgetWithText(TextButton, 'Change'),
+        timeout: const Duration(seconds: 20));
+    await _tap(tester, find.widgetWithText(TextButton, 'Change').at(1));
+
     await _pumpUntil(
         tester, find.widgetWithText(TextField, 'Phone number'));
     await tester.enterText(
         find.widgetWithText(TextField, 'Phone number'), '99 999 9999');
     await _tap(tester, _button('Save'));
 
-    // Saving pops the Edit Profile sheet and prompts re-verification via a
-    // snackbar rather than silently leaving the account looking verified
-    // for a number that was never actually confirmed.
-    await _pumpUntil(
-        tester, find.textContaining('needs to be verified'),
-        timeout: const Duration(seconds: 20));
-    await _tap(tester, find.byType(SnackBarAction));
-
+    // Saving goes straight to /verify — no intermediate snackbar, since
+    // that's the entire point of this dedicated screen.
     // Lands on /verify with only the phone channel unconfirmed — email
     // stays verified, so its section renders no code field at all, leaving
     // exactly one `TextFormField` (the phone code entry) in the tree. Its
@@ -945,6 +948,62 @@ void main() {
     final me = await _api('GET', '/api/me', token: user['token'] as String);
     expect(me['phone'], '+66 99 999 9999');
     expect(me['phone_verified_at'], isNotNull);
+  });
+
+  testWidgets(
+      'changing the email address via the dedicated Change flow requires re-verification',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final user = await _register('emailchange', stamp, type: 'both');
+    final newEmail = 'it-emailchange-new-$stamp@example.com';
+
+    await tester.pumpWidget(
+      ProviderScope(
+          overrides: _appOverrides(user['token'] as String),
+          child: const HiwwApp()),
+    );
+
+    await _pumpUntil(tester, find.byTooltip('Account'),
+        timeout: const Duration(seconds: 40));
+    await _tap(tester, find.byTooltip('Account'));
+
+    await _pumpUntil(tester, find.widgetWithText(TextButton, 'Edit'),
+        timeout: const Duration(seconds: 20));
+    await _tap(tester, find.widgetWithText(TextButton, 'Edit'));
+
+    // Email's locked row comes first, so its Change button is index 0.
+    await _pumpUntil(
+        tester, find.widgetWithText(TextButton, 'Change'),
+        timeout: const Duration(seconds: 20));
+    await _tap(tester, find.widgetWithText(TextButton, 'Change').first);
+
+    await _pumpUntil(
+        tester, find.widgetWithText(TextField, 'New email address'));
+    await tester.enterText(
+        find.widgetWithText(TextField, 'New email address'), newEmail);
+    await _tap(tester, _button('Save'));
+
+    // Straight to /verify, email now the outstanding channel this time.
+    await _pumpUntil(tester, find.text('Verify your account'),
+        timeout: const Duration(seconds: 20));
+    await _pumpUntil(tester, find.textContaining('dev code'),
+        timeout: const Duration(seconds: 20));
+    await _tap(tester, _button('Verify'));
+
+    final deadline = DateTime.now().add(const Duration(seconds: 20));
+    while (DateTime.now().isBefore(deadline) &&
+        find.text('Verify your account').evaluate().isNotEmpty) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+    expect(find.text('Verify your account'), findsNothing);
+
+    final me = await _api('GET', '/api/me', token: user['token'] as String);
+    expect(me['email'], newEmail);
+    expect(me['email_verified_at'], isNotNull);
   });
 
   testWidgets('traveler marks a confirmed order shipped', (tester) async {

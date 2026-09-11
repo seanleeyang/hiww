@@ -317,14 +317,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get infoNewCodeSent => 'A new code was sent.';
 
   @override
-  String get infoPhoneNeedsVerification =>
-      'Your new phone number needs to be verified.';
-
-  @override
   String get accountTitle => 'Account';
 
   @override
   String get actionEdit => 'Edit';
+
+  @override
+  String get actionChange => 'Change';
+
+  @override
+  String get changePhoneTitle => 'Change phone number';
+
+  @override
+  String get changeEmailTitle => 'Change email address';
+
+  @override
+  String get changeContactNote =>
+      'You\'ll need to verify the new one with a code before you can use the app again.';
+
+  @override
+  String get fieldNewPhone => 'New phone number';
+
+  @override
+  String get fieldNewEmail => 'New email address';
+
+  @override
+  String get errorEnterNewPhone => 'Enter a new phone number';
 
   @override
   String get accountCompleteProfile => 'Complete your profile';

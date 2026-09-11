@@ -67,7 +67,8 @@ describe('profile + reputation', () => {
     expect(patch.statusCode).toBe(200);
     expect(patch.json().data.phone).toBe('+1 555 9999');
     expect(patch.json().data.phone_verified_at).toBeNull();
-    expect(patch.json().data.debug_otp).toMatch(/^\d{6}$/);
+    expect(patch.json().data.debug_otp.phone).toMatch(/^\d{6}$/);
+    expect(patch.json().data.debug_otp.email).toBeUndefined();
 
     // A gated route now 403s again, same as a freshly-registered account.
     const gated = await ctx.app.inject({
@@ -93,7 +94,7 @@ describe('profile + reputation', () => {
     expect(me.statusCode).toBe(200);
 
     // Verifying the new number with the fresh code lifts the gate again.
-    const code = patch.json().data.debug_otp as string;
+    const code = patch.json().data.debug_otp.phone as string;
     const verify = await ctx.app.inject({
       method: 'POST',
       url: '/api/auth/verify-otp',
@@ -132,6 +133,116 @@ describe('profile + reputation', () => {
     expect(patch.statusCode).toBe(200);
     expect(patch.json().data.phone_verified_at).not.toBeNull();
     expect(patch.json().data.debug_otp).toBeUndefined();
+  });
+
+  it('changing the email address resets its verification and re-gates the account', async () => {
+    const user = await createUser(ctx, { user_type: 'shopper' });
+    const newEmail = `new-${user.userId}@example.com`;
+
+    const patch = await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers: authHeader(user),
+      payload: { email: newEmail },
+    });
+    expect(patch.statusCode).toBe(200);
+    expect(patch.json().data.email).toBe(newEmail);
+    expect(patch.json().data.email_verified_at).toBeNull();
+    expect(patch.json().data.debug_otp.email).toMatch(/^\d{6}$/);
+    expect(patch.json().data.debug_otp.phone).toBeUndefined();
+
+    const gated = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/trips',
+      headers: authHeader(user),
+      payload: {
+        departure_country: 'TH',
+        arrival_country: 'JP',
+        departure_city: 'Bangkok',
+        arrival_city: 'Tokyo',
+        departure_date: new Date(Date.now() + 7 * 86400000).toISOString(),
+        return_date: new Date(Date.now() + 21 * 86400000).toISOString(),
+        max_weight_kg: 8,
+        max_items: 5,
+      },
+    });
+    expect(gated.statusCode).toBe(403);
+    expect(gated.json().code).toBe('VERIFICATION_REQUIRED');
+
+    const code = patch.json().data.debug_otp.email as string;
+    const verify = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/verify-otp',
+      headers: authHeader(user),
+      payload: { channel: 'email', code },
+    });
+    expect(verify.statusCode).toBe(200);
+
+    // The new address now logs in; the old one no longer resolves an account.
+    const login = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: newEmail, password: 'SecurePass123!' },
+    });
+    expect(login.statusCode).toBe(200);
+  });
+
+  it('rejects changing to an email address already in use', async () => {
+    const user = await createUser(ctx, { user_type: 'shopper' });
+    const other = await createUser(ctx, { user_type: 'traveler' });
+
+    const patch = await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers: authHeader(user),
+      payload: { email: other.email },
+    });
+    expect(patch.statusCode).toBe(409);
+    expect(patch.json().code).toBe('USER_EXISTS');
+
+    // Nothing changed — still able to reach /api/me without a fresh verify.
+    const me = await ctx.app.inject({ method: 'GET', url: '/api/me', headers: authHeader(user) });
+    expect(me.json().data.email).toBe(user.email);
+    expect(me.json().data.email_verified_at).not.toBeNull();
+  });
+
+  it('changing both phone and email in one request re-gates both channels independently', async () => {
+    const user = await createUser(ctx, { user_type: 'shopper' });
+    const newEmail = `both-${user.userId}@example.com`;
+
+    const patch = await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers: authHeader(user),
+      payload: { email: newEmail, phone: '+1 555 8888' },
+    });
+    expect(patch.statusCode).toBe(200);
+    expect(patch.json().data.debug_otp.email).toMatch(/^\d{6}$/);
+    expect(patch.json().data.debug_otp.phone).toMatch(/^\d{6}$/);
+
+    // Verifying only email still leaves phone (and therefore the account) gated.
+    await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/verify-otp',
+      headers: authHeader(user),
+      payload: { channel: 'email', code: patch.json().data.debug_otp.email },
+    });
+    const stillGated = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/trips',
+      headers: authHeader(user),
+      payload: {
+        departure_country: 'TH',
+        arrival_country: 'JP',
+        departure_city: 'Bangkok',
+        arrival_city: 'Tokyo',
+        departure_date: new Date(Date.now() + 7 * 86400000).toISOString(),
+        return_date: new Date(Date.now() + 21 * 86400000).toISOString(),
+        max_weight_kg: 8,
+        max_items: 5,
+      },
+    });
+    expect(stillGated.statusCode).toBe(403);
   });
 
   it('delivering an order bumps the traveler delivered_count and stage timestamps', async () => {

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
-import '../../../core/navigation.dart';
 import '../../../core/password_policy.dart';
 import '../../../core/world_countries.dart';
 import '../../../l10n/app_localizations.dart';
@@ -13,7 +12,6 @@ import '../../../ui/image_picker_field.dart';
 import '../../../ui/initials_avatar.dart';
 import '../../../ui/password_requirements_info.dart';
 import '../../../ui/password_strength_bar.dart';
-import '../../../ui/phone_field.dart';
 import '../../../ui/busy_filled_button.dart';
 import '../../../ui/section_header.dart';
 import '../../../ui/soft_card.dart';
@@ -23,6 +21,7 @@ import '../../../ui/status_pill.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
 import '../data/account_repository.dart';
+import 'change_contact_screen.dart';
 
 void _showEditProfile(BuildContext context, WidgetRef ref, AuthUser user) {
   showModalBottomSheet<void>(
@@ -245,7 +244,6 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late final _name = TextEditingController(text: widget.user.fullName);
   late final _city = TextEditingController(text: widget.user.homeCity ?? '');
-  late String _phone = widget.user.phone ?? '';
   late final _addressStreet = TextEditingController(text: widget.user.addressStreet ?? '');
   late final _addressCity = TextEditingController(text: widget.user.addressCity ?? '');
   late final _addressPostalCode =
@@ -265,6 +263,17 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     super.dispose();
   }
 
+  // Closes this sheet, then pushes the dedicated single-purpose screen for
+  // changing phone/email — kept entirely separate from Save below so
+  // changing an unrelated field (name, address, …) can never silently kick
+  // off a re-verification gate the user didn't ask for.
+  void _goToChange(ContactChannel channel) {
+    Navigator.of(context).pop();
+    context.push(
+      channel == ContactChannel.phone ? '/account/change-phone' : '/account/change-email',
+    );
+  }
+
   Future<void> _save() async {
     if (_name.text.trim().length < 2) {
       setState(() => _error = AppLocalizations.of(context)!.errorEnterName);
@@ -274,7 +283,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       _busy = true;
       _error = null;
     });
-    final wasPhoneVerified = widget.user.phoneVerified;
     try {
       await ref
           .read(accountRepositoryProvider)
@@ -282,7 +290,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             fullName: _name.text.trim(),
             homeCity: _city.text.trim(),
             avatarUrl: _avatarUrl ?? '',
-            phone: _phone.trim(),
             addressStreet: _addressStreet.text.trim(),
             addressCity: _addressCity.text.trim(),
             addressPostalCode: _addressPostalCode.text.trim(),
@@ -290,29 +297,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           );
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      // A changed phone number was never actually proven to belong to this
-      // user, so the backend resets its verification and issues a fresh
-      // OTP (src/modules/auth/routes.ts's PATCH /api/me) — steer them to
-      // /verify right away instead of letting them discover the gate later
-      // on some unrelated action.
-      final nowUnverified = wasPhoneVerified && !(ref.read(currentUserProvider)?.phoneVerified ?? true);
       Navigator.of(context).pop();
-      if (nowUnverified) {
-        final ctx = rootNavigatorKey.currentContext;
-        if (ctx != null && ctx.mounted) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(
-              content: Text(l10n.infoPhoneNeedsVerification),
-              duration: const Duration(seconds: 8),
-              action: SnackBarAction(
-                label: l10n.actionVerify,
-                onPressed: () => ctx.push('/verify'),
-              ),
-            ),
-          );
-        }
-      }
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -365,10 +350,16 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 ),
               ),
               const SizedBox(height: 12),
-              PhoneField(
-                value: _phone,
-                defaultCountryCode: _addressCountry,
-                onChanged: (v) => _phone = v,
+              _LockedContactRow(
+                label: l10n.fieldEmail,
+                value: widget.user.email,
+                onChange: () => _goToChange(ContactChannel.email),
+              ),
+              const SizedBox(height: 12),
+              _LockedContactRow(
+                label: l10n.labelPhone,
+                value: widget.user.phone ?? '',
+                onChange: () => _goToChange(ContactChannel.phone),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -416,6 +407,39 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A read-only field paired with a "Change" button, for phone/email — these
+/// can't be edited inline here since changing either invalidates its
+/// verification; [onChange] hands off to the dedicated screen that handles
+/// that properly (see [ChangeContactScreen]).
+class _LockedContactRow extends StatelessWidget {
+  const _LockedContactRow({required this.label, required this.value, required this.onChange});
+  final String label;
+  final String value;
+  final VoidCallback onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: InputDecorator(
+            decoration: InputDecoration(labelText: label),
+            child: Text(
+              value.isEmpty ? '—' : value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        TextButton(onPressed: onChange, child: Text(l10n.actionChange)),
+      ],
     );
   }
 }

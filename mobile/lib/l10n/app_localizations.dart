@@ -662,12 +662,6 @@ abstract class AppLocalizations {
   /// **'A new code was sent.'**
   String get infoNewCodeSent;
 
-  /// No description provided for @infoPhoneNeedsVerification.
-  ///
-  /// In en, this message translates to:
-  /// **'Your new phone number needs to be verified.'**
-  String get infoPhoneNeedsVerification;
-
   /// No description provided for @accountTitle.
   ///
   /// In en, this message translates to:
@@ -679,6 +673,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit'**
   String get actionEdit;
+
+  /// No description provided for @actionChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get actionChange;
+
+  /// No description provided for @changePhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change phone number'**
+  String get changePhoneTitle;
+
+  /// No description provided for @changeEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email address'**
+  String get changeEmailTitle;
+
+  /// No description provided for @changeContactNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll need to verify the new one with a code before you can use the app again.'**
+  String get changeContactNote;
+
+  /// No description provided for @fieldNewPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'New phone number'**
+  String get fieldNewPhone;
+
+  /// No description provided for @fieldNewEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'New email address'**
+  String get fieldNewEmail;
+
+  /// No description provided for @errorEnterNewPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a new phone number'**
+  String get errorEnterNewPhone;
 
   /// No description provided for @accountCompleteProfile.
   ///

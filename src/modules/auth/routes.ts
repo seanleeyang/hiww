@@ -611,45 +611,73 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
     const current = await request.db
       .selectFrom('users')
-      .select(['phone'])
+      .select(['email', 'phone'])
       .where('id', '=', request.userId!)
       .executeTakeFirst();
     if (!current) {
       throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
     }
 
-    // A changed number was never actually proven to belong to this user —
-    // the old verification doesn't carry over. `null` counts as a change
-    // too (clearing the phone clears its verification with it).
+    // A changed number/address was never actually proven to belong to this
+    // user — the old verification doesn't carry over. `null` counts as a
+    // change too for phone (clearing it clears its verification with it);
+    // email can't be cleared (it's the login identifier), so it's always a
+    // string when present.
     const phoneChanged = parsed.data.phone !== undefined && parsed.data.phone !== current.phone;
+    const emailChanged = parsed.data.email !== undefined && parsed.data.email !== current.email;
+
+    if (emailChanged) {
+      const taken = await request.db
+        .selectFrom('users')
+        .select('id')
+        .where('email', '=', parsed.data.email!)
+        .where('id', '!=', request.userId!)
+        .executeTakeFirst();
+      if (taken) {
+        throw new AppError('USER_EXISTS', 409, 'auth.userExists');
+      }
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const patch: Record<string, any> = { updated_at: new Date() };
     if (parsed.data.full_name !== undefined) patch.full_name = parsed.data.full_name;
     if (parsed.data.home_city !== undefined) patch.home_city = parsed.data.home_city;
     if (parsed.data.avatar_url !== undefined) patch.avatar_url = parsed.data.avatar_url;
+    if (parsed.data.email !== undefined) patch.email = parsed.data.email;
     if (parsed.data.phone !== undefined) patch.phone = parsed.data.phone;
     if (parsed.data.address_street !== undefined) patch.address_street = parsed.data.address_street;
     if (parsed.data.address_city !== undefined) patch.address_city = parsed.data.address_city;
     if (parsed.data.address_postal_code !== undefined) patch.address_postal_code = parsed.data.address_postal_code;
     if (parsed.data.address_country !== undefined) patch.address_country = parsed.data.address_country;
 
-    // Re-issue a phone OTP immediately, same as registration, rather than
-    // leaving the account unverified with no code in flight. `/api/me`
-    // itself stays verification-exempt, so this save still succeeds even
-    // though it just invalidated the phone — every *other* route now 403s
-    // with VERIFICATION_REQUIRED until the new number is confirmed (see
-    // the auth guard).
-    let debugOtp: string | undefined;
+    // Re-issue an OTP immediately for whichever channel(s) changed, same as
+    // registration, rather than leaving the account unverified with no code
+    // in flight. `/api/me` itself stays verification-exempt, so this save
+    // still succeeds even though it just invalidated a channel — every
+    // *other* route now 403s with VERIFICATION_REQUIRED until the new
+    // value is confirmed (see the auth guard).
+    const debugOtp: { email?: string; phone?: string } = {};
+    if (emailChanged) {
+      patch.email_verified_at = null;
+      debugOtp.email = await issueOtp(request.db, request.userId!, 'email', parsed.data.email!);
+    }
     if (phoneChanged) {
       patch.phone_verified_at = null;
       if (parsed.data.phone) {
-        debugOtp = await issueOtp(request.db, request.userId!, 'phone', parsed.data.phone);
+        debugOtp.phone = await issueOtp(request.db, request.userId!, 'phone', parsed.data.phone);
       }
     }
 
     await request.db.updateTable('users').set(patch).where('id', '=', request.userId!).execute();
 
+    if (emailChanged) {
+      await recordAudit(request.db, actorFromRequest(request), {
+        action: 'user.email_changed',
+        targetType: 'user',
+        targetId: request.userId!,
+        summary: 'Email address changed — re-verification required',
+      });
+    }
     if (phoneChanged) {
       await recordAudit(request.db, actorFromRequest(request), {
         action: 'user.phone_changed',
@@ -667,7 +695,10 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
     reply.send({
       success: true,
-      data: { ...meResponse(me), ...(isMockOtp() && debugOtp ? { debug_otp: debugOtp } : {}) },
+      data: {
+        ...meResponse(me),
+        ...(isMockOtp() && Object.keys(debugOtp).length ? { debug_otp: debugOtp } : {}),
+      },
       code: 'ME_UPDATED',
     });
   });

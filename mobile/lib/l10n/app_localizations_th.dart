@@ -314,14 +314,32 @@ class AppLocalizationsTh extends AppLocalizations {
   String get infoNewCodeSent => 'ส่งรหัสใหม่แล้ว';
 
   @override
-  String get infoPhoneNeedsVerification =>
-      'ต้องยืนยันหมายเลขโทรศัพท์ใหม่ของคุณ';
-
-  @override
   String get accountTitle => 'บัญชี';
 
   @override
   String get actionEdit => 'แก้ไข';
+
+  @override
+  String get actionChange => 'เปลี่ยน';
+
+  @override
+  String get changePhoneTitle => 'เปลี่ยนหมายเลขโทรศัพท์';
+
+  @override
+  String get changeEmailTitle => 'เปลี่ยนอีเมล';
+
+  @override
+  String get changeContactNote =>
+      'คุณจะต้องยืนยันข้อมูลใหม่ด้วยรหัสก่อนใช้งานแอปต่อได้';
+
+  @override
+  String get fieldNewPhone => 'หมายเลขโทรศัพท์ใหม่';
+
+  @override
+  String get fieldNewEmail => 'อีเมลใหม่';
+
+  @override
+  String get errorEnterNewPhone => 'กรอกหมายเลขโทรศัพท์ใหม่';
 
   @override
   String get accountCompleteProfile => 'กรอกข้อมูลโปรไฟล์ให้ครบถ้วน';

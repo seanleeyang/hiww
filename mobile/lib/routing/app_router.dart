@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/navigation.dart';
 import '../features/account/presentation/account_screen.dart';
+import '../features/account/presentation/change_contact_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/facebook_callback_screen.dart';
@@ -192,6 +193,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/verify', builder: (_, _) => const VerifyOtpScreen()),
       GoRoute(path: '/account', builder: (_, _) => const AccountScreen()),
+      GoRoute(
+        path: '/account/change-phone',
+        builder: (_, _) => const ChangeContactScreen(channel: ContactChannel.phone),
+      ),
+      GoRoute(
+        path: '/account/change-email',
+        builder: (_, _) => const ChangeContactScreen(channel: ContactChannel.email),
+      ),
       GoRoute(
         path: '/trips/:id/edit',
         builder: (_, s) => EditTripScreen(existing: s.extra as Trip),
