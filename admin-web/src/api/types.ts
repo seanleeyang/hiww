@@ -159,11 +159,28 @@ export type QueueItem =
       full_name: string;
       document_type: 'passport' | 'id_card' | 'drivers_license' | null;
       document_id: string | null;
-      /** Name as printed on the document — may differ from the account's own full_name. */
-      document_name: string | null;
+      /** Name/address/contact as filled in on the form — may differ from the account's own. */
+      first_name: string | null;
+      last_name: string | null;
+      address: string | null;
+      contact_number: string | null;
       document_photo_url: string | null;
       /** Optional second page — a passport's visa stamp page, or the back of a card. */
       document_photo_back_url: string | null;
+      /** Photo of the user holding the document, for the AI face-match check. */
+      selfie_photo_url: string | null;
+      /** Advisory AI cross-check — never sets `status` itself. */
+      ai_risk: 'low' | 'medium' | 'high' | null;
+      ai_analysis: {
+        summary?: string;
+        flags?: string[];
+        extracted?: { firstName?: string | null; lastName?: string | null; documentId?: string | null; address?: string | null };
+        nameMatch?: 'match' | 'mismatch' | 'unclear';
+        documentIdMatch?: 'match' | 'mismatch' | 'unclear';
+        addressMatch?: 'match' | 'mismatch' | 'unclear';
+        faceMatch?: 'match' | 'mismatch' | 'unclear';
+        documentAuthenticity?: 'plausible' | 'suspicious';
+      } | null;
       submitted_at: string | null;
       created_at: string;
     }

@@ -164,6 +164,30 @@ const TEMPLATES: Record<string, Template> = {
           subject: "Order cancelled — payment wasn't made in time",
           body: `The shopper didn't pay in time for "${p.item}", so the order was cancelled.`,
         },
+  kyc_submitted: (l) =>
+    l === 'th'
+      ? {
+          subject: 'ได้รับคำขอยืนยันตัวตนแล้ว',
+          body: 'ระบบได้รับเอกสารยืนยันตัวตนของคุณเรียบร้อยแล้ว ทีมงานกำลังตรวจสอบและจะแจ้งผลให้ทราบโดยเร็วที่สุด',
+        }
+      : {
+          subject: 'We received your ID check',
+          body: "Your documents were submitted for review. Our team is verifying them and will let you know as soon as possible.",
+        },
+  'kyc_reviewed:approved': (l) =>
+    l === 'th'
+      ? { subject: 'ยืนยันตัวตนสำเร็จ', body: 'บัญชีของคุณผ่านการยืนยันตัวตนแล้ว คุณสามารถทำคำสั่งซื้อได้ตามปกติ' }
+      : { subject: 'ID check approved', body: "You're verified — you can now complete orders as usual." },
+  'kyc_reviewed:rejected': (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'การยืนยันตัวตนไม่ผ่าน',
+          body: `ทีมงานตรวจสอบเอกสารของคุณแล้วแต่ไม่สามารถยืนยันได้${p.note ? `: ${p.note}` : ''} กรุณาส่งเอกสารใหม่อีกครั้ง`,
+        }
+      : {
+          subject: "ID check couldn't be verified",
+          body: `We reviewed your documents but couldn't verify them${p.note ? `: ${p.note}` : ''}. Please resubmit.`,
+        },
   purchase_proof: (l, p) =>
     l === 'th'
       ? {

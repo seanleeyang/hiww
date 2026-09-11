@@ -437,10 +437,14 @@ class _KycCard extends ConsumerStatefulWidget {
 
 class _KycCardState extends ConsumerState<_KycCard> {
   final _docId = TextEditingController();
-  final _docName = TextEditingController();
+  final _firstName = TextEditingController();
+  final _lastName = TextEditingController();
+  final _address = TextEditingController();
+  final _contactNumber = TextEditingController();
   String _docType = 'passport';
   String? _photoUrl;
   String? _photoBackUrl;
+  String? _selfieUrl;
   bool _expanded = false;
   bool _submitting = false;
   String? _error;
@@ -448,13 +452,16 @@ class _KycCardState extends ConsumerState<_KycCard> {
   @override
   void dispose() {
     _docId.dispose();
-    _docName.dispose();
+    _firstName.dispose();
+    _lastName.dispose();
+    _address.dispose();
+    _contactNumber.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
-    if (_docName.text.trim().length < 2) {
+    if (_firstName.text.trim().isEmpty || _lastName.text.trim().isEmpty) {
       setState(() => _error = l10n.errorEnterNameOnDocument);
       return;
     }
@@ -462,8 +469,20 @@ class _KycCardState extends ConsumerState<_KycCard> {
       setState(() => _error = l10n.errorEnterDocumentNumber);
       return;
     }
+    if (_address.text.trim().length < 3) {
+      setState(() => _error = l10n.errorEnterAddressOnDocument);
+      return;
+    }
+    if (_contactNumber.text.trim().length < 3) {
+      setState(() => _error = l10n.errorEnterContactNumber);
+      return;
+    }
     if (_photoUrl == null) {
       setState(() => _error = l10n.errorDocumentPhotoRequired);
+      return;
+    }
+    if (_selfieUrl == null) {
+      setState(() => _error = l10n.errorSelfiePhotoRequired);
       return;
     }
     setState(() {
@@ -474,8 +493,12 @@ class _KycCardState extends ConsumerState<_KycCard> {
       await ref.read(accountRepositoryProvider).submitKyc(
             documentType: _docType,
             documentId: _docId.text.trim(),
-            documentName: _docName.text.trim(),
+            firstName: _firstName.text.trim(),
+            lastName: _lastName.text.trim(),
+            address: _address.text.trim(),
+            contactNumber: _contactNumber.text.trim(),
             documentPhotoUrl: _photoUrl!,
+            selfiePhotoUrl: _selfieUrl!,
             documentPhotoBackUrl: _photoBackUrl,
           );
       await ref.read(authControllerProvider.notifier).refreshMe();
@@ -484,9 +507,13 @@ class _KycCardState extends ConsumerState<_KycCard> {
         _submitting = false;
         _expanded = false;
         _docId.clear();
-        _docName.clear();
+        _firstName.clear();
+        _lastName.clear();
+        _address.clear();
+        _contactNumber.clear();
         _photoUrl = null;
         _photoBackUrl = null;
+        _selfieUrl = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.infoSubmittedForReview)),
@@ -527,7 +554,14 @@ class _KycCardState extends ConsumerState<_KycCard> {
               FilledButton.tonal(
                 onPressed: () => setState(() {
                   _expanded = true;
-                  if (_docName.text.isEmpty) _docName.text = user.fullName;
+                  if (_firstName.text.isEmpty && _lastName.text.isEmpty) {
+                    final parts = user.fullName.trim().split(RegExp(r'\s+'));
+                    _firstName.text = parts.first;
+                    if (parts.length > 1) _lastName.text = parts.sublist(1).join(' ');
+                  }
+                  if (_contactNumber.text.isEmpty && user.phone != null) {
+                    _contactNumber.text = user.phone!;
+                  }
                 }),
                 child: Text(
                   user.kycStatus == 'pending'
@@ -553,14 +587,39 @@ class _KycCardState extends ConsumerState<_KycCard> {
                 onChanged: (v) => setState(() => _docType = v ?? 'passport'),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _docName,
-                decoration: InputDecoration(labelText: l10n.fieldNameOnDocument),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _firstName,
+                      decoration: InputDecoration(labelText: l10n.fieldFirstNameOnDocument),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _lastName,
+                      decoration: InputDecoration(labelText: l10n.fieldLastNameOnDocument),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _docId,
                 decoration: InputDecoration(labelText: l10n.fieldDocumentNumber),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _address,
+                decoration: InputDecoration(labelText: l10n.fieldAddressOnDocument),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _contactNumber,
+                decoration: InputDecoration(labelText: l10n.fieldContactNumber),
+                keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 12),
               ImagePickerField(
@@ -573,6 +632,12 @@ class _KycCardState extends ConsumerState<_KycCard> {
                 value: _photoBackUrl,
                 onChanged: (url) => setState(() => _photoBackUrl = url),
                 label: l10n.fieldDocumentPhotoBackOptional,
+              ),
+              const SizedBox(height: 12),
+              ImagePickerField(
+                value: _selfieUrl,
+                onChanged: (url) => setState(() => _selfieUrl = url),
+                label: l10n.fieldSelfieWithDocument,
               ),
               if (_error != null) ...[
                 const SizedBox(height: 8),

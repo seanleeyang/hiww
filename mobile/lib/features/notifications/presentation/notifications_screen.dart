@@ -133,6 +133,8 @@ class NotificationsScreen extends ConsumerWidget {
     'offer_accepted' => Icons.handshake_outlined,
     'payment_claimed' => Icons.hourglass_top,
     'payment_confirmed' => Icons.payments_outlined,
+    'kyc_submitted' => Icons.badge_outlined,
+    'kyc_reviewed' => Icons.badge_outlined,
     'purchase_proof' => Icons.receipt_long_outlined,
     'upload_reminder' => Icons.timer_outlined,
     'shipped' => Icons.local_shipping_outlined,

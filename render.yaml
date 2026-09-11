@@ -64,6 +64,15 @@ services:
       - key: AI_CHAT_MODEL
         value: claude-haiku-4-5
 
+      # AI KYC check: cross-references the submitted ID-check form against the
+      # document photo and checks the selfie for a face match — advisory only,
+      # an admin still makes the final call. Same ANTHROPIC_API_KEY, same
+      # higher-capability model tier as the receipt check.
+      - key: AI_KYC_CHECK
+        value: claude
+      - key: AI_KYC_MODEL
+        value: claude-opus-5
+
       # Uploaded images -> Cloudflare R2 (Render's free disk is ephemeral).
       # Until all five R2_* values are set the app logs a warning and falls
       # back to local disk. See docs/DEPLOY.md.

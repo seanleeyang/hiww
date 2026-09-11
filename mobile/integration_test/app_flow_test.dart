@@ -797,12 +797,21 @@ void main() {
     await _tap(
         tester, find.widgetWithText(FilledButton, 'Update ID details'));
     await _pumpUntil(
-        tester, find.widgetWithText(TextField, 'Name on document'));
+        tester, find.widgetWithText(TextField, 'First name (as on document)'));
     await tester.enterText(
-        find.widgetWithText(TextField, 'Name on document'), 'Kyc Testuser');
+        find.widgetWithText(TextField, 'First name (as on document)'), 'Kyc');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Last name (as on document)'),
+        'Testuser');
     await tester.enterText(
         find.widgetWithText(TextField, 'Document number'), 'X1234567');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Address (as on document)'),
+        '123 Test St, Bangkok');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Contact number'), '+66 81 234 5678');
     await _pickPhoto(tester, 'Add a photo of the document');
+    await _pickPhoto(tester, 'Add a selfie holding the document');
     await _tap(tester, _button('Submit for review'));
 
     await _pumpUntil(tester, find.textContaining('Submitted for review'),

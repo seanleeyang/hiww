@@ -340,6 +340,14 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       },
     });
 
+    if (parsed.data.status === 'approved' || parsed.data.status === 'rejected') {
+      await recordNotification(request.db, {
+        userId: user.id,
+        type: 'kyc_reviewed',
+        params: { _variant: parsed.data.status, note: parsed.data.status === 'rejected' ? parsed.data.note : '' },
+      });
+    }
+
     reply.send({
       success: true,
       data: { user_id: user.id, kyc_status: parsed.data.status, note: parsed.data.note },

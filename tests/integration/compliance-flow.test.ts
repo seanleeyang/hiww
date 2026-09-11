@@ -3,8 +3,12 @@ import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } f
 const submitPayload = {
   document_type: 'passport',
   document_id: 'ABC12345',
-  document_name: 'Jane A Traveler',
+  first_name: 'Jane',
+  last_name: 'Traveler',
+  address: '123 Sukhumvit Rd, Bangkok',
+  contact_number: '+66 81 234 5678',
   document_photo_url: 'https://example.com/uploads/id-front.jpg',
+  selfie_photo_url: 'https://example.com/uploads/selfie.jpg',
 };
 
 describe('compliance / KYC flow', () => {
@@ -48,19 +52,23 @@ describe('compliance / KYC flow', () => {
     expect(updated?.kyc_status).toBe('approved');
   });
 
-  it('rejects a submission missing the document photo or name', async () => {
+  it('rejects a submission missing any required field', async () => {
     const user = await createUser(ctx, { user_type: 'traveler' });
 
-    const res = await ctx.app.inject({
-      method: 'POST',
-      url: '/api/compliance/kyc/submit',
-      headers: authHeader(user),
-      payload: { document_type: 'passport', document_id: 'ABC12345' },
-    });
-    expect(res.statusCode).toBe(400);
+    for (const omit of ['first_name', 'last_name', 'address', 'contact_number', 'document_photo_url', 'selfie_photo_url']) {
+      const payload = { ...submitPayload } as Record<string, unknown>;
+      delete payload[omit];
+      const res = await ctx.app.inject({
+        method: 'POST',
+        url: '/api/compliance/kyc/submit',
+        headers: authHeader(user),
+        payload,
+      });
+      expect(res.statusCode).toBe(400);
+    }
   });
 
-  it('persists the submitted document details and photo(s) for an admin to review', async () => {
+  it('persists the submitted document details and photos for an admin to review', async () => {
     const user = await createUser(ctx, { user_type: 'traveler' });
     const admin = await createUser(ctx, { admin: true });
 
@@ -82,9 +90,13 @@ describe('compliance / KYC flow', () => {
       .executeTakeFirst();
     expect(row?.kyc_document_type).toBe('passport');
     expect(row?.kyc_document_id).toBe('ABC12345');
-    expect(row?.kyc_document_name).toBe('Jane A Traveler');
+    expect(row?.kyc_first_name).toBe('Jane');
+    expect(row?.kyc_last_name).toBe('Traveler');
+    expect(row?.kyc_address).toBe('123 Sukhumvit Rd, Bangkok');
+    expect(row?.kyc_contact_number).toBe('+66 81 234 5678');
     expect(row?.kyc_document_photo_url).toBe('https://example.com/uploads/id-front.jpg');
     expect(row?.kyc_document_photo_back_url).toBe('https://example.com/uploads/visa-page.jpg');
+    expect(row?.kyc_selfie_photo_url).toBe('https://example.com/uploads/selfie.jpg');
     expect(row?.kyc_submitted_at).not.toBeNull();
 
     const reviews = await ctx.app.inject({
@@ -95,9 +107,89 @@ describe('compliance / KYC flow', () => {
     const queue = reviews.json().data.queue as Array<Record<string, unknown>>;
     const entry = queue.find((q) => q.type === 'kyc' && q.user_id === user.userId);
     expect(entry).toBeDefined();
-    expect(entry?.document_name).toBe('Jane A Traveler');
+    expect(entry?.first_name).toBe('Jane');
+    expect(entry?.last_name).toBe('Traveler');
+    expect(entry?.address).toBe('123 Sukhumvit Rd, Bangkok');
+    expect(entry?.contact_number).toBe('+66 81 234 5678');
     expect(entry?.document_photo_url).toBe('https://example.com/uploads/id-front.jpg');
     expect(entry?.document_photo_back_url).toBe('https://example.com/uploads/visa-page.jpg');
+    expect(entry?.selfie_photo_url).toBe('https://example.com/uploads/selfie.jpg');
+  });
+
+  it('notifies the user their submission was received', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+
+    const submit = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/submit',
+      headers: authHeader(user),
+      payload: submitPayload,
+    });
+    expect(submit.statusCode).toBe(201);
+
+    const notifications = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/notifications',
+      headers: authHeader(user),
+    });
+    const items = notifications.json().data.items as Array<{ type: string }>;
+    expect(items.some((n) => n.type === 'kyc_submitted')).toBe(true);
+  });
+
+  it('the AI check cross-references the submission with the document (mock analyzer)', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
+
+    // The mock analyzer keys off the photo URLs — see MockKycAnalyzer.
+    const submit = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/submit',
+      headers: authHeader(user),
+      payload: {
+        ...submitPayload,
+        document_photo_url: 'https://example.com/uploads/id-mismatch.jpg',
+        selfie_photo_url: 'https://example.com/uploads/selfie-faceMismatch.jpg',
+      },
+    });
+    expect(submit.statusCode).toBe(201);
+
+    const row = await ctx.db
+      .selectFrom('users')
+      .selectAll()
+      .where('id', '=', user.userId)
+      .executeTakeFirst();
+    expect(row?.kyc_ai_risk).toBe('high');
+    expect(row?.kyc_ai_analysis).toBeDefined();
+    expect((row?.kyc_ai_analysis as any).faceMatch).toBe('mismatch');
+
+    const reviews = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/admin/reviews',
+      headers: authHeader(admin),
+    });
+    const queue = reviews.json().data.queue as Array<Record<string, unknown>>;
+    const entry = queue.find((q) => q.type === 'kyc' && q.user_id === user.userId);
+    expect((entry?.ai_analysis as any)?.faceMatch).toBe('mismatch');
+    expect(entry?.ai_risk).toBe('high');
+  });
+
+  it('a clean submission comes back low risk from the AI check', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+
+    const submit = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/submit',
+      headers: authHeader(user),
+      payload: submitPayload,
+    });
+    expect(submit.statusCode).toBe(201);
+
+    const row = await ctx.db
+      .selectFrom('users')
+      .selectAll()
+      .where('id', '=', user.userId)
+      .executeTakeFirst();
+    expect(row?.kyc_ai_risk).toBe('low');
   });
 
   it('a non-admin cannot approve KYC (no self-approval)', async () => {
@@ -111,5 +203,35 @@ describe('compliance / KYC flow', () => {
     });
 
     expect(approve.statusCode).toBe(403);
+  });
+
+  it('the admin console review action notifies the user of the outcome', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
+
+    await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/submit',
+      headers: authHeader(user),
+      payload: submitPayload,
+    });
+
+    const reject = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${user.userId}/kyc-review`,
+      headers: authHeader(admin),
+      payload: { status: 'rejected', note: 'Photo is too blurry to read' },
+    });
+    expect(reject.statusCode).toBe(200);
+
+    const notifications = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/notifications',
+      headers: authHeader(user),
+    });
+    const items = notifications.json().data.items as Array<{ type: string; body: string }>;
+    const entry = items.find((n) => n.type === 'kyc_reviewed');
+    expect(entry).toBeDefined();
+    expect(entry?.body).toContain('Photo is too blurry to read');
   });
 });

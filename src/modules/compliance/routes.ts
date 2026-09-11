@@ -1,16 +1,24 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { AppError } from '@/utils/helpers';
+import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
+import { recordNotification } from '@/services/notify';
+import { runKycCheck } from '@/services/kyc-check';
 
 const kycSubmitSchema = z.object({
   document_type: z.enum(['passport', 'id_card', 'drivers_license']),
   document_id: z.string().min(3),
-  /** Name exactly as printed on the document — may differ from the account's own full_name (nicknames, married names, etc.), so an admin needs to see both. */
-  document_name: z.string().min(2),
+  /** As printed on the document — may differ from the account's own full_name/phone (nicknames, married names, a different contact number), so an admin needs to see both. */
+  first_name: z.string().min(1),
+  last_name: z.string().min(1),
+  address: z.string().min(3),
+  contact_number: z.string().min(3),
   document_photo_url: z.string().url(),
   /** Optional second page — a passport's visa stamp page, or the back of a card. */
   document_photo_back_url: z.string().url().optional(),
+  /** Photo of the user holding the document, for the AI face-match check. */
+  selfie_photo_url: z.string().url(),
 });
 
 const kycReviewSchema = z.object({
@@ -47,9 +55,16 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
         kyc_status: 'pending',
         kyc_document_type: parsed.data.document_type,
         kyc_document_id: parsed.data.document_id,
-        kyc_document_name: parsed.data.document_name,
+        kyc_first_name: parsed.data.first_name,
+        kyc_last_name: parsed.data.last_name,
+        kyc_address: parsed.data.address,
+        kyc_contact_number: parsed.data.contact_number,
         kyc_document_photo_url: parsed.data.document_photo_url,
         kyc_document_photo_back_url: parsed.data.document_photo_back_url ?? null,
+        kyc_selfie_photo_url: parsed.data.selfie_photo_url,
+        // A fresh submission invalidates whatever the previous AI pass said.
+        kyc_ai_analysis: null,
+        kyc_ai_risk: null,
         kyc_submitted_at: now,
         updated_at: now,
       })
@@ -64,9 +79,34 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
       metadata: {
         document_type: parsed.data.document_type,
         document_id: parsed.data.document_id,
-        document_name: parsed.data.document_name,
+        first_name: parsed.data.first_name,
+        last_name: parsed.data.last_name,
       },
     });
+
+    await recordNotification(request.db, { userId: user.id, type: 'kyc_submitted', params: {} });
+
+    // Advisory cross-check (matches submitted fields against the document,
+    // and the selfie against the document photo) for the admin queue — runs
+    // after the response for the real model so submission latency isn't
+    // affected; the mock is instant and deterministic, so tests await it
+    // directly, same pattern as the receipt/chat-moderation checks.
+    const check = runKycCheck(request.db, {
+      id: user.id,
+      kyc_document_type: parsed.data.document_type,
+      kyc_document_photo_url: parsed.data.document_photo_url,
+      kyc_document_photo_back_url: parsed.data.document_photo_back_url ?? null,
+      kyc_selfie_photo_url: parsed.data.selfie_photo_url,
+      kyc_first_name: parsed.data.first_name,
+      kyc_last_name: parsed.data.last_name,
+      kyc_document_id: parsed.data.document_id,
+      kyc_address: parsed.data.address,
+    });
+    if (config.aiKycCheck === 'claude') {
+      void check.catch(() => undefined);
+    } else {
+      await check;
+    }
 
     reply.status(201).send({
       success: true,
@@ -96,6 +136,14 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
       .set({ kyc_status: parsed.data.status, updated_at: new Date() })
       .where('id', '=', user.id)
       .execute();
+
+    if (parsed.data.status === 'approved' || parsed.data.status === 'rejected') {
+      await recordNotification(request.db, {
+        userId: user.id,
+        type: 'kyc_reviewed',
+        params: { _variant: parsed.data.status },
+      });
+    }
 
     reply.send({
       success: true,

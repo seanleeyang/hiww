@@ -25,6 +25,8 @@ export type AuditAction =
   | 'dispute.resolve'
   | 'kyc.submit'
   | 'kyc.review'
+  | 'kyc.ai_flag'
+  | 'kyc.ai_check_failed'
   | 'user.flag'
   | 'user.password_reset'
   | 'user.reclaimed_via_social_link'

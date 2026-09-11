@@ -356,11 +356,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorEnterDocumentNumber => 'Enter your document number';
 
   @override
-  String get fieldNameOnDocument => 'Name on document';
+  String get fieldFirstNameOnDocument => 'First name (as on document)';
+
+  @override
+  String get fieldLastNameOnDocument => 'Last name (as on document)';
 
   @override
   String get errorEnterNameOnDocument =>
-      'Enter the name as it appears on your document';
+      'Enter your first and last name as they appear on your document';
+
+  @override
+  String get fieldAddressOnDocument => 'Address (as on document)';
+
+  @override
+  String get errorEnterAddressOnDocument =>
+      'Enter the address as it appears on your document';
+
+  @override
+  String get fieldContactNumber => 'Contact number';
+
+  @override
+  String get errorEnterContactNumber => 'Enter a contact number';
 
   @override
   String get fieldDocumentPhoto => 'Add a photo of the document';
@@ -371,6 +387,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fieldDocumentPhotoBackOptional =>
       'Add a second page (optional) — e.g. a visa stamp page, or the back of a card';
+
+  @override
+  String get fieldSelfieWithDocument => 'Add a selfie holding the document';
+
+  @override
+  String get errorSelfiePhotoRequired =>
+      'Add a selfie of yourself holding the document';
 
   @override
   String get actionSubmitForReview => 'Submit for review';

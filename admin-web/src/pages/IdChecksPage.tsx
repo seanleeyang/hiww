@@ -4,11 +4,14 @@ import { api } from '../api/client';
 import type { QueueItem } from '../api/types';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { StatusPill } from '../components/StatusPill';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
 import { dateTime } from '../lib/format';
+import { riskLabel, riskTone } from '../lib/status';
 
 type KycItem = Extract<QueueItem, { type: 'kyc' }>;
+type FieldMatch = 'match' | 'mismatch' | 'unclear';
 
 function docTypeLabel(type: NonNullable<KycItem['document_type']>): string {
   switch (type) {
@@ -19,6 +22,11 @@ function docTypeLabel(type: NonNullable<KycItem['document_type']>): string {
     case 'drivers_license':
       return "Driver's license";
   }
+}
+
+function matchLabel(field: string, m: FieldMatch | undefined): string | null {
+  if (!m || m === 'match') return null;
+  return `${field}: ${m}`;
 }
 
 export function IdChecksPage() {
@@ -49,7 +57,18 @@ export function IdChecksPage() {
       {items.length === 0 ? (
         <EmptyState>Nothing pending.</EmptyState>
       ) : (
-        items.map((item) => (
+        items.map((item) => {
+          const submittedName = [item.first_name, item.last_name].filter(Boolean).join(' ');
+          const mismatches = item.ai_analysis
+            ? [
+                matchLabel('Name', item.ai_analysis.nameMatch),
+                matchLabel('Document number', item.ai_analysis.documentIdMatch),
+                matchLabel('Address', item.ai_analysis.addressMatch),
+                matchLabel('Face', item.ai_analysis.faceMatch),
+              ].filter((m): m is string => m !== null)
+            : [];
+
+          return (
           <Card key={item.id}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
               <div>
@@ -63,13 +82,17 @@ export function IdChecksPage() {
                     {item.document_id ? ` · ${item.document_id}` : ''}
                   </p>
                 )}
-                {item.document_name && item.document_name !== item.full_name && (
+                {submittedName && submittedName !== item.full_name && (
                   <p className="muted" style={{ margin: '4px 0' }}>
-                    Name on document: {item.document_name}
+                    Name on form: {submittedName}
                   </p>
                 )}
-                {(item.document_photo_url || item.document_photo_back_url) && (
-                  <p style={{ margin: '4px 0', display: 'flex', gap: 12 }}>
+                {item.address && <p className="muted" style={{ margin: '4px 0' }}>Address: {item.address}</p>}
+                {item.contact_number && (
+                  <p className="muted" style={{ margin: '4px 0' }}>Contact: {item.contact_number}</p>
+                )}
+                {(item.document_photo_url || item.document_photo_back_url || item.selfie_photo_url) && (
+                  <p style={{ margin: '4px 0', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     {item.document_photo_url && (
                       <a href={item.document_photo_url} target="_blank" rel="noreferrer">
                         View document photo
@@ -80,12 +103,31 @@ export function IdChecksPage() {
                         View second page
                       </a>
                     )}
+                    {item.selfie_photo_url && (
+                      <a href={item.selfie_photo_url} target="_blank" rel="noreferrer">
+                        View selfie with document
+                      </a>
+                    )}
                   </p>
                 )}
                 {!item.document_photo_url && (
                   <p className="muted" style={{ margin: '4px 0' }}>
                     No document photo on file — submitted before this was required.
                   </p>
+                )}
+                {item.ai_risk && (
+                  <div style={{ margin: '8px 0' }}>
+                    <StatusPill label={`AI check: ${riskLabel(item.ai_risk)}`} tone={riskTone(item.ai_risk)} />
+                    {item.ai_analysis?.summary && (
+                      <p style={{ margin: '4px 0' }}>{item.ai_analysis.summary}</p>
+                    )}
+                    {mismatches.length > 0 && (
+                      <p className="muted" style={{ margin: '4px 0' }}>Flagged: {mismatches.join(', ')}</p>
+                    )}
+                    {item.ai_analysis?.documentAuthenticity === 'suspicious' && (
+                      <p className="muted" style={{ margin: '4px 0' }}>Document authenticity: suspicious</p>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="btn-row" style={{ flexShrink: 0 }}>
@@ -103,7 +145,8 @@ export function IdChecksPage() {
               </div>
             </div>
           </Card>
-        ))
+          );
+        })
       )}
 
       <ConfirmDialog

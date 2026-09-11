@@ -151,6 +151,19 @@ export const config = {
   aiChatModeration: process.env.AI_CHAT_MODERATION || 'mock',
   aiChatModel: process.env.AI_CHAT_MODEL || 'claude-haiku-4-5',
   /**
+   * AI KYC check. Cross-checks a submitted ID-check form (name, document
+   * number, address) against what's printed on the uploaded document photo,
+   * checks the selfie-with-document photo for a face match, and flags an
+   * obviously inauthentic document — advisory only, an admin still makes
+   * the final approve/reject call. `mock` (default) is deterministic for
+   * tests and local dev; `claude` calls the Anthropic API and needs
+   * ANTHROPIC_API_KEY. Uses the same higher-capability model tier as the
+   * receipt check (not the lighter chat-moderation one) since document/face
+   * comparison is a harder vision task.
+   */
+  aiKycCheck: process.env.AI_KYC_CHECK || 'mock',
+  aiKycModel: process.env.AI_KYC_MODEL || 'claude-opus-5',
+  /**
    * Push notifications ("hard" alerts a user gets even with the app fully
    * closed), for the two things that can't wait for the next in-app poll:
    * the shopper's payment countdown starting, and the traveler's daily

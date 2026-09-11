@@ -740,17 +740,47 @@ abstract class AppLocalizations {
   /// **'Enter your document number'**
   String get errorEnterDocumentNumber;
 
-  /// No description provided for @fieldNameOnDocument.
+  /// No description provided for @fieldFirstNameOnDocument.
   ///
   /// In en, this message translates to:
-  /// **'Name on document'**
-  String get fieldNameOnDocument;
+  /// **'First name (as on document)'**
+  String get fieldFirstNameOnDocument;
+
+  /// No description provided for @fieldLastNameOnDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name (as on document)'**
+  String get fieldLastNameOnDocument;
 
   /// No description provided for @errorEnterNameOnDocument.
   ///
   /// In en, this message translates to:
-  /// **'Enter the name as it appears on your document'**
+  /// **'Enter your first and last name as they appear on your document'**
   String get errorEnterNameOnDocument;
+
+  /// No description provided for @fieldAddressOnDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Address (as on document)'**
+  String get fieldAddressOnDocument;
+
+  /// No description provided for @errorEnterAddressOnDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the address as it appears on your document'**
+  String get errorEnterAddressOnDocument;
+
+  /// No description provided for @fieldContactNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact number'**
+  String get fieldContactNumber;
+
+  /// No description provided for @errorEnterContactNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a contact number'**
+  String get errorEnterContactNumber;
 
   /// No description provided for @fieldDocumentPhoto.
   ///
@@ -769,6 +799,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a second page (optional) — e.g. a visa stamp page, or the back of a card'**
   String get fieldDocumentPhotoBackOptional;
+
+  /// No description provided for @fieldSelfieWithDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a selfie holding the document'**
+  String get fieldSelfieWithDocument;
+
+  /// No description provided for @errorSelfiePhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a selfie of yourself holding the document'**
+  String get errorSelfiePhotoRequired;
 
   /// No description provided for @actionSubmitForReview.
   ///

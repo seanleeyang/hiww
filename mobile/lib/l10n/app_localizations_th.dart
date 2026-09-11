@@ -354,10 +354,27 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorEnterDocumentNumber => 'กรอกหมายเลขเอกสารของคุณ';
 
   @override
-  String get fieldNameOnDocument => 'ชื่อบนเอกสาร';
+  String get fieldFirstNameOnDocument => 'ชื่อจริง (ตามเอกสาร)';
 
   @override
-  String get errorEnterNameOnDocument => 'กรอกชื่อตามที่ปรากฏบนเอกสารของคุณ';
+  String get fieldLastNameOnDocument => 'นามสกุล (ตามเอกสาร)';
+
+  @override
+  String get errorEnterNameOnDocument =>
+      'กรอกชื่อและนามสกุลตามที่ปรากฏบนเอกสารของคุณ';
+
+  @override
+  String get fieldAddressOnDocument => 'ที่อยู่ (ตามเอกสาร)';
+
+  @override
+  String get errorEnterAddressOnDocument =>
+      'กรอกที่อยู่ตามที่ปรากฏบนเอกสารของคุณ';
+
+  @override
+  String get fieldContactNumber => 'เบอร์ติดต่อ';
+
+  @override
+  String get errorEnterContactNumber => 'กรอกเบอร์ติดต่อ';
 
   @override
   String get fieldDocumentPhoto => 'แนบรูปถ่ายเอกสาร';
@@ -368,6 +385,12 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get fieldDocumentPhotoBackOptional =>
       'แนบหน้าที่สอง (ไม่บังคับ) — เช่น หน้าประทับตราวีซ่า หรือด้านหลังบัตร';
+
+  @override
+  String get fieldSelfieWithDocument => 'แนบรูปเซลฟี่ถือเอกสาร';
+
+  @override
+  String get errorSelfiePhotoRequired => 'แนบรูปเซลฟี่ของคุณขณะถือเอกสาร';
 
   @override
   String get actionSubmitForReview => 'ส่งเพื่อตรวจสอบ';
