@@ -452,6 +452,10 @@ class AppLocalizationsTh extends AppLocalizations {
       'ยืนยันตัวตนก่อนทำคำสั่งซื้อให้เสร็จสมบูรณ์ ทีมงาน Hiww จะตรวจสอบเอกสารด้วยตนเองในช่วงนำร่อง';
 
   @override
+  String get kycUnderReview =>
+      'การยืนยันตัวตนของคุณกำลังอยู่ระหว่างตรวจสอบ เราจะแจ้งให้ทราบทันทีที่ตรวจสอบเสร็จ — ไม่ต้องส่งซ้ำ';
+
+  @override
   String get actionUpdateIdDetails => 'อัปเดตข้อมูลบัตร';
 
   @override

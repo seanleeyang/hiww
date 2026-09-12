@@ -51,6 +51,36 @@ describe('compliance / KYC flow', () => {
     expect(updated?.kyc_status).toBe('approved');
   });
 
+  it('GET /api/me exposes kyc_submitted_at so the app can lock the form while a review is pending', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
+
+    const before = await ctx.app.inject({ method: 'GET', url: '/api/me', headers: authHeader(user) });
+    expect(before.json().data.kyc_status).toBe('pending');
+    expect(before.json().data.kyc_submitted_at).toBeNull();
+
+    await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/submit',
+      headers: authHeader(user),
+      payload: submitPayload,
+    });
+
+    const afterSubmit = await ctx.app.inject({ method: 'GET', url: '/api/me', headers: authHeader(user) });
+    expect(afterSubmit.json().data.kyc_status).toBe('pending');
+    expect(afterSubmit.json().data.kyc_submitted_at).not.toBeNull();
+
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${user.userId}/kyc-review`,
+      headers: authHeader(admin),
+      payload: { status: 'rejected', reason_code: 'photo_unclear' },
+    });
+
+    const afterReject = await ctx.app.inject({ method: 'GET', url: '/api/me', headers: authHeader(user) });
+    expect(afterReject.json().data.kyc_status).toBe('rejected');
+  });
+
   it('rejects a submission missing any required field', async () => {
     const user = await createUser(ctx, { user_type: 'traveler' });
 

@@ -54,6 +54,7 @@ class AuthUser {
     this.addressCountry,
     this.bankName,
     this.bankAccountNumber,
+    this.kycSubmittedAt,
     this.emailVerified = false,
     this.phoneVerified = false,
   });
@@ -102,12 +103,24 @@ class AuthUser {
   final String? bankName;
   final String? bankAccountNumber;
 
+  /// Set the moment a KYC submission is made; null if never submitted.
+  /// Distinguishes "never submitted" from "submitted, awaiting review" —
+  /// both read as `kycStatus == 'pending'` otherwise.
+  final String? kycSubmittedAt;
+
   /// Set once the matching OTP is confirmed at registration.
   final bool emailVerified;
   final bool phoneVerified;
 
   bool get isAdmin => role == 'admin';
   bool get isKycApproved => kycStatus == 'approved';
+
+  /// A submission is in flight and hasn't been reviewed yet — the Identity
+  /// Verification form stays locked (no resubmission) until an admin either
+  /// approves it (locked forever) or rejects it (unlocked for one retry),
+  /// so a user can't rack up repeated paid AI checks by resubmitting while
+  /// still under review.
+  bool get isKycAwaitingReview => kycStatus == 'pending' && kycSubmittedAt != null;
 
   /// The backend blocks every route but /api/me and the OTP endpoints until
   /// both are true — the app should route to the verify screen instead.
@@ -133,6 +146,7 @@ class AuthUser {
         userType: UserType.parse(json['user_type']),
         role: (json['role'] ?? 'user').toString(),
         kycStatus: (json['kyc_status'] ?? 'pending').toString(),
+        kycSubmittedAt: json['kyc_submitted_at'] as String?,
         riskStatus: (json['risk_status'] ?? 'clear').toString(),
         avatarUrl: (json['avatar_url'] as String?)?.trim().isEmpty ?? true
             ? null

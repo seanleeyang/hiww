@@ -955,12 +955,21 @@ class _KycCardState extends ConsumerState<_KycCard> {
             ],
           ),
           Text(
-            user.isKycApproved ? l10n.kycVerified : l10n.kycUnverified,
+            user.isKycApproved
+                ? l10n.kycVerified
+                : user.isKycAwaitingReview
+                    ? l10n.kycUnderReview
+                    : l10n.kycUnverified,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          if (!user.isKycApproved) ...[
+          // Locked while approved (forever) or while a submission is
+          // awaiting review (until an admin approves or rejects it) — see
+          // AuthUser.isKycAwaitingReview. This is what stops a user from
+          // resubmitting (and re-triggering the paid AI check) again and
+          // again while still waiting on a review.
+          if (!user.isKycApproved && !user.isKycAwaitingReview) ...[
             const SizedBox(height: 12),
             if (!_expanded)
               FilledButton.tonal(
@@ -973,7 +982,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
                   }
                 }),
                 child: Text(
-                  user.kycStatus == 'pending'
+                  user.kycStatus == 'rejected'
                       ? l10n.actionUpdateIdDetails
                       : l10n.actionSubmitIdDetails,
                 ),

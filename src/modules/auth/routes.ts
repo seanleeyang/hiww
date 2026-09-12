@@ -554,6 +554,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     'user_type',
     'role',
     'kyc_status',
+    // Distinguishes "never submitted" from "submitted, awaiting admin
+    // review" — both read as kyc_status 'pending' otherwise. The mobile app
+    // uses this to lock the Identity Verification form once a submission is
+    // in flight, so a user can't resubmit (and re-trigger the paid AI
+    // check) while waiting on review.
+    'kyc_submitted_at',
     'risk_status',
     'avatar_url',
     'home_city',

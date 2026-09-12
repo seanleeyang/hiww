@@ -456,6 +456,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Verify your identity before completing an order. The Hiww team reviews submissions manually during the pilot.';
 
   @override
+  String get kycUnderReview =>
+      'Your ID check is being reviewed. We\'ll let you know as soon as it\'s done — no need to resubmit.';
+
+  @override
   String get actionUpdateIdDetails => 'Update ID details';
 
   @override

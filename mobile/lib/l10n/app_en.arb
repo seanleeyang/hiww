@@ -163,6 +163,7 @@
   "kycSectionTitle": "Identity verification",
   "kycVerified": "Your identity has been verified.",
   "kycUnverified": "Verify your identity before completing an order. The Hiww team reviews submissions manually during the pilot.",
+  "kycUnderReview": "Your ID check is being reviewed. We'll let you know as soon as it's done — no need to resubmit.",
   "actionUpdateIdDetails": "Update ID details",
   "actionSubmitIdDetails": "Submit ID details",
   "fieldDocumentType": "Document type",

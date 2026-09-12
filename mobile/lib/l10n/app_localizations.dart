@@ -926,6 +926,12 @@ abstract class AppLocalizations {
   /// **'Verify your identity before completing an order. The Hiww team reviews submissions manually during the pilot.'**
   String get kycUnverified;
 
+  /// No description provided for @kycUnderReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ID check is being reviewed. We\'ll let you know as soon as it\'s done — no need to resubmit.'**
+  String get kycUnderReview;
+
   /// No description provided for @actionUpdateIdDetails.
   ///
   /// In en, this message translates to:
