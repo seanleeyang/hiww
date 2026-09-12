@@ -59,6 +59,38 @@ describe('admin action flow', () => {
     expect(updatedUser?.risk_status).toBe('flagged');
   });
 
+  it('restricting an account signs it out everywhere immediately; merely flagging it does not', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const flaggedUser = await createUser(ctx, { user_type: 'both' });
+    const restrictedUser = await createUser(ctx, { user_type: 'both' });
+
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${flaggedUser.userId}/flag`,
+      headers: authHeader(admin),
+      payload: { risk_status: 'flagged', reason: 'Worth watching, not locking down yet' },
+    });
+    const stillSignedInFlagged = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/me',
+      headers: authHeader(flaggedUser),
+    });
+    expect(stillSignedInFlagged.statusCode).toBe(200);
+
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${restrictedUser.userId}/flag`,
+      headers: authHeader(admin),
+      payload: { risk_status: 'restricted', reason: 'Suspected fraud, locking down immediately' },
+    });
+    const signedOutRestricted = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/me',
+      headers: authHeader(restrictedUser),
+    });
+    expect(signedOutRestricted.statusCode).toBe(401);
+  });
+
   it('rejects all admin actions for a non-admin', async () => {
     const attacker = await createUser(ctx, { user_type: 'both' });
     const victim = await createUser(ctx, { user_type: 'both' });

@@ -107,16 +107,20 @@ class AuthRepository {
 
   /// Changes the password for the currently signed-in user — proves
   /// identity via [currentPassword] rather than an OTP (that's what
-  /// [forgotPassword]/[resetPassword] are for). No token change: the
-  /// existing session stays valid.
+  /// [forgotPassword]/[resetPassword] are for). A password change also
+  /// invalidates every other token on the account (a lost device, an old
+  /// forgotten session), so the backend hands back a fresh one for this
+  /// device to keep using — store it, or this device would get logged out
+  /// too on its very next request.
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
-    await _api.post('/api/auth/change-password', body: {
+    final data = await _api.post('/api/auth/change-password', body: {
       'current_password': currentPassword,
       'new_password': newPassword,
     });
+    await _storeToken(data, persist: !_tokens.isSessionOnly);
   }
 
   Future<AuthUser> me() async {

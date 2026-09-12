@@ -38,6 +38,8 @@ export interface UsersTable {
   risk_status: Generated<'clear' | 'flagged' | 'restricted'>;
   role: Generated<'user' | 'admin'>;
   password_hash?: string | null;
+  /** Bumping this invalidates every token issued before now, in one write — see migration 046 and src/middleware/auth-guard.ts. */
+  token_version: Generated<number>;
   /** Profile + reputation (migration 007). */
   avatar_url?: string | null;
   home_city?: string | null;

@@ -66,7 +66,7 @@ export function verifyPassword(password: string, stored: string | null | undefin
   return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
 }
 
-export function signToken(payload: { userId: string; email: string; exp: number }): string {
+export function signToken(payload: { userId: string; email: string; exp: number; tokenVersion: number }): string {
   const header = encodeBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const body = encodeBase64Url(JSON.stringify(payload));
   const signature = crypto
@@ -80,7 +80,7 @@ export function signToken(payload: { userId: string; email: string; exp: number 
   return `${header}.${body}.${signature}`;
 }
 
-export function verifyToken(token: string): { userId: string; email: string; exp: number } {
+export function verifyToken(token: string): { userId: string; email: string; exp: number; tokenVersion: number } {
   const parts = token.split('.');
   if (parts.length !== 3) {
     throw new Error('Invalid token format');

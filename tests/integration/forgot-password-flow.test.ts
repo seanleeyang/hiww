@@ -79,6 +79,31 @@ describe('Forgot password', () => {
     expect(newLogin.statusCode).toBe(200);
   });
 
+  it('invalidates whatever session was active before the reset — the actual point of a reset if the account was compromised', async () => {
+    const { email, res } = await register();
+    const tokenBeforeReset = res.json().data.token as string;
+
+    const forgot = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/forgot-password',
+      payload: { email },
+    });
+    const code = forgot.json().data.debug_otp as string;
+
+    await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/reset-password',
+      payload: { email, code, new_password: 'BrandNewPass456!' },
+    });
+
+    const stillSignedIn = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/me',
+      headers: { authorization: `Bearer ${tokenBeforeReset}` },
+    });
+    expect(stillSignedIn.statusCode).toBe(401);
+  });
+
   it('does not reveal whether an email is registered', async () => {
     const res = await ctx.app.inject({
       method: 'POST',

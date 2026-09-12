@@ -115,10 +115,12 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
     req.userRole = undefined;
 
     const authHeader = request.headers.authorization;
+    let tokenVersion: number | undefined;
     if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       try {
         const payload = verifyToken(authHeader.slice(7));
         req.userId = payload.userId;
+        tokenVersion = payload.tokenVersion;
       } catch {
         // Invalid or expired token: treat as unauthenticated. No `x-user-id`
         // fallback — the only way to be a user is to present a valid token.
@@ -147,10 +149,22 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
     // vs admin decisions without another lookup.
     const actor = await req.db
       .selectFrom('users')
-      .select(['id', 'role', 'email_verified_at', 'phone_verified_at'])
+      .select(['id', 'role', 'email_verified_at', 'phone_verified_at', 'token_version'])
       .where('id', '=', req.userId)
       .executeTakeFirst();
-    req.userRole = actor?.role ?? undefined;
+
+    // The token's own signature/expiry already checked out above, but a
+    // token only stays valid as long as its embedded version still matches
+    // the account's *current* one — password change/reset and an admin
+    // restricting the account all bump it, instantly invalidating every
+    // token issued before that moment (see migration 046). A token minted
+    // before this check existed carries no version at all, which never
+    // matches a real (>= 0) one, so it's rejected the same way — a one-time
+    // forced re-login the moment this ships, not a recurring thing.
+    if (!actor || actor.token_version !== tokenVersion) {
+      throw new AppError('AUTH_REQUIRED', 401, 'common.authRequired');
+    }
+    req.userRole = actor.role ?? undefined;
 
     if (ADMIN_ROUTES.has(routeUrl) && req.userRole !== 'admin') {
       throw new AppError('ADMIN_REQUIRED', 403, 'authGuard.adminRequired');

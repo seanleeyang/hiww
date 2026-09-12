@@ -40,6 +40,39 @@ describe('POST /api/auth/change-password', () => {
     expect(newLogin.statusCode).toBe(200);
   });
 
+  it('invalidates the old token everywhere, but hands back a fresh one this device keeps using', async () => {
+    const user = await createUser(ctx); // password is 'SecurePass123!'
+
+    const change = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/auth/change-password',
+      headers: authHeader(user),
+      payload: { current_password: 'SecurePass123!', new_password: 'BrandNewPass456!' },
+    });
+    expect(change.statusCode).toBe(200);
+    const freshToken = change.json().data.token as string;
+    expect(freshToken).toBeTruthy();
+
+    // The token used to make this very request is now dead — a stolen
+    // device or an old forgotten-about session with this same token stops
+    // working the instant the password changes.
+    const withOldToken = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/me',
+      headers: authHeader(user),
+    });
+    expect(withOldToken.statusCode).toBe(401);
+
+    // The fresh token handed back in the response still works — this
+    // device's own session isn't kicked out by its own password change.
+    const withFreshToken = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/me',
+      headers: { authorization: `Bearer ${freshToken}` },
+    });
+    expect(withFreshToken.statusCode).toBe(200);
+  });
+
   it('rejects a wrong current password without changing anything', async () => {
     const user = await createUser(ctx);
 

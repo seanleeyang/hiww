@@ -271,6 +271,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       userId,
       email: parsed.data.email,
       exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+      tokenVersion: 0,
     });
 
     reply.status(201).send({
@@ -310,6 +311,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       userId: user.id,
       email: user.email,
       exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+      tokenVersion: user.token_version,
     });
 
     reply.send({
@@ -372,7 +374,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
               auth_provider: parsed.data.provider,
               provider_user_id: identity.providerId,
               email_verified_at: existing.email_verified_at ?? new Date(),
-              ...(reclaiming ? { password_hash: null } : {}),
+              // Reclaiming means whoever set that password no longer owns
+              // this account — any token issued to them before now (the
+              // registration flow signs one immediately, before
+              // verification) needs to stop working, same as a password
+              // change/reset.
+              ...(reclaiming ? { password_hash: null, token_version: existing.token_version + 1 } : {}),
               updated_at: new Date(),
             })
             .where('id', '=', existing.id)
@@ -390,7 +397,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
             ...existing,
             auth_provider: parsed.data.provider,
             provider_user_id: identity.providerId,
-            ...(reclaiming ? { password_hash: null } : {}),
+            ...(reclaiming ? { password_hash: null, token_version: existing.token_version + 1 } : {}),
           };
         } else {
           const userId = generateId();
@@ -419,6 +426,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         userId: user.id,
         email: user.email,
         exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        tokenVersion: user.token_version,
       });
 
       reply.send({
@@ -471,7 +479,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
       const user = await request.db
         .selectFrom('users')
-        .select(['id', 'email'])
+        .select(['id', 'email', 'token_version'])
         .where('email', '=', parsed.data.email)
         .executeTakeFirst();
 
@@ -480,9 +488,19 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('INVALID_OTP', 400, 'common.otpInvalid');
       }
 
+      // Bumping token_version invalidates every token issued before this
+      // reset — the exact case this exists for is a stolen/compromised
+      // account: resetting the password should also cut off whoever else
+      // might still be signed in, not just block new logins with the old
+      // password.
+      const newTokenVersion = user.token_version + 1;
       await request.db
         .updateTable('users')
-        .set({ password_hash: hashPassword(parsed.data.new_password), updated_at: new Date() })
+        .set({
+          password_hash: hashPassword(parsed.data.new_password),
+          token_version: newTokenVersion,
+          updated_at: new Date(),
+        })
         .where('id', '=', user.id)
         .execute();
 
@@ -497,6 +515,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         userId: user.id,
         email: user.email,
         exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        tokenVersion: newTokenVersion,
       });
 
       reply.send({
@@ -523,7 +542,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
       const user = await request.db
         .selectFrom('users')
-        .select(['id', 'email', 'password_hash'])
+        .select(['id', 'email', 'password_hash', 'token_version'])
         .where('id', '=', request.userId!)
         .executeTakeFirst();
 
@@ -531,9 +550,15 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('AUTH_ERROR', 401, 'auth.currentPasswordIncorrect');
       }
 
+      // Bumping token_version invalidates every other token for this
+      // account (a stolen device, an old forgotten-about session) the
+      // instant the password changes — this device's own current token
+      // would otherwise stop working on its very next request, so a fresh
+      // one (already reflecting the bump) is handed back below instead.
+      const newTokenVersion = user.token_version + 1;
       await request.db
         .updateTable('users')
-        .set({ password_hash: hashPassword(parsed.data.new_password), updated_at: new Date() })
+        .set({ password_hash: hashPassword(parsed.data.new_password), token_version: newTokenVersion, updated_at: new Date() })
         .where('id', '=', user.id)
         .execute();
 
@@ -544,7 +569,14 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         summary: 'Password changed from account settings',
       });
 
-      reply.send({ success: true, data: { userId: user.id }, code: 'PASSWORD_CHANGED' });
+      const token = signToken({
+        userId: user.id,
+        email: user.email,
+        exp: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        tokenVersion: newTokenVersion,
+      });
+
+      reply.send({ success: true, data: { userId: user.id, token }, code: 'PASSWORD_CHANGED' });
     }
   );
 

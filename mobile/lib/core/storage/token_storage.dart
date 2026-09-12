@@ -13,6 +13,12 @@ class TokenStorage {
   /// restart signs them out again instead of coming back automatically.
   String? _sessionOnly;
 
+  /// Whether the current token is in "don't persist" mode — so a caller
+  /// replacing the token (e.g. after a password change) can keep it that
+  /// way instead of silently upgrading the session to survive an app
+  /// restart when the user explicitly chose not to.
+  bool get isSessionOnly => _sessionOnly != null;
+
   Future<String?> read() async => _sessionOnly ?? await _storage.read(key: _key);
 
   /// [persist] false keeps the token in memory only (see [_sessionOnly])

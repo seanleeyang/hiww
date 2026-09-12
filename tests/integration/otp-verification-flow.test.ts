@@ -171,7 +171,7 @@ describe('OTP verification at registration', () => {
       })
       .execute();
 
-    const token = signToken({ userId: id, email, exp: Date.now() + 60_000 });
+    const token = signToken({ userId: id, email, exp: Date.now() + 60_000, tokenVersion: 0 });
     const trips = await ctx.app.inject({
       method: 'GET',
       url: '/api/trips',

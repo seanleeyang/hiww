@@ -45,6 +45,7 @@ import * as m042 from './042_bank_account';
 import * as m043 from './043_payout_bank_snapshot';
 import * as m044 from './044_membership_id';
 import * as m045 from './045_request_delivery_address';
+import * as m046 from './046_token_version';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -93,4 +94,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '043_payout_bank_snapshot', up: m043.up },
   { name: '044_membership_id', up: m044.up },
   { name: '045_request_delivery_address', up: m045.up },
+  { name: '046_token_version', up: m046.up },
 ];

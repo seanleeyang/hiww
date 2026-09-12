@@ -408,6 +408,10 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       .updateTable('users')
       .set({
         risk_status: parsed.data.risk_status,
+        // 'restricted' is the one status meant to actually lock the account
+        // down — bump token_version so any session they're currently signed
+        // into is cut off immediately, not just blocked from future logins.
+        ...(parsed.data.risk_status === 'restricted' ? { token_version: user.token_version + 1 } : {}),
         updated_at: new Date(),
       })
       .where('id', '=', user.id)

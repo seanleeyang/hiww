@@ -63,6 +63,7 @@ describe('POST /api/auth/social', () => {
     });
     expect(squat.statusCode).toBe(201);
     const squattedUserId = squat.json().data.userId as string;
+    const squatterToken = squat.json().data.token as string;
 
     // Never completes OTP — email_verified_at stays null, same as the real
     // exploit: register-and-abandon on someone else's email address.
@@ -97,6 +98,15 @@ describe('POST /api/auth/social', () => {
       .executeTakeFirst();
     expect(row?.password_hash).toBeNull();
     expect(row?.email_verified_at).not.toBeNull();
+
+    // The squatter's session from registration — issued before the real
+    // owner ever showed up — is also dead, not just their password.
+    const squatterSession = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/me',
+      headers: { authorization: `Bearer ${squatterToken}` },
+    });
+    expect(squatterSession.statusCode).toBe(401);
   });
 
   it('does not touch the password when linking to an already-verified account', async () => {
