@@ -7,11 +7,10 @@ import '../l10n/app_localizations.dart';
 /// Thai address, backed by the bundled Thai geography dataset. Postal code
 /// is a deliberate, explicit choice, not auto-filled from the sub-district —
 /// scoped to the codes seen across the selected district's sub-districts.
-///
-/// Values are passed and returned as plain English names — the same strings
-/// the backend already stores in `address_city`/`address_district`/
-/// `address_subdistrict`/`address_postal_code` — so no new column or code
-/// scheme is needed on the server side.
+/// Stores English names by default — the same strings the backend already
+/// has in `address_city`/`address_district`/`address_subdistrict` (so no new
+/// column or code scheme is needed there) — or Thai names when
+/// [storeThaiNames] is set, for a caller with no such column to match.
 class ThaiAddressPicker extends StatefulWidget {
   const ThaiAddressPicker({
     super.key,
@@ -24,6 +23,7 @@ class ThaiAddressPicker extends StatefulWidget {
     this.districtLabel,
     this.subdistrictLabel,
     this.postalCodeLabel,
+    this.storeThaiNames = false,
   });
 
   final String province;
@@ -43,6 +43,18 @@ class ThaiAddressPicker extends StatefulWidget {
   final String? districtLabel;
   final String? subdistrictLabel;
   final String? postalCodeLabel;
+
+  /// When true, [onChanged] receives the Thai name instead of the English
+  /// one (still whichever the app locale shows on screen — this only
+  /// changes what's *stored*). For the Personal Information address this
+  /// stays false, since the backend's `address_city`/etc. columns already
+  /// hold English values and existing data shouldn't shift language. The
+  /// KYC "address as on document" flow sets this true instead: that string
+  /// is free text sent to an admin/AI comparing it against a physical Thai
+  /// ID card, which is printed in Thai — matching the document's own
+  /// script makes that comparison direct rather than requiring a mental
+  /// translation step either way.
+  final bool storeThaiNames;
 
   @override
   State<ThaiAddressPicker> createState() => _ThaiAddressPickerState();
@@ -76,6 +88,9 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
         final district = province == null ? null : geo.districtByName(province.code, widget.district);
         final subdistrict =
             district == null ? null : geo.subdistrictByName(district.code, widget.subdistrict);
+        String storedName(ThaiProvince p) => widget.storeThaiNames ? p.nameTh : p.nameEn;
+        String storedDistrictName(ThaiDistrict d) => widget.storeThaiNames ? d.nameTh : d.nameEn;
+        String storedSubdistrictName(ThaiSubdistrict s) => widget.storeThaiNames ? s.nameTh : s.nameEn;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -97,7 +112,7 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                 );
                 if (picked == null) return;
                 widget.onChanged(
-                  province: picked.nameEn,
+                  province: storedName(picked),
                   district: '',
                   subdistrict: '',
                   postalCode: '',
@@ -125,8 +140,8 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                       );
                       if (picked == null) return;
                       widget.onChanged(
-                        province: province.nameEn,
-                        district: picked.nameEn,
+                        province: storedName(province),
+                        district: storedDistrictName(picked),
                         subdistrict: '',
                         postalCode: '',
                       );
@@ -158,9 +173,9 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                       // silently pre-filled, so they actually notice and
                       // confirm the value that goes on file.
                       widget.onChanged(
-                        province: province!.nameEn,
-                        district: district.nameEn,
-                        subdistrict: picked.nameEn,
+                        province: storedName(province!),
+                        district: storedDistrictName(district),
+                        subdistrict: storedSubdistrictName(picked),
                         postalCode: '',
                       );
                     },
@@ -195,8 +210,8 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                       );
                       if (picked == null) return;
                       widget.onChanged(
-                        province: province!.nameEn,
-                        district: district.nameEn,
+                        province: storedName(province!),
+                        district: storedDistrictName(district),
                         subdistrict: widget.subdistrict,
                         postalCode: picked,
                       );

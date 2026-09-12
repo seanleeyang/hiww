@@ -3319,6 +3319,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reviews ({count})'**
   String reviewsSectionCount(int count);
+
+  /// No description provided for @hintNameAsOnThaiId.
+  ///
+  /// In en, this message translates to:
+  /// **'In Thai, as printed on your ID card'**
+  String get hintNameAsOnThaiId;
 }
 
 class _AppLocalizationsDelegate

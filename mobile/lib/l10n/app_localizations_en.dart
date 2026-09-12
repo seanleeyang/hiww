@@ -1867,4 +1867,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String reviewsSectionCount(int count) {
     return 'Reviews ($count)';
   }
+
+  @override
+  String get hintNameAsOnThaiId => 'In Thai, as printed on your ID card';
 }

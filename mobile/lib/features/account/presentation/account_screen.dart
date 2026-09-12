@@ -848,15 +848,21 @@ class _KycCardState extends ConsumerState<_KycCard> {
   }
 
   /// Assembles the Thai ID address fields into one string, in the standard
-  /// house-registration order, for the backend's single `kyc_address`
-  /// column — e.g. "123/45 Moo 6, Soi Sukhumvit 24, Sukhumvit Road,
-  /// Khlong Tan Nuea, Watthana, Bangkok 10110".
+  /// house-registration order — e.g. "123/45 หมู่ 6, ซอย สุขุมวิท 24,
+  /// ถนน สุขุมวิท, คลองตันเหนือ, วัฒนา, กรุงเทพมหานคร 10110" — for the
+  /// backend's single `kyc_address` column. Kept in Thai regardless of the
+  /// app's own display language: this string is what an admin/the AI check
+  /// compares against a physical Thai ID card, itself printed in Thai, so
+  /// matching that script directly avoids a translation step on either
+  /// side. Province/District/Sub-district already come back as Thai names
+  /// from `ThaiAddressPicker` (`storeThaiNames: true` below); only the
+  /// prefix words here need to be written in Thai to match.
   String _composedThaiAddress() {
     final parts = <String>[];
     if (_houseNumber.text.trim().isNotEmpty) parts.add(_houseNumber.text.trim());
-    if (_villageNumber.text.trim().isNotEmpty) parts.add('Moo ${_villageNumber.text.trim()}');
-    if (_alley.text.trim().isNotEmpty) parts.add('Soi ${_alley.text.trim()}');
-    if (_road.text.trim().isNotEmpty) parts.add('${_road.text.trim()} Road');
+    if (_villageNumber.text.trim().isNotEmpty) parts.add('หมู่ ${_villageNumber.text.trim()}');
+    if (_alley.text.trim().isNotEmpty) parts.add('ซอย ${_alley.text.trim()}');
+    if (_road.text.trim().isNotEmpty) parts.add('ถนน ${_road.text.trim()}');
     final line1 = parts.join(', ');
 
     final locality = [_addrSubdistrict.text, _addrDistrict.text, _addrProvince.text]
@@ -1028,14 +1034,20 @@ class _KycCardState extends ConsumerState<_KycCard> {
                   Expanded(
                     child: TextField(
                       controller: _firstName,
-                      decoration: InputDecoration(labelText: l10n.fieldFirstNameOnDocument),
+                      decoration: InputDecoration(
+                        labelText: l10n.fieldFirstNameOnDocument,
+                        hintText: _docType == 'id_card' ? l10n.hintNameAsOnThaiId : null,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
                       controller: _lastName,
-                      decoration: InputDecoration(labelText: l10n.fieldLastNameOnDocument),
+                      decoration: InputDecoration(
+                        labelText: l10n.fieldLastNameOnDocument,
+                        hintText: _docType == 'id_card' ? l10n.hintNameAsOnThaiId : null,
+                      ),
                     ),
                   ),
                 ],
@@ -1093,6 +1105,12 @@ class _KycCardState extends ConsumerState<_KycCard> {
                   districtLabel: l10n.fieldDistrict,
                   subdistrictLabel: l10n.fieldSubdistrict,
                   postalCodeLabel: l10n.fieldPostalCode,
+                  // A Thai ID card is printed in Thai — storing the Thai
+                  // names here (regardless of the app's own display
+                  // language) means what an admin or the AI check compares
+                  // against the document photo is already in the same
+                  // script, no mental translation needed either way.
+                  storeThaiNames: true,
                   onChanged: ({
                     required province,
                     required district,

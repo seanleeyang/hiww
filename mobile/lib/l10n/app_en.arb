@@ -770,5 +770,7 @@
   "reviewsSectionCount": "Reviews ({count})",
   "@reviewsSectionCount": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "hintNameAsOnThaiId": "In Thai, as printed on your ID card"
 }

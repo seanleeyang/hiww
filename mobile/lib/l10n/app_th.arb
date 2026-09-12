@@ -584,5 +584,7 @@
   "timeHoursShort": "{hours} ชม.",
   "timeDaysShort": "{days} วัน",
 
-  "reviewsSectionCount": "รีวิว ({count})"
+  "reviewsSectionCount": "รีวิว ({count})",
+
+  "hintNameAsOnThaiId": "ภาษาไทย ตามที่ปรากฏบนบัตรประชาชน"
 }
