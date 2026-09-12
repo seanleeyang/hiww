@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/thai_geography.dart';
 
-/// Cascading Province → District → Sub-district picker for a Thai address,
-/// backed by the bundled Thai geography dataset. Selecting a sub-district
-/// auto-fills the postal code (all three levels share one postal-code
-/// column in the source data, so the result is unambiguous once a
-/// sub-district is chosen).
+/// Cascading Province → District → Sub-district → Postal code picker for a
+/// Thai address, backed by the bundled Thai geography dataset. Postal code
+/// is a deliberate, explicit choice, not auto-filled from the sub-district —
+/// scoped to the codes seen across the selected district's sub-districts.
 ///
 /// Values are passed and returned as plain English names — the same strings
 /// the backend already stores in `address_city`/`address_district`/
@@ -135,11 +134,16 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                         ),
                       );
                       if (picked == null) return;
+                      // Postal code is deliberately left blank here, even
+                      // though the sub-district's own code is known — the
+                      // user picks it explicitly below instead of it being
+                      // silently pre-filled, so they actually notice and
+                      // confirm the value that goes on file.
                       widget.onChanged(
                         province: province!.nameEn,
                         district: district.nameEn,
                         subdistrict: picked.nameEn,
-                        postalCode: picked.postalCode,
+                        postalCode: '',
                       );
                     },
             ),
@@ -148,11 +152,11 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
               label: widget.postalCodeLabel,
               value: widget.postalCode.isEmpty ? null : widget.postalCode,
               enabled: district != null,
-              // Picking a sub-district already auto-fills the postal code
-              // it's officially assigned (see the class doc comment) — this
-              // is only for the rarer case of overriding it (e.g. a large
-              // organization with its own dedicated code) once a district
-              // narrows down which codes are even plausible.
+              // The only way postal code gets set — picking a sub-district
+              // no longer auto-fills it (see that onTap above). Scoped to
+              // the codes actually seen across the selected district's
+              // sub-districts, so it's a short, unambiguous list even
+              // though it's a free pick rather than derived.
               onTap: district == null
                   ? null
                   : () async {
