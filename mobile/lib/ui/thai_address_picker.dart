@@ -144,9 +144,41 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                     },
             ),
             const SizedBox(height: 12),
-            InputDecorator(
-              decoration: InputDecoration(labelText: widget.postalCodeLabel),
-              child: Text(widget.postalCode.isEmpty ? '—' : widget.postalCode),
+            _PickerRow(
+              label: widget.postalCodeLabel,
+              value: widget.postalCode.isEmpty ? null : widget.postalCode,
+              enabled: district != null,
+              // Picking a sub-district already auto-fills the postal code
+              // it's officially assigned (see the class doc comment) — this
+              // is only for the rarer case of overriding it (e.g. a large
+              // organization with its own dedicated code) once a district
+              // narrows down which codes are even plausible.
+              onTap: district == null
+                  ? null
+                  : () async {
+                      final codes = geo
+                          .subdistrictsFor(district.code)
+                          .map((s) => s.postalCode)
+                          .toSet()
+                          .toList()
+                        ..sort();
+                      final picked = await showDialog<String>(
+                        context: context,
+                        builder: (_) => _SearchDialog<String>(
+                          items: codes,
+                          selected: widget.postalCode.isEmpty ? null : widget.postalCode,
+                          labelOf: (c) => c,
+                          subLabelOf: (_) => '',
+                        ),
+                      );
+                      if (picked == null) return;
+                      widget.onChanged(
+                        province: province!.nameEn,
+                        district: district.nameEn,
+                        subdistrict: widget.subdistrict,
+                        postalCode: picked,
+                      );
+                    },
             ),
           ],
         );
