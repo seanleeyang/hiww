@@ -528,11 +528,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get infoSubmittedForReview => 'ส่งเพื่อตรวจสอบแล้ว';
 
   @override
-  String get kycSubmittedDialogTitle => 'ส่งเพื่อยืนยันตัวตนแล้ว';
+  String get kycSubmittedDialogTitle =>
+      'ส่งข้อมูลเพื่อยืนยันตัวตนเรียบร้อยแล้ว';
 
   @override
   String get kycSubmittedDialogBody =>
-      'ขอบคุณ — ทีมงานของเราจะตรวจสอบข้อมูลของคุณในเร็ว ๆ นี้ เราจะแจ้งให้คุณทราบเมื่อตรวจสอบเสร็จแล้ว';
+      'ทีมงานส่งข้อมูลเพื่อยืนยันตัวตนเรียบร้อยแล้ว ทีมงานของเราได้รับข้อมูลและเอกสารของท่านเรียบร้อยแล้ว และจะแจ้งให้ท่านทราบเมื่อการยืนยันตัวตนเสร็จสมบูรณ์';
 
   @override
   String get actionLogOut => 'ออกจากระบบ';
