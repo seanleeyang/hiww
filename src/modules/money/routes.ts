@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { AppError, generateId } from '@/utils/helpers';
+import { AppError, generateId, isUniqueViolation } from '@/utils/helpers';
 import { getPaymentProvider } from '@/services/providers';
 import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
@@ -259,21 +259,34 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
       const payoutAmount = order.traveller_payout ?? order.total_price;
 
       const payoutId = generateId();
-      await request.db
-        .insertInto('payouts')
-        .values({
-          id: payoutId,
-          order_id: order.id,
-          recorded_by: request.userId ?? null,
-          amount: payoutAmount,
-          method: parsed.data.method,
-          reference: parsed.data.reference,
-          note: parsed.data.note ?? null,
-          bank_name: traveler.bank_name,
-          bank_account_number: traveler.bank_account_number,
-          created_at: new Date(),
-        })
-        .execute();
+      try {
+        await request.db
+          .insertInto('payouts')
+          .values({
+            id: payoutId,
+            order_id: order.id,
+            recorded_by: request.userId ?? null,
+            amount: payoutAmount,
+            method: parsed.data.method,
+            reference: parsed.data.reference,
+            note: parsed.data.note ?? null,
+            bank_name: traveler.bank_name,
+            bank_account_number: traveler.bank_account_number,
+            created_at: new Date(),
+          })
+          .execute();
+      } catch (error) {
+        // The `existing` check above has a race window between two
+        // concurrent requests for the same order — `payouts.order_id`'s
+        // unique constraint (migration 011) is the real backstop. Whichever
+        // request loses that race lands here instead of actually creating a
+        // second payout; give it the same clean error the earlier check
+        // would have, not a raw 500.
+        if (isUniqueViolation(error)) {
+          throw new AppError('ALREADY_DONE', 409, 'money.alreadyPaidOut');
+        }
+        throw error;
+      }
 
       await recordAudit(request.db, actorFromRequest(request), {
         action: 'order.payout',

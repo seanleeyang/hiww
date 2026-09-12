@@ -54,6 +54,17 @@ describe('payouts + reconciliation', () => {
     expect(r.awaiting_payout.orders.some((o) => o.id === order.orderId)).toBe(false);
     expect(r.paid_out.payouts.some((p) => p.order_id === order.orderId)).toBe(true);
 
+    // A second attempt on the same order is rejected cleanly, not silently
+    // accepted into a second payout.
+    const secondPayout = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/payout',
+      headers: authHeader(admin),
+      payload: { order_id: order.orderId, method: 'wise', reference: 'W-456' },
+    });
+    expect(secondPayout.statusCode).toBe(409);
+    expect(secondPayout.json().code).toBe('ALREADY_DONE');
+
     const audit = await ctx.app.inject({
       method: 'GET',
       url: `/api/admin/audit?action=order.payout&target_id=${order.orderId}`,
@@ -63,6 +74,32 @@ describe('payouts + reconciliation', () => {
     expect(entry.actor_id).toBe(admin.userId);
     expect(entry.metadata.reference).toBe('W-123');
     expect(entry.metadata.amount).toBe('170');
+  });
+
+  it('a concurrent double-payout attempt on the same order records exactly one payout', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+    await completeOrder(ctx, order);
+
+    const attempt = (reference: string) =>
+      ctx.app.inject({
+        method: 'POST',
+        url: '/api/payments/payout',
+        headers: authHeader(admin),
+        payload: { order_id: order.orderId, method: 'wise', reference },
+      });
+    const [r1, r2] = await Promise.all([attempt('W-RACE-1'), attempt('W-RACE-2')]);
+
+    // Exactly one side wins (201); the other gets the same clean "already
+    // done" error a sequential second attempt would — never a raw 500 from
+    // the database's own unique-constraint rejection.
+    const codes = [r1.statusCode, r2.statusCode].sort();
+    expect(codes).toEqual([201, 409]);
+    const loser = r1.statusCode === 409 ? r1 : r2;
+    expect(loser.json().code).toBe('ALREADY_DONE');
+
+    const payouts = await ctx.db.selectFrom('payouts').selectAll().where('order_id', '=', order.orderId).execute();
+    expect(payouts).toHaveLength(1);
   });
 
   it('ignores a client-supplied amount and always pays out the server-computed traveller_payout', async () => {

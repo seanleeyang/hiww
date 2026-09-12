@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { AppError, generateId } from '@/utils/helpers';
+import { AppError, generateId, isUniqueViolation } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
 
@@ -272,19 +272,29 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       order.shopper_total ?? String(Number(order.total_price) + Number(order.fees));
 
     const refundId = generateId();
-    await request.db
-      .insertInto('refunds')
-      .values({
-        id: refundId,
-        order_id: order.id,
-        recorded_by: request.userId ?? null,
-        amount: refundAmount,
-        method: parsed.data.method,
-        reference: parsed.data.reference,
-        note: parsed.data.note ?? null,
-        created_at: new Date(),
-      })
-      .execute();
+    try {
+      await request.db
+        .insertInto('refunds')
+        .values({
+          id: refundId,
+          order_id: order.id,
+          recorded_by: request.userId ?? null,
+          amount: refundAmount,
+          method: parsed.data.method,
+          reference: parsed.data.reference,
+          note: parsed.data.note ?? null,
+          created_at: new Date(),
+        })
+        .execute();
+    } catch (error) {
+      // Same race as the payout route above (see money/routes.ts) —
+      // `refunds.order_id`'s unique constraint (migration 036) is the real
+      // backstop against two concurrent requests both refunding this order.
+      if (isUniqueViolation(error)) {
+        throw new AppError('ALREADY_DONE', 409, 'money.alreadyRefunded');
+      }
+      throw error;
+    }
 
     await recordAudit(request.db, actorFromRequest(request), {
       action: 'order.refund',

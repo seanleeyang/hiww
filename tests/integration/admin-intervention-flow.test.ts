@@ -251,6 +251,26 @@ describe('admin refund recording', () => {
     expect(second.statusCode).toBe(409);
   });
 
+  it('a concurrent double-refund attempt on the same order records exactly one refund', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await cancelledConfirmedOrder(admin);
+
+    const attempt = (reference: string) =>
+      ctx.app.inject({
+        method: 'POST',
+        url: `/api/admin/orders/${order.orderId}/refund`,
+        headers: authHeader(admin),
+        payload: { method: 'bank_transfer', reference },
+      });
+    const [r1, r2] = await Promise.all([attempt('refund-race-1'), attempt('refund-race-2')]);
+
+    const codes = [r1.statusCode, r2.statusCode].sort();
+    expect(codes).toEqual([201, 409]);
+
+    const refunds = await ctx.db.selectFrom('refunds').selectAll().where('order_id', '=', order.orderId).execute();
+    expect(refunds).toHaveLength(1);
+  });
+
   it('cannot refund an order that was never cancelled', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);
