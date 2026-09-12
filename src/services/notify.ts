@@ -31,7 +31,10 @@ export type NotificationType =
   | 'message_flagged'
   | 'order_cancelled'
   | 'refund_due'
-  | 'refund_sent';
+  | 'refund_sent'
+  | 'account_warned'
+  | 'account_suspended'
+  | 'account_banned';
 
 export interface NotificationInput {
   userId: string;

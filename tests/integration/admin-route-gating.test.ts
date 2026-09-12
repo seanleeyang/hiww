@@ -20,6 +20,10 @@ const GET_ROUTES = new Set([
   '/api/admin/requests',
   '/api/admin/offers',
   '/api/admin/order-reviews',
+  // Shares a URL pattern with a POST of the same shape (log a violation) —
+  // this backstop only exercises the GET side; the POST side's admin-only
+  // requirement is covered directly in the violations flow tests.
+  '/api/admin/users/:userId/violations',
   '/api/ledger/:userId',
   '/api/ops/overview',
   '/api/ops/reconciliation',

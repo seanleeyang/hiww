@@ -8,6 +8,7 @@ import { profileUpdateSchema, phoneSchema, passwordSchema } from '@/types/schema
 import { toUserSummary } from '@/utils/user-summary';
 import { membershipId } from '@/utils/membership';
 import { encryptSecret, decryptSecret } from '@/utils/encryption';
+import { assertNotRestricted } from '@/services/violations';
 import { issueOtp, verifyOtp, isMockOtp } from '@/services/otp';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 
@@ -307,6 +308,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (!user || !verifyPassword(parsed.data.password, user.password_hash)) {
       throw new AppError('AUTH_ERROR', 401, 'auth.invalidCredentials');
     }
+    assertNotRestricted(user);
 
     const token = signToken({
       userId: user.id,
@@ -422,6 +424,8 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
           user = await request.db.selectFrom('users').selectAll().where('id', '=', userId).executeTakeFirstOrThrow();
         }
       }
+
+      assertNotRestricted(user);
 
       const token = signToken({
         userId: user.id,

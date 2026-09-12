@@ -6,8 +6,10 @@ import { ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { KycRejectDialog, type KycRejectReason } from '../components/KycRejectDialog';
+import { ViolationHistoryDialog } from '../components/ViolationHistoryDialog';
 import { useToast } from '../components/Toast';
 import { idCheckLabel, riskStatusLabel, riskStatusTone } from '../lib/status';
+import { dateTime } from '../lib/format';
 
 export function UsersPage() {
   const qc = useQueryClient();
@@ -15,6 +17,8 @@ export function UsersPage() {
   const users = useQuery({ queryKey: ['admin-users'], queryFn: () => api.get<{ users: AdminUser[] }>('/admin/users') });
   const [flagging, setFlagging] = useState<AdminUser | null>(null);
   const [rejecting, setRejecting] = useState<AdminUser | null>(null);
+  const [strikingUser, setStrikingUser] = useState<AdminUser | null>(null);
+  const [historyUser, setHistoryUser] = useState<AdminUser | null>(null);
   const [search, setSearch] = useState('');
   const [riskFilter, setRiskFilter] = useState('');
   // This table lists every user regardless of ID-check status (unlike the ID
@@ -57,6 +61,25 @@ export function UsersPage() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['admin-users'] });
       toast(variables.risk_status === 'clear' ? 'Flag cleared' : 'Account flagged');
+    },
+    onError,
+  });
+  const strike = useMutation({
+    mutationFn: ({ userId, reason }: { userId: string; reason: string }) =>
+      api.post<{ count: number; risk_status: string; suspended_until: string | null }>(
+        `/admin/users/${userId}/violations`,
+        { reason }
+      ),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['admin-users'] });
+      const ordinal = data.count === 1 ? '1st' : data.count === 2 ? '2nd' : `${data.count}${data.count === 3 ? 'rd' : 'th'}`;
+      const consequence =
+        data.risk_status === 'flagged'
+          ? 'warned (no lockout yet)'
+          : data.suspended_until
+            ? `suspended until ${new Date(data.suspended_until).toLocaleDateString()}`
+            : 'permanently banned';
+      toast(`${ordinal} strike recorded — account ${consequence}`, data.risk_status === 'restricted' ? 'error' : 'success');
     },
     onError,
   });
@@ -105,6 +128,7 @@ export function UsersPage() {
             <th>Role</th>
             <th>ID check</th>
             <th>Risk</th>
+            <th>Strikes</th>
             <th></th>
           </tr>
         </thead>
@@ -126,6 +150,21 @@ export function UsersPage() {
               </td>
               <td>
                 <StatusPill label={riskStatusLabel(u.risk_status)} tone={riskStatusTone(u.risk_status)} />
+                {u.risk_status === 'restricted' && (
+                  <div className="muted" style={{ fontSize: 12 }}>
+                    {u.suspended_until ? `Until ${dateTime(u.suspended_until)}` : 'Permanent'}
+                  </div>
+                )}
+              </td>
+              <td>
+                <button
+                  type="button"
+                  className="btn btn-small btn-ghost"
+                  onClick={() => setHistoryUser(u)}
+                  title="View violation history"
+                >
+                  {u.violation_count}
+                </button>
               </td>
               <td>
                 <div className="btn-row">
@@ -190,6 +229,14 @@ export function UsersPage() {
                       Clear flag
                     </button>
                   )}
+                  <button
+                    type="button"
+                    className="btn btn-small btn-danger"
+                    disabled={strike.isPending}
+                    onClick={() => setStrikingUser(u)}
+                  >
+                    Log violation
+                  </button>
                 </div>
               </td>
             </tr>
@@ -217,6 +264,30 @@ export function UsersPage() {
           if (!rejecting) return;
           await review.mutateAsync({ userId: rejecting.id, status: 'rejected', reason_code, note });
         }}
+      />
+
+      <ConfirmDialog
+        open={strikingUser !== null}
+        title="Log a violation"
+        description={
+          strikingUser
+            ? `This will be strike ${strikingUser.violation_count + 1} for ${strikingUser.full_name}. 1st = warning, 2nd = 7-day suspension, 3rd = permanent ban.`
+            : undefined
+        }
+        reason={{ label: 'Reason', minLength: 3, placeholder: 'What did they do…' }}
+        confirmLabel="Log violation"
+        danger
+        onClose={() => setStrikingUser(null)}
+        onConfirm={async (reason) => {
+          if (!strikingUser) return;
+          await strike.mutateAsync({ userId: strikingUser.id, reason: reason! });
+        }}
+      />
+
+      <ViolationHistoryDialog
+        userId={historyUser?.id ?? null}
+        userName={historyUser?.full_name}
+        onClose={() => setHistoryUser(null)}
       />
     </div>
   );

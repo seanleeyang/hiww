@@ -36,6 +36,13 @@ export interface UsersTable {
   kyc_ai_risk?: 'low' | 'medium' | 'high' | null;
   kyc_submitted_at?: Date | null;
   risk_status: Generated<'clear' | 'flagged' | 'restricted'>;
+  /**
+   * How long a `restricted` account stays locked out (migration 048, see
+   * src/services/violations.ts) — null means no end date (a permanent ban,
+   * or a manual "flag as restricted" with no violation attached). Ignored
+   * while risk_status isn't 'restricted'.
+   */
+  suspended_until?: Date | null;
   role: Generated<'user' | 'admin'>;
   password_hash?: string | null;
   /** Bumping this invalidates every token issued before now, in one write — see migration 046 and src/middleware/auth-guard.ts. */
@@ -430,6 +437,7 @@ export interface Database {
   refunds: RefundsTable;
   otp_codes: OtpCodesTable;
   device_tokens: DeviceTokensTable;
+  user_violations: UserViolationsTable;
 }
 
 /** One registered device for push notifications (migration 032). */
@@ -440,4 +448,13 @@ export interface DeviceTokensTable {
   platform: string;
   created_at: Generated<Date>;
   updated_at: Generated<Date>;
+}
+
+/** One admin-logged strike against a user (migration 048) — see src/services/violations.ts. */
+export interface UserViolationsTable {
+  id: string;
+  user_id: string;
+  reason: string;
+  issued_by?: string | null;
+  created_at: Generated<Date>;
 }

@@ -349,6 +349,40 @@ const TEMPLATES: Record<string, Template> = {
           subject: 'You’ve been refunded',
           body: `Hiww refunded ${p.amount} for "${p.item}" via ${p.method} (ref ${p.reference}).`,
         },
+  // The 3-strikes system (src/services/violations.ts) — an admin-logged
+  // violation escalates through these three in order. `reason` is always
+  // the admin's own free-typed explanation, same as the existing "flag an
+  // account" action.
+  account_warned: (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'คำเตือนเกี่ยวกับบัญชีของคุณ',
+          body: `บัญชีของคุณได้รับคำเตือนเนื่องจาก: ${p.reason} การละเมิดซ้ำอาจทำให้บัญชีถูกระงับหรือปิดถาวร`,
+        }
+      : {
+          subject: 'A warning about your account',
+          body: `Your account received a warning for: ${p.reason}. Further violations may lead to a suspension or permanent ban.`,
+        },
+  account_suspended: (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'บัญชีของคุณถูกระงับชั่วคราว',
+          body: `บัญชีของคุณถูกระงับจนถึง ${p.until} เนื่องจาก: ${p.reason} การละเมิดครั้งต่อไปจะทำให้บัญชีถูกปิดถาวร`,
+        }
+      : {
+          subject: 'Your account has been suspended',
+          body: `Your account is suspended until ${p.until} for: ${p.reason}. One more violation will result in a permanent ban.`,
+        },
+  account_banned: (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'บัญชีของคุณถูกปิดถาวร',
+          body: `บัญชีของคุณถูกปิดถาวรเนื่องจาก: ${p.reason}`,
+        }
+      : {
+          subject: 'Your account has been permanently banned',
+          body: `Your account has been permanently banned for: ${p.reason}.`,
+        },
 };
 
 /** Renders a notification's subject/body in `locale`. `type` is the stored

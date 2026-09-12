@@ -28,6 +28,7 @@ export type AuditAction =
   | 'kyc.ai_flag'
   | 'kyc.ai_check_failed'
   | 'user.flag'
+  | 'user.violation'
   | 'user.password_reset'
   | 'user.password_change'
   | 'user.phone_changed'

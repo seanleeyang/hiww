@@ -36,6 +36,7 @@ function adminUser(overrides: Partial<AdminUser> = {}): AdminUser {
     role: 'admin',
     kyc_status: 'approved',
     risk_status: 'clear',
+    violation_count: 0,
     created_at: new Date().toISOString(),
     ...overrides,
   };

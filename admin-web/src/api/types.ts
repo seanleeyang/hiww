@@ -25,6 +25,17 @@ export interface AdminUser {
   role: 'user' | 'admin';
   kyc_status: 'pending' | 'approved' | 'rejected';
   risk_status: 'clear' | 'flagged' | 'restricted';
+  /** Only meaningful while risk_status is 'restricted' — null means no end date (a permanent ban). */
+  suspended_until?: string | null;
+  /** Total strikes ever logged — see the 3-strikes system (src/services/violations.ts). */
+  violation_count: number;
+  created_at: string;
+}
+
+export interface UserViolation {
+  id: string;
+  reason: string;
+  issued_by_name: string | null;
   created_at: string;
 }
 

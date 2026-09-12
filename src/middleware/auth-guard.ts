@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { AppError } from '@/utils/helpers';
 import { verifyToken } from '@/utils/auth';
+import { assertNotRestricted } from '@/services/violations';
 
 /**
  * Routes that do not require a logged-in user. Everything else is protected by
@@ -76,6 +77,7 @@ export const ADMIN_ROUTES = new Set<string>([
   '/api/admin/disputes/:id/resolve',
   '/api/admin/users/:userId/kyc-review',
   '/api/admin/users/:userId/flag',
+  '/api/admin/users/:userId/violations',
   '/api/admin/orders/:id/clear-receipt-flag',
   '/api/admin/messages/:id/clear-flag',
   '/api/admin/messages/:id/hide',
@@ -153,7 +155,7 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
     // vs admin decisions without another lookup.
     const actor = await req.db
       .selectFrom('users')
-      .select(['id', 'role', 'email_verified_at', 'phone_verified_at', 'token_version'])
+      .select(['id', 'role', 'email_verified_at', 'phone_verified_at', 'token_version', 'risk_status', 'suspended_until'])
       .where('id', '=', req.userId)
       .executeTakeFirst();
 
@@ -169,6 +171,13 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
       throw new AppError('AUTH_REQUIRED', 401, 'common.authRequired');
     }
     req.userRole = actor.role ?? undefined;
+
+    // Belt-and-suspenders: restricting an account already bumps
+    // token_version (see src/services/violations.ts and admin/actions.ts),
+    // which kills any live session on the very next request — this mostly
+    // only ever fires in the brief window before that happens, or if
+    // something re-signed a token without checking first.
+    assertNotRestricted(actor);
 
     if (ADMIN_ROUTES.has(routeUrl) && req.userRole !== 'admin') {
       throw new AppError('ADMIN_REQUIRED', 403, 'authGuard.adminRequired');

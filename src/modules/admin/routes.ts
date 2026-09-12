@@ -540,14 +540,39 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/admin/users', async (request, reply) => {
     const rows = await request.db
       .selectFrom('users')
-      .select(['id', 'member_seq', 'email', 'full_name', 'user_type', 'role', 'kyc_status', 'risk_status', 'created_at'])
+      .select([
+        'id',
+        'member_seq',
+        'email',
+        'full_name',
+        'user_type',
+        'role',
+        'kyc_status',
+        'risk_status',
+        'suspended_until',
+        'created_at',
+      ])
       .orderBy('created_at', 'desc')
       .limit(200)
       .execute();
 
+    // One query for every user's strike count, rather than one per row —
+    // see src/services/violations.ts for what drives it.
+    const violationCounts = await request.db
+      .selectFrom('user_violations')
+      .select(['user_id', (eb: any) => eb.fn.countAll().as('count')])
+      .groupBy('user_id')
+      .execute();
+    const violationCountById = new Map(violationCounts.map((v: any) => [v.user_id, Number(v.count)]));
+
     // Surfaced as a short, speakable reference number (H00000123) for
     // admin/support use — see src/utils/membership.ts.
-    const users = rows.map(({ member_seq, ...rest }) => ({ ...rest, membership_id: membershipId(member_seq) }));
+    const users = rows.map(({ member_seq, suspended_until, ...rest }) => ({
+      ...rest,
+      membership_id: membershipId(member_seq),
+      suspended_until: suspended_until ? new Date(suspended_until).toISOString() : null,
+      violation_count: violationCountById.get(rest.id) ?? 0,
+    }));
 
     reply.send({ success: true, data: { users }, code: 'ADMIN_USERS' });
   });

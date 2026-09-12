@@ -22,6 +22,7 @@ function user(overrides: Partial<AdminUser> = {}): AdminUser {
     role: 'user',
     kyc_status: 'pending',
     risk_status: 'clear',
+    violation_count: 0,
     created_at: new Date().toISOString(),
     ...overrides,
   };
@@ -145,6 +146,53 @@ describe('UsersPage', () => {
     await testUser.selectOptions(screen.getByDisplayValue('All risk levels'), 'flagged');
     expect(screen.getByText('Bob Shopper')).toBeInTheDocument();
     expect(screen.queryByText('Alice Traveler')).not.toBeInTheDocument();
+  });
+
+  it('logs a violation with a typed reason and shows the resulting strike count', async () => {
+    const testUser = userEvent.setup();
+    vi.mocked(api.post).mockResolvedValue({ count: 2, risk_status: 'restricted', suspended_until: '2026-12-01T00:00:00.000Z' });
+    renderUsersPage([user({ violation_count: 1 })]);
+
+    await testUser.click(await screen.findByRole('button', { name: 'Log violation' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Log a violation' });
+    expect(within(dialog).getByText(/strike 2 for Test Shopper/i)).toBeInTheDocument();
+
+    await testUser.type(within(dialog).getByRole('textbox'), 'Sent a harassing message to another user');
+    await testUser.click(within(dialog).getByRole('button', { name: 'Log violation' }));
+
+    expect(api.post).toHaveBeenCalledWith('/admin/users/user-1/violations', {
+      reason: 'Sent a harassing message to another user',
+    });
+  });
+
+  it('shows a user\'s violation history when the strike count is clicked', async () => {
+    const testUser = userEvent.setup();
+    vi.mocked(api.get).mockImplementation((url: string) =>
+      Promise.resolve(
+        url.startsWith('/admin/users/user-1/violations')
+          ? {
+              items: [
+                { id: 'v2', reason: 'Second offense', issued_by_name: 'Admin Two', created_at: new Date().toISOString() },
+                { id: 'v1', reason: 'First offense', issued_by_name: 'Admin One', created_at: new Date().toISOString() },
+              ],
+            }
+          : { users: [user({ violation_count: 2 })] }
+      )
+    );
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <ToastProvider>
+          <UsersPage />
+        </ToastProvider>
+      </QueryClientProvider>
+    );
+
+    await testUser.click(await screen.findByRole('button', { name: '2' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Violation history' });
+    expect(within(dialog).getByText('Second offense')).toBeInTheDocument();
+    expect(within(dialog).getByText('First offense')).toBeInTheDocument();
+    expect(within(dialog).getByText(/Strike 2/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Strike 1/)).toBeInTheDocument();
   });
 
   it('finds a user by their membership ID alone', async () => {

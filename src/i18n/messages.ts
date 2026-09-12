@@ -36,6 +36,14 @@ const MESSAGES: Record<string, Entry> = {
     en: 'Verify your email and phone to continue',
     th: 'กรุณายืนยันอีเมลและเบอร์โทรศัพท์ก่อนดำเนินการต่อ',
   },
+  'authGuard.accountSuspended': {
+    en: (p) => `Your account is suspended until ${p.until}.`,
+    th: (p) => `บัญชีของคุณถูกระงับจนถึง ${p.until}`,
+  },
+  'authGuard.accountBanned': {
+    en: 'Your account has been permanently banned.',
+    th: 'บัญชีของคุณถูกปิดถาวร',
+  },
 
   // utils/profile-guard.ts
   'profileGuard.incompletePhoneAndAddress': {
@@ -57,6 +65,7 @@ const MESSAGES: Record<string, Entry> = {
     th: 'ข้อมูลการตัดสินข้อพิพาทไม่ถูกต้อง',
   },
   'adminActions.invalidRiskFlag': { en: 'Invalid risk flag payload', th: 'ข้อมูลการตั้งค่าความเสี่ยงไม่ถูกต้อง' },
+  'adminActions.invalidViolation': { en: 'Enter a reason for this violation', th: 'กรุณาระบุเหตุผลสำหรับการละเมิดนี้' },
   'adminActions.invalidCancelPayload': { en: 'Invalid cancel payload', th: 'ข้อมูลการยกเลิกไม่ถูกต้อง' },
   'adminActions.orderAlreadyCancelled': { en: 'This order is already cancelled', th: 'คำสั่งซื้อนี้ถูกยกเลิกไปแล้ว' },
   'adminActions.orderAlreadyPaidOut': {

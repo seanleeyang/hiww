@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AppError, generateId, isUniqueViolation } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
+import { recordViolation } from '@/services/violations';
 
 const resolveDisputeSchema = z.object({
   status: z.enum(['resolved', 'closed']),
@@ -43,6 +44,10 @@ const reviewKycSchema = z
 
 const flagUserSchema = z.object({
   risk_status: z.enum(['clear', 'flagged', 'restricted']),
+  reason: z.string().min(3),
+});
+
+const violationSchema = z.object({
   reason: z.string().min(3),
 });
 
@@ -434,5 +439,65 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       data: { user_id: user.id, risk_status: parsed.data.risk_status, reason: parsed.data.reason },
       code: 'USER_RISK_FLAGGED',
     });
+  });
+
+  // Logs one strike and auto-escalates (warn -> 7-day suspension -> permanent
+  // ban) — see src/services/violations.ts. Distinct from the manual "flag"
+  // action above, which sets risk_status directly for a one-off severe case
+  // without going through the strike count at all.
+  app.post<{ Params: { userId: string }; Body: unknown }>(
+    '/api/admin/users/:userId/violations',
+    async (request, reply) => {
+      const parsed = violationSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new AppError('VALIDATION_ERROR', 400, 'adminActions.invalidViolation');
+      }
+
+      const user = await request.db
+        .selectFrom('users')
+        .select('id')
+        .where('id', '=', request.params.userId)
+        .executeTakeFirst();
+      if (!user) {
+        throw new AppError('NOT_FOUND', 404, 'common.userNotFound');
+      }
+
+      const result = await recordViolation(request.db, {
+        userId: user.id,
+        reason: parsed.data.reason,
+        actor: actorFromRequest(request),
+      });
+
+      reply.status(201).send({
+        success: true,
+        data: {
+          id: result.id,
+          count: result.count,
+          risk_status: result.riskStatus,
+          suspended_until: result.suspendedUntil?.toISOString() ?? null,
+        },
+        code: 'VIOLATION_RECORDED',
+      });
+    }
+  );
+
+  // A user's full strike history, most recent first — so an admin can see
+  // what already happened before deciding whether (and how) to escalate
+  // further.
+  app.get<{ Params: { userId: string } }>('/api/admin/users/:userId/violations', async (request, reply) => {
+    const items = await request.db
+      .selectFrom('user_violations')
+      .leftJoin('users as issuer', 'issuer.id', 'user_violations.issued_by')
+      .select([
+        'user_violations.id',
+        'user_violations.reason',
+        'user_violations.created_at',
+        'issuer.full_name as issued_by_name',
+      ])
+      .where('user_violations.user_id', '=', request.params.userId)
+      .orderBy('user_violations.created_at', 'desc')
+      .execute();
+
+    reply.send({ success: true, data: { items }, code: 'USER_VIOLATIONS' });
   });
 }
