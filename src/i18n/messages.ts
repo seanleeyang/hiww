@@ -38,9 +38,17 @@ const MESSAGES: Record<string, Entry> = {
   },
 
   // utils/profile-guard.ts
-  'profileGuard.incomplete': {
+  'profileGuard.incompletePhoneAndAddress': {
     en: 'Add your phone number and delivery address before your first order',
     th: 'กรุณาเพิ่มเบอร์โทรศัพท์และที่อยู่จัดส่งก่อนทำคำสั่งซื้อแรกของคุณ',
+  },
+  'profileGuard.incompletePhone': {
+    en: 'Add your phone number before your first order',
+    th: 'กรุณาเพิ่มเบอร์โทรศัพท์ก่อนทำคำสั่งซื้อแรกของคุณ',
+  },
+  'profileGuard.incompleteAddress': {
+    en: 'Add your delivery address before your first order',
+    th: 'กรุณาเพิ่มที่อยู่จัดส่งก่อนทำคำสั่งซื้อแรกของคุณ',
   },
 
   // modules/admin/actions.ts
