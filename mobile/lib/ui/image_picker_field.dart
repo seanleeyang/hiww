@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../core/api/api_exception.dart';
 import '../features/uploads/data/uploads_repository.dart';
+import '../l10n/app_localizations.dart';
 
 /// A form control that picks an image (camera or gallery), uploads it and
 /// reports back the stored URL. [value] is that URL (or null when unset).
@@ -14,14 +15,17 @@ class ImagePickerField extends ConsumerStatefulWidget {
     super.key,
     required this.value,
     required this.onChanged,
-    this.label = 'Add a photo',
+    this.label,
     this.circle = false,
     this.height = 160,
   });
 
   final String? value;
   final ValueChanged<String?> onChanged;
-  final String label;
+
+  /// Defaults to the localized "Add a photo" — pass a custom label only
+  /// when this picker means something more specific in context.
+  final String? label;
 
   /// Render as a round avatar picker instead of a wide banner.
   final bool circle;
@@ -35,6 +39,8 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
   final _picker = ImagePicker();
   bool _busy = false;
 
+  String _label(BuildContext context) => widget.label ?? AppLocalizations.of(context)!.fieldAddPhoto;
+
   Future<void> _pick(ImageSource source) async {
     try {
       final file = await _picker.pickImage(
@@ -46,7 +52,8 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
       if (file == null) return;
       await _upload(file);
     } catch (_) {
-      _toast('Could not add that photo. Try another.');
+      if (!mounted) return;
+      _toast(AppLocalizations.of(context)!.errorAddPhotoFailed);
     }
   }
 
@@ -59,7 +66,8 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
       final bytes = await picked.readAsBytes();
       await _upload(XFile.fromData(bytes, name: picked.name));
     } catch (_) {
-      _toast('Could not add that photo. Try another.');
+      if (!mounted) return;
+      _toast(AppLocalizations.of(context)!.errorAddPhotoFailed);
     }
   }
 
@@ -72,7 +80,8 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
     } on ApiException catch (e) {
       _toast(e.message);
     } catch (_) {
-      _toast('Could not add that photo. Try another.');
+      if (!mounted) return;
+      _toast(AppLocalizations.of(context)!.errorAddPhotoFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -92,10 +101,11 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
   Widget _buildBanner(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final hasImage = widget.value != null;
+    final label = _label(context);
 
     return Semantics(
       button: true,
-      label: widget.label,
+      label: label,
       child: InkWell(
         onTap: _busy ? null : _showMenu,
         borderRadius: BorderRadius.circular(16),
@@ -122,7 +132,7 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.label,
+                      label,
                       style: TextStyle(color: scheme.onSurfaceVariant),
                     ),
                   ],
@@ -148,7 +158,7 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
     return Center(
       child: Semantics(
         button: true,
-        label: widget.label,
+        label: _label(context),
         child: InkWell(
           onTap: _busy ? null : _showMenu,
           customBorder: const CircleBorder(),
@@ -191,6 +201,7 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
   /// edge of the screen). A `null` result from a "Remove photo" tap clears
   /// the value, a plain dismiss leaves it unchanged.
   Future<void> _showMenu() async {
+    final l10n = AppLocalizations.of(context)!;
     final choice = await showDialog<_SheetChoice>(
       context: context,
       // Shadow `context` with the dialog's own — using the field's context
@@ -198,38 +209,38 @@ class _ImagePickerFieldState extends ConsumerState<ImagePickerField> {
       // hosted under (e.g. a bottom-tab's own nested one) instead of just
       // dismissing this dialog.
       builder: (context) => SimpleDialog(
-        title: Text(widget.label),
+        title: Text(_label(context)),
         children: [
           SimpleDialogOption(
             onPressed: () =>
                 Navigator.pop(context, const _SheetChoice.camera()),
-            child: const _MenuRow(
+            child: _MenuRow(
               icon: Icons.photo_camera_outlined,
-              label: 'Take a photo',
+              label: l10n.actionTakePhoto,
             ),
           ),
           SimpleDialogOption(
             onPressed: () =>
                 Navigator.pop(context, const _SheetChoice.gallery()),
-            child: const _MenuRow(
+            child: _MenuRow(
               icon: Icons.photo_library_outlined,
-              label: 'Choose from gallery',
+              label: l10n.actionChooseFromGallery,
             ),
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, const _SheetChoice.files()),
-            child: const _MenuRow(
+            child: _MenuRow(
               icon: Icons.folder_open_outlined,
-              label: 'Choose from files',
+              label: l10n.actionChooseFromFiles,
             ),
           ),
           if (widget.value != null)
             SimpleDialogOption(
               onPressed: () =>
                   Navigator.pop(context, const _SheetChoice.remove()),
-              child: const _MenuRow(
+              child: _MenuRow(
                 icon: Icons.delete_outline,
-                label: 'Remove photo',
+                label: l10n.actionRemovePhoto,
               ),
             ),
         ],
@@ -298,7 +309,10 @@ class _EditChip extends StatelessWidget {
             children: [
               const Icon(Icons.edit, size: 15),
               const SizedBox(width: 6),
-              Text('Change', style: Theme.of(context).textTheme.labelMedium),
+              Text(
+                AppLocalizations.of(context)!.actionChange,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
             ],
           ),
         ),

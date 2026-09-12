@@ -158,10 +158,10 @@ class _TripList extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(t.title ?? t.route,
+                    Text(t.title ?? t.route(l10n.localeName),
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                     const SizedBox(height: 6),
-                    RouteChip(route: t.route, dates: t.dates),
+                    RouteChip(route: t.route(l10n.localeName), dates: t.dates),
                   ],
                 ),
               ),

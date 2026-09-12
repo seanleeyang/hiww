@@ -29,8 +29,8 @@ void main() {
     });
 
     expect(item.isTrip, true);
-    expect(item.trip!.toLabel, 'Tokyo');
-    expect(item.trip!.route, 'Bangkok to Tokyo');
+    expect(item.trip!.toLabel(), 'Tokyo');
+    expect(item.trip!.route(), 'Bangkok → Tokyo');
     expect(item.owner!.fullName, 'Nuch S');
     expect(item.owner!.deliveredCount, 147);
     expect(item.matchCount, 3);

@@ -50,7 +50,7 @@ class TripDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    trip.title ?? trip.route,
+                    trip.title ?? trip.route(l10n.localeName),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 12),
@@ -61,11 +61,12 @@ class TripDetailScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        RouteChip(route: trip.route, dates: trip.dates),
+                        RouteChip(route: trip.route(l10n.localeName), dates: trip.dates),
                         const SizedBox(height: 12),
                         IconLine(
                           Icons.public,
-                          '${countryName(trip.departureCountry)} → ${countryName(trip.arrivalCountry)}',
+                          '${countryName(trip.departureCountry, l10n.localeName)} → '
+                          '${countryName(trip.arrivalCountry, l10n.localeName)}',
                         ),
                         if (trip.maxWeightKg > 0) ...[
                           const SizedBox(height: 6),

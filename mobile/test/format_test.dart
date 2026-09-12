@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/core/format.dart';
+import 'package:hiww_mobile/l10n/app_localizations_en.dart';
 
 void main() {
+  final l10n = AppLocalizationsEn();
+
   group('money', () {
     test('formats integer decimal strings without cents', () {
       expect(money('1500.00'), '฿1,500');
@@ -21,13 +24,13 @@ void main() {
     test('spells out day, month and year on both ends', () {
       expect(
         dateRange(DateTime(2026, 11, 12), DateTime(2026, 11, 19)),
-        '12 Nov 2026 to 19 Nov 2026',
+        '12 Nov 2026 – 19 Nov 2026',
       );
     });
     test('cross month shows both full dates', () {
       expect(
         dateRange(DateTime(2026, 11, 28), DateTime(2026, 12, 3)),
-        '28 Nov 2026 to 3 Dec 2026',
+        '28 Nov 2026 – 3 Dec 2026',
       );
     });
     test('single date', () {
@@ -38,10 +41,10 @@ void main() {
 
   group('earnRangeLabel', () {
     test('shows a range when matches pay differently', () {
-      expect(earnRangeLabel('80', '1200'), 'Earn ฿80–1,200');
+      expect(earnRangeLabel(l10n, '80', '1200'), 'Earn ฿80–1,200');
     });
     test('collapses to a single amount when every match pays the same', () {
-      expect(earnRangeLabel('520', '520'), 'Earn ฿520');
+      expect(earnRangeLabel(l10n, '520', '520'), 'Earn ฿520');
     });
   });
 
@@ -60,19 +63,19 @@ void main() {
   group('countdown', () {
     final now = DateTime(2026, 11, 12, 10, 0);
     test('shows hours and minutes when over an hour remains', () {
-      expect(countdown(now.add(const Duration(hours: 1, minutes: 5)), now: now), '1h 5m left');
+      expect(countdown(l10n, now.add(const Duration(hours: 1, minutes: 5)), now: now), '1h 5m left');
     });
     test('shows minutes only under an hour', () {
-      expect(countdown(now.add(const Duration(minutes: 42)), now: now), '42m left');
+      expect(countdown(l10n, now.add(const Duration(minutes: 42)), now: now), '42m left');
     });
     test('shows a friendly message under a minute', () {
-      expect(countdown(now.add(const Duration(seconds: 30)), now: now), 'Less than a minute left');
+      expect(countdown(l10n, now.add(const Duration(seconds: 30)), now: now), 'Less than a minute left');
     });
     test('reports Expired once the deadline has passed', () {
-      expect(countdown(now.subtract(const Duration(minutes: 1)), now: now), 'Expired');
+      expect(countdown(l10n, now.subtract(const Duration(minutes: 1)), now: now), 'Expired');
     });
     test('empty for a null deadline', () {
-      expect(countdown(null, now: now), '');
+      expect(countdown(l10n, null, now: now), '');
     });
   });
 }

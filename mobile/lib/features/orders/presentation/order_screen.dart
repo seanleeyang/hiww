@@ -539,8 +539,8 @@ class _PaymentCountdownBannerState extends ConsumerState<_PaymentCountdownBanner
     final scheme = Theme.of(context).colorScheme;
     final fg = urgent ? scheme.onErrorContainer : scheme.onPrimaryContainer;
     final label = widget.forShopper
-        ? l10n.payWithinOrCancel(countdown(widget.deadline))
-        : l10n.shopperHasTimeToPay(countdown(widget.deadline));
+        ? l10n.payWithinOrCancel(countdown(l10n, widget.deadline))
+        : l10n.shopperHasTimeToPay(countdown(l10n, widget.deadline));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

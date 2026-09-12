@@ -1670,4 +1670,138 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get actionPrivacyPolicy => 'นโยบายความเป็นส่วนตัว';
+
+  @override
+  String get hintSearch => 'ค้นหา';
+
+  @override
+  String get infoNoMatches => 'ไม่พบผลลัพธ์';
+
+  @override
+  String get hintSelect => 'เลือก';
+
+  @override
+  String get hintSearchCountries => 'ค้นหาประเทศ';
+
+  @override
+  String get hintSelectCountry => 'เลือกประเทศ';
+
+  @override
+  String get fieldDialCode => 'รหัส';
+
+  @override
+  String get fieldPhoneNumber => 'หมายเลขโทรศัพท์';
+
+  @override
+  String get hintSearchCountryOrCode => 'ค้นหาประเทศหรือรหัส';
+
+  @override
+  String get fieldAddPhoto => 'เพิ่มรูปภาพ';
+
+  @override
+  String get errorAddPhotoFailed =>
+      'ไม่สามารถเพิ่มรูปภาพได้ ลองรูปอื่นอีกครั้ง';
+
+  @override
+  String get actionTakePhoto => 'ถ่ายรูป';
+
+  @override
+  String get actionChooseFromGallery => 'เลือกจากคลังภาพ';
+
+  @override
+  String get actionChooseFromFiles => 'เลือกจากไฟล์';
+
+  @override
+  String get actionRemovePhoto => 'ลบรูปภาพ';
+
+  @override
+  String get infoSavedToDevice => 'บันทึกลงในอุปกรณ์ของคุณแล้ว';
+
+  @override
+  String get errorPhotoAccessDenied =>
+      'อนุญาตการเข้าถึงรูปภาพเพื่อบันทึกรูปภาพ';
+
+  @override
+  String get errorSaveImageFailed =>
+      'ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่อีกครั้ง';
+
+  @override
+  String get actionSaving => 'กำลังบันทึก…';
+
+  @override
+  String get actionSaveToDevice => 'บันทึกลงในอุปกรณ์';
+
+  @override
+  String get categoryAll => 'ทั้งหมด';
+
+  @override
+  String get categoryBeauty => 'ความงาม';
+
+  @override
+  String get categoryFashion => 'แฟชั่น';
+
+  @override
+  String get categorySneakers => 'รองเท้าผ้าใบ';
+
+  @override
+  String get categoryElectronics => 'อิเล็กทรอนิกส์';
+
+  @override
+  String get categorySnacks => 'ขนม';
+
+  @override
+  String get categoryOther => 'อื่น ๆ';
+
+  @override
+  String get actionUpdateProfile => 'อัปเดตโปรไฟล์';
+
+  @override
+  String get timeJustNow => 'เมื่อสักครู่';
+
+  @override
+  String get timeExpired => 'หมดเวลา';
+
+  @override
+  String get timeLessThanMinuteLeft => 'เหลือเวลาไม่ถึงหนึ่งนาที';
+
+  @override
+  String timeHoursMinutesLeft(int hours, int minutes) {
+    return 'เหลือเวลา $hours ชม. $minutes นาที';
+  }
+
+  @override
+  String timeMinutesLeft(int minutes) {
+    return 'เหลือเวลา $minutes นาที';
+  }
+
+  @override
+  String get errorServerTimeout => 'เซิร์ฟเวอร์ใช้เวลาตอบกลับนานเกินไป';
+
+  @override
+  String get errorCannotReachServer =>
+      'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ของ Hiww ได้ กรุณาตรวจสอบการเชื่อมต่อและ URL ของ API';
+
+  @override
+  String get errorTooManyAttemptsWait =>
+      'พยายามมากเกินไป กรุณารอสักครู่แล้วลองใหม่อีกครั้ง';
+
+  @override
+  String errorRequestFailedWithStatus(int status) {
+    return 'คำขอไม่สำเร็จ ($status)';
+  }
+
+  @override
+  String earnSingle(String amount) {
+    return 'รายได้ $amount';
+  }
+
+  @override
+  String earnRange(String min, String max) {
+    return 'รายได้ $min–$max';
+  }
+
+  @override
+  String needByDate(String date) {
+    return 'ต้องการภายใน $date';
+  }
 }

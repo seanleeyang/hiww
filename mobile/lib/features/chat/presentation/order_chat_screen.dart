@@ -361,7 +361,7 @@ class _ChatClosingSoonBannerState extends ConsumerState<_ChatClosingSoonBanner> 
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Theme.of(context).colorScheme.surfaceContainerHigh,
       child: Text(
-        l10n.chatClosingSoonBanner(countdown(widget.closesAt)),
+        l10n.chatClosingSoonBanner(countdown(l10n, widget.closesAt)),
         style: TextStyle(
           fontSize: 12,
           color: Theme.of(context).colorScheme.onSurfaceVariant,

@@ -37,9 +37,13 @@ class Trip {
   final String status;
   final DateTime? createdAt;
 
-  String get fromLabel => departureCity ?? defaultCityFor(departureCountry) ?? countryName(departureCountry);
-  String get toLabel => arrivalCity ?? defaultCityFor(arrivalCountry) ?? countryName(arrivalCountry);
-  String get route => '$fromLabel to $toLabel';
+  /// [locale] is an [AppLocalizations.localeName] ('en' | 'th').
+  String fromLabel([String locale = 'en']) =>
+      departureCity ?? defaultCityFor(departureCountry) ?? countryName(departureCountry, locale);
+  String toLabel([String locale = 'en']) =>
+      arrivalCity ?? defaultCityFor(arrivalCountry) ?? countryName(arrivalCountry, locale);
+  // "→" needs no translation, unlike the word "to" this replaced.
+  String route([String locale = 'en']) => '${fromLabel(locale)} → ${toLabel(locale)}';
   String get dates => dateRange(departureDate, returnDate);
 
   factory Trip.fromJson(Map<String, dynamic> j) => Trip(

@@ -530,5 +530,52 @@
   "landingTermsPrefix": "การใช้งาน Hiww ถือว่าคุณยอมรับ",
   "actionTermsOfUse": "ข้อกำหนดการใช้งาน",
   "landingTermsAnd": "และ",
-  "actionPrivacyPolicy": "นโยบายความเป็นส่วนตัว"
+  "actionPrivacyPolicy": "นโยบายความเป็นส่วนตัว",
+
+  "hintSearch": "ค้นหา",
+  "infoNoMatches": "ไม่พบผลลัพธ์",
+  "hintSelect": "เลือก",
+  "hintSearchCountries": "ค้นหาประเทศ",
+  "hintSelectCountry": "เลือกประเทศ",
+  "fieldDialCode": "รหัส",
+  "fieldPhoneNumber": "หมายเลขโทรศัพท์",
+  "hintSearchCountryOrCode": "ค้นหาประเทศหรือรหัส",
+
+  "fieldAddPhoto": "เพิ่มรูปภาพ",
+  "errorAddPhotoFailed": "ไม่สามารถเพิ่มรูปภาพได้ ลองรูปอื่นอีกครั้ง",
+  "actionTakePhoto": "ถ่ายรูป",
+  "actionChooseFromGallery": "เลือกจากคลังภาพ",
+  "actionChooseFromFiles": "เลือกจากไฟล์",
+  "actionRemovePhoto": "ลบรูปภาพ",
+
+  "infoSavedToDevice": "บันทึกลงในอุปกรณ์ของคุณแล้ว",
+  "errorPhotoAccessDenied": "อนุญาตการเข้าถึงรูปภาพเพื่อบันทึกรูปภาพ",
+  "errorSaveImageFailed": "ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่อีกครั้ง",
+  "actionSaving": "กำลังบันทึก…",
+  "actionSaveToDevice": "บันทึกลงในอุปกรณ์",
+
+  "categoryAll": "ทั้งหมด",
+  "categoryBeauty": "ความงาม",
+  "categoryFashion": "แฟชั่น",
+  "categorySneakers": "รองเท้าผ้าใบ",
+  "categoryElectronics": "อิเล็กทรอนิกส์",
+  "categorySnacks": "ขนม",
+  "categoryOther": "อื่น ๆ",
+
+  "actionUpdateProfile": "อัปเดตโปรไฟล์",
+
+  "timeJustNow": "เมื่อสักครู่",
+  "timeExpired": "หมดเวลา",
+  "timeLessThanMinuteLeft": "เหลือเวลาไม่ถึงหนึ่งนาที",
+  "timeHoursMinutesLeft": "เหลือเวลา {hours} ชม. {minutes} นาที",
+  "timeMinutesLeft": "เหลือเวลา {minutes} นาที",
+
+  "errorServerTimeout": "เซิร์ฟเวอร์ใช้เวลาตอบกลับนานเกินไป",
+  "errorCannotReachServer": "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ของ Hiww ได้ กรุณาตรวจสอบการเชื่อมต่อและ URL ของ API",
+  "errorTooManyAttemptsWait": "พยายามมากเกินไป กรุณารอสักครู่แล้วลองใหม่อีกครั้ง",
+  "errorRequestFailedWithStatus": "คำขอไม่สำเร็จ ({status})",
+
+  "earnSingle": "รายได้ {amount}",
+  "earnRange": "รายได้ {min}–{max}",
+  "needByDate": "ต้องการภายใน {date}"
 }

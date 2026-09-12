@@ -101,10 +101,9 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   bool get _isDirectRequest => widget.targetTripId != null;
 
   /// `_category` stores the lowercase id (e.g. "beauty") CategoryChips uses
-  /// as a value — look up its display label (e.g. "Beauty") for anywhere
-  /// the category is actually shown to the user.
-  String get _categoryLabel =>
-      kCategories.firstWhere((c) => c.value == _category, orElse: () => (value: _category, label: _category)).label;
+  /// as a value — look up its localized display label (e.g. "Beauty") for
+  /// anywhere the category is actually shown to the user.
+  String get _categoryLabel => categoryLabel(AppLocalizations.of(context)!, _category);
 
   String get _cityValue {
     if (_cityChoice == othersCity) return _cityCustom.text.trim();
@@ -566,7 +565,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                l10n.travelersHeadingSoon(m.count, countryName(_country)),
+                                l10n.travelersHeadingSoon(m.count, countryName(_country, l10n.localeName)),
                                 style: const TextStyle(fontSize: 13),
                               ),
                             ),
@@ -727,16 +726,18 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                 const SizedBox(height: 6),
                 IconLine(
                   Icons.public,
-                  l10n.wantBuyInLine(_cityValue.isNotEmpty ? _cityValue : countryName(_country)),
+                  l10n.wantBuyInLine(
+                      _cityValue.isNotEmpty ? _cityValue : countryName(_country, l10n.localeName)),
                 ),
                 const SizedBox(height: 6),
                 IconLine(
                   Icons.local_shipping_outlined,
-                  l10n.wantDeliverToLine(_destCityValue.isNotEmpty ? _destCityValue : countryName(_destCountry)),
+                  l10n.wantDeliverToLine(
+                      _destCityValue.isNotEmpty ? _destCityValue : countryName(_destCountry, l10n.localeName)),
                 ),
                 if (_needBy != null) ...[
                   const SizedBox(height: 6),
-                  IconLine(Icons.event_outlined, 'Need by ${shortDate(_needBy)}'),
+                  IconLine(Icons.event_outlined, l10n.needByDate(shortDate(_needBy))),
                 ],
               ],
             ),

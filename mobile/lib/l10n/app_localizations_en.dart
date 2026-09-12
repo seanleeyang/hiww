@@ -1711,4 +1711,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionPrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get hintSearch => 'Search';
+
+  @override
+  String get infoNoMatches => 'No matches';
+
+  @override
+  String get hintSelect => 'Select';
+
+  @override
+  String get hintSearchCountries => 'Search countries';
+
+  @override
+  String get hintSelectCountry => 'Select a country';
+
+  @override
+  String get fieldDialCode => 'Code';
+
+  @override
+  String get fieldPhoneNumber => 'Phone number';
+
+  @override
+  String get hintSearchCountryOrCode => 'Search country or code';
+
+  @override
+  String get fieldAddPhoto => 'Add a photo';
+
+  @override
+  String get errorAddPhotoFailed => 'Could not add that photo. Try another.';
+
+  @override
+  String get actionTakePhoto => 'Take a photo';
+
+  @override
+  String get actionChooseFromGallery => 'Choose from gallery';
+
+  @override
+  String get actionChooseFromFiles => 'Choose from files';
+
+  @override
+  String get actionRemovePhoto => 'Remove photo';
+
+  @override
+  String get infoSavedToDevice => 'Saved to your device';
+
+  @override
+  String get errorPhotoAccessDenied => 'Allow photo access to save images';
+
+  @override
+  String get errorSaveImageFailed => 'Could not save the image. Try again.';
+
+  @override
+  String get actionSaving => 'Saving…';
+
+  @override
+  String get actionSaveToDevice => 'Save to device';
+
+  @override
+  String get categoryAll => 'All';
+
+  @override
+  String get categoryBeauty => 'Beauty';
+
+  @override
+  String get categoryFashion => 'Fashion';
+
+  @override
+  String get categorySneakers => 'Sneakers';
+
+  @override
+  String get categoryElectronics => 'Electronics';
+
+  @override
+  String get categorySnacks => 'Snacks';
+
+  @override
+  String get categoryOther => 'Others';
+
+  @override
+  String get actionUpdateProfile => 'Update profile';
+
+  @override
+  String get timeJustNow => 'just now';
+
+  @override
+  String get timeExpired => 'Expired';
+
+  @override
+  String get timeLessThanMinuteLeft => 'Less than a minute left';
+
+  @override
+  String timeHoursMinutesLeft(int hours, int minutes) {
+    return '${hours}h ${minutes}m left';
+  }
+
+  @override
+  String timeMinutesLeft(int minutes) {
+    return '${minutes}m left';
+  }
+
+  @override
+  String get errorServerTimeout => 'The server took too long to respond.';
+
+  @override
+  String get errorCannotReachServer =>
+      'Could not reach the Hiww server. Check the connection and API URL.';
+
+  @override
+  String get errorTooManyAttemptsWait =>
+      'Too many attempts. Wait a minute and try again.';
+
+  @override
+  String errorRequestFailedWithStatus(int status) {
+    return 'Request failed ($status).';
+  }
+
+  @override
+  String earnSingle(String amount) {
+    return 'Earn $amount';
+  }
+
+  @override
+  String earnRange(String min, String max) {
+    return 'Earn $min–$max';
+  }
+
+  @override
+  String needByDate(String date) {
+    return 'Need by $date';
+  }
 }

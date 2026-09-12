@@ -119,7 +119,7 @@ class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
                     ListTile(
                       leading: const Icon(Icons.history),
                       title: Text(c.city),
-                      subtitle: Text(c.countryName),
+                      subtitle: Text(c.countryLabel(l10n.localeName)),
                       onTap: () => _pick(c),
                     ),
                   const Divider(height: 24),
@@ -128,7 +128,7 @@ class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
                   ListTile(
                     leading: const Icon(Icons.location_city_outlined),
                     title: Text(c.city),
-                    subtitle: Text(c.countryName),
+                    subtitle: Text(c.countryLabel(l10n.localeName)),
                     onTap: () => _pick(c),
                   ),
               ],

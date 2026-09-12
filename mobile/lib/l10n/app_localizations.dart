@@ -3055,6 +3055,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Privacy Policy'**
   String get actionPrivacyPolicy;
+
+  /// No description provided for @hintSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get hintSearch;
+
+  /// No description provided for @infoNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get infoNoMatches;
+
+  /// No description provided for @hintSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get hintSelect;
+
+  /// No description provided for @hintSearchCountries.
+  ///
+  /// In en, this message translates to:
+  /// **'Search countries'**
+  String get hintSearchCountries;
+
+  /// No description provided for @hintSelectCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a country'**
+  String get hintSelectCountry;
+
+  /// No description provided for @fieldDialCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get fieldDialCode;
+
+  /// No description provided for @fieldPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get fieldPhoneNumber;
+
+  /// No description provided for @hintSearchCountryOrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Search country or code'**
+  String get hintSearchCountryOrCode;
+
+  /// No description provided for @fieldAddPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get fieldAddPhoto;
+
+  /// No description provided for @errorAddPhotoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add that photo. Try another.'**
+  String get errorAddPhotoFailed;
+
+  /// No description provided for @actionTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get actionTakePhoto;
+
+  /// No description provided for @actionChooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get actionChooseFromGallery;
+
+  /// No description provided for @actionChooseFromFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from files'**
+  String get actionChooseFromFiles;
+
+  /// No description provided for @actionRemovePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get actionRemovePhoto;
+
+  /// No description provided for @infoSavedToDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to your device'**
+  String get infoSavedToDevice;
+
+  /// No description provided for @errorPhotoAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow photo access to save images'**
+  String get errorPhotoAccessDenied;
+
+  /// No description provided for @errorSaveImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the image. Try again.'**
+  String get errorSaveImageFailed;
+
+  /// No description provided for @actionSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get actionSaving;
+
+  /// No description provided for @actionSaveToDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to device'**
+  String get actionSaveToDevice;
+
+  /// No description provided for @categoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get categoryAll;
+
+  /// No description provided for @categoryBeauty.
+  ///
+  /// In en, this message translates to:
+  /// **'Beauty'**
+  String get categoryBeauty;
+
+  /// No description provided for @categoryFashion.
+  ///
+  /// In en, this message translates to:
+  /// **'Fashion'**
+  String get categoryFashion;
+
+  /// No description provided for @categorySneakers.
+  ///
+  /// In en, this message translates to:
+  /// **'Sneakers'**
+  String get categorySneakers;
+
+  /// No description provided for @categoryElectronics.
+  ///
+  /// In en, this message translates to:
+  /// **'Electronics'**
+  String get categoryElectronics;
+
+  /// No description provided for @categorySnacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Snacks'**
+  String get categorySnacks;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get categoryOther;
+
+  /// No description provided for @actionUpdateProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Update profile'**
+  String get actionUpdateProfile;
+
+  /// No description provided for @timeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get timeJustNow;
+
+  /// No description provided for @timeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get timeExpired;
+
+  /// No description provided for @timeLessThanMinuteLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than a minute left'**
+  String get timeLessThanMinuteLeft;
+
+  /// No description provided for @timeHoursMinutesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m left'**
+  String timeHoursMinutesLeft(int hours, int minutes);
+
+  /// No description provided for @timeMinutesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m left'**
+  String timeMinutesLeft(int minutes);
+
+  /// No description provided for @errorServerTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The server took too long to respond.'**
+  String get errorServerTimeout;
+
+  /// No description provided for @errorCannotReachServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the Hiww server. Check the connection and API URL.'**
+  String get errorCannotReachServer;
+
+  /// No description provided for @errorTooManyAttemptsWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a minute and try again.'**
+  String get errorTooManyAttemptsWait;
+
+  /// No description provided for @errorRequestFailedWithStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed ({status}).'**
+  String errorRequestFailedWithStatus(int status);
+
+  /// No description provided for @earnSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn {amount}'**
+  String earnSingle(String amount);
+
+  /// No description provided for @earnRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn {min}–{max}'**
+  String earnRange(String min, String max);
+
+  /// No description provided for @needByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Need by {date}'**
+  String needByDate(String date);
 }
 
 class _AppLocalizationsDelegate

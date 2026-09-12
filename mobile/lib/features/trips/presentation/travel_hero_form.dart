@@ -104,13 +104,13 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
           const SizedBox(height: 16),
           _FormRow(
             label: l10n.labelTravelingFrom,
-            value: _from?.label,
+            value: _from?.label(l10n.localeName),
             onTap: _pickFrom,
           ),
           const Divider(height: 1, color: Colors.white24),
           _FormRow(
             label: l10n.labelTravelingTo,
-            value: _to?.label,
+            value: _to?.label(l10n.localeName),
             onTap: _pickTo,
           ),
           const Divider(height: 1, color: Colors.white24),

@@ -224,7 +224,7 @@ class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
               children: [
                 Expanded(
                   child: TextFormField(
-                    initialValue: countryName(_country),
+                    initialValue: countryName(_country, l10n.localeName),
                     enabled: false,
                     decoration: InputDecoration(labelText: l10n.labelBuyIn),
                   ),

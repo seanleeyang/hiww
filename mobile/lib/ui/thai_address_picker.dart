@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/thai_geography.dart';
+import '../l10n/app_localizations.dart';
 
 /// Cascading Province → District → Sub-district → Postal code picker for a
 /// Thai address, backed by the bundled Thai geography dataset. Postal code
@@ -19,10 +20,10 @@ class ThaiAddressPicker extends StatefulWidget {
     required this.subdistrict,
     required this.postalCode,
     required this.onChanged,
-    this.provinceLabel = 'Province',
-    this.districtLabel = 'District',
-    this.subdistrictLabel = 'Sub-district',
-    this.postalCodeLabel = 'Postal code',
+    this.provinceLabel,
+    this.districtLabel,
+    this.subdistrictLabel,
+    this.postalCodeLabel,
   });
 
   final String province;
@@ -35,10 +36,13 @@ class ThaiAddressPicker extends StatefulWidget {
     required String subdistrict,
     required String postalCode,
   }) onChanged;
-  final String provinceLabel;
-  final String districtLabel;
-  final String subdistrictLabel;
-  final String postalCodeLabel;
+
+  /// Each defaults to the matching localized field name — pass a custom
+  /// label only when this picker means something more specific in context.
+  final String? provinceLabel;
+  final String? districtLabel;
+  final String? subdistrictLabel;
+  final String? postalCodeLabel;
 
   @override
   State<ThaiAddressPicker> createState() => _ThaiAddressPickerState();
@@ -49,6 +53,7 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return FutureBuilder<ThaiGeography>(
       future: _future,
       builder: (context, snapshot) {
@@ -69,7 +74,7 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _PickerRow(
-              label: widget.provinceLabel,
+              label: widget.provinceLabel ?? l10n.fieldProvince,
               value: province?.nameEn,
               onTap: () async {
                 final picked = await showDialog<ThaiProvince>(
@@ -92,7 +97,7 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
             ),
             const SizedBox(height: 12),
             _PickerRow(
-              label: widget.districtLabel,
+              label: widget.districtLabel ?? l10n.fieldDistrict,
               value: district?.nameEn,
               enabled: province != null,
               onTap: province == null
@@ -118,7 +123,7 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
             ),
             const SizedBox(height: 12),
             _PickerRow(
-              label: widget.subdistrictLabel,
+              label: widget.subdistrictLabel ?? l10n.fieldSubdistrict,
               value: subdistrict?.nameEn,
               enabled: district != null,
               onTap: district == null
@@ -149,7 +154,7 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
             ),
             const SizedBox(height: 12),
             _PickerRow(
-              label: widget.postalCodeLabel,
+              label: widget.postalCodeLabel ?? l10n.fieldPostalCode,
               value: widget.postalCode.isEmpty ? null : widget.postalCode,
               enabled: district != null,
               // The only way postal code gets set — picking a sub-district
@@ -206,6 +211,7 @@ class _PickerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: onTap,
       child: InputDecorator(
@@ -215,7 +221,7 @@ class _PickerRow extends StatelessWidget {
           enabled: enabled,
         ),
         child: Text(
-          value ?? 'Select',
+          value ?? l10n.hintSelect,
           style: value == null
               ? TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)
               : null,
@@ -253,6 +259,7 @@ class _SearchDialogState<T> extends State<_SearchDialog<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final q = _query.text.trim().toLowerCase();
     final results = q.isEmpty
         ? widget.items
@@ -272,18 +279,18 @@ class _SearchDialogState<T> extends State<_SearchDialog<T>> {
               child: TextField(
                 controller: _query,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search',
-                  prefixIcon: Icon(Icons.search),
+                decoration: InputDecoration(
+                  hintText: l10n.hintSearch,
+                  prefixIcon: const Icon(Icons.search),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
             ),
             Flexible(
               child: results.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text('No matches'),
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(l10n.infoNoMatches),
                     )
                   : ListView.builder(
                       shrinkWrap: true,

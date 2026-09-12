@@ -111,7 +111,7 @@ class WantDetailScreen extends ConsumerWidget {
                         const SizedBox(height: 6),
                         IconLine(
                           Icons.public,
-                          l10n.wantBuyInLine(want.sourceCity ?? countryName(want.sourceCountry)),
+                          l10n.wantBuyInLine(want.sourceCity ?? countryName(want.sourceCountry, l10n.localeName)),
                         ),
                         if (want.destinationLabel != null) ...[
                           const SizedBox(height: 6),
@@ -478,7 +478,10 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(e.message),
-          action: SnackBarAction(label: 'Update profile', onPressed: () => context.push('/account')),
+          action: SnackBarAction(
+            label: AppLocalizations.of(context)!.actionUpdateProfile,
+            onPressed: () => context.push('/account'),
+          ),
         ));
         return;
       }

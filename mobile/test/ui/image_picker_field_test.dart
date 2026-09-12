@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hiww_mobile/l10n/app_localizations.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
 import 'package:hiww_mobile/ui/image_picker_field.dart';
 
 Widget _wrap(Widget child) => ProviderScope(
       child: MaterialApp(
         theme: hiwwTheme(Brightness.light),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: child),
       ),
     );

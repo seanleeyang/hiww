@@ -461,7 +461,7 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          '${countryName(_from)} → ${countryName(_to)}',
+                          '${countryName(_from, l10n.localeName)} → ${countryName(_to, l10n.localeName)}',
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),

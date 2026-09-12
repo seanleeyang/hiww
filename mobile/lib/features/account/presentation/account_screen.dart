@@ -200,7 +200,7 @@ class _ContactDetailsCard extends StatelessWidget {
       user.addressDistrict,
       user.addressCity,
       user.addressPostalCode,
-      worldCountryName(user.addressCountry),
+      worldCountryName(user.addressCountry, l10n.localeName),
     ].where((p) => (p ?? '').trim().isNotEmpty).join(', ');
 
     return SoftCard(
@@ -302,7 +302,9 @@ class _BankAccountCard extends StatelessWidget {
           ),
           _ContactRow(
             icon: Icons.account_balance_outlined,
-            label: hasBank ? '$bankName · $accountNumber' : l10n.accountAddBankAccount,
+            label: hasBank
+                ? '${bankLabel(bankName, l10n.localeName)} · $accountNumber'
+                : l10n.accountAddBankAccount,
           ),
         ],
       ),
@@ -712,10 +714,14 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                initialValue: kThaiBanks.contains(_bankName) ? _bankName : null,
+                initialValue:
+                    kThaiBanks.any((b) => b.value == _bankName) ? _bankName : null,
                 decoration: InputDecoration(labelText: l10n.fieldBank),
                 items: kThaiBanks
-                    .map((bank) => DropdownMenuItem(value: bank, child: Text(bank)))
+                    .map((bank) => DropdownMenuItem(
+                          value: bank.value,
+                          child: Text(bankLabel(bank.value, l10n.localeName)),
+                        ))
                     .toList(),
                 onChanged: (v) => setState(() => _bankName = v),
               ),

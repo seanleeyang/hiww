@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../core/image_saver/image_saver.dart';
+import '../l10n/app_localizations.dart';
 
 /// Opens [url] full-screen, pinch-to-zoomable, with a "Save to device" action
 /// so a traveler can grab a copy before losing signal at the shop.
@@ -36,13 +37,14 @@ class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
       );
       final result = await saveImageBytes(Uint8List.fromList(response.data!));
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       _toast(switch (result) {
-        SaveResult.success => 'Saved to your device',
-        SaveResult.permissionDenied => 'Allow photo access to save images',
-        SaveResult.failure => 'Could not save the image. Try again.',
+        SaveResult.success => l10n.infoSavedToDevice,
+        SaveResult.permissionDenied => l10n.errorPhotoAccessDenied,
+        SaveResult.failure => l10n.errorSaveImageFailed,
       });
     } catch (_) {
-      if (mounted) _toast('Could not save the image. Try again.');
+      if (mounted) _toast(AppLocalizations.of(context)!.errorSaveImageFailed);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -98,7 +100,11 @@ class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
                           ),
                         )
                       : const Icon(Icons.download_outlined),
-                  label: Text(_saving ? 'Saving…' : 'Save to device'),
+                  label: Text(
+                    _saving
+                        ? AppLocalizations.of(context)!.actionSaving
+                        : AppLocalizations.of(context)!.actionSaveToDevice,
+                  ),
                 ),
               ),
             ),

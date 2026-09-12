@@ -1,3 +1,5 @@
+import 'world_countries.dart';
+
 /// A short list of shopping destinations for the pilot. `code` is what the
 /// backend stores (it accepts any non-empty string).
 const kCountries = <({String code, String name})>[
@@ -31,11 +33,12 @@ List<({String code, String name})> get kLiveCountries =>
 List<({String code, String name})> get kComingSoonCountries =>
     kCountries.where((c) => !isLiveCountry(c.code)).toList();
 
-String countryName(String code) {
-  for (final c in kCountries) {
-    if (c.code == code) return c.name;
-  }
-  return code;
+/// [locale] is an [AppLocalizations.localeName] ('en' | 'th') — every code
+/// in [kCountries] also exists in `kWorldCountries`, so its Thai name is
+/// looked up there instead of duplicating a translation table here.
+String countryName(String code, [String locale = 'en']) {
+  final name = worldCountryName(code, locale);
+  return name.isEmpty ? code : name;
 }
 
 /// A likely-default city shown when a traveler leaves the city field blank —

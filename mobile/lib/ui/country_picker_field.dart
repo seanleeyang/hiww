@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/world_countries.dart';
+import '../l10n/app_localizations.dart';
 
 /// A form-field-styled tappable box that opens a searchable country picker.
 /// Used where a value must be one of `kWorldCountries` (e.g. a delivery
@@ -11,12 +12,15 @@ class CountryPickerField extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
-    this.label = 'Country',
+    this.label,
   });
 
   final String? value;
   final ValueChanged<String?> onChanged;
-  final String label;
+
+  /// Defaults to the localized "Country" — pass a custom label only when
+  /// this field means something more specific in context.
+  final String? label;
 
   Future<void> _pick(BuildContext context) async {
     final picked = await showDialog<String>(
@@ -28,13 +32,17 @@ class CountryPickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = worldCountryName(value);
+    final l10n = AppLocalizations.of(context)!;
+    final name = worldCountryName(value, l10n.localeName);
     return InkWell(
       onTap: () => _pick(context),
       child: InputDecorator(
-        decoration: InputDecoration(labelText: label, suffixIcon: const Icon(Icons.arrow_drop_down)),
+        decoration: InputDecoration(
+          labelText: label ?? l10n.labelCountry,
+          suffixIcon: const Icon(Icons.arrow_drop_down),
+        ),
         child: Text(
-          name.isEmpty ? 'Select a country' : name,
+          name.isEmpty ? l10n.hintSelectCountry : name,
           style: name.isEmpty
               ? TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)
               : null,
@@ -63,10 +71,14 @@ class _CountrySearchDialogState extends State<_CountrySearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = l10n.localeName;
     final q = _query.text.trim().toLowerCase();
     final matches = q.isEmpty
         ? kWorldCountries
-        : kWorldCountries.where((c) => c.name.toLowerCase().contains(q)).toList();
+        : kWorldCountries
+            .where((c) => worldCountryName(c.code, locale).toLowerCase().contains(q))
+            .toList();
     // Thailand first — this is a Thailand-based pilot, so it's who almost
     // everyone is picking, and it's otherwise buried mid-alphabet. Same
     // reasoning as the phone dial-code picker (phone_field.dart).
@@ -86,18 +98,18 @@ class _CountrySearchDialogState extends State<_CountrySearchDialog> {
               child: TextField(
                 controller: _query,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search countries',
-                  prefixIcon: Icon(Icons.search),
+                decoration: InputDecoration(
+                  hintText: l10n.hintSearchCountries,
+                  prefixIcon: const Icon(Icons.search),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
             ),
             Flexible(
               child: results.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text('No matches'),
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(l10n.infoNoMatches),
                     )
                   : ListView.builder(
                       shrinkWrap: true,
@@ -105,7 +117,7 @@ class _CountrySearchDialogState extends State<_CountrySearchDialog> {
                       itemBuilder: (context, i) {
                         final c = results[i];
                         return ListTile(
-                          title: Text(c.name),
+                          title: Text(worldCountryName(c.code, locale)),
                           selected: c.code == widget.selected,
                           onTap: () => Navigator.of(context).pop(c.code),
                         );

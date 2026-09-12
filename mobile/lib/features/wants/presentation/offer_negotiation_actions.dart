@@ -143,7 +143,7 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
     if (!o.myTurn || !widget.enabled) {
       final waitingLabel = widget.enabled
           ? (o.respondBy != null
-              ? l10n.waitingForResponseWithCountdown(countdown(o.respondBy))
+              ? l10n.waitingForResponseWithCountdown(countdown(l10n, o.respondBy))
               : l10n.waitingForResponse)
           : l10n.wantNoLongerOpen;
       return Column(
@@ -166,7 +166,7 @@ class _OfferNegotiationActionsState extends State<OfferNegotiationActions> {
       children: [
         if (history != null) ...[history, const SizedBox(height: 8)],
         if (o.respondBy != null) ...[
-          Text(l10n.respondWithin(countdown(o.respondBy)), style: muted),
+          Text(l10n.respondWithin(countdown(l10n, o.respondBy)), style: muted),
           const SizedBox(height: 8),
         ],
         Row(

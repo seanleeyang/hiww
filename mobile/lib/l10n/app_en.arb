@@ -683,5 +683,70 @@
   "landingTermsPrefix": "By using Hiww, I agree to Hiww's",
   "actionTermsOfUse": "Terms of Use",
   "landingTermsAnd": "and",
-  "actionPrivacyPolicy": "Privacy Policy"
+  "actionPrivacyPolicy": "Privacy Policy",
+
+  "hintSearch": "Search",
+  "infoNoMatches": "No matches",
+  "hintSelect": "Select",
+  "hintSearchCountries": "Search countries",
+  "hintSelectCountry": "Select a country",
+  "fieldDialCode": "Code",
+  "fieldPhoneNumber": "Phone number",
+  "hintSearchCountryOrCode": "Search country or code",
+
+  "fieldAddPhoto": "Add a photo",
+  "errorAddPhotoFailed": "Could not add that photo. Try another.",
+  "actionTakePhoto": "Take a photo",
+  "actionChooseFromGallery": "Choose from gallery",
+  "actionChooseFromFiles": "Choose from files",
+  "actionRemovePhoto": "Remove photo",
+
+  "infoSavedToDevice": "Saved to your device",
+  "errorPhotoAccessDenied": "Allow photo access to save images",
+  "errorSaveImageFailed": "Could not save the image. Try again.",
+  "actionSaving": "Saving…",
+  "actionSaveToDevice": "Save to device",
+
+  "categoryAll": "All",
+  "categoryBeauty": "Beauty",
+  "categoryFashion": "Fashion",
+  "categorySneakers": "Sneakers",
+  "categoryElectronics": "Electronics",
+  "categorySnacks": "Snacks",
+  "categoryOther": "Others",
+
+  "actionUpdateProfile": "Update profile",
+
+  "timeJustNow": "just now",
+  "timeExpired": "Expired",
+  "timeLessThanMinuteLeft": "Less than a minute left",
+  "timeHoursMinutesLeft": "{hours}h {minutes}m left",
+  "@timeHoursMinutesLeft": {
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "timeMinutesLeft": "{minutes}m left",
+  "@timeMinutesLeft": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+
+  "errorServerTimeout": "The server took too long to respond.",
+  "errorCannotReachServer": "Could not reach the Hiww server. Check the connection and API URL.",
+  "errorTooManyAttemptsWait": "Too many attempts. Wait a minute and try again.",
+  "errorRequestFailedWithStatus": "Request failed ({status}).",
+  "@errorRequestFailedWithStatus": {
+    "placeholders": { "status": { "type": "int" } }
+  },
+
+  "earnSingle": "Earn {amount}",
+  "@earnSingle": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "earnRange": "Earn {min}–{max}",
+  "@earnRange": {
+    "placeholders": { "min": { "type": "String" }, "max": { "type": "String" } }
+  },
+  "needByDate": "Need by {date}",
+  "@needByDate": {
+    "placeholders": { "date": { "type": "String" } }
+  }
 }

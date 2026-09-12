@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/world_countries.dart';
+import '../l10n/app_localizations.dart';
 
 /// A phone number split into a dial-code picker + local number field, so
 /// entering an area code doesn't require typing "+66" from memory. Composes
@@ -76,6 +77,7 @@ class _PhoneFieldState extends State<PhoneField> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -84,8 +86,8 @@ class _PhoneFieldState extends State<PhoneField> {
           child: InkWell(
             onTap: _pickDial,
             child: InputDecorator(
-              decoration: const InputDecoration(labelText: 'Code'),
-              child: Text(_dial ?? 'Select'),
+              decoration: InputDecoration(labelText: l10n.fieldDialCode),
+              child: Text(_dial ?? l10n.hintSelect),
             ),
           ),
         ),
@@ -94,8 +96,8 @@ class _PhoneFieldState extends State<PhoneField> {
           child: TextField(
             controller: _local,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Phone number',
+            decoration: InputDecoration(
+              labelText: l10n.fieldPhoneNumber,
               hintText: '81 234 5678',
             ),
             onChanged: (_) => _emit(),
@@ -125,11 +127,13 @@ class _DialCodeSearchDialogState extends State<_DialCodeSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = l10n.localeName;
     final q = _query.text.trim().toLowerCase();
     final matches = q.isEmpty
         ? kWorldCountries
         : kWorldCountries
-            .where((c) => c.name.toLowerCase().contains(q) || c.dial.contains(q))
+            .where((c) => worldCountryName(c.code, locale).toLowerCase().contains(q) || c.dial.contains(q))
             .toList();
     // Thailand first — this is a Thailand-based pilot, so it's who almost
     // everyone is picking, and it's otherwise buried mid-alphabet.
@@ -149,18 +153,18 @@ class _DialCodeSearchDialogState extends State<_DialCodeSearchDialog> {
               child: TextField(
                 controller: _query,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search country or code',
-                  prefixIcon: Icon(Icons.search),
+                decoration: InputDecoration(
+                  hintText: l10n.hintSearchCountryOrCode,
+                  prefixIcon: const Icon(Icons.search),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
             ),
             Flexible(
               child: results.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text('No matches'),
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(l10n.infoNoMatches),
                     )
                   : ListView.builder(
                       shrinkWrap: true,
@@ -172,7 +176,7 @@ class _DialCodeSearchDialogState extends State<_DialCodeSearchDialog> {
                             width: 48,
                             child: Text(c.dial, style: const TextStyle(fontWeight: FontWeight.w600)),
                           ),
-                          title: Text(c.name),
+                          title: Text(worldCountryName(c.code, locale)),
                           selected: c.dial == widget.selected,
                           onTap: () => Navigator.of(context).pop(c.dial),
                         );

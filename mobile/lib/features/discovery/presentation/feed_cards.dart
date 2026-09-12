@@ -56,7 +56,7 @@ class TripFeedCard extends StatelessWidget {
                 Positioned(
                   right: 12,
                   bottom: 12,
-                  child: EarnBadge(label: earnRangeLabel(earnMin, earnMax)),
+                  child: EarnBadge(label: earnRangeLabel(l10n, earnMin, earnMax)),
                 ),
             ],
           ),
@@ -67,7 +67,7 @@ class TripFeedCard extends StatelessWidget {
               children: [
                 if (traveler != null) AvatarRating(user: traveler!),
                 const SizedBox(height: 10),
-                RouteChip(route: trip.route, dates: trip.dates),
+                RouteChip(route: trip.route(l10n.localeName), dates: trip.dates),
                 const SizedBox(height: 8),
                 Row(
                   children: [

@@ -1,3 +1,5 @@
+import 'countries.dart' as countries;
+
 /// A small curated set of real cities for the countries this pilot
 /// currently supports (`kLiveCountries` in `countries.dart`) — enough for
 /// the "Traveling from/to" search sheet to have real results, without
@@ -6,9 +8,19 @@ class CityOption {
   const CityOption({required this.city, required this.countryCode, required this.countryName});
   final String city;
   final String countryCode;
+
+  /// English country name, kept only for [searchCities]' text matching.
+  /// Display text should go through [countryLabel]/[label] instead, which
+  /// follow the app's language toggle — the city name itself stays as
+  /// written here either way (transliterating city names accurately into
+  /// Thai is a separate, much bigger dataset this pilot's short curated
+  /// list doesn't attempt).
   final String countryName;
 
-  String get label => '$city, $countryName';
+  /// [locale] is an [AppLocalizations.localeName] ('en' | 'th').
+  String countryLabel([String locale = 'en']) => countries.countryName(countryCode, locale);
+
+  String label([String locale = 'en']) => '$city, ${countryLabel(locale)}';
 }
 
 const kCities = <CityOption>[

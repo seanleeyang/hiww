@@ -298,7 +298,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
       children: [
         Expanded(
           child: TextFormField(
-            initialValue: countryName(code),
+            initialValue: countryName(code, l10n.localeName),
             enabled: false,
             decoration: InputDecoration(labelText: label),
           ),

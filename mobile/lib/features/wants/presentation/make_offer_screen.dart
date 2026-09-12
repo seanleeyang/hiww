@@ -254,7 +254,7 @@ class _WantContextCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Wrap(spacing: 12, runSpacing: 4, children: [
-            IconLine(Icons.public, l10n.wantBuyInLine(want.sourceCity ?? countryName(want.sourceCountry))),
+            IconLine(Icons.public, l10n.wantBuyInLine(want.sourceCity ?? countryName(want.sourceCountry, l10n.localeName))),
             if (want.destinationLabel != null)
               IconLine(Icons.local_shipping_outlined, l10n.wantDeliverToLine(want.destinationLabel!)),
             if (want.productUrl != null)

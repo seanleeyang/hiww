@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../ui/verification_required_dialog.dart';
 import '../../features/settings/locale_controller.dart';
+import '../../l10n/app_localizations.dart';
+import '../../l10n/app_localizations_en.dart';
+import '../../l10n/app_localizations_th.dart';
 import '../env.dart';
 import '../navigation.dart';
 import '../storage/token_storage.dart';
@@ -22,6 +25,13 @@ class ApiClient {
     required TokenStorage tokenStorage,
     String locale = 'en',
   }) : _tokens = tokenStorage,
+      // A network-level failure (timeout, no connection, rate limit) never
+      // reaches the backend, so there's no localized message in the response
+      // body to read — these fallback strings have to be picked client-side.
+      // No BuildContext is available this deep, so the already-resolved
+      // locale this client was built with (see `apiClientProvider`) is used
+      // directly against the generated localizations classes instead.
+      _l10n = locale == 'th' ? AppLocalizationsTh() : AppLocalizationsEn(),
       _dio = Dio(
         BaseOptions(
           baseUrl: baseUrl,
@@ -55,6 +65,7 @@ class ApiClient {
 
   final Dio _dio;
   final TokenStorage _tokens;
+  final AppLocalizations _l10n;
 
   /// Test seam: swap the underlying HTTP transport.
   set httpClientAdapter(HttpClientAdapter adapter) =>
@@ -124,15 +135,12 @@ class ApiClient {
         DioExceptionType.connectionTimeout ||
         DioExceptionType.sendTimeout ||
         DioExceptionType.receiveTimeout =>
-          'The server took too long to respond.',
-        DioExceptionType.connectionError =>
-          'Could not reach the Hiww server. Check the connection and API URL.',
-        DioExceptionType.badResponse when status == 429 =>
-          'Too many attempts. Wait a minute and try again.',
-        _ =>
-          status != null
-              ? 'Request failed ($status).'
-              : 'Something went wrong. Please try again.',
+          _l10n.errorServerTimeout,
+        DioExceptionType.connectionError => _l10n.errorCannotReachServer,
+        DioExceptionType.badResponse when status == 429 => _l10n.errorTooManyAttemptsWait,
+        _ => status != null
+            ? _l10n.errorRequestFailedWithStatus(status)
+            : '${_l10n.errorGenericTitle}. ${_l10n.errorPleaseTryAgain}',
       };
     }
     if (code == 'VERIFICATION_REQUIRED') {

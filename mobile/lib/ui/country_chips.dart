@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/countries.dart';
+import '../l10n/app_localizations.dart';
 
 /// Country filter chips for the Trips browse tab — trips have no category of
 /// their own (only a departure/arrival country), so country is the filter
@@ -17,20 +18,21 @@ class CountryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           ChoiceChip(
-            label: const Text('All'),
+            label: Text(l10n.categoryAll),
             selected: selected == null,
             onSelected: (_) => onSelected(null),
           ),
           const SizedBox(width: 8),
           for (final c in kLiveCountries) ...[
             ChoiceChip(
-              label: Text(c.name),
+              label: Text(countryName(c.code, l10n.localeName)),
               selected: selected == c.code,
               onSelected: (_) => onSelected(c.code),
             ),

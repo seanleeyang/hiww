@@ -34,7 +34,7 @@ void main() {
     )));
 
     expect(find.text('Nuch S'), findsOneWidget);
-    expect(find.textContaining('Bangkok to Tokyo'), findsOneWidget);
+    expect(find.textContaining('Bangkok → Tokyo'), findsOneWidget);
     expect(find.text('Earn ฿1,200'), findsOneWidget);
     expect(find.textContaining('147 delivered'), findsOneWidget);
   });

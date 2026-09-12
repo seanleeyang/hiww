@@ -97,7 +97,7 @@ class NotificationsScreen extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            timeAgo(n.createdAt),
+                            timeAgo(l10n, n.createdAt),
                             style: TextStyle(
                               fontSize: 12,
                               color: scheme.onSurfaceVariant,
