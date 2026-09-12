@@ -389,9 +389,6 @@ class AppLocalizationsTh extends AppLocalizations {
   String get fieldProfilePhoto => 'รูปโปรไฟล์';
 
   @override
-  String get fieldHomeCity => 'เมืองที่อยู่ (ไม่บังคับ)';
-
-  @override
   String get contactDeliveryNote =>
       'จำเป็นต้องกรอกก่อนคำสั่งซื้อแรกของคุณ ข้อมูลนี้ Hiww และอีกฝ่ายในคำสั่งซื้อเท่านั้นที่เห็นได้ — จะไม่แสดงต่อสาธารณะ';
 

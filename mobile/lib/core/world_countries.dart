@@ -221,3 +221,20 @@ String? dialCodeFor(String? code) {
   }
   return null;
 }
+
+/// Countries whose top-level administrative division is officially (or very
+/// commonly, in translation) called a "Province" rather than a "City" —
+/// used only to pick a friendlier label on a free-text address field, not to
+/// validate or look up real subdivisions. Not exhaustive (many more
+/// countries use "state", "region", "county", etc. — those keep the generic
+/// "City" label). Thailand is deliberately excluded: it gets its own real
+/// province/district/sub-district dataset and cascading picker instead (see
+/// `ThaiAddressPicker`).
+const _provinceLabelCountries = <String>{
+  'AF', 'AR', 'BE', 'BF', 'CA', 'CN', 'CR', 'CU', 'CD', 'EC', 'GA', 'ID',
+  'IR', 'IT', 'KH', 'KP', 'KR', 'LA', 'LK', 'MZ', 'MN', 'NL', 'PK', 'PA',
+  'PG', 'PH', 'RW', 'SA', 'SB', 'ES', 'TR', 'VN', 'ZA', 'ZM', 'ZW',
+};
+
+bool usesProvinceLabel(String? code) =>
+    code != null && _provinceLabelCountries.contains(code.toUpperCase());

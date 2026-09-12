@@ -806,12 +806,6 @@ abstract class AppLocalizations {
   /// **'Profile photo'**
   String get fieldProfilePhoto;
 
-  /// No description provided for @fieldHomeCity.
-  ///
-  /// In en, this message translates to:
-  /// **'Home city (optional)'**
-  String get fieldHomeCity;
-
   /// No description provided for @contactDeliveryNote.
   ///
   /// In en, this message translates to:
@@ -917,7 +911,7 @@ abstract class AppLocalizations {
   /// No description provided for @kycSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Identity Verification'**
+  /// **'Identity verification'**
   String get kycSectionTitle;
 
   /// No description provided for @kycVerified.

@@ -125,7 +125,6 @@
   "infoBankAccountUpdated": "อัปเดตบัญชีธนาคารของคุณเรียบร้อยแล้ว",
   "editProfileTitle": "แก้ไขโปรไฟล์",
   "fieldProfilePhoto": "รูปโปรไฟล์",
-  "fieldHomeCity": "เมืองที่อยู่ (ไม่บังคับ)",
   "contactDeliveryNote": "จำเป็นต้องกรอกก่อนคำสั่งซื้อแรกของคุณ ข้อมูลนี้ Hiww และอีกฝ่ายในคำสั่งซื้อเท่านั้นที่เห็นได้ — จะไม่แสดงต่อสาธารณะ",
   "fieldStreetAddress": "ที่อยู่ บรรทัดที่ 1",
   "fieldStreetAddress2": "ที่อยู่ บรรทัดที่ 2 (ไม่บังคับ)",

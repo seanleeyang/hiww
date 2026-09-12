@@ -393,9 +393,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldProfilePhoto => 'Profile photo';
 
   @override
-  String get fieldHomeCity => 'Home city (optional)';
-
-  @override
   String get contactDeliveryNote =>
       'Required before your first order. Only visible to Hiww and the other person on an order — never shown publicly.';
 
@@ -449,7 +446,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Card payments are off during the pilot. You pay by bank transfer and the Hiww team confirms once the money lands.';
 
   @override
-  String get kycSectionTitle => 'Identity Verification';
+  String get kycSectionTitle => 'Identity verification';
 
   @override
   String get kycVerified => 'Your identity has been verified.';

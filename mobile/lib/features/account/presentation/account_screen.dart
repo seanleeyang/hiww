@@ -321,7 +321,6 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late final _firstName = TextEditingController(text: _splitName(widget.user.fullName).$1);
   late final _surname = TextEditingController(text: _splitName(widget.user.fullName).$2);
-  late final _city = TextEditingController(text: widget.user.homeCity ?? '');
   late final _addressStreet = TextEditingController(text: widget.user.addressStreet ?? '');
   late final _addressStreet2 = TextEditingController(text: widget.user.addressStreet2 ?? '');
   late final _addressCity = TextEditingController(text: widget.user.addressCity ?? '');
@@ -348,7 +347,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void dispose() {
     _firstName.dispose();
     _surname.dispose();
-    _city.dispose();
     _addressStreet.dispose();
     _addressStreet2.dispose();
     _addressCity.dispose();
@@ -405,7 +403,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           .read(accountRepositoryProvider)
           .updateProfile(
             fullName: '${_firstName.text.trim()} ${_surname.text.trim()}',
-            homeCity: _city.text.trim(),
             avatarUrl: _avatarUrl ?? '',
             gender: _gender ?? '',
             dateOfBirth: _dateOfBirth == null ? '' : _isoDate(_dateOfBirth!),
@@ -496,14 +493,6 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   child: Text(_dateOfBirth == null ? '—' : _isoDate(_dateOfBirth!)),
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _city,
-                decoration: InputDecoration(
-                  labelText: l10n.fieldHomeCity,
-                  hintText: 'Bangkok',
-                ),
-              ),
               const Divider(height: 24),
               Text(l10n.sectionContactDelivery, style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 4),
@@ -574,7 +563,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
               else ...[
                 TextField(
                   controller: _addressCity,
-                  decoration: InputDecoration(labelText: l10n.fieldCity),
+                  decoration: InputDecoration(
+                    labelText: usesProvinceLabel(_addressCountry) ? l10n.fieldProvince : l10n.fieldCity,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
