@@ -135,6 +135,21 @@ export interface RequestsTable {
   destination_country: string;
   destination_city?: string | null;
   product_url?: string | null;
+  /**
+   * Delivery address (migration 045) — where the item actually gets shipped,
+   * distinct from destination_country/destination_city above (which are
+   * public browse/matching granularity only). Private to the shopper; never
+   * returned from the public browse feed or detail route. When true, the
+   * street-level fields below are ignored and the shopper's *current*
+   * profile address is resolved fresh at accept-offer time instead — see
+   * offers/routes.ts.
+   */
+  delivery_same_as_registered: Generated<boolean>;
+  delivery_address_street?: string | null;
+  delivery_address_street2?: string | null;
+  delivery_address_subdistrict?: string | null;
+  delivery_address_district?: string | null;
+  delivery_address_postal_code?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -235,6 +250,22 @@ export interface OrdersTable {
    */
   chat_deleted_by_shopper_at?: Date | null;
   chat_deleted_by_traveler_at?: Date | null;
+  /**
+   * Delivery address snapshot (migration 045) — resolved once at
+   * accept-offer time (either the shopper's profile address, or the
+   * source request's own delivery_address_* fields) and frozen here from
+   * then on, same immutable-audit-trail pattern as the payout bank
+   * snapshot (migration 043). This is the only place a delivery address is
+   * ever exposed to the traveler — never on the public request/browse
+   * feed.
+   */
+  delivery_address_street?: string | null;
+  delivery_address_street2?: string | null;
+  delivery_address_subdistrict?: string | null;
+  delivery_address_district?: string | null;
+  delivery_address_city?: string | null;
+  delivery_address_postal_code?: string | null;
+  delivery_address_country?: string | null;
   created_at: Date;
   updated_at: Date;
 }

@@ -5,7 +5,11 @@ import { createUser, completeProfile, authHeader, type TestContext, type TestUse
  * tests. Every step goes through the app so auth and validation are exercised.
  */
 
-export async function createRequest(ctx: TestContext, shopper: TestUser): Promise<string> {
+export async function createRequest(
+  ctx: TestContext,
+  shopper: TestUser,
+  overrides: Record<string, unknown> = {}
+): Promise<string> {
   const res = await ctx.app.inject({
     method: 'POST',
     url: '/api/requests',
@@ -17,6 +21,7 @@ export async function createRequest(ctx: TestContext, shopper: TestUser): Promis
       estimated_weight_kg: 2,
       budget: '150.00',
       destination_country: 'TH',
+      ...overrides,
     },
   });
   if (res.statusCode !== 201) throw new Error(`createRequest failed (${res.statusCode}): ${res.body}`);

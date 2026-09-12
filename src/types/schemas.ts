@@ -38,26 +38,47 @@ export const updateTripSchema = z.object({
 
 export type UpdateTripInput = z.infer<typeof updateTripSchema>;
 
-export const createRequestSchema = z.object({
-  item_description: z.string().min(10),
-  source_country: z.string().min(1),
-  category: z.string().min(1),
-  estimated_weight_kg: z.number().positive(),
-  budget: z.string().regex(/^\d+(\.\d{2})?$/),
-  quantity: z.number().int().min(1).max(99).optional(),
-  // Presentation fields (optional; migration 007).
-  title: optionalText(120),
-  source_city: optionalText(120),
-  need_by: z.string().datetime().optional(),
-  image_url: optionalUrl,
-  // Delivery destination (migration 027) — required at create time, distinct
-  // from source_country/source_city (where to buy the item).
-  destination_country: z.string().min(1),
-  destination_city: optionalText(120),
-  product_url: optionalUrl,
-  // Set via "Request from this trip" — see src/modules/requests/routes.ts.
-  target_trip_id: z.string().uuid().optional(),
-});
+export const createRequestSchema = z
+  .object({
+    item_description: z.string().min(10),
+    source_country: z.string().min(1),
+    category: z.string().min(1),
+    estimated_weight_kg: z.number().positive(),
+    budget: z.string().regex(/^\d+(\.\d{2})?$/),
+    quantity: z.number().int().min(1).max(99).optional(),
+    // Presentation fields (optional; migration 007).
+    title: optionalText(120),
+    source_city: optionalText(120),
+    need_by: z.string().datetime().optional(),
+    image_url: optionalUrl,
+    // Delivery destination (migration 027) — required at create time, distinct
+    // from source_country/source_city (where to buy the item).
+    destination_country: z.string().min(1),
+    destination_city: optionalText(120),
+    product_url: optionalUrl,
+    // Set via "Request from this trip" — see src/modules/requests/routes.ts.
+    target_trip_id: z.string().uuid().optional(),
+    // Delivery address (migration 045). Defaults to true (use the shopper's
+    // own registered address, resolved fresh at accept-offer time — see
+    // offers/routes.ts) so a shopper who never touches this still gets a
+    // valid delivery address. Street-level fields are only required/used
+    // when explicitly set to false.
+    delivery_same_as_registered: z.boolean().optional(),
+    delivery_address_street: optionalText(200),
+    delivery_address_street2: optionalText(200),
+    delivery_address_subdistrict: optionalText(120),
+    delivery_address_district: optionalText(120),
+    delivery_address_postal_code: optionalText(20),
+  })
+  .refine(
+    (data) =>
+      data.delivery_same_as_registered !== false ||
+      (data.delivery_address_street && data.delivery_address_postal_code),
+    {
+      message: 'delivery_address_street and delivery_address_postal_code are required when delivery_same_as_registered is false',
+      path: ['delivery_address_street'],
+    }
+  );
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;
 

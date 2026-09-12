@@ -956,6 +956,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorDeliverToCityRequired => 'จัดส่งไปที่ (เมือง) ห้ามเว้นว่าง';
 
   @override
+  String get labelSameAsRegisteredAddress =>
+      'ใช้ที่อยู่เดียวกับที่ลงทะเบียนไว้';
+
+  @override
+  String get errorDeliveryAddressRequired => 'กรุณากรอกที่อยู่และรหัสไปรษณีย์';
+
+  @override
+  String get sectionDeliveryAddress => 'ที่อยู่จัดส่ง';
+
+  @override
   String get hintCityExample => 'โตเกียว';
 
   @override

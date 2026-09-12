@@ -1808,6 +1808,24 @@ abstract class AppLocalizations {
   /// **'Deliver to (City) cannot be left blank'**
   String get errorDeliverToCityRequired;
 
+  /// No description provided for @labelSameAsRegisteredAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as my registered address'**
+  String get labelSameAsRegisteredAddress;
+
+  /// No description provided for @errorDeliveryAddressRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the street address and postal code'**
+  String get errorDeliveryAddressRequired;
+
+  /// No description provided for @sectionDeliveryAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery address'**
+  String get sectionDeliveryAddress;
+
   /// No description provided for @hintCityExample.
   ///
   /// In en, this message translates to:

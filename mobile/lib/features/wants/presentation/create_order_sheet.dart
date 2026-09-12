@@ -81,6 +81,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   String _destCountry = unselected;
   String _destCityChoice = unselected;
   final _destCityCustom = TextEditingController();
+  bool _deliverySameAsRegistered = true;
+  final _deliveryStreet = TextEditingController();
+  final _deliveryStreet2 = TextEditingController();
+  final _deliverySubdistrict = TextEditingController();
+  final _deliveryDistrict = TextEditingController();
+  final _deliveryPostalCode = TextEditingController();
   int _budget = 3000;
   int _qty = 1;
   DateTime? _needBy;
@@ -92,11 +98,13 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   final _detailsKey = GlobalKey();
   final _buyInKey = GlobalKey();
   final _deliverToKey = GlobalKey();
+  final _deliveryAddressKey = GlobalKey();
   String? _photoError;
   String? _titleError;
   String? _detailsError;
   String? _buyInError;
   String? _deliverToError;
+  String? _deliveryAddressError;
 
   bool get _isDirectRequest => widget.targetTripId != null;
 
@@ -135,6 +143,11 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
     _details.dispose();
     _cityCustom.dispose();
     _destCityCustom.dispose();
+    _deliveryStreet.dispose();
+    _deliveryStreet2.dispose();
+    _deliverySubdistrict.dispose();
+    _deliveryDistrict.dispose();
+    _deliveryPostalCode.dispose();
     super.dispose();
   }
 
@@ -158,6 +171,10 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
     _deliverToError = _destCountry.isEmpty
         ? l10n.errorDeliverToCountryRequired
         : (_destCityValue.isEmpty ? l10n.errorDeliverToCityRequired : null);
+    _deliveryAddressError = (!_deliverySameAsRegistered &&
+            (_deliveryStreet.text.trim().isEmpty || _deliveryPostalCode.text.trim().isEmpty))
+        ? l10n.errorDeliveryAddressRequired
+        : null;
 
     GlobalKey? firstInvalid;
     if (_photoError != null) firstInvalid ??= _photoKey;
@@ -165,6 +182,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
     if (_detailsError != null) firstInvalid ??= _detailsKey;
     if (_buyInError != null) firstInvalid ??= _buyInKey;
     if (_deliverToError != null) firstInvalid ??= _deliverToKey;
+    if (_deliveryAddressError != null) firstInvalid ??= _deliveryAddressKey;
 
     final scrollTarget = firstInvalid;
     if (scrollTarget != null) {
@@ -224,6 +242,12 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
             destinationCountry: _destCountry,
             destinationCity: _destCityValue,
             productUrl: _productUrl.text.trim().isEmpty ? null : _productUrl.text.trim(),
+            deliverySameAsRegistered: _deliverySameAsRegistered,
+            deliveryAddressStreet: _deliverySameAsRegistered ? null : _deliveryStreet.text.trim(),
+            deliveryAddressStreet2: _deliverySameAsRegistered ? null : _deliveryStreet2.text.trim(),
+            deliveryAddressSubdistrict: _deliverySameAsRegistered ? null : _deliverySubdistrict.text.trim(),
+            deliveryAddressDistrict: _deliverySameAsRegistered ? null : _deliveryDistrict.text.trim(),
+            deliveryAddressPostalCode: _deliverySameAsRegistered ? null : _deliveryPostalCode.text.trim(),
           );
       ref.invalidate(myWantsProvider);
       ref.invalidate(feedProvider);
@@ -638,6 +662,58 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
           if (_deliverToError != null) ...[
             const SizedBox(height: 4),
             Text(_deliverToError!, style: TextStyle(color: scheme.error, fontSize: 12)),
+          ],
+          const SizedBox(height: 8),
+          CheckboxListTile(
+            value: _deliverySameAsRegistered,
+            onChanged: (v) => setState(() => _deliverySameAsRegistered = v ?? true),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: Text(l10n.labelSameAsRegisteredAddress),
+          ),
+          if (!_deliverySameAsRegistered) ...[
+            const SizedBox(height: 4),
+            Column(
+              key: _deliveryAddressKey,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _deliveryStreet,
+                  onChanged: (_) {
+                    if (_deliveryAddressError != null) setState(() => _deliveryAddressError = null);
+                  },
+                  decoration: InputDecoration(labelText: l10n.fieldStreetAddress),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _deliveryStreet2,
+                  decoration: InputDecoration(labelText: l10n.fieldStreetAddress2),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _deliveryDistrict,
+                  decoration: InputDecoration(labelText: l10n.fieldDistrict),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _deliverySubdistrict,
+                  decoration: InputDecoration(labelText: l10n.fieldSubdistrict),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _deliveryPostalCode,
+                  onChanged: (_) {
+                    if (_deliveryAddressError != null) setState(() => _deliveryAddressError = null);
+                  },
+                  decoration: InputDecoration(labelText: l10n.fieldPostalCode),
+                ),
+                if (_deliveryAddressError != null) ...[
+                  const SizedBox(height: 4),
+                  Text(_deliveryAddressError!, style: TextStyle(color: scheme.error, fontSize: 12)),
+                ],
+              ],
+            ),
           ],
           const SizedBox(height: 18),
           Text(l10n.labelBudget, style: Theme.of(context).textTheme.labelLarge),

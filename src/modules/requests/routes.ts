@@ -7,6 +7,28 @@ import { recordNotification } from '@/services/notify';
 import { requireCompleteProfile } from '@/utils/profile-guard';
 import { config } from '@/config/env';
 
+// Only the shopper who owns a request should ever see exactly where they
+// asked for it to be delivered — every other viewer (public browse, a
+// non-owner detail lookup) gets the request with these stripped, same as
+// they never existed. The matched traveler only learns the address once an
+// offer is accepted and it's snapshotted onto the order (see
+// offers/routes.ts) — never before, and never for anyone who didn't win it.
+const PRIVATE_DELIVERY_FIELDS = [
+  'delivery_same_as_registered',
+  'delivery_address_street',
+  'delivery_address_street2',
+  'delivery_address_subdistrict',
+  'delivery_address_district',
+  'delivery_address_postal_code',
+] as const;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function redactDeliveryAddress(row: any): any {
+  const copy = { ...row };
+  for (const field of PRIVATE_DELIVERY_FIELDS) delete copy[field];
+  return copy;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registerRequestsRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: unknown }>(
@@ -63,6 +85,12 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
           destination_city: parsed.data.destination_city ?? null,
           product_url: parsed.data.product_url ?? null,
           target_trip_id: targetTrip?.id ?? null,
+          delivery_same_as_registered: parsed.data.delivery_same_as_registered ?? true,
+          delivery_address_street: parsed.data.delivery_address_street ?? null,
+          delivery_address_street2: parsed.data.delivery_address_street2 ?? null,
+          delivery_address_subdistrict: parsed.data.delivery_address_subdistrict ?? null,
+          delivery_address_district: parsed.data.delivery_address_district ?? null,
+          delivery_address_postal_code: parsed.data.delivery_address_postal_code ?? null,
           status: 'open',
           created_at: now,
           updated_at: now,
@@ -153,12 +181,14 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         base = base.where('shopper_id', '!=', request.userId!);
       }
 
-      const items = await base
+      const rows = await base
         .selectAll()
         .orderBy('created_at', 'desc')
         .limit(limit)
         .offset(offset)
         .execute();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items = rows.map((r: any) => redactDeliveryAddress(r));
 
       reply.send({ success: true, data: { items, page, limit }, code: 'REQUESTS_LISTED' });
     }
@@ -217,9 +247,14 @@ export async function registerRequestsRoutes(app: FastifyInstance): Promise<void
         .where('id', '=', itemRequest.shopper_id)
         .executeTakeFirst();
 
+      // The delivery address is only ever the owning shopper's business
+      // until an offer is accepted — see PRIVATE_DELIVERY_FIELDS above.
+      const isOwner = itemRequest.shopper_id === request.userId;
+      const responseRequest = isOwner ? itemRequest : redactDeliveryAddress(itemRequest);
+
       reply.send({
         success: true,
-        data: { ...itemRequest, shopper: shopper ? toUserSummary(shopper) : null },
+        data: { ...responseRequest, shopper: shopper ? toUserSummary(shopper) : null },
         code: 'REQUEST_FOUND',
       });
     }

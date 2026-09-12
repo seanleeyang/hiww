@@ -973,6 +973,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Deliver to (City) cannot be left blank';
 
   @override
+  String get labelSameAsRegisteredAddress => 'Same as my registered address';
+
+  @override
+  String get errorDeliveryAddressRequired =>
+      'Enter the street address and postal code';
+
+  @override
+  String get sectionDeliveryAddress => 'Delivery address';
+
+  @override
   String get hintCityExample => 'Tokyo';
 
   @override

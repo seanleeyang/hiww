@@ -26,6 +26,14 @@ class WantsRepository {
     required String destinationCountry,
     String? destinationCity,
     String? productUrl,
+    // Delivery address (migration 045). Defaults to true server-side too, so
+    // omitting these entirely still works — see createRequestSchema.
+    bool? deliverySameAsRegistered,
+    String? deliveryAddressStreet,
+    String? deliveryAddressStreet2,
+    String? deliveryAddressSubdistrict,
+    String? deliveryAddressDistrict,
+    String? deliveryAddressPostalCode,
   }) async {
     final body = <String, dynamic>{
       'item_description': itemDescription,
@@ -45,6 +53,24 @@ class WantsRepository {
       body['destination_city'] = destinationCity;
     }
     if (productUrl != null && productUrl.isNotEmpty) body['product_url'] = productUrl;
+    if (deliverySameAsRegistered != null) {
+      body['delivery_same_as_registered'] = deliverySameAsRegistered;
+    }
+    if (deliveryAddressStreet != null && deliveryAddressStreet.isNotEmpty) {
+      body['delivery_address_street'] = deliveryAddressStreet;
+    }
+    if (deliveryAddressStreet2 != null && deliveryAddressStreet2.isNotEmpty) {
+      body['delivery_address_street2'] = deliveryAddressStreet2;
+    }
+    if (deliveryAddressSubdistrict != null && deliveryAddressSubdistrict.isNotEmpty) {
+      body['delivery_address_subdistrict'] = deliveryAddressSubdistrict;
+    }
+    if (deliveryAddressDistrict != null && deliveryAddressDistrict.isNotEmpty) {
+      body['delivery_address_district'] = deliveryAddressDistrict;
+    }
+    if (deliveryAddressPostalCode != null && deliveryAddressPostalCode.isNotEmpty) {
+      body['delivery_address_postal_code'] = deliveryAddressPostalCode;
+    }
     final data = await _api.post('/api/requests', body: body);
     return (data as Map)['id'].toString();
   }

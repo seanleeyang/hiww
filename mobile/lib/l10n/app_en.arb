@@ -363,6 +363,9 @@
   "errorBuyInCityRequired": "Buy in (City) cannot be left blank",
   "errorDeliverToCountryRequired": "Deliver to (Country) cannot be left blank",
   "errorDeliverToCityRequired": "Deliver to (City) cannot be left blank",
+  "labelSameAsRegisteredAddress": "Same as my registered address",
+  "errorDeliveryAddressRequired": "Enter the street address and postal code",
+  "sectionDeliveryAddress": "Delivery address",
   "hintCityExample": "Tokyo",
   "travelersHeadingSoon": "{count, plural, one{{count} traveler} other{{count} travelers}} heading to {country} soon",
   "@travelersHeadingSoon": {

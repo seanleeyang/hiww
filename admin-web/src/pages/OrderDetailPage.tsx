@@ -167,6 +167,24 @@ export function OrderDetailPage() {
           </p>
         </Card>
 
+        {(o.delivery_address_street || o.delivery_address_city) && (
+          <Card title="Delivery address">
+            <p>
+              {[
+                o.delivery_address_street,
+                o.delivery_address_street2,
+                o.delivery_address_subdistrict,
+                o.delivery_address_district,
+                o.delivery_address_city,
+                o.delivery_address_postal_code,
+                o.delivery_address_country,
+              ]
+                .filter(Boolean)
+                .join(', ')}
+            </p>
+          </Card>
+        )}
+
         <Card title="Money">
           <div className="money-breakdown">
             <div className="money-row">

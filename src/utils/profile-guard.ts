@@ -4,6 +4,9 @@ import { AppError } from '@/utils/helpers';
 export interface ProfileCompletenessRow {
   phone?: string | null;
   address_street?: string | null;
+  address_street2?: string | null;
+  address_subdistrict?: string | null;
+  address_district?: string | null;
   address_city?: string | null;
   address_postal_code?: string | null;
   address_country?: string | null;
@@ -27,20 +30,32 @@ export function isProfileComplete(user: ProfileCompletenessRow): boolean {
  * Both sides of an order need a phone number and delivery address before it
  * exists — the traveler when they make an offer, the shopper when they
  * accept one. Throws the same error either way so the client can show one
- * "complete your profile" prompt.
+ * "complete your profile" prompt. Returns the row (address fields included)
+ * so a caller that needs it — e.g. resolving a "same as registered address"
+ * delivery snapshot at accept-offer time — doesn't have to query it again.
  */
 export async function requireCompleteProfile(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: any,
   userId: string
-): Promise<void> {
+): Promise<ProfileCompletenessRow> {
   const user = await db
     .selectFrom('users')
-    .select(['phone', 'address_street', 'address_city', 'address_postal_code', 'address_country'])
+    .select([
+      'phone',
+      'address_street',
+      'address_street2',
+      'address_subdistrict',
+      'address_district',
+      'address_city',
+      'address_postal_code',
+      'address_country',
+    ])
     .where('id', '=', userId)
     .executeTakeFirst();
 
   if (!user || !isProfileComplete(user)) {
     throw new AppError('PROFILE_INCOMPLETE', 403, 'profileGuard.incomplete');
   }
+  return user;
 }

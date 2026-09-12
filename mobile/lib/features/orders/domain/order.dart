@@ -46,6 +46,13 @@ class Order {
     this.shopperTotal,
     this.travellerPayout,
     this.currency,
+    this.deliveryAddressStreet,
+    this.deliveryAddressStreet2,
+    this.deliveryAddressSubdistrict,
+    this.deliveryAddressDistrict,
+    this.deliveryAddressCity,
+    this.deliveryAddressPostalCode,
+    this.deliveryAddressCountry,
   });
 
   final String id;
@@ -99,6 +106,36 @@ class Order {
   final String? deliveryProofUrl;
   final bool canReview;
   final OrderReview? myReview;
+
+  /// Delivery address snapshot (migration 045) — resolved once at
+  /// accept-offer time, frozen from then on. Null for orders created before
+  /// this shipped.
+  final String? deliveryAddressStreet;
+  final String? deliveryAddressStreet2;
+  final String? deliveryAddressSubdistrict;
+  final String? deliveryAddressDistrict;
+  final String? deliveryAddressCity;
+  final String? deliveryAddressPostalCode;
+  final String? deliveryAddressCountry;
+
+  /// Whether a delivery address was ever snapshotted onto this order — false
+  /// for orders created before migration 045 shipped.
+  bool get hasDeliveryAddress =>
+      (deliveryAddressStreet ?? '').trim().isNotEmpty || (deliveryAddressCity ?? '').trim().isNotEmpty;
+
+  /// `123 Sukhumvit Rd, Khlong Toei Nuea, Khlong Toei, Bangkok 10110` — every
+  /// non-empty part joined, comma-separated, EXCLUDING the country (that's
+  /// stored as an ISO code, not a display name — callers with access to
+  /// `AppLocalizations` should append `countryName(deliveryAddressCountry,
+  /// locale)` themselves). Empty string if nothing was ever snapshotted.
+  String get deliveryAddressLines => [
+        deliveryAddressStreet,
+        deliveryAddressStreet2,
+        deliveryAddressSubdistrict,
+        deliveryAddressDistrict,
+        deliveryAddressCity,
+        deliveryAddressPostalCode,
+      ].whereType<String>().where((p) => p.trim().isNotEmpty).join(', ');
 
   String get displayTitle => (title != null && title!.isNotEmpty) ? title! : itemDescription;
 
@@ -166,6 +203,13 @@ class Order {
         shopperTotal: _s(j['shopper_total']),
         travellerPayout: _s(j['traveller_payout']),
         currency: _s(j['currency']),
+        deliveryAddressStreet: _s(j['delivery_address_street']),
+        deliveryAddressStreet2: _s(j['delivery_address_street2']),
+        deliveryAddressSubdistrict: _s(j['delivery_address_subdistrict']),
+        deliveryAddressDistrict: _s(j['delivery_address_district']),
+        deliveryAddressCity: _s(j['delivery_address_city']),
+        deliveryAddressPostalCode: _s(j['delivery_address_postal_code']),
+        deliveryAddressCountry: _s(j['delivery_address_country']),
       );
 }
 

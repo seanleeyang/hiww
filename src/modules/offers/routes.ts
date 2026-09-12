@@ -316,8 +316,31 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
       }
 
       // Accepting creates the order — the shopper needs to be reachable,
-      // regardless of which side clicked accept.
-      await requireCompleteProfile(request.db, requestRow.shopper_id);
+      // regardless of which side clicked accept. Also doubles as the
+      // resolved delivery address when the request says "same as my
+      // registered address" — read fresh here (not whatever the profile
+      // said back when the request was posted), then frozen onto the order
+      // below so it can't drift if the shopper edits their profile later.
+      const shopperProfile = await requireCompleteProfile(request.db, requestRow.shopper_id);
+      const deliveryAddress = requestRow.delivery_same_as_registered
+        ? {
+            street: shopperProfile.address_street ?? null,
+            street2: shopperProfile.address_street2 ?? null,
+            subdistrict: shopperProfile.address_subdistrict ?? null,
+            district: shopperProfile.address_district ?? null,
+            city: shopperProfile.address_city ?? null,
+            postal_code: shopperProfile.address_postal_code ?? null,
+            country: shopperProfile.address_country ?? null,
+          }
+        : {
+            street: requestRow.delivery_address_street ?? null,
+            street2: requestRow.delivery_address_street2 ?? null,
+            subdistrict: requestRow.delivery_address_subdistrict ?? null,
+            district: requestRow.delivery_address_district ?? null,
+            city: requestRow.destination_city ?? null,
+            postal_code: requestRow.delivery_address_postal_code ?? null,
+            country: requestRow.destination_country ?? null,
+          };
 
       const total = new Decimal(offer.quoted_price);
       const pricing = calculatePricing(offer.quoted_price);
@@ -388,6 +411,13 @@ export async function registerOffersRoutes(app: FastifyInstance): Promise<void> 
             currency: pricing.currency,
             status: 'pending_payment',
             payment_deadline_at: paymentDeadlineAt,
+            delivery_address_street: deliveryAddress.street,
+            delivery_address_street2: deliveryAddress.street2,
+            delivery_address_subdistrict: deliveryAddress.subdistrict,
+            delivery_address_district: deliveryAddress.district,
+            delivery_address_city: deliveryAddress.city,
+            delivery_address_postal_code: deliveryAddress.postal_code,
+            delivery_address_country: deliveryAddress.country,
             created_at: now,
             updated_at: now,
           })

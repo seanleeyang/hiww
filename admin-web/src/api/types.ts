@@ -60,6 +60,14 @@ export interface Order {
   counterparty?: UserSummary | null;
   request_image_url?: string | null;
   request_category?: string | null;
+  /** Delivery address snapshot, resolved once at accept-offer time — null for orders created before this shipped. */
+  delivery_address_street?: string | null;
+  delivery_address_street2?: string | null;
+  delivery_address_subdistrict?: string | null;
+  delivery_address_district?: string | null;
+  delivery_address_city?: string | null;
+  delivery_address_postal_code?: string | null;
+  delivery_address_country?: string | null;
   created_at: string;
   updated_at: string;
 }

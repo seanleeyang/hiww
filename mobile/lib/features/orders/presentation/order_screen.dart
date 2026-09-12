@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/countries.dart';
 import '../../../core/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
@@ -135,6 +136,26 @@ class OrderScreen extends ConsumerWidget {
                     ),
                   const SizedBox(height: 18),
                   SoftCard(child: OrderStepper(order: o)),
+                  if (o.hasDeliveryAddress) ...[
+                    const SizedBox(height: 14),
+                    SoftCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.labelDeliverTo, style: Theme.of(context).textTheme.labelLarge),
+                          const SizedBox(height: 6),
+                          IconLine(
+                            Icons.local_shipping_outlined,
+                            <String>[
+                              o.deliveryAddressLines,
+                              if (o.deliveryAddressCountry != null)
+                                countryName(o.deliveryAddressCountry!, l10n.localeName),
+                            ].where((p) => p.isNotEmpty).join(', '),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   if (o.purchaseProofUrl != null) ...[
                     const SizedBox(height: 14),
                     _PurchaseProofCard(
