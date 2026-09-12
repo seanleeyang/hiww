@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/format.dart';
 import '../../../core/thai_banks.dart';
 import '../../../core/thai_id_formatter.dart';
 import '../../../core/world_countries.dart';
@@ -306,7 +307,8 @@ class _ContactDetailsCard extends StatelessWidget {
       'prefer_not_to_say' => l10n.genderPreferNotToSay,
       _ => null,
     };
-    final parts = [gender, user.dateOfBirth].whereType<String>().toList();
+    final dob = user.dateOfBirth == null ? null : DateTime.tryParse(user.dateOfBirth!);
+    final parts = [gender, dob == null ? null : ddMmYyyy(dob)].whereType<String>().toList();
     return parts.isEmpty ? null : parts.join(' · ');
   }
 }
@@ -552,7 +554,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                     labelText: l10n.fieldBirthday,
                     suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
                   ),
-                  child: Text(_dateOfBirth == null ? '—' : _isoDate(_dateOfBirth!)),
+                  child: Text(_dateOfBirth == null ? '—' : ddMmYyyy(_dateOfBirth!)),
                 ),
               ),
               const Divider(height: 24),

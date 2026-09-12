@@ -39,6 +39,15 @@ void main() {
     });
   });
 
+  group('ddMmYyyy', () {
+    test('formats as fixed DD-MM-YYYY regardless of locale', () {
+      expect(ddMmYyyy(DateTime(1998, 5, 3)), '03-05-1998');
+    });
+    test('pads single-digit day and month', () {
+      expect(ddMmYyyy(DateTime(2000, 1, 9)), '09-01-2000');
+    });
+  });
+
   group('earnRangeLabel', () {
     test('shows a range when matches pay differently', () {
       expect(earnRangeLabel(l10n, '80', '1200'), 'Earn ฿80–1,200');

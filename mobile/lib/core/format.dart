@@ -57,6 +57,14 @@ String dateRange(AppLocalizations l10n, DateTime? start, DateTime? end) {
 String dateLong(AppLocalizations l10n, DateTime? d) =>
     d == null ? '' : _monthDayYear(l10n.localeName).format(d);
 
+/// `20-05-1998` — fixed DD-MM-YYYY, used for personal-details dates (date of
+/// birth) regardless of system language. There's no month name here to
+/// translate, so unlike the locale-aware formats above this is always the
+/// same numeric ordering — the user's stated preference for any date field
+/// of this kind.
+String ddMmYyyy(DateTime d) =>
+    '${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year.toString().padLeft(4, '0')}';
+
 /// `Nov 14` for a stepper timestamp.
 String shortDate(AppLocalizations l10n, DateTime? d) =>
     d == null ? '' : _dayMonth(l10n.localeName).format(d);
