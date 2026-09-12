@@ -26,6 +26,34 @@ function matchLabel(field: string, m: FieldMatch | undefined): string | null {
   return `${field}: ${m}`;
 }
 
+interface FieldComparison {
+  field: string;
+  match: FieldMatch;
+  extracted: string;
+}
+
+/** For each field the AI flagged as mismatched/unclear against the
+ * document, what it actually read off the document photo — so the admin
+ * can see the discrepancy at a glance instead of having to open the photo
+ * and read it themselves to find out what "mismatch" even means. Face has
+ * no text to compare (it's a photo match, already shown as a thumbnail),
+ * so it's not part of this table. */
+function fieldComparisons(item: KycItem): FieldComparison[] {
+  const ai = item.ai_analysis;
+  if (!ai) return [];
+  const ex = ai.extracted ?? {};
+  const candidates: Array<{ field: string; match: FieldMatch | undefined; extracted: string }> = [
+    {
+      field: 'Name',
+      match: ai.nameMatch,
+      extracted: [ex.firstName, ex.lastName].filter(Boolean).join(' '),
+    },
+    { field: 'Document number', match: ai.documentIdMatch, extracted: ex.documentId ?? '' },
+    { field: 'Address', match: ai.addressMatch, extracted: ex.address ?? '' },
+  ];
+  return candidates.filter((c): c is FieldComparison => c.match != null && c.match !== 'match');
+}
+
 /** A tappable thumbnail rather than a bare link — the point is that an admin
  * can actually SEE the photo on this page, not just trust a URL will open. */
 function PhotoThumb({ url, label }: { url: string; label: string }) {
@@ -104,21 +132,16 @@ export function IdChecksPage() {
       ) : (
         items.map((item) => {
           const submittedName = [item.first_name, item.last_name].filter(Boolean).join(' ');
-          const mismatches = item.ai_analysis
-            ? [
-                matchLabel('Name', item.ai_analysis.nameMatch),
-                matchLabel('Document number', item.ai_analysis.documentIdMatch),
-                matchLabel('Address', item.ai_analysis.addressMatch),
-                matchLabel('Face', item.ai_analysis.faceMatch),
-              ].filter((m): m is string => m !== null)
-            : [];
+          const comparisons = fieldComparisons(item);
+          const faceIssue = matchLabel('Face', item.ai_analysis?.faceMatch);
           const authenticityIssue =
             item.ai_analysis?.documentAuthenticity === 'suspicious' ? ['Document authenticity: suspicious'] : [];
           // Everything specific the AI check found wrong, for the admin's
-          // manual pass to focus on — structured mismatches first, then the
-          // model's own free-form flags (some overlap is fine; this is an
-          // internal checklist, not user-facing copy).
-          const issues = [...mismatches, ...authenticityIssue, ...(item.ai_analysis?.flags ?? [])];
+          // manual pass to focus on — the field-level mismatches get their
+          // own comparison table below (with what the document actually
+          // shows), so only Face (a photo match, no text to compare) and
+          // the model's own free-form flags land in this generic list.
+          const issues = [...(faceIssue ? [faceIssue] : []), ...authenticityIssue, ...(item.ai_analysis?.flags ?? [])];
           const passedPrelim = item.ai_risk === 'low';
 
           return (
@@ -159,6 +182,26 @@ export function IdChecksPage() {
                           </li>
                         ))}
                       </ul>
+                    )}
+                    {comparisons.length > 0 && (
+                      <table style={{ margin: '6px 0' }}>
+                        <thead>
+                          <tr>
+                            <th>Field</th>
+                            <th>Result</th>
+                            <th>Document shows</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {comparisons.map((c) => (
+                            <tr key={c.field}>
+                              <td>{c.field}</td>
+                              <td className="muted">{c.match}</td>
+                              <td>{c.extracted || <span className="muted">unclear</span>}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     )}
                   </div>
                 )}

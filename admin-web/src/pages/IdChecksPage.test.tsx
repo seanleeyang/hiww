@@ -101,6 +101,34 @@ describe('IdChecksPage', () => {
     expect(screen.getByText('Face looks different from the document photo')).toBeInTheDocument();
   });
 
+  it('shows what the document actually reads for a mismatched field, not just the verdict', async () => {
+    renderPage([
+      kycItem({
+        first_name: 'Somchai',
+        last_name: 'Jaidee',
+        ai_risk: 'high',
+        ai_analysis: {
+          summary: 'Name on the form does not match the document.',
+          flags: [],
+          extracted: { firstName: 'สมชาย', lastName: 'ใจดี', documentId: null, address: null },
+          nameMatch: 'mismatch',
+          documentIdMatch: 'match',
+          addressMatch: 'match',
+          faceMatch: 'match',
+          documentAuthenticity: 'plausible',
+        },
+      }),
+    ]);
+
+    // An admin shouldn't have to open the photo and read it themselves to
+    // find out what "Name: mismatch" even means.
+    expect(await screen.findByText('Name')).toBeInTheDocument();
+    expect(screen.getByText('สมชาย ใจดี')).toBeInTheDocument();
+    // Face matched, so it stays out of this comparison table (no text to
+    // compare for a photo match) and isn't in the generic issues list either.
+    expect(screen.queryByText('Face: mismatch')).not.toBeInTheDocument();
+  });
+
   it('rejects with a fixed reason and notifies the user why', async () => {
     const testUser = userEvent.setup();
     renderPage([kycItem()]);
