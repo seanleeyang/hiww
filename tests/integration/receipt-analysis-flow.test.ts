@@ -153,8 +153,12 @@ describe('AI receipt check', () => {
       url: `/api/orders/${order.orderId}`,
       headers: authHeader(order.shopper),
     });
-    // The photo is visible to participants — only the AI risk verdict is admin-only.
-    expect(asShopper.json().data.item_photo_url).toBe('https://example.com/uploads/item.jpg');
+    // The photo is visible to participants — only the AI risk verdict is
+    // admin-only. Signed, not the bare stored URL (checked directly on the
+    // DB row above), same as an order's other proof photos now.
+    expect(asShopper.json().data.item_photo_url).toMatch(
+      /^https:\/\/example\.com\/uploads\/item\.jpg\?exp=\d+&sig=[0-9a-f]+$/
+    );
 
     const queue = await reviewQueue(admin);
     expect(queue.some((q) => q.type === 'receipt' && q.order_id === order.orderId)).toBe(false);
@@ -177,6 +181,8 @@ describe('AI receipt check', () => {
     const entry = queue.find((q) => q.type === 'receipt' && q.order_id === order.orderId);
     expect(entry).toBeDefined();
     expect(entry.item_photo_assessment).toBe('mismatch');
-    expect(entry.item_photo_url).toBe('https://example.com/uploads/mismatch-item.jpg');
+    expect(entry.item_photo_url).toMatch(
+      /^https:\/\/example\.com\/uploads\/mismatch-item\.jpg\?exp=\d+&sig=[0-9a-f]+$/
+    );
   });
 });

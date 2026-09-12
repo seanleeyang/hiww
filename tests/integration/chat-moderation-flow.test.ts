@@ -523,7 +523,11 @@ describe('AI chat moderation', () => {
       url: `/api/orders/${order.orderId}/messages`,
       headers: authHeader(order.shopper),
     });
-    expect(list.json().data.items[0].image_url).toBe('https://example.com/uploads/item-photo.jpg');
+    // Signed, not the bare stored URL — chat images now require the same
+    // short-lived signature as an order proof photo or a KYC document.
+    expect(list.json().data.items[0].image_url).toMatch(
+      /^https:\/\/example\.com\/uploads\/item-photo\.jpg\?exp=\d+&sig=[0-9a-f]+$/
+    );
 
     const queue = await reviewQueue(admin);
     expect(queue.some((q) => q.type === 'message' && q.order_id === order.orderId)).toBe(false);

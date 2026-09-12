@@ -1,4 +1,5 @@
 import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
+import { createAcceptedOrder } from '../helpers/flows';
 import { __setFileStore, type FileStore } from '@/services/storage';
 import { signUploadKey } from '@/utils/signed-url';
 
@@ -164,6 +165,89 @@ describe('uploads flow', () => {
     const ok = await ctx.app.inject({ method: 'GET', url: signedPath });
     expect(ok.statusCode).toBe(200);
     expect(ok.rawPayload.equals(PNG_1PX)).toBe(true);
+  });
+
+  it('requires a signature to view an order proof photo, and a bystander cannot mint one for themselves', async () => {
+    const order = await createAcceptedOrder(ctx);
+    const bystander = await createUser(ctx);
+    const { body, contentType } = multipart([
+      { name: 'file', filename: 'delivery.png', contentType: 'image/png', data: PNG_1PX },
+    ]);
+    const upload = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/uploads',
+      headers: { ...authHeader(order.shopper), 'content-type': contentType },
+      payload: body,
+    });
+    const rawUrl = upload.json().data.url as string;
+    const path = new URL(rawUrl).pathname;
+
+    await ctx.db.updateTable('orders').set({ delivery_proof_url: rawUrl }).where('id', '=', order.orderId).execute();
+
+    // No signature — denied even though the shopper is genuinely a party
+    // to this order; the file route only trusts the signature, not who's
+    // asking.
+    const noSig = await ctx.app.inject({ method: 'GET', url: path, headers: authHeader(order.shopper) });
+    expect(noSig.statusCode).toBe(403);
+
+    // A complete stranger to this order gets the same signed link everyone
+    // else would if they asked GET /api/orders/:id — but they can't, since
+    // that route itself 403s them first.
+    const strangerOrderReq = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}`,
+      headers: authHeader(bystander),
+    });
+    expect(strangerOrderReq.statusCode).toBe(403);
+
+    // The shopper, a genuine party, gets a working signed link from the
+    // order detail endpoint.
+    const orderReq = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}`,
+      headers: authHeader(order.shopper),
+    });
+    const signedUrl = orderReq.json().data.delivery_proof_url as string;
+    expect(signedUrl).toContain('?exp=');
+    const signedPath = new URL(signedUrl).pathname + new URL(signedUrl).search;
+    const ok = await ctx.app.inject({ method: 'GET', url: signedPath });
+    expect(ok.statusCode).toBe(200);
+  });
+
+  it('requires a signature to view a chat image', async () => {
+    const order = await createAcceptedOrder(ctx);
+    const { body, contentType } = multipart([
+      { name: 'file', filename: 'chat.png', contentType: 'image/png', data: PNG_1PX },
+    ]);
+    const upload = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/uploads',
+      headers: { ...authHeader(order.shopper), 'content-type': contentType },
+      payload: body,
+    });
+    const rawUrl = upload.json().data.url as string;
+    const path = new URL(rawUrl).pathname;
+
+    const send = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+      payload: { image_url: rawUrl },
+    });
+    expect(send.statusCode).toBe(201);
+
+    const noSig = await ctx.app.inject({ method: 'GET', url: path });
+    expect(noSig.statusCode).toBe(403);
+
+    const list = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+    });
+    const signedUrl = list.json().data.items[0].image_url as string;
+    const signedPath = new URL(signedUrl).pathname + new URL(signedUrl).search;
+    const ok = await ctx.app.inject({ method: 'GET', url: signedPath });
+    expect(ok.statusCode).toBe(200);
   });
 
   it('an ordinary (non-KYC) upload needs no signature at all', async () => {

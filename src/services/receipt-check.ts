@@ -2,6 +2,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from '@/types/database';
 import { getReceiptAnalyzer } from '@/services/ai';
 import { recordAudit } from '@/services/audit';
+import { signPrivateUploadUrl } from '@/utils/signed-url';
 
 interface OrderForCheck {
   id: string;
@@ -41,9 +42,15 @@ export async function runReceiptCheck(
       category = req?.category ?? null;
     }
 
+    // Signed — the real (Claude-backed) analyzer fetches this URL itself
+    // (src/services/ai/fetch-image.ts) to read the image, and that fetch is
+    // subject to the exact same signature check as any other client now
+    // that purchase_proof_url/item_photo_url require one (see
+    // src/modules/uploads/routes.ts). The mock analyzer used in tests never
+    // fetches anything, so this is a no-op there.
     const analysis = await getReceiptAnalyzer().analyze({
-      imageUrl: order.purchase_proof_url,
-      itemPhotoUrl: order.item_photo_url ?? null,
+      imageUrl: signPrivateUploadUrl(order.purchase_proof_url) ?? order.purchase_proof_url,
+      itemPhotoUrl: signPrivateUploadUrl(order.item_photo_url ?? null),
       itemDescription: order.item_description,
       category,
       expectedAmount: order.total_price,

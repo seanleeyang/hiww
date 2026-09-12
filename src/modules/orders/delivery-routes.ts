@@ -7,6 +7,7 @@ import { purchaseProofSchema, shippingProofSchema, releaseSchema } from '@/types
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
 import { runReceiptCheck } from '@/services/receipt-check';
+import { signPrivateUploadUrl } from '@/utils/signed-url';
 
 const noteSchema = z.object({
   note: z.string().min(1).optional(),
@@ -257,7 +258,7 @@ export async function registerDeliveryRoutes(app: FastifyInstance): Promise<void
 
       reply.send({
         success: true,
-        data: { order_id: order.id, shipping_proof_url: parsed.data.image_url },
+        data: { order_id: order.id, shipping_proof_url: signPrivateUploadUrl(parsed.data.image_url) },
         code: 'SHIPPING_PROOF_ADDED',
       });
     }

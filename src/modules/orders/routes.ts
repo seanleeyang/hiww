@@ -4,6 +4,7 @@ import { toUserSummary, USER_SUMMARY_COLUMNS } from '@/utils/user-summary';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification } from '@/services/notify';
 import { expireOverduePayments } from '@/services/order-expiry';
+import { signOrderPhotoUrls } from '@/utils/signed-url';
 
 /** Drop the operator-only AI receipt fields before returning an order to a participant. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,7 +83,7 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
         const counterpartyId = order.traveler_id === request.userId ? order.shopper_id : order.traveler_id;
         const counterparty = counterpartyById.get(counterpartyId);
         return {
-          ...order,
+          ...signOrderPhotoUrls(order),
           request_image_url: sourceRequest?.image_url ?? null,
           request_category: sourceRequest?.category ?? null,
           counterparty: counterparty ? toUserSummary(counterparty) : null,
@@ -167,7 +168,7 @@ export async function registerOrdersRoutes(app: FastifyInstance): Promise<void> 
       reply.send({
         success: true,
         data: {
-          ...orderView,
+          ...signOrderPhotoUrls(orderView),
           counterparty: counterparty ? toUserSummary(counterparty) : null,
           request_image_url: sourceRequest?.image_url ?? null,
           request_category: sourceRequest?.category ?? null,

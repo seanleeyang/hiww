@@ -5,6 +5,7 @@ import { recordAudit } from '@/services/audit';
 import { recordNotification } from '@/services/notify';
 import { t } from '@/i18n/messages';
 import type { SupportedLocale } from '@/i18n/locale';
+import { signPrivateUploadUrl } from '@/utils/signed-url';
 
 // Named social/messaging brands, including short forms (fb, ig, wa) and
 // letter-by-letter spelling-out (e.g. "L I N E", "w.a.") as an evasion
@@ -299,9 +300,12 @@ export async function runChatModerationCheck(
   if (existingRisk === 'high') return; // already at the top; nothing to escalate
 
   try {
+    // Signed for the same reason as the receipt check (see
+    // src/services/receipt-check.ts) — the real analyzer fetches this URL
+    // itself, and it now needs a valid signature like anyone else would.
     const result = await getChatModerationAnalyzer().analyze({
       body: message.body,
-      imageUrl: message.image_url,
+      imageUrl: signPrivateUploadUrl(message.image_url),
     });
     if (result.risk === 'low') return;
     if (existingRisk === 'medium' && result.risk === 'medium') return; // no change

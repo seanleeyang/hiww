@@ -45,11 +45,12 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
     wildcard: false,
   });
 
-  // Everything else uploaded (avatars, trip covers, want photos, chat
-  // images, order proof photos) is still served openly here, same as
-  // before — only a KYC document/selfie photo requires the signature a
-  // GET /api/admin/reviews response already stamps onto it. The rest is a
-  // known gap, planned as a follow-up pass rather than silently left as-is.
+  // Avatars, trip covers, and want photos are still served openly here —
+  // those are meant to be publicly visible (a guest browsing the feed has
+  // no token at all). A KYC document/selfie photo, an order's proof photos,
+  // or a chat image all require the signature that the one or two places
+  // each of those is ever returned already stamps onto it (see
+  // src/utils/signed-url.ts and its call sites).
   app.get<{ Params: { key: string }; Querystring: { exp?: string; sig?: string } }>(
     '/uploads/:key',
     async (request, reply) => {
@@ -59,15 +60,30 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
       }
 
       const suffix = `%/uploads/${key}`;
-      const kycOwner = await request.db
-        .selectFrom('users')
-        .select('id')
-        .where((eb: any) =>
-          eb.or([eb('kyc_document_photo_url', 'like', suffix), eb('kyc_selfie_photo_url', 'like', suffix)])
-        )
-        .executeTakeFirst();
+      const [kycOwner, orderMatch, messageMatch] = await Promise.all([
+        request.db
+          .selectFrom('users')
+          .select('id')
+          .where((eb: any) =>
+            eb.or([eb('kyc_document_photo_url', 'like', suffix), eb('kyc_selfie_photo_url', 'like', suffix)])
+          )
+          .executeTakeFirst(),
+        request.db
+          .selectFrom('orders')
+          .select('id')
+          .where((eb: any) =>
+            eb.or([
+              eb('purchase_proof_url', 'like', suffix),
+              eb('item_photo_url', 'like', suffix),
+              eb('shipping_proof_url', 'like', suffix),
+              eb('delivery_proof_url', 'like', suffix),
+            ])
+          )
+          .executeTakeFirst(),
+        request.db.selectFrom('messages').select('id').where('image_url', 'like', suffix).executeTakeFirst(),
+      ]);
 
-      if (kycOwner) {
+      if (kycOwner || orderMatch || messageMatch) {
         if (!verifySignedUploadKey(key, request.query.exp, request.query.sig)) {
           throw new AppError('FORBIDDEN', 403, 'uploads.signatureRequired');
         }

@@ -33,13 +33,14 @@ export function verifySignedUploadKey(key: string, exp: string | undefined, sig:
 
 /**
  * Appends a signature to a stored `.../uploads/<key>` URL so it keeps working
- * for `ttlSeconds` and then stops — for handing a KYC document/selfie photo
- * to whoever was just found authorized to see it (an admin reviewing it, or
- * the account's own owner), without requiring every `<img>`/`Image.network`
- * that renders it to attach an auth header. `null`/empty in is `null` out,
- * so call sites can pass a possibly-unset photo URL straight through.
+ * for `ttlSeconds` and then stops — for handing a private photo (a KYC
+ * document/selfie, an order's purchase/shipping/delivery proof, a chat
+ * image) to whoever was just found authorized to see it, without requiring
+ * every `<img>`/`Image.network` that renders it to attach an auth header.
+ * `null`/empty in is `null` out, so call sites can pass a possibly-unset
+ * photo URL straight through.
  */
-export function signKycPhotoUrl(url: string | null | undefined, ttlSeconds = 15 * 60): string | null {
+export function signPrivateUploadUrl(url: string | null | undefined, ttlSeconds = 15 * 60): string | null {
   if (!url) return null;
   const marker = '/uploads/';
   const idx = url.indexOf(marker);
@@ -49,4 +50,29 @@ export function signKycPhotoUrl(url: string | null | undefined, ttlSeconds = 15 
   const { exp, sig } = signUploadKey(key, ttlSeconds);
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}exp=${exp}&sig=${sig}`;
+}
+
+/** Order-scoped proof photos — signs whichever of the four are present,
+ * leaves everything else on the object untouched. Safe to call on any
+ * order-shaped object right before it goes out in a response. */
+export function signOrderPhotoUrls<
+  T extends {
+    purchase_proof_url?: string | null;
+    item_photo_url?: string | null;
+    shipping_proof_url?: string | null;
+    delivery_proof_url?: string | null;
+  },
+>(order: T): T {
+  return {
+    ...order,
+    purchase_proof_url: signPrivateUploadUrl(order.purchase_proof_url),
+    item_photo_url: signPrivateUploadUrl(order.item_photo_url),
+    shipping_proof_url: signPrivateUploadUrl(order.shipping_proof_url),
+    delivery_proof_url: signPrivateUploadUrl(order.delivery_proof_url),
+  };
+}
+
+/** A chat message's attached image, if any — same idea as {@link signOrderPhotoUrls}. */
+export function signMessageImageUrl<T extends { image_url?: string | null }>(message: T): T {
+  return { ...message, image_url: signPrivateUploadUrl(message.image_url) };
 }

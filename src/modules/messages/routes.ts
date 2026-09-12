@@ -17,6 +17,7 @@ import { recordTyping, isCounterpartyTyping } from '@/services/typing';
 import { sendPush } from '@/services/push-notify';
 import { config } from '@/config/env';
 import { requireOrderParticipant } from '@/utils/order-participant';
+import { signPrivateUploadUrl } from '@/utils/signed-url';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadOrderForParticipant(request: any, orderId: string): Promise<any> {
@@ -105,7 +106,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
       const items = rows.map(({ hidden_at, image_url, ...row }: any) => ({
         ...row,
         body: presentMessageBody({ ...row, hidden_at }, request.userId!, locale),
-        image_url: hidden_at ? null : image_url,
+        image_url: hidden_at ? null : signPrivateUploadUrl(image_url),
       }));
 
       const closesAt = chatClosesAt(order);
@@ -335,7 +336,7 @@ export async function registerMessagesRoutes(app: FastifyInstance): Promise<void
         if (!last) continue;
         const { hidden_at, ...lastPublic } = last;
         lastPublic.body = presentMessageBody({ ...last, hidden_at }, request.userId!, request.locale ?? 'en');
-        if (hidden_at) lastPublic.image_url = null;
+        lastPublic.image_url = hidden_at ? null : signPrivateUploadUrl(lastPublic.image_url);
 
         const unread = await request.db
           .selectFrom('messages')
