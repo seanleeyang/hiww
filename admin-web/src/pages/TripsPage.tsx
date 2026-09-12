@@ -1,21 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
-import type { Trip } from '../api/types';
+import type { AdminUser, Trip } from '../api/types';
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '../components/Toast';
 import { dateTime } from '../lib/format';
-import { lifecycleTone, tripStatusLabel } from '../lib/status';
+import { TRIP_STATUSES, lifecycleTone, tripStatusLabel } from '../lib/status';
 
 export function TripsPage() {
   const qc = useQueryClient();
   const toast = useToast();
   const trips = useQuery({ queryKey: ['admin-trips'], queryFn: () => api.get<{ trips: Trip[] }>('/admin/trips') });
+  const users = useQuery({ queryKey: ['admin-users'], queryFn: () => api.get<{ users: AdminUser[] }>('/admin/users') });
   const [removing, setRemoving] = useState<Trip | null>(null);
   const [cancellingAll, setCancellingAll] = useState(false);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const onError = (err: unknown) => toast(err instanceof ApiError ? err.message : 'Something went wrong', 'error');
 
@@ -36,8 +38,14 @@ export function TripsPage() {
     onError,
   });
 
+  const membershipById = useMemo(
+    () => new Map((users.data?.users ?? []).map((u) => [u.id, u.membership_id])),
+    [users.data]
+  );
+
   const filtered = useMemo(() => {
-    const items = trips.data?.trips ?? [];
+    let items = trips.data?.trips ?? [];
+    if (statusFilter) items = items.filter((t) => t.status === statusFilter);
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter(
@@ -46,9 +54,10 @@ export function TripsPage() {
         t.traveler_name.toLowerCase().includes(q) ||
         t.traveler_email.toLowerCase().includes(q) ||
         t.departure_country.toLowerCase().includes(q) ||
-        t.arrival_country.toLowerCase().includes(q)
+        t.arrival_country.toLowerCase().includes(q) ||
+        (membershipById.get(t.traveler_id) ?? '').toLowerCase().includes(q)
     );
-  }, [trips.data, search]);
+  }, [trips.data, search, statusFilter, membershipById]);
 
   const liveCount = (trips.data?.trips ?? []).filter((t) => t.status === 'published' || t.status === 'in_progress').length;
 
@@ -67,15 +76,25 @@ export function TripsPage() {
         }
       />
 
-      <input
-        placeholder="Search by route, title, or traveler…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 16, maxWidth: 320 }}
-      />
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          placeholder="Search by route, title, traveler, or member ID…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ maxWidth: 320 }}
+        />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">All statuses</option>
+          {TRIP_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {tripStatusLabel(s)}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {filtered.length === 0 ? (
-        <EmptyState>{search ? 'No trips match your search.' : 'No trips yet.'}</EmptyState>
+        <EmptyState>{search || statusFilter ? 'No trips match your filters.' : 'No trips yet.'}</EmptyState>
       ) : (
         <table>
           <thead>

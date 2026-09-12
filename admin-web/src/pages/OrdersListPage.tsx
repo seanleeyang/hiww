@@ -5,7 +5,7 @@ import { api } from '../api/client';
 import type { AdminUser, Order } from '../api/types';
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
-import { orderStatusLabel, orderStatusTone } from '../lib/status';
+import { ORDER_STATUSES, orderStatusLabel, orderStatusTone } from '../lib/status';
 import { dateTime, money } from '../lib/format';
 
 const PAGE_LIMIT = 100;
@@ -13,6 +13,7 @@ const PAGE_LIMIT = 100;
 export function OrdersListPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const orders = useQuery({
     queryKey: ['orders'],
     queryFn: () => api.get<{ items: Order[] }>(`/orders?limit=${PAGE_LIMIT}`),
@@ -23,21 +24,30 @@ export function OrdersListPage() {
     () => new Map((users.data?.users ?? []).map((u) => [u.id, u.full_name])),
     [users.data]
   );
+  const membershipById = useMemo(
+    () => new Map((users.data?.users ?? []).map((u) => [u.id, u.membership_id])),
+    [users.data]
+  );
 
   const filtered = useMemo(() => {
-    const items = orders.data?.items ?? [];
+    let items = orders.data?.items ?? [];
+    if (statusFilter) items = items.filter((o) => o.status === statusFilter);
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter((o) => {
       const shopperName = nameById.get(o.shopper_id) ?? '';
       const travelerName = nameById.get(o.traveler_id) ?? '';
+      const shopperMembershipId = membershipById.get(o.shopper_id) ?? '';
+      const travelerMembershipId = membershipById.get(o.traveler_id) ?? '';
       return (
         o.item_description.toLowerCase().includes(q) ||
         shopperName.toLowerCase().includes(q) ||
-        travelerName.toLowerCase().includes(q)
+        travelerName.toLowerCase().includes(q) ||
+        shopperMembershipId.toLowerCase().includes(q) ||
+        travelerMembershipId.toLowerCase().includes(q)
       );
     });
-  }, [orders.data, search, nameById]);
+  }, [orders.data, search, statusFilter, nameById, membershipById]);
 
   if (orders.isLoading) return <LoadingState />;
   if (orders.isError) return <ErrorState error={orders.error} onRetry={() => orders.refetch()} />;
@@ -48,12 +58,22 @@ export function OrdersListPage() {
     <div>
       <PageHeader title="Orders" subtitle="Every order on the platform. Open one to confirm payment, cancel, or record money movement." />
 
-      <input
-        placeholder="Search by item, shopper, or traveler…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 16, maxWidth: 320 }}
-      />
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          placeholder="Search by item, shopper, traveler, or member ID…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ maxWidth: 320 }}
+        />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">All statuses</option>
+          {ORDER_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {orderStatusLabel(s)}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {hitLimit && !search && (
         <p className="muted" style={{ marginTop: -8, marginBottom: 16, fontSize: 12.5 }}>
@@ -62,7 +82,7 @@ export function OrdersListPage() {
       )}
 
       {filtered.length === 0 ? (
-        <EmptyState>{search ? 'No orders match your search.' : 'No orders yet.'}</EmptyState>
+        <EmptyState>{search || statusFilter ? 'No orders match your filters.' : 'No orders yet.'}</EmptyState>
       ) : (
         <table>
           <thead>

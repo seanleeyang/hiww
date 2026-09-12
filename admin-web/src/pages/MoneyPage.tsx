@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
-import type { MoneyOrderRow, Reconciliation } from '../api/types';
+import type { AdminUser, MoneyOrderRow, PayoutRow, Reconciliation, RefundRow } from '../api/types';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader, Stat, StatGrid } from '../components/ui';
 import { MoneyActionDialog } from '../components/MoneyActionDialog';
 import { useToast } from '../components/Toast';
@@ -12,8 +12,10 @@ export function MoneyPage() {
   const qc = useQueryClient();
   const toast = useToast();
   const recon = useQuery({ queryKey: ['reconciliation'], queryFn: () => api.get<Reconciliation>('/ops/reconciliation') });
+  const users = useQuery({ queryKey: ['admin-users'], queryFn: () => api.get<{ users: AdminUser[] }>('/admin/users') });
   const [payingOut, setPayingOut] = useState<MoneyOrderRow | null>(null);
   const [refunding, setRefunding] = useState<MoneyOrderRow | null>(null);
+  const [search, setSearch] = useState('');
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['reconciliation'] });
   const payout = useMutation({
@@ -33,13 +35,44 @@ export function MoneyPage() {
     },
   });
 
+  const membershipById = useMemo(
+    () => new Map((users.data?.users ?? []).map((u) => [u.id, u.membership_id])),
+    [users.data]
+  );
+
+  const q = search.trim().toLowerCase();
+  const matchesOrderRow = (o: MoneyOrderRow) =>
+    !q ||
+    o.item_description.toLowerCase().includes(q) ||
+    (o.shopper_id && (membershipById.get(o.shopper_id) ?? '').toLowerCase().includes(q)) ||
+    (o.traveler_id && (membershipById.get(o.traveler_id) ?? '').toLowerCase().includes(q));
+  // Payouts/refunds don't carry shopper/traveler ids (see PayoutRow/RefundRow)
+  // — only item text and the payment reference/method are searchable here.
+  const matchesMoneyRow = (r: PayoutRow | RefundRow) =>
+    !q ||
+    r.item_description.toLowerCase().includes(q) ||
+    r.method.toLowerCase().includes(q) ||
+    r.reference.toLowerCase().includes(q);
+
   if (recon.isLoading) return <LoadingState />;
   if (recon.isError) return <ErrorState error={recon.error} onRetry={() => recon.refetch()} />;
   const d = recon.data!;
+  const awaitingPayment = d.awaiting_payment.orders.filter(matchesOrderRow);
+  const awaitingPayout = d.awaiting_payout.orders.filter(matchesOrderRow);
+  const awaitingRefund = d.awaiting_refund.orders.filter(matchesOrderRow);
+  const paidOut = d.paid_out.payouts.filter(matchesMoneyRow);
+  const refunded = d.refunded.refunds.filter(matchesMoneyRow);
 
   return (
     <div>
       <PageHeader title="Money" subtitle="Manual-money pilot reconciliation — what's owed in, owed out, and settled." />
+
+      <input
+        placeholder="Search every table below by item or member ID…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{ marginBottom: 16, maxWidth: 360 }}
+      />
 
       <StatGrid>
         <Stat label="Awaiting payment" value={money(d.awaiting_payment.total)} />
@@ -50,8 +83,8 @@ export function MoneyPage() {
       </StatGrid>
 
       <Card title={`Awaiting payment (${d.awaiting_payment.count})`}>
-        {d.awaiting_payment.orders.length === 0 ? (
-          <EmptyState>Nothing pending.</EmptyState>
+        {awaitingPayment.length === 0 ? (
+          <EmptyState>{search ? 'No matches.' : 'Nothing pending.'}</EmptyState>
         ) : (
           <table>
             <thead>
@@ -63,7 +96,7 @@ export function MoneyPage() {
               </tr>
             </thead>
             <tbody>
-              {d.awaiting_payment.orders.map((o) => (
+              {awaitingPayment.map((o) => (
                 <tr key={o.id}>
                   <td>
                     <Link to={`/orders/${o.id}`}>{o.item_description}</Link>
@@ -79,8 +112,8 @@ export function MoneyPage() {
       </Card>
 
       <Card title={`Awaiting payout (${d.awaiting_payout.count})`}>
-        {d.awaiting_payout.orders.length === 0 ? (
-          <EmptyState>Nothing pending.</EmptyState>
+        {awaitingPayout.length === 0 ? (
+          <EmptyState>{search ? 'No matches.' : 'Nothing pending.'}</EmptyState>
         ) : (
           <table>
             <thead>
@@ -92,7 +125,7 @@ export function MoneyPage() {
               </tr>
             </thead>
             <tbody>
-              {d.awaiting_payout.orders.map((o) => {
+              {awaitingPayout.map((o) => {
                 const hasBankAccount = Boolean(o.bank_name && o.bank_account_number);
                 return (
                   <tr key={o.id}>
@@ -127,8 +160,8 @@ export function MoneyPage() {
       </Card>
 
       <Card title={`Awaiting refund (${d.awaiting_refund.count})`}>
-        {d.awaiting_refund.orders.length === 0 ? (
-          <EmptyState>Nothing pending.</EmptyState>
+        {awaitingRefund.length === 0 ? (
+          <EmptyState>{search ? 'No matches.' : 'Nothing pending.'}</EmptyState>
         ) : (
           <table>
             <thead>
@@ -139,7 +172,7 @@ export function MoneyPage() {
               </tr>
             </thead>
             <tbody>
-              {d.awaiting_refund.orders.map((o) => (
+              {awaitingRefund.map((o) => (
                 <tr key={o.id}>
                   <td>
                     <Link to={`/orders/${o.id}`}>{o.item_description}</Link>
@@ -158,8 +191,8 @@ export function MoneyPage() {
       </Card>
 
       <Card title={`Recent payouts (${d.paid_out.count})`}>
-        {d.paid_out.payouts.length === 0 ? (
-          <EmptyState>None recorded yet.</EmptyState>
+        {paidOut.length === 0 ? (
+          <EmptyState>{search ? 'No matches.' : 'None recorded yet.'}</EmptyState>
         ) : (
           <table>
             <thead>
@@ -172,7 +205,7 @@ export function MoneyPage() {
               </tr>
             </thead>
             <tbody>
-              {d.paid_out.payouts.map((p) => (
+              {paidOut.map((p) => (
                 <tr key={p.id}>
                   <td>
                     <Link to={`/orders/${p.order_id}`}>{p.item_description}</Link>
@@ -195,8 +228,8 @@ export function MoneyPage() {
       </Card>
 
       <Card title={`Recent refunds (${d.refunded.count})`}>
-        {d.refunded.refunds.length === 0 ? (
-          <EmptyState>None recorded yet.</EmptyState>
+        {refunded.length === 0 ? (
+          <EmptyState>{search ? 'No matches.' : 'None recorded yet.'}</EmptyState>
         ) : (
           <table>
             <thead>
@@ -208,7 +241,7 @@ export function MoneyPage() {
               </tr>
             </thead>
             <tbody>
-              {d.refunded.refunds.map((r) => (
+              {refunded.map((r) => (
                 <tr key={r.id}>
                   <td>
                     <Link to={`/orders/${r.order_id}`}>{r.item_description}</Link>

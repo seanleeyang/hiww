@@ -132,6 +132,21 @@ describe('UsersPage', () => {
     expect(screen.queryByText('Bob Shopper')).not.toBeInTheDocument();
   });
 
+  it('filters the table by risk level', async () => {
+    const testUser = userEvent.setup();
+    renderUsersPage([
+      user({ id: 'a', full_name: 'Alice Traveler', risk_status: 'clear' }),
+      user({ id: 'b', full_name: 'Bob Shopper', risk_status: 'flagged' }),
+    ]);
+
+    expect(await screen.findByText('Alice Traveler')).toBeInTheDocument();
+    expect(screen.getByText('Bob Shopper')).toBeInTheDocument();
+
+    await testUser.selectOptions(screen.getByDisplayValue('All risk levels'), 'flagged');
+    expect(screen.getByText('Bob Shopper')).toBeInTheDocument();
+    expect(screen.queryByText('Alice Traveler')).not.toBeInTheDocument();
+  });
+
   it('finds a user by their membership ID alone', async () => {
     const testUser = userEvent.setup();
     renderUsersPage([

@@ -16,6 +16,7 @@ export function UsersPage() {
   const [flagging, setFlagging] = useState<AdminUser | null>(null);
   const [rejecting, setRejecting] = useState<AdminUser | null>(null);
   const [search, setSearch] = useState('');
+  const [riskFilter, setRiskFilter] = useState('');
   // This table lists every user regardless of ID-check status (unlike the ID
   // Checks page's pending-only queue), so a decided row sticks around with
   // one of Approve/Reject always still clickable -- e.g. reject someone,
@@ -61,7 +62,8 @@ export function UsersPage() {
   });
 
   const filtered = useMemo(() => {
-    const items = users.data?.users ?? [];
+    let items = users.data?.users ?? [];
+    if (riskFilter) items = items.filter((u) => u.risk_status === riskFilter);
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter(
@@ -70,7 +72,7 @@ export function UsersPage() {
         u.email.toLowerCase().includes(q) ||
         u.membership_id.toLowerCase().includes(q)
     );
-  }, [users.data, search]);
+  }, [users.data, search, riskFilter]);
 
   if (users.isLoading) return <LoadingState />;
   if (users.isError) return <ErrorState error={users.error} onRetry={() => users.refetch()} />;
@@ -79,12 +81,20 @@ export function UsersPage() {
     <div>
       <PageHeader title="Users" subtitle="Every account. Review ID checks and flag risky accounts." />
 
-      <input
-        placeholder="Search by name, email, or member ID…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 16, maxWidth: 320 }}
-      />
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          placeholder="Search by name, email, or member ID…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ maxWidth: 320 }}
+        />
+        <select value={riskFilter} onChange={(e) => setRiskFilter(e.target.value)}>
+          <option value="">All risk levels</option>
+          <option value="clear">Clear</option>
+          <option value="flagged">Flagged</option>
+          <option value="restricted">Restricted</option>
+        </select>
+      </div>
 
       <table>
         <thead>

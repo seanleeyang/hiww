@@ -1,21 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api/client';
-import type { Want } from '../api/types';
+import type { AdminUser, Want } from '../api/types';
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '../components/Toast';
 import { money } from '../lib/format';
-import { lifecycleTone, wantStatusLabel } from '../lib/status';
+import { WANT_STATUSES, lifecycleTone, wantStatusLabel } from '../lib/status';
 
 export function WantsPage() {
   const qc = useQueryClient();
   const toast = useToast();
   const wants = useQuery({ queryKey: ['admin-wants'], queryFn: () => api.get<{ requests: Want[] }>('/admin/requests') });
+  const users = useQuery({ queryKey: ['admin-users'], queryFn: () => api.get<{ users: AdminUser[] }>('/admin/users') });
   const [removing, setRemoving] = useState<Want | null>(null);
   const [cancellingAll, setCancellingAll] = useState(false);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const onError = (err: unknown) => toast(err instanceof ApiError ? err.message : 'Something went wrong', 'error');
 
@@ -36,8 +38,14 @@ export function WantsPage() {
     onError,
   });
 
+  const membershipById = useMemo(
+    () => new Map((users.data?.users ?? []).map((u) => [u.id, u.membership_id])),
+    [users.data]
+  );
+
   const filtered = useMemo(() => {
-    const items = wants.data?.requests ?? [];
+    let items = wants.data?.requests ?? [];
+    if (statusFilter) items = items.filter((w) => w.status === statusFilter);
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter(
@@ -45,9 +53,10 @@ export function WantsPage() {
         w.item_description.toLowerCase().includes(q) ||
         (w.title ?? '').toLowerCase().includes(q) ||
         w.shopper_name.toLowerCase().includes(q) ||
-        w.shopper_email.toLowerCase().includes(q)
+        w.shopper_email.toLowerCase().includes(q) ||
+        (membershipById.get(w.shopper_id) ?? '').toLowerCase().includes(q)
     );
-  }, [wants.data, search]);
+  }, [wants.data, search, statusFilter, membershipById]);
 
   const liveCount = (wants.data?.requests ?? []).filter((w) => w.status === 'open' || w.status === 'accepted').length;
 
@@ -66,15 +75,25 @@ export function WantsPage() {
         }
       />
 
-      <input
-        placeholder="Search by item or shopper…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 16, maxWidth: 320 }}
-      />
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          placeholder="Search by item, shopper, or member ID…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ maxWidth: 320 }}
+        />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">All statuses</option>
+          {WANT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {wantStatusLabel(s)}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {filtered.length === 0 ? (
-        <EmptyState>{search ? 'No wants match your search.' : 'No wants yet.'}</EmptyState>
+        <EmptyState>{search || statusFilter ? 'No wants match your filters.' : 'No wants yet.'}</EmptyState>
       ) : (
         <table>
           <thead>
