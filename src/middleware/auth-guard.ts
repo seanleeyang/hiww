@@ -125,6 +125,12 @@ export async function registerAuthGuard(app: FastifyInstance): Promise<void> {
       }
     }
 
+    // `routeUrl` is undefined for a genuinely unmatched route (a plain 404,
+    // or a client-side admin-console path with no matching static file,
+    // falling back to the SPA shell) — not a resolution failure on a real
+    // route. Those must stay reachable with no token, same as any 404 page,
+    // so this is intentionally treated the same as an explicit PUBLIC_ROUTES
+    // match, not a fail-open gap.
     const routeUrl = matchedRoute(request);
     if (!routeUrl || PUBLIC_ROUTES.has(routeUrl)) {
       return;
