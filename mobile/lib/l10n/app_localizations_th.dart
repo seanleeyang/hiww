@@ -1738,6 +1738,21 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionSaveToDevice => 'บันทึกลงในอุปกรณ์';
 
   @override
+  String get labelMemberId => 'รหัสสมาชิก';
+
+  @override
+  String get actionShow => 'แสดง';
+
+  @override
+  String get actionHide => 'ซ่อน';
+
+  @override
+  String get actionCopy => 'คัดลอก';
+
+  @override
+  String get infoCopiedToClipboard => 'คัดลอกไปยังคลิปบอร์ดแล้ว';
+
+  @override
   String get categoryAll => 'ทั้งหมด';
 
   @override

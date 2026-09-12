@@ -97,18 +97,10 @@ class AccountScreen extends ConsumerWidget {
                             user.fullName,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            user.homeCity == null
-                                ? user.email
-                                : '${user.homeCity} · ${user.email}',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
-                          ),
+                          if (user.membershipId.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            _MembershipIdRow(membershipId: user.membershipId),
+                          ],
                           const SizedBox(height: 6),
                           StarRatingDisplay(
                             rating: user.ratingAvg,
@@ -154,6 +146,67 @@ class AccountScreen extends ConsumerWidget {
             );
         },
       ),
+    );
+  }
+}
+
+/// Masked by default (`H12345XXX` — first 6 characters shown, the rest
+/// replaced by a literal "XXX" rather than dots matching the real length, so
+/// the number's actual length isn't leaked either) so it doesn't clutter the
+/// header; tapping the eye reveals the full ID plus a copy button, for the
+/// rare case someone needs to read it out to support.
+class _MembershipIdRow extends StatefulWidget {
+  const _MembershipIdRow({required this.membershipId});
+  final String membershipId;
+
+  @override
+  State<_MembershipIdRow> createState() => _MembershipIdRowState();
+}
+
+class _MembershipIdRowState extends State<_MembershipIdRow> {
+  bool _revealed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final id = widget.membershipId;
+    final masked = id.length > 6 ? '${id.substring(0, 6)}XXX' : id;
+    final mutedStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        );
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('${l10n.labelMemberId} ', style: mutedStyle),
+        Text(_revealed ? id : masked, style: mutedStyle),
+        IconButton(
+          icon: Icon(
+            _revealed ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            size: 16,
+          ),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          visualDensity: VisualDensity.compact,
+          tooltip: _revealed ? l10n.actionHide : l10n.actionShow,
+          onPressed: () => setState(() => _revealed = !_revealed),
+        ),
+        if (_revealed)
+          IconButton(
+            icon: const Icon(Icons.copy_outlined, size: 16),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            visualDensity: VisualDensity.compact,
+            tooltip: l10n.actionCopy,
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: id));
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.infoCopiedToClipboard)),
+              );
+            },
+          ),
+      ],
     );
   }
 }

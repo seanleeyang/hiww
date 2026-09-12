@@ -3182,6 +3182,36 @@ abstract class AppLocalizations {
   /// **'Save to device'**
   String get actionSaveToDevice;
 
+  /// No description provided for @labelMemberId.
+  ///
+  /// In en, this message translates to:
+  /// **'Member ID'**
+  String get labelMemberId;
+
+  /// No description provided for @actionShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get actionShow;
+
+  /// No description provided for @actionHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get actionHide;
+
+  /// No description provided for @actionCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get actionCopy;
+
+  /// No description provided for @infoCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get infoCopiedToClipboard;
+
   /// No description provided for @categoryAll.
   ///
   /// In en, this message translates to:

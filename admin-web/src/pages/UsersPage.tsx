@@ -64,7 +64,12 @@ export function UsersPage() {
     const items = users.data?.users ?? [];
     const q = search.trim().toLowerCase();
     if (!q) return items;
-    return items.filter((u) => u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    return items.filter(
+      (u) =>
+        u.full_name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.membership_id.toLowerCase().includes(q)
+    );
   }, [users.data, search]);
 
   if (users.isLoading) return <LoadingState />;
@@ -75,7 +80,7 @@ export function UsersPage() {
       <PageHeader title="Users" subtitle="Every account. Review ID checks and flag risky accounts." />
 
       <input
-        placeholder="Search by name or email…"
+        placeholder="Search by name, email, or member ID…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{ marginBottom: 16, maxWidth: 320 }}
@@ -85,6 +90,7 @@ export function UsersPage() {
         <thead>
           <tr>
             <th>User</th>
+            <th>Member ID</th>
             <th>Type</th>
             <th>Role</th>
             <th>ID check</th>
@@ -99,6 +105,7 @@ export function UsersPage() {
                 {u.full_name}
                 <div className="muted">{u.email}</div>
               </td>
+              <td className="muted">{u.membership_id}</td>
               <td>{u.user_type}</td>
               <td>{u.role}</td>
               <td>

@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { AppError } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
+import { membershipId } from '@/utils/membership';
 
 export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/admin/reviews', async (request, reply) => {
@@ -498,12 +499,16 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.get('/api/admin/users', async (request, reply) => {
-    const users = await request.db
+    const rows = await request.db
       .selectFrom('users')
-      .select(['id', 'email', 'full_name', 'user_type', 'role', 'kyc_status', 'risk_status', 'created_at'])
+      .select(['id', 'member_seq', 'email', 'full_name', 'user_type', 'role', 'kyc_status', 'risk_status', 'created_at'])
       .orderBy('created_at', 'desc')
       .limit(200)
       .execute();
+
+    // Surfaced as a short, speakable reference number (H00000123) for
+    // admin/support use — see src/utils/membership.ts.
+    const users = rows.map(({ member_seq, ...rest }) => ({ ...rest, membership_id: membershipId(member_seq) }));
 
     reply.send({ success: true, data: { users }, code: 'ADMIN_USERS' });
   });

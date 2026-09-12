@@ -6,6 +6,7 @@ import { hashPassword, signToken, verifyPassword } from '@/utils/auth';
 import { config } from '@/config/env';
 import { profileUpdateSchema, phoneSchema, passwordSchema } from '@/types/schemas';
 import { toUserSummary } from '@/utils/user-summary';
+import { membershipId } from '@/utils/membership';
 import { issueOtp, verifyOtp, isMockOtp } from '@/services/otp';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 
@@ -549,6 +550,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
   const meColumns = [
     'id',
+    'member_seq',
     'email',
     'full_name',
     'user_type',
@@ -586,9 +588,11 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const meResponse = (me: any): Record<string, unknown> => {
     const summary = toUserSummary(me);
+    const { member_seq, ...rest } = me;
     return {
-      ...me,
+      ...rest,
       rating_avg: summary.rating_avg,
+      membership_id: membershipId(member_seq),
       pilot: {
         manual_money: config.manualMoneyPilot,
         payment_instructions: config.paymentInstructions,

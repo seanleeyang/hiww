@@ -1776,6 +1776,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionSaveToDevice => 'Save to device';
 
   @override
+  String get labelMemberId => 'Member ID';
+
+  @override
+  String get actionShow => 'Show';
+
+  @override
+  String get actionHide => 'Hide';
+
+  @override
+  String get actionCopy => 'Copy';
+
+  @override
+  String get infoCopiedToClipboard => 'Copied to clipboard';
+
+  @override
   String get categoryAll => 'All';
 
   @override

@@ -709,6 +709,12 @@
   "actionSaving": "Saving…",
   "actionSaveToDevice": "Save to device",
 
+  "labelMemberId": "Member ID",
+  "actionShow": "Show",
+  "actionHide": "Hide",
+  "actionCopy": "Copy",
+  "infoCopiedToClipboard": "Copied to clipboard",
+
   "categoryAll": "All",
   "categoryBeauty": "Beauty",
   "categoryFashion": "Fashion",

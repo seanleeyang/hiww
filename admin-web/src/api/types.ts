@@ -17,6 +17,8 @@ export interface UserSummary {
 
 export interface AdminUser {
   id: string;
+  /** Short reference number (e.g. H00000123) for support/admin use — not a secret, just a speakable ID. */
+  membership_id: string;
   email: string;
   full_name: string;
   user_type: 'shopper' | 'traveler' | 'both';

@@ -556,6 +556,12 @@
   "actionSaving": "กำลังบันทึก…",
   "actionSaveToDevice": "บันทึกลงในอุปกรณ์",
 
+  "labelMemberId": "รหัสสมาชิก",
+  "actionShow": "แสดง",
+  "actionHide": "ซ่อน",
+  "actionCopy": "คัดลอก",
+  "infoCopiedToClipboard": "คัดลอกไปยังคลิปบอร์ดแล้ว",
+
   "categoryAll": "ทั้งหมด",
   "categoryBeauty": "ความงาม",
   "categoryFashion": "แฟชั่น",

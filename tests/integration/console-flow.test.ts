@@ -44,8 +44,18 @@ describe('operator console', () => {
 
     const ok = await ctx.app.inject({ method: 'GET', url: '/api/admin/users', headers: authHeader(admin) });
     expect(ok.statusCode).toBe(200);
-    expect(Array.isArray(ok.json().data.users)).toBe(true);
-    expect(ok.json().data.users.length).toBeGreaterThanOrEqual(2);
+    const users = ok.json().data.users;
+    expect(Array.isArray(users)).toBe(true);
+    expect(users.length).toBeGreaterThanOrEqual(2);
+
+    // Every user gets a short, human-referenceable membership number for
+    // admin/support use (H + 8 digits) — never the raw sequence, and no
+    // two accounts collide.
+    for (const u of users) {
+      expect(u.membership_id).toMatch(/^H\d{8}$/);
+      expect(u.member_seq).toBeUndefined();
+    }
+    expect(new Set(users.map((u: { membership_id: string }) => u.membership_id)).size).toBe(users.length);
 
     const nobody = await ctx.app.inject({ method: 'GET', url: '/api/admin/users' });
     expect(nobody.statusCode).toBe(401);

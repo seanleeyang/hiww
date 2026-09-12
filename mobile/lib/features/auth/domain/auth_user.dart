@@ -30,6 +30,7 @@ class PilotInfo {
 class AuthUser {
   const AuthUser({
     required this.id,
+    this.membershipId = '',
     required this.email,
     required this.fullName,
     required this.userType,
@@ -60,6 +61,10 @@ class AuthUser {
   });
 
   final String id;
+
+  /// Short reference number (e.g. `H00000123`) shown on the Account page and
+  /// to admins/support — not a secret, just something shorter than a UUID.
+  final String membershipId;
   final String email;
   final String fullName;
   final UserType userType;
@@ -141,6 +146,7 @@ class AuthUser {
 
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
         id: json['id'].toString(),
+        membershipId: (json['membership_id'] ?? '').toString(),
         email: (json['email'] ?? '').toString(),
         fullName: (json['full_name'] ?? '').toString(),
         userType: UserType.parse(json['user_type']),

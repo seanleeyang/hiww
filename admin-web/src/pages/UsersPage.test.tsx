@@ -15,6 +15,7 @@ vi.mock('../api/client', async () => {
 function user(overrides: Partial<AdminUser> = {}): AdminUser {
   return {
     id: 'user-1',
+    membership_id: 'H00000001',
     email: 'shopper@example.com',
     full_name: 'Test Shopper',
     user_type: 'shopper',
@@ -116,18 +117,31 @@ describe('UsersPage', () => {
     expect(screen.queryByRole('button', { name: 'Reconsider' })).not.toBeInTheDocument();
   });
 
-  it('filters the table by name or email', async () => {
+  it('filters the table by name, email, or member ID', async () => {
     const testUser = userEvent.setup();
     renderUsersPage([
-      user({ id: 'a', full_name: 'Alice Traveler', email: 'alice@example.com' }),
-      user({ id: 'b', full_name: 'Bob Shopper', email: 'bob@example.com' }),
+      user({ id: 'a', full_name: 'Alice Traveler', email: 'alice@example.com', membership_id: 'H00000001' }),
+      user({ id: 'b', full_name: 'Bob Shopper', email: 'bob@example.com', membership_id: 'H00000002' }),
     ]);
 
     expect(await screen.findByText('Alice Traveler')).toBeInTheDocument();
     expect(screen.getByText('Bob Shopper')).toBeInTheDocument();
 
-    await testUser.type(screen.getByPlaceholderText('Search by name or email…'), 'alice');
+    await testUser.type(screen.getByPlaceholderText('Search by name, email, or member ID…'), 'alice');
     expect(screen.getByText('Alice Traveler')).toBeInTheDocument();
     expect(screen.queryByText('Bob Shopper')).not.toBeInTheDocument();
+  });
+
+  it('finds a user by their membership ID alone', async () => {
+    const testUser = userEvent.setup();
+    renderUsersPage([
+      user({ id: 'a', full_name: 'Alice Traveler', email: 'alice@example.com', membership_id: 'H00000001' }),
+      user({ id: 'b', full_name: 'Bob Shopper', email: 'bob@example.com', membership_id: 'H00000002' }),
+    ]);
+
+    await screen.findByText('Alice Traveler');
+    await testUser.type(screen.getByPlaceholderText('Search by name, email, or member ID…'), 'H00000002');
+    expect(screen.getByText('Bob Shopper')).toBeInTheDocument();
+    expect(screen.queryByText('Alice Traveler')).not.toBeInTheDocument();
   });
 });

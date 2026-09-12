@@ -14,6 +14,8 @@ type JsonbArray<T> = ColumnType<T, string | undefined, string>;
 
 export interface UsersTable {
   id: string;
+  /** Raw sequence backing the `H00000123`-style membership number (migration 044) — see `src/utils/membership.ts`. Auto-assigned by a DB sequence default; existing users were backfilled in signup order. */
+  member_seq: Generated<number>;
   email: string;
   full_name: string;
   user_type: 'shopper' | 'traveler' | 'both';

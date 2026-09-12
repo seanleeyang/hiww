@@ -24,6 +24,9 @@ describe('profile + reputation', () => {
     expect(body.rating_count).toBe(0);
     expect(body.delivered_count).toBe(0);
     expect(body.avatar_url).toBeNull();
+    // Short reference number for admin/support use — never the raw sequence.
+    expect(body.membership_id).toMatch(/^H\d{8}$/);
+    expect(body.member_seq).toBeUndefined();
 
     const patch = await ctx.app.inject({
       method: 'PATCH',

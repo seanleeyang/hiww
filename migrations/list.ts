@@ -43,6 +43,7 @@ import * as m040 from './040_kyc_ai_check_and_form_split';
 import * as m041 from './041_personal_information';
 import * as m042 from './042_bank_account';
 import * as m043 from './043_payout_bank_snapshot';
+import * as m044 from './044_membership_id';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -89,4 +90,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '041_personal_information', up: m041.up },
   { name: '042_bank_account', up: m042.up },
   { name: '043_payout_bank_snapshot', up: m043.up },
+  { name: '044_membership_id', up: m044.up },
 ];
