@@ -1830,7 +1830,4 @@ class AppLocalizationsTh extends AppLocalizations {
   String reviewsSectionCount(int count) {
     return 'รีวิว ($count)';
   }
-
-  @override
-  String get hintNameAsOnThaiId => 'ภาษาไทย ตามที่ปรากฏบนบัตรประชาชน';
 }

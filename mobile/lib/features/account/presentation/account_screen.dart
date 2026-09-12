@@ -1034,20 +1034,14 @@ class _KycCardState extends ConsumerState<_KycCard> {
                   Expanded(
                     child: TextField(
                       controller: _firstName,
-                      decoration: InputDecoration(
-                        labelText: l10n.fieldFirstNameOnDocument,
-                        hintText: _docType == 'id_card' ? l10n.hintNameAsOnThaiId : null,
-                      ),
+                      decoration: InputDecoration(labelText: l10n.fieldFirstNameOnDocument),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
                       controller: _lastName,
-                      decoration: InputDecoration(
-                        labelText: l10n.fieldLastNameOnDocument,
-                        hintText: _docType == 'id_card' ? l10n.hintNameAsOnThaiId : null,
-                      ),
+                      decoration: InputDecoration(labelText: l10n.fieldLastNameOnDocument),
                     ),
                   ),
                 ],
