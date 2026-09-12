@@ -996,14 +996,13 @@ class _KycCardState extends ConsumerState<_KycCard> {
             const SizedBox(height: 12),
             if (!_expanded)
               FilledButton.tonal(
-                onPressed: () => setState(() {
-                  _expanded = true;
-                  if (_firstName.text.isEmpty && _lastName.text.isEmpty) {
-                    final parts = user.fullName.trim().split(RegExp(r'\s+'));
-                    _firstName.text = parts.first;
-                    if (parts.length > 1) _lastName.text = parts.sublist(1).join(' ');
-                  }
-                }),
+                // Deliberately does NOT prefill name from the account's own
+                // full name — that's a different field, may be in a
+                // different language or script than this document (e.g. an
+                // English account name vs. a Thai ID card), and prefilling
+                // it just meant backspacing over the wrong value instead of
+                // saving any typing.
+                onPressed: () => setState(() => _expanded = true),
                 child: Text(
                   user.kycStatus == 'rejected'
                       ? l10n.actionUpdateIdDetails
