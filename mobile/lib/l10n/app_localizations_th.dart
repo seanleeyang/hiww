@@ -494,6 +494,18 @@ class AppLocalizationsTh extends AppLocalizations {
       'กรอกที่อยู่ตามที่ปรากฏบนเอกสารของคุณ';
 
   @override
+  String get fieldHouseNumber => 'บ้านเลขที่';
+
+  @override
+  String get fieldVillageNumber => 'หมู่ที่ (ไม่บังคับ)';
+
+  @override
+  String get fieldAlley => 'ซอย (ไม่บังคับ)';
+
+  @override
+  String get fieldRoad => 'ถนน (ไม่บังคับ)';
+
+  @override
   String get fieldDocumentPhoto => 'แนบรูปถ่ายเอกสาร';
 
   @override

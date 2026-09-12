@@ -795,7 +795,21 @@ class _KycCardState extends ConsumerState<_KycCard> {
   final _docId = TextEditingController();
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
+  // Passport addresses aren't in any standard machine-readable shape, so
+  // they stay one free-text field. A Thai ID card / house-registration
+  // address, though, always has the same components (house/plot no., Moo,
+  // Soi, Road, sub-district, district, province, postal code) — see
+  // `_houseNumber` etc. below — so it's collected as those instead and
+  // composed into one string for the backend's single `address` column.
   final _address = TextEditingController();
+  final _houseNumber = TextEditingController();
+  final _villageNumber = TextEditingController();
+  final _alley = TextEditingController();
+  final _road = TextEditingController();
+  final _addrProvince = TextEditingController();
+  final _addrDistrict = TextEditingController();
+  final _addrSubdistrict = TextEditingController();
+  final _addrPostalCode = TextEditingController();
   String _docType = 'id_card';
   String? _photoUrl;
   String? _selfieUrl;
@@ -809,7 +823,37 @@ class _KycCardState extends ConsumerState<_KycCard> {
     _firstName.dispose();
     _lastName.dispose();
     _address.dispose();
+    _houseNumber.dispose();
+    _villageNumber.dispose();
+    _alley.dispose();
+    _road.dispose();
+    _addrProvince.dispose();
+    _addrDistrict.dispose();
+    _addrSubdistrict.dispose();
+    _addrPostalCode.dispose();
     super.dispose();
+  }
+
+  /// Assembles the Thai ID address fields into one string, in the standard
+  /// house-registration order, for the backend's single `kyc_address`
+  /// column — e.g. "123/45 Moo 6, Soi Sukhumvit 24, Sukhumvit Road,
+  /// Khlong Tan Nuea, Watthana, Bangkok 10110".
+  String _composedThaiAddress() {
+    final parts = <String>[];
+    if (_houseNumber.text.trim().isNotEmpty) parts.add(_houseNumber.text.trim());
+    if (_villageNumber.text.trim().isNotEmpty) parts.add('Moo ${_villageNumber.text.trim()}');
+    if (_alley.text.trim().isNotEmpty) parts.add('Soi ${_alley.text.trim()}');
+    if (_road.text.trim().isNotEmpty) parts.add('${_road.text.trim()} Road');
+    final line1 = parts.join(', ');
+
+    final locality = [_addrSubdistrict.text, _addrDistrict.text, _addrProvince.text]
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .join(', ');
+
+    return [line1, [locality, _addrPostalCode.text.trim()].where((p) => p.isNotEmpty).join(' ')]
+        .where((p) => p.isNotEmpty)
+        .join(', ');
   }
 
   Future<void> _submit() async {
@@ -827,7 +871,16 @@ class _KycCardState extends ConsumerState<_KycCard> {
       setState(() => _error = l10n.errorEnterDocumentNumber);
       return;
     }
-    if (_address.text.trim().length < 3) {
+    if (_docType == 'id_card') {
+      if (_houseNumber.text.trim().isEmpty ||
+          _addrProvince.text.trim().isEmpty ||
+          _addrDistrict.text.trim().isEmpty ||
+          _addrSubdistrict.text.trim().isEmpty ||
+          _addrPostalCode.text.trim().isEmpty) {
+        setState(() => _error = l10n.errorEnterAddressOnDocument);
+        return;
+      }
+    } else if (_address.text.trim().length < 3) {
       setState(() => _error = l10n.errorEnterAddressOnDocument);
       return;
     }
@@ -849,7 +902,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
             documentId: _docId.text.trim(),
             firstName: _firstName.text.trim(),
             lastName: _lastName.text.trim(),
-            address: _address.text.trim(),
+            address: _docType == 'id_card' ? _composedThaiAddress() : _address.text.trim(),
             documentPhotoUrl: _photoUrl!,
             selfiePhotoUrl: _selfieUrl!,
           );
@@ -862,6 +915,14 @@ class _KycCardState extends ConsumerState<_KycCard> {
         _firstName.clear();
         _lastName.clear();
         _address.clear();
+        _houseNumber.clear();
+        _villageNumber.clear();
+        _alley.clear();
+        _road.clear();
+        _addrProvince.clear();
+        _addrDistrict.clear();
+        _addrSubdistrict.clear();
+        _addrPostalCode.clear();
         _photoUrl = null;
         _selfieUrl = null;
       });
@@ -969,11 +1030,67 @@ class _KycCardState extends ConsumerState<_KycCard> {
                     _docType == 'id_card' ? [ThaiNationalIdInputFormatter()] : null,
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _address,
-                decoration: InputDecoration(labelText: l10n.fieldAddressOnDocument),
-                maxLines: 2,
-              ),
+              if (_docType == 'id_card') ...[
+                TextField(
+                  controller: _houseNumber,
+                  decoration: InputDecoration(
+                    labelText: l10n.fieldHouseNumber,
+                    hintText: '123/45',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _villageNumber,
+                        decoration: InputDecoration(labelText: l10n.fieldVillageNumber),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: _alley,
+                        decoration: InputDecoration(labelText: l10n.fieldAlley),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _road,
+                  decoration: InputDecoration(labelText: l10n.fieldRoad),
+                ),
+                const SizedBox(height: 12),
+                ThaiAddressPicker(
+                  province: _addrProvince.text,
+                  district: _addrDistrict.text,
+                  subdistrict: _addrSubdistrict.text,
+                  postalCode: _addrPostalCode.text,
+                  provinceLabel: l10n.fieldProvince,
+                  districtLabel: l10n.fieldDistrict,
+                  subdistrictLabel: l10n.fieldSubdistrict,
+                  postalCodeLabel: l10n.fieldPostalCode,
+                  onChanged: ({
+                    required province,
+                    required district,
+                    required subdistrict,
+                    required postalCode,
+                  }) {
+                    setState(() {
+                      _addrProvince.text = province;
+                      _addrDistrict.text = district;
+                      _addrSubdistrict.text = subdistrict;
+                      _addrPostalCode.text = postalCode;
+                    });
+                  },
+                ),
+              ] else
+                TextField(
+                  controller: _address,
+                  decoration: InputDecoration(labelText: l10n.fieldAddressOnDocument),
+                  maxLines: 2,
+                ),
               const SizedBox(height: 12),
               ImagePickerField(
                 value: _photoUrl,

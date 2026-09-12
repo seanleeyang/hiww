@@ -1004,6 +1004,30 @@ abstract class AppLocalizations {
   /// **'Enter the address as it appears on your document'**
   String get errorEnterAddressOnDocument;
 
+  /// No description provided for @fieldHouseNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'House / building number'**
+  String get fieldHouseNumber;
+
+  /// No description provided for @fieldVillageNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Village no. (Moo) (optional)'**
+  String get fieldVillageNumber;
+
+  /// No description provided for @fieldAlley.
+  ///
+  /// In en, this message translates to:
+  /// **'Alley / Soi (optional)'**
+  String get fieldAlley;
+
+  /// No description provided for @fieldRoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Road (optional)'**
+  String get fieldRoad;
+
   /// No description provided for @fieldDocumentPhoto.
   ///
   /// In en, this message translates to:

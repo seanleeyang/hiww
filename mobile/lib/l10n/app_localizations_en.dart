@@ -498,6 +498,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the address as it appears on your document';
 
   @override
+  String get fieldHouseNumber => 'House / building number';
+
+  @override
+  String get fieldVillageNumber => 'Village no. (Moo) (optional)';
+
+  @override
+  String get fieldAlley => 'Alley / Soi (optional)';
+
+  @override
+  String get fieldRoad => 'Road (optional)';
+
+  @override
   String get fieldDocumentPhoto => 'Add a photo of the document';
 
   @override
