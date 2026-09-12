@@ -85,6 +85,37 @@ describe('UsersPage', () => {
     expect(dialog).not.toBeInTheDocument();
   });
 
+  it('collapses Approve/Reject into a single "Reconsider" step once a decision exists', async () => {
+    const testUser = userEvent.setup();
+    renderUsersPage([user({ kyc_status: 'approved' })]);
+
+    // Already decided — neither action button is just sitting there
+    // clickable; only the deliberate "Reconsider" step is available.
+    expect(await screen.findByRole('button', { name: 'Reconsider' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Approve ID' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reject ID' })).not.toBeInTheDocument();
+
+    await testUser.click(screen.getByRole('button', { name: 'Reconsider' }));
+
+    // Only the flip action makes sense for an already-approved user.
+    expect(screen.getByRole('button', { name: 'Reject ID' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Approve ID' })).not.toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+
+    // Backing out again collapses it back to "Reconsider" with no request sent.
+    await testUser.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Reconsider' })).toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it('shows both actions unprompted while an ID check is still pending', async () => {
+    renderUsersPage([user({ kyc_status: 'pending' })]);
+
+    expect(await screen.findByRole('button', { name: 'Approve ID' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reject ID' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reconsider' })).not.toBeInTheDocument();
+  });
+
   it('filters the table by name or email', async () => {
     const testUser = userEvent.setup();
     renderUsersPage([

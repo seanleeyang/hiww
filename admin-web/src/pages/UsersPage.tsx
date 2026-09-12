@@ -16,6 +16,14 @@ export function UsersPage() {
   const [flagging, setFlagging] = useState<AdminUser | null>(null);
   const [rejecting, setRejecting] = useState<AdminUser | null>(null);
   const [search, setSearch] = useState('');
+  // This table lists every user regardless of ID-check status (unlike the ID
+  // Checks page's pending-only queue), so a decided row sticks around with
+  // one of Approve/Reject always still clickable -- e.g. reject someone,
+  // and "Approve ID" is right there to accidentally re-approve them before
+  // they've even resubmitted anything. Once a decision exists, both buttons
+  // collapse into a single deliberate "Reconsider" step per row; only after
+  // that does the flip action (whichever one still makes sense) reappear.
+  const [reconsideringIds, setReconsideringIds] = useState<Set<string>>(new Set());
 
   const onError = (err: unknown) => toast(err instanceof ApiError ? err.message : 'Something went wrong', 'error');
 
@@ -32,6 +40,11 @@ export function UsersPage() {
       note?: string;
     }) => api.post(`/admin/users/${userId}/kyc-review`, { status, reason_code, note }),
     onSuccess: (_data, variables) => {
+      setReconsideringIds((prev) => {
+        const next = new Set(prev);
+        next.delete(variables.userId);
+        return next;
+      });
       qc.invalidateQueries({ queryKey: ['admin-users'] });
       toast(variables.status === 'approved' ? 'ID check approved' : 'ID check rejected — the user has been notified why');
     },
@@ -99,19 +112,51 @@ export function UsersPage() {
               </td>
               <td>
                 <div className="btn-row">
-                  {u.kyc_status !== 'approved' && (
+                  {u.kyc_status === 'pending' || reconsideringIds.has(u.id) ? (
+                    <>
+                      {u.kyc_status !== 'approved' && (
+                        <button
+                          type="button"
+                          className="btn btn-small"
+                          disabled={review.isPending}
+                          onClick={() => review.mutate({ userId: u.id, status: 'approved' })}
+                        >
+                          Approve ID
+                        </button>
+                      )}
+                      {u.kyc_status !== 'rejected' && (
+                        <button
+                          type="button"
+                          className="btn btn-small"
+                          disabled={review.isPending}
+                          onClick={() => setRejecting(u)}
+                        >
+                          Reject ID
+                        </button>
+                      )}
+                      {u.kyc_status !== 'pending' && (
+                        <button
+                          type="button"
+                          className="btn btn-small btn-ghost"
+                          onClick={() =>
+                            setReconsideringIds((prev) => {
+                              const next = new Set(prev);
+                              next.delete(u.id);
+                              return next;
+                            })
+                          }
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </>
+                  ) : (
                     <button
                       type="button"
-                      className="btn btn-small"
-                      disabled={review.isPending}
-                      onClick={() => review.mutate({ userId: u.id, status: 'approved' })}
+                      className="btn btn-small btn-ghost"
+                      onClick={() => setReconsideringIds((prev) => new Set(prev).add(u.id))}
                     >
-                      Approve ID
-                    </button>
-                  )}
-                  {u.kyc_status !== 'rejected' && (
-                    <button type="button" className="btn btn-small" disabled={review.isPending} onClick={() => setRejecting(u)}>
-                      Reject ID
+                      Reconsider
                     </button>
                   )}
                   {u.risk_status === 'clear' ? (

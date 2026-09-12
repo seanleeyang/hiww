@@ -61,6 +61,13 @@ export function IdChecksPage() {
   const toast = useToast();
   const queue = useQuery({ queryKey: ['admin-reviews'], queryFn: () => api.get<{ queue: QueueItem[] }>('/admin/reviews') });
   const [rejecting, setRejecting] = useState<KycItem | null>(null);
+  // A decided item leaves this queue once `admin-reviews` refetches (it only
+  // lists pending ones) -- but that refetch is async, so there's a brief
+  // window right after a successful decision where the card (and its
+  // buttons) would otherwise still be sitting there, clickable, on stale
+  // data. Hiding by id the instant the mutation succeeds closes that gap
+  // without waiting on the network.
+  const [decidedUserIds, setDecidedUserIds] = useState<Set<string>>(new Set());
 
   const review = useMutation({
     mutationFn: ({
@@ -75,6 +82,7 @@ export function IdChecksPage() {
       note?: string;
     }) => api.post(`/admin/users/${userId}/kyc-review`, { status, reason_code, note }),
     onSuccess: (_data, variables) => {
+      setDecidedUserIds((prev) => new Set(prev).add(variables.userId));
       qc.invalidateQueries({ queryKey: ['admin-reviews'] });
       toast(variables.status === 'approved' ? 'ID check approved' : 'ID check rejected — the user has been notified why');
     },
@@ -84,7 +92,8 @@ export function IdChecksPage() {
   if (queue.isLoading) return <LoadingState />;
   if (queue.isError) return <ErrorState error={queue.error} onRetry={() => queue.refetch()} />;
 
-  const items = (queue.data?.queue.filter((q): q is KycItem => q.type === 'kyc')) ?? [];
+  const items =
+    queue.data?.queue.filter((q): q is KycItem => q.type === 'kyc' && !decidedUserIds.has(q.user_id)) ?? [];
 
   return (
     <div>

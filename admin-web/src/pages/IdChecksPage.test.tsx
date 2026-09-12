@@ -116,4 +116,19 @@ describe('IdChecksPage', () => {
       note: undefined,
     });
   });
+
+  it('hides a card the instant it is approved, without waiting on the list to refetch', async () => {
+    const testUser = userEvent.setup();
+    vi.mocked(api.post).mockResolvedValue({});
+    // The mock keeps returning the same item forever — the query itself
+    // never reports it as gone. If it disappears anyway, that's the
+    // client-side "hide what I just decided" guard doing its job, not a
+    // network refetch.
+    renderPage([kycItem()]);
+
+    await testUser.click(await screen.findByRole('button', { name: 'Approve' }));
+
+    await screen.findByText('Nothing pending.');
+    expect(screen.queryByText('Test Traveler')).not.toBeInTheDocument();
+  });
 });
