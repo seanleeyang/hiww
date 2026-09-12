@@ -1,5 +1,6 @@
 import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
 import { __setFileStore, type FileStore } from '@/services/storage';
+import { signUploadKey } from '@/utils/signed-url';
 
 // A 1x1 transparent PNG.
 const PNG_1PX = Buffer.from(
@@ -112,6 +113,84 @@ describe('uploads flow', () => {
     });
 
     expect(res.statusCode).toBe(400);
+  });
+
+  it('refuses to serve a KYC photo with no signature, an expired one, or a tampered one — but accepts a real one', async () => {
+    const traveler = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
+    const { body, contentType } = multipart([
+      { name: 'file', filename: 'id-front.png', contentType: 'image/png', data: PNG_1PX },
+    ]);
+    const upload = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/uploads',
+      headers: { ...authHeader(traveler), 'content-type': contentType },
+      payload: body,
+    });
+    const rawUrl = upload.json().data.url as string;
+    const path = new URL(rawUrl).pathname;
+    const key = path.split('/uploads/')[1];
+
+    await ctx.db
+      .updateTable('users')
+      .set({ kyc_document_photo_url: rawUrl })
+      .where('id', '=', traveler.userId)
+      .execute();
+
+    // No signature at all.
+    const noSig = await ctx.app.inject({ method: 'GET', url: path });
+    expect(noSig.statusCode).toBe(403);
+
+    // Tampered signature — flip a character.
+    const { exp, sig } = signUploadKey(key, 900);
+    const badSig = sig.slice(0, -1) + (sig.at(-1) === '0' ? '1' : '0');
+    const tampered = await ctx.app.inject({ method: 'GET', url: `${path}?exp=${exp}&sig=${badSig}` });
+    expect(tampered.statusCode).toBe(403);
+
+    // Expired — signed for a moment already in the past.
+    const expired = signUploadKey(key, -1);
+    const expiredRes = await ctx.app.inject({
+      method: 'GET',
+      url: `${path}?exp=${expired.exp}&sig=${expired.sig}`,
+    });
+    expect(expiredRes.statusCode).toBe(403);
+
+    // The real thing, exactly as GET /api/admin/reviews would hand it out.
+    const reviews = await ctx.app.inject({ method: 'GET', url: '/api/admin/reviews', headers: authHeader(admin) });
+    const entry = (reviews.json().data.queue as Array<Record<string, unknown>>).find(
+      (q) => q.type === 'kyc' && q.user_id === traveler.userId
+    );
+    const signedPath = new URL(entry!.document_photo_url as string).pathname + new URL(entry!.document_photo_url as string).search;
+    const ok = await ctx.app.inject({ method: 'GET', url: signedPath });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.rawPayload.equals(PNG_1PX)).toBe(true);
+  });
+
+  it('an ordinary (non-KYC) upload needs no signature at all', async () => {
+    const user = await createUser(ctx);
+    const { body, contentType } = multipart([
+      { name: 'file', filename: 'avatar.png', contentType: 'image/png', data: PNG_1PX },
+    ]);
+    const upload = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/uploads',
+      headers: { ...authHeader(user), 'content-type': contentType },
+      payload: body,
+    });
+    const path = new URL(upload.json().data.url as string).pathname;
+
+    const res = await ctx.app.inject({ method: 'GET', url: path });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('rejects a key that does not look like one of ours, before ever touching the database', async () => {
+    const res = await ctx.app.inject({ method: 'GET', url: '/uploads/not-a-real-upload-key.exe' });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('rejects a multi-segment path traversal attempt at the routing level', async () => {
+    const res = await ctx.app.inject({ method: 'GET', url: '/uploads/../../etc/passwd' });
+    expect(res.statusCode).toBe(404);
   });
 
   it('with a remote store, returns the store\'s absolute URL as-is', async () => {

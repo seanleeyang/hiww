@@ -134,8 +134,15 @@ describe('compliance / KYC flow', () => {
     expect(entry?.first_name).toBe('Jane');
     expect(entry?.last_name).toBe('Traveler');
     expect(entry?.address).toBe('123 Sukhumvit Rd, Bangkok');
-    expect(entry?.document_photo_url).toBe('https://example.com/uploads/id-front.jpg');
-    expect(entry?.selfie_photo_url).toBe('https://example.com/uploads/selfie.jpg');
+    // Signed and short-lived, not the bare stored URL — see
+    // src/utils/signed-url.ts. The database row itself (checked above) still
+    // holds the plain, unsigned URL; only what leaves the API is dressed up.
+    expect(entry?.document_photo_url).toMatch(
+      /^https:\/\/example\.com\/uploads\/id-front\.jpg\?exp=\d+&sig=[0-9a-f]+$/
+    );
+    expect(entry?.selfie_photo_url).toMatch(
+      /^https:\/\/example\.com\/uploads\/selfie\.jpg\?exp=\d+&sig=[0-9a-f]+$/
+    );
   });
 
   it('notifies the user their submission was received', async () => {

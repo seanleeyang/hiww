@@ -16,8 +16,6 @@ const PUBLIC_ROUTES = new Set<string>([
   '/api/auth/reset-password',
   '/',
   '/app',
-  // Static serving of user-uploaded images (@fastify/static wildcard route).
-  '/uploads/*',
   // The built admin console (React app) — its JS/CSS/index.html need no
   // token to load; auth is enforced only on the /api/admin/* calls it makes
   // once loaded. A client-side route with no matching static file (e.g.
@@ -38,6 +36,12 @@ const PUBLIC_GET_ROUTES = new Set<string>([
   '/api/trips/:id',
   '/api/requests/:id',
   '/api/users/:id/reviews',
+  // Uploaded images (avatars, trip covers, chat photos, etc.) — a guest
+  // browsing the public feed needs to see these with no token. The one
+  // exception is a KYC document/selfie photo, which the route itself
+  // (src/modules/uploads/routes.ts) requires a short-lived signature for
+  // regardless of what the auth guard decides here.
+  '/uploads/:key',
 ]);
 
 /**

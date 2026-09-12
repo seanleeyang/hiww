@@ -12,6 +12,7 @@ const MESSAGES: Record<string, Entry> = {
   'common.requestNotFound': { en: 'Request not found', th: 'ไม่พบรายการต้องการนี้' },
   'common.offerNotFound': { en: 'Offer not found', th: 'ไม่พบข้อเสนอนี้' },
   'common.disputeNotFound': { en: 'Dispute not found', th: 'ไม่พบข้อพิพาทนี้' },
+  'common.fileNotFound': { en: 'File not found', th: 'ไม่พบไฟล์นี้' },
   'common.notYourTrip': { en: 'Not your trip', th: 'ไม่ใช่ทริปของคุณ' },
   'common.notYourWant': { en: 'Not your want', th: 'ไม่ใช่รายการต้องการของคุณ' },
   'common.notPartOfOrder': { en: 'You are not part of this order', th: 'คุณไม่ได้เป็นส่วนหนึ่งของคำสั่งซื้อนี้' },
@@ -357,6 +358,10 @@ const MESSAGES: Record<string, Entry> = {
   'uploads.storeFailed': {
     en: 'Could not store the image. Try again.',
     th: 'ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่อีกครั้ง',
+  },
+  'uploads.signatureRequired': {
+    en: 'This link has expired or is not valid for this file',
+    th: 'ลิงก์นี้หมดอายุแล้วหรือไม่ถูกต้องสำหรับไฟล์นี้',
   },
 
   // modules/ops/routes.ts

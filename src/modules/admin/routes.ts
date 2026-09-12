@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { AppError } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { membershipId } from '@/utils/membership';
+import { signKycPhotoUrl } from '@/utils/signed-url';
 
 export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/admin/reviews', async (request, reply) => {
@@ -100,8 +101,11 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           first_name: user.kyc_first_name ?? null,
           last_name: user.kyc_last_name ?? null,
           address: user.kyc_address ?? null,
-          document_photo_url: user.kyc_document_photo_url ?? null,
-          selfie_photo_url: user.kyc_selfie_photo_url ?? null,
+          // Signed, short-lived — these are the single most sensitive photos
+          // in the app (a government ID + a selfie), so the raw stored URL
+          // never goes out to a client at all. See src/modules/uploads/routes.ts.
+          document_photo_url: signKycPhotoUrl(user.kyc_document_photo_url),
+          selfie_photo_url: signKycPhotoUrl(user.kyc_selfie_photo_url),
           ai_analysis: user.kyc_ai_analysis ?? null,
           ai_risk: user.kyc_ai_risk ?? null,
           submitted_at: user.kyc_submitted_at ?? null,
