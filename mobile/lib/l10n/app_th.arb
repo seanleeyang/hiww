@@ -161,6 +161,7 @@
   "fieldAddressOnDocument": "ที่อยู่ (ตามเอกสาร)",
   "errorEnterAddressOnDocument": "กรอกที่อยู่ตามที่ปรากฏบนเอกสารของคุณ",
   "fieldHouseNumber": "บ้านเลขที่",
+  "fieldBuildingName": "ชื่ออาคาร",
   "fieldVillageNumber": "หมู่",
   "fieldAlley": "ซอย",
   "fieldRoad": "ถนน",

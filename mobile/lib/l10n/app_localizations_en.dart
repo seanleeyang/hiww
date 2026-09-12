@@ -505,7 +505,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the address as it appears on your document';
 
   @override
-  String get fieldHouseNumber => 'House / building number';
+  String get fieldHouseNumber => 'House / unit number';
+
+  @override
+  String get fieldBuildingName => 'Building name (optional)';
 
   @override
   String get fieldVillageNumber => 'Village no. (Moo) (optional)';

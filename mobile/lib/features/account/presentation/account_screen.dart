@@ -816,6 +816,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
   // composed into one string for the backend's single `address` column.
   final _address = TextEditingController();
   final _houseNumber = TextEditingController();
+  final _buildingName = TextEditingController();
   final _villageNumber = TextEditingController();
   final _alley = TextEditingController();
   final _road = TextEditingController();
@@ -837,6 +838,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
     _lastName.dispose();
     _address.dispose();
     _houseNumber.dispose();
+    _buildingName.dispose();
     _villageNumber.dispose();
     _alley.dispose();
     _road.dispose();
@@ -860,6 +862,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
   String _composedThaiAddress() {
     final parts = <String>[];
     if (_houseNumber.text.trim().isNotEmpty) parts.add(_houseNumber.text.trim());
+    if (_buildingName.text.trim().isNotEmpty) parts.add('อาคาร${_buildingName.text.trim()}');
     if (_villageNumber.text.trim().isNotEmpty) parts.add('หมู่ ${_villageNumber.text.trim()}');
     if (_alley.text.trim().isNotEmpty) parts.add('ซอย ${_alley.text.trim()}');
     if (_road.text.trim().isNotEmpty) parts.add('ถนน ${_road.text.trim()}');
@@ -935,6 +938,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
         _lastName.clear();
         _address.clear();
         _houseNumber.clear();
+        _buildingName.clear();
         _villageNumber.clear();
         _alley.clear();
         _road.clear();
@@ -1065,6 +1069,11 @@ class _KycCardState extends ConsumerState<_KycCard> {
                     labelText: l10n.fieldHouseNumber,
                     hintText: '123/45',
                   ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _buildingName,
+                  decoration: InputDecoration(labelText: l10n.fieldBuildingName),
                 ),
                 const SizedBox(height: 12),
                 Row(

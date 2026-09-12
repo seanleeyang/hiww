@@ -1019,8 +1019,14 @@ abstract class AppLocalizations {
   /// No description provided for @fieldHouseNumber.
   ///
   /// In en, this message translates to:
-  /// **'House / building number'**
+  /// **'House / unit number'**
   String get fieldHouseNumber;
+
+  /// No description provided for @fieldBuildingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Building name (optional)'**
+  String get fieldBuildingName;
 
   /// No description provided for @fieldVillageNumber.
   ///

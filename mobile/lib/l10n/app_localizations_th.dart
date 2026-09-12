@@ -503,6 +503,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get fieldHouseNumber => 'บ้านเลขที่';
 
   @override
+  String get fieldBuildingName => 'ชื่ออาคาร';
+
+  @override
   String get fieldVillageNumber => 'หมู่';
 
   @override
