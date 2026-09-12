@@ -85,6 +85,7 @@ class OrderStepper extends StatelessWidget {
     required ColorScheme scheme,
     required HiwwColors hiww,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final done = _isDone(index);
     final current = index == _currentIndex;
     final dotColor = done
@@ -142,7 +143,7 @@ class OrderStepper extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  stage.at != null ? shortDate(stage.at) : stage.hint,
+                  stage.at != null ? shortDate(l10n, stage.at) : stage.hint,
                   style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
                 ),
               ],

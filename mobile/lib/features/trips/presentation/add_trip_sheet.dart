@@ -343,7 +343,7 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     (_depart != null && _ret != null)
-                        ? '${shortDate(_depart)} – ${shortDate(_ret)}'
+                        ? '${shortDate(l10n, _depart)} – ${shortDate(l10n, _ret)}'
                         : l10n.labelTravelDates,
                   ),
                 ),
@@ -472,7 +472,7 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                     children: [
                       const Icon(Icons.event_outlined, size: 18),
                       const SizedBox(width: 10),
-                      Text('${shortDate(_depart)} – ${shortDate(_ret)}'),
+                      Text('${shortDate(l10n, _depart)} – ${shortDate(l10n, _ret)}'),
                     ],
                   ),
                   const SizedBox(height: 10),

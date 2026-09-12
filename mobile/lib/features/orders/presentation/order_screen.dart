@@ -673,7 +673,7 @@ class _PurchaseProofCard extends StatelessWidget {
               const Spacer(),
               if (at != null)
                 Text(
-                  shortDate(at),
+                  shortDate(l10n, at),
                   style: TextStyle(
                     fontSize: 12,
                     color: scheme.onSurfaceVariant,
@@ -767,7 +767,7 @@ class _ShippingProofCard extends StatelessWidget {
               const Spacer(),
               if (at != null)
                 Text(
-                  shortDate(at),
+                  shortDate(l10n, at),
                   style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
                 ),
             ],
@@ -816,7 +816,7 @@ class _DeliveryProofCard extends StatelessWidget {
               const Spacer(),
               if (at != null)
                 Text(
-                  shortDate(at),
+                  shortDate(l10n, at),
                   style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
                 ),
             ],

@@ -18,6 +18,7 @@ import '../../../ui/soft_card.dart';
 import '../../../ui/star_rating.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/status_pill.dart';
+import '../../../ui/language_toggle.dart';
 import '../../../ui/thai_address_picker.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_user.dart';
@@ -63,6 +64,12 @@ class AccountScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.accountTitle),
         leading: BackButton(onPressed: () => context.go('/browse')),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: LanguageToggle(),
+          ),
+        ],
       ),
       body: AsyncValueView(
         value: authState,

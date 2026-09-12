@@ -67,7 +67,7 @@ class TripFeedCard extends StatelessWidget {
               children: [
                 if (traveler != null) AvatarRating(user: traveler!),
                 const SizedBox(height: 10),
-                RouteChip(route: trip.route(l10n.localeName), dates: trip.dates),
+                RouteChip(route: trip.route(l10n.localeName), dates: trip.dates(l10n)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -161,8 +161,8 @@ class WantFeedCard extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         IconLine(Icons.sell_outlined, l10n.feedWantBudgetLabel(want.budgetLabel)),
-                        if (want.needByLabel != null)
-                          IconLine(Icons.event_outlined, want.needByLabel!),
+                        if (want.needByLabel(l10n) != null)
+                          IconLine(Icons.event_outlined, want.needByLabel(l10n)!),
                       ],
                     ),
                   ],

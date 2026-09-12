@@ -109,8 +109,8 @@ class _DateRangeSheetState extends State<_DateRangeSheet> {
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Text(
                         _end != null
-                            ? '${shortDate(_start)} – ${shortDate(_end)}'
-                            : shortDate(_start),
+                            ? '${shortDate(l10n, _start)} – ${shortDate(l10n, _end)}'
+                            : shortDate(l10n, _start),
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),

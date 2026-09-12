@@ -1842,4 +1842,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String needByDate(String date) {
     return 'Need by $date';
   }
+
+  @override
+  String deliverByDate(String date) {
+    return 'Deliver by $date';
+  }
+
+  @override
+  String timeMinutesShort(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String timeHoursShort(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String timeDaysShort(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String reviewsSectionCount(int count) {
+    return 'Reviews ($count)';
+  }
 }

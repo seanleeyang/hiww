@@ -464,7 +464,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                           child: OutlinedButton.icon(
                             onPressed: _pickDate,
                             icon: const Icon(Icons.event_outlined, size: 18),
-                            label: Text(_needBy == null ? l10n.anyTime : shortDate(_needBy)),
+                            label: Text(_needBy == null ? l10n.anyTime : shortDate(l10n, _needBy)),
                           ),
                         ),
                         if (_needBy != null) ...[
@@ -737,7 +737,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                 ),
                 if (_needBy != null) ...[
                   const SizedBox(height: 6),
-                  IconLine(Icons.event_outlined, l10n.needByDate(shortDate(_needBy))),
+                  IconLine(Icons.event_outlined, l10n.needByDate(shortDate(l10n, _needBy))),
                 ],
               ],
             ),

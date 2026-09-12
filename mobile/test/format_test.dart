@@ -23,19 +23,19 @@ void main() {
   group('dateRange', () {
     test('spells out day, month and year on both ends', () {
       expect(
-        dateRange(DateTime(2026, 11, 12), DateTime(2026, 11, 19)),
+        dateRange(l10n, DateTime(2026, 11, 12), DateTime(2026, 11, 19)),
         '12 Nov 2026 – 19 Nov 2026',
       );
     });
     test('cross month shows both full dates', () {
       expect(
-        dateRange(DateTime(2026, 11, 28), DateTime(2026, 12, 3)),
+        dateRange(l10n, DateTime(2026, 11, 28), DateTime(2026, 12, 3)),
         '28 Nov 2026 – 3 Dec 2026',
       );
     });
     test('single date', () {
-      expect(dateRange(DateTime(2026, 11, 12), null), '12 Nov 2026');
-      expect(dateRange(null, null), '');
+      expect(dateRange(l10n, DateTime(2026, 11, 12), null), '12 Nov 2026');
+      expect(dateRange(l10n, null, null), '');
     });
   });
 

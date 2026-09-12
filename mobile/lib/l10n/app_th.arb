@@ -577,5 +577,12 @@
 
   "earnSingle": "รายได้ {amount}",
   "earnRange": "รายได้ {min}–{max}",
-  "needByDate": "ต้องการภายใน {date}"
+  "needByDate": "ต้องการภายใน {date}",
+  "deliverByDate": "ส่งภายใน {date}",
+
+  "timeMinutesShort": "{minutes} นาที",
+  "timeHoursShort": "{hours} ชม.",
+  "timeDaysShort": "{days} วัน",
+
+  "reviewsSectionCount": "รีวิว ({count})"
 }

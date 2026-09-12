@@ -161,7 +161,7 @@ class _TripList extends ConsumerWidget {
                     Text(t.title ?? t.route(l10n.localeName),
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                     const SizedBox(height: 6),
-                    RouteChip(route: t.route(l10n.localeName), dates: t.dates),
+                    RouteChip(route: t.route(l10n.localeName), dates: t.dates(l10n)),
                   ],
                 ),
               ),

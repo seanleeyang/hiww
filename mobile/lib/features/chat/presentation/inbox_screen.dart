@@ -109,7 +109,7 @@ class _MessagesTab extends ConsumerWidget {
                       ),
                     ),
                     if (t.lastMessage?.createdAt != null)
-                      Text(shortDate(t.lastMessage!.createdAt),
+                      Text(shortDate(l10n, t.lastMessage!.createdAt),
                           style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
                   ],
                 ),

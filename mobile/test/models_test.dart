@@ -4,8 +4,10 @@ import 'package:hiww_mobile/features/discovery/domain/route_match.dart';
 import 'package:hiww_mobile/features/orders/domain/order.dart';
 import 'package:hiww_mobile/features/shared/domain/pricing_preview.dart';
 import 'package:hiww_mobile/features/wants/domain/offer.dart';
+import 'package:hiww_mobile/l10n/app_localizations_en.dart';
 
 void main() {
+  final l10n = AppLocalizationsEn();
   test('FeedItem parses a trip card', () {
     final item = FeedItem.fromJson({
       'kind': 'trip',
@@ -63,7 +65,7 @@ void main() {
     expect(item.want!.displayTitle, 'Nike Dunk Panda');
     expect(item.want!.budgetLabel, '฿6,500');
     expect(item.want!.quantity, 3);
-    expect(item.want!.needByLabel, 'Need by Dec 1');
+    expect(item.want!.needByLabel(l10n), 'Need by Dec 1');
     expect(item.want!.sourceLabel, 'Tokyo');
   });
 
@@ -76,7 +78,7 @@ void main() {
       'traveler_name': 'Nuch S',
     });
     expect(onRequest.priceLabel, '฿1,500');
-    expect(onRequest.deliveryLabel, 'Deliver by Nov 18');
+    expect(onRequest.deliveryLabel(l10n), 'Deliver by Nov 18');
 
     final mine = Offer.fromJson({
       'id': 'o2',

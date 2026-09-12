@@ -1,4 +1,5 @@
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../shared/domain/user_summary.dart';
 
 class Want {
@@ -53,7 +54,8 @@ class Want {
   String get sourceLabel => sourceCity ?? sourceCountry;
   String? get destinationLabel => destinationCity ?? destinationCountry;
   String get budgetLabel => money(budget);
-  String? get needByLabel => needBy == null ? null : 'Need by ${shortDate(needBy)}';
+  String? needByLabel(AppLocalizations l10n) =>
+      needBy == null ? null : l10n.needByDate(shortDate(l10n, needBy));
 
   factory Want.fromJson(Map<String, dynamic> j) => Want(
         id: j['id'].toString(),

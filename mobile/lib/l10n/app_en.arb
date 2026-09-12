@@ -748,5 +748,27 @@
   "needByDate": "Need by {date}",
   "@needByDate": {
     "placeholders": { "date": { "type": "String" } }
+  },
+  "deliverByDate": "Deliver by {date}",
+  "@deliverByDate": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "timeMinutesShort": "{minutes}m",
+  "@timeMinutesShort": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "timeHoursShort": "{hours}h",
+  "@timeHoursShort": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "timeDaysShort": "{days}d",
+  "@timeDaysShort": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+
+  "reviewsSectionCount": "Reviews ({count})",
+  "@reviewsSectionCount": {
+    "placeholders": { "count": { "type": "int" } }
   }
 }

@@ -1,5 +1,6 @@
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../shared/domain/user_summary.dart';
 
 class Trip {
@@ -44,7 +45,7 @@ class Trip {
       arrivalCity ?? defaultCityFor(arrivalCountry) ?? countryName(arrivalCountry, locale);
   // "→" needs no translation, unlike the word "to" this replaced.
   String route([String locale = 'en']) => '${fromLabel(locale)} → ${toLabel(locale)}';
-  String get dates => dateRange(departureDate, returnDate);
+  String dates(AppLocalizations l10n) => dateRange(l10n, departureDate, returnDate);
 
   factory Trip.fromJson(Map<String, dynamic> j) => Trip(
         id: j['id'].toString(),

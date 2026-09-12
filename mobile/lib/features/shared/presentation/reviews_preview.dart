@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/initials_avatar.dart';
 import '../../../ui/star_rating.dart';
 import '../data/reviews_repository.dart';
@@ -24,6 +25,7 @@ class _ReviewsPreviewState extends ConsumerState<ReviewsPreview> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final reviews = ref.watch(userReviewsProvider(widget.userId));
     return reviews.when(
       loading: () => const SizedBox.shrink(),
@@ -42,7 +44,7 @@ class _ReviewsPreviewState extends ConsumerState<ReviewsPreview> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Reviews (${summary.user.ratingCount})',
+                        l10n.reviewsSectionCount(summary.user.ratingCount),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
@@ -82,7 +84,7 @@ class _ReviewsPreviewState extends ConsumerState<ReviewsPreview> {
                                 color: Theme.of(context).colorScheme.onSurfaceVariant)),
                       ],
                       if (r.createdAt != null)
-                        Text(dateLong(r.createdAt),
+                        Text(dateLong(l10n, r.createdAt),
                             style: TextStyle(
                                 fontSize: 11,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant)),

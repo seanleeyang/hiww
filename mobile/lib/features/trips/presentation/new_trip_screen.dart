@@ -319,6 +319,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
     DateTime? value,
     ValueChanged<DateTime> onPick,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return OutlinedButton(
       onPressed: () async {
         final now = DateTime.now();
@@ -332,7 +333,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
       },
       child: Align(
         alignment: Alignment.centerLeft,
-        child: Text(value == null ? label : shortDate(value)),
+        child: Text(value == null ? label : shortDate(l10n, value)),
       ),
     );
   }

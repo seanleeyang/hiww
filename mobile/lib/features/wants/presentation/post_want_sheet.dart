@@ -200,7 +200,7 @@ class _EditWantSheetState extends ConsumerState<_EditWantSheet> {
                               onPressed: _pickDate,
                               icon: const Icon(Icons.event_outlined, size: 18),
                               label: Text(
-                                _needBy == null ? l10n.anyTime : shortDate(_needBy),
+                                _needBy == null ? l10n.anyTime : shortDate(l10n, _needBy),
                               ),
                             ),
                           ),

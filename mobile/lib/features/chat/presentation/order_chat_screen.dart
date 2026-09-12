@@ -450,7 +450,7 @@ class _Bubble extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    chatTimestamp(message.createdAt),
+                    chatTimestamp(l10n, message.createdAt),
                     style: TextStyle(
                       fontSize: 10,
                       color: (mine ? scheme.onPrimary : scheme.onSurfaceVariant)

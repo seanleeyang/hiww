@@ -185,7 +185,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
               Text(l10n.labelDeliverBy, style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 4),
               Text(
-                l10n.hintDeliverByFromReturn(shortDate(minDeliverBy)),
+                l10n.hintDeliverByFromReturn(shortDate(l10n, minDeliverBy)),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -205,7 +205,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
                   if (picked != null) setState(() => _deliverBy = picked);
                 },
                 icon: const Icon(Icons.event_outlined, size: 18),
-                label: Text(_deliverBy == null ? l10n.actionPickADate : shortDate(_deliverBy)),
+                label: Text(_deliverBy == null ? l10n.actionPickADate : shortDate(l10n, _deliverBy)),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 14),

@@ -117,7 +117,7 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
           _FormRow(
             label: l10n.labelTravelDates,
             value: (_depart != null && _ret != null)
-                ? '${shortDate(_depart)} – ${shortDate(_ret)}'
+                ? '${shortDate(l10n, _depart)} – ${shortDate(l10n, _ret)}'
                 : null,
             onTap: _pickDates,
           ),

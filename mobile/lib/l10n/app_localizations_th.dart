@@ -1804,4 +1804,29 @@ class AppLocalizationsTh extends AppLocalizations {
   String needByDate(String date) {
     return 'ต้องการภายใน $date';
   }
+
+  @override
+  String deliverByDate(String date) {
+    return 'ส่งภายใน $date';
+  }
+
+  @override
+  String timeMinutesShort(int minutes) {
+    return '$minutes นาที';
+  }
+
+  @override
+  String timeHoursShort(int hours) {
+    return '$hours ชม.';
+  }
+
+  @override
+  String timeDaysShort(int days) {
+    return '$days วัน';
+  }
+
+  @override
+  String reviewsSectionCount(int count) {
+    return 'รีวิว ($count)';
+  }
 }

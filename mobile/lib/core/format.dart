@@ -2,11 +2,16 @@ import 'package:intl/intl.dart';
 
 import '../l10n/app_localizations.dart';
 
-final _dayMonth = DateFormat('MMM d');
-final _monthDayYear = DateFormat('MMM d, y');
-final _dayMonthTime = DateFormat('MMM d, h:mm a');
-final _timeOnly = DateFormat('h:mm a');
-final _dMmmY = DateFormat('d MMM y');
+// Locale only changes which language the month/day names render in (Thai
+// month abbreviations etc., via CLDR data loaded by `initializeDateFormatting`
+// in main.dart) — the year is always whatever `DateTime.year` already is
+// (Gregorian), never converted to the Buddhist Era. `DateFormat` is cheap to
+// construct, so these are built fresh per call rather than cached per locale.
+DateFormat _dayMonth(String locale) => DateFormat('MMM d', locale);
+DateFormat _monthDayYear(String locale) => DateFormat('MMM d, y', locale);
+DateFormat _dayMonthTime(String locale) => DateFormat('MMM d, h:mm a', locale);
+DateFormat _timeOnly(String locale) => DateFormat('h:mm a', locale);
+DateFormat _dMmmY(String locale) => DateFormat('d MMM y', locale);
 
 /// `฿1,500` / `฿1,234.56` — the backend stores amounts as decimal strings.
 String money(Object? amount) {
@@ -36,31 +41,34 @@ String earnRangeLabel(AppLocalizations l10n, Object? min, Object? max) {
   return l10n.earnRange(lo, hiBare);
 }
 
-/// `12 Nov 2026 – 19 Nov 2026` / single date `12 Nov 2026`. The separator is
-/// a symbol rather than the word "to" so this needs no translation; the
-/// month abbreviation itself is intentionally left in Gregorian/English
-/// form even in Thai — full Thai-calendar dates (Buddhist Era year, Thai
-/// month names) are a materially bigger, separate feature, not attempted
-/// here.
-String dateRange(DateTime? start, DateTime? end) {
+/// `12 พ.ย. 2026 – 19 พ.ย. 2026` / single date `12 พ.ย. 2026` (or the English
+/// month form outside Thai locale). The separator is a symbol rather than
+/// the word "to" so it needs no translation on its own. The year is always
+/// whatever `DateTime.year` already is — Gregorian, never converted to the
+/// Buddhist Era — only the month/day names switch language.
+String dateRange(AppLocalizations l10n, DateTime? start, DateTime? end) {
+  final fmt = _dMmmY(l10n.localeName);
   if (start == null && end == null) return '';
-  if (start == null) return _dMmmY.format(end!);
-  if (end == null) return _dMmmY.format(start);
-  return '${_dMmmY.format(start)} – ${_dMmmY.format(end)}';
+  if (start == null) return fmt.format(end!);
+  if (end == null) return fmt.format(start);
+  return '${fmt.format(start)} – ${fmt.format(end)}';
 }
 
-String dateLong(DateTime? d) => d == null ? '' : _monthDayYear.format(d);
+String dateLong(AppLocalizations l10n, DateTime? d) =>
+    d == null ? '' : _monthDayYear(l10n.localeName).format(d);
 
 /// `Nov 14` for a stepper timestamp.
-String shortDate(DateTime? d) => d == null ? '' : _dayMonth.format(d);
+String shortDate(AppLocalizations l10n, DateTime? d) =>
+    d == null ? '' : _dayMonth(l10n.localeName).format(d);
 
 /// `2:30 PM` for a message sent today, `Sep 6, 2:30 PM` otherwise.
-String chatTimestamp(DateTime? d) {
+String chatTimestamp(AppLocalizations l10n, DateTime? d) {
   if (d == null) return '';
   final now = DateTime.now();
   final sameDay =
       d.year == now.year && d.month == now.month && d.day == now.day;
-  return sameDay ? _timeOnly.format(d) : _dayMonthTime.format(d);
+  final locale = l10n.localeName;
+  return sameDay ? _timeOnly(locale).format(d) : _dayMonthTime(locale).format(d);
 }
 
 DateTime? parseDate(Object? raw) {
@@ -84,19 +92,16 @@ String initials(String name) {
 String pluralize(int n, String singular, [String? plural]) =>
     n == 1 ? '1 $singular' : '$n ${plural ?? '${singular}s'}';
 
-/// `just now` / `5m` / `3h` / `2d` / `Nov 14` — compact relative time for
-/// feeds. The `m`/`h`/`d` unit letters are left as universal shorthand
-/// (not translated) — that matches how compact relative-time is commonly
-/// shown even in localized apps, and a full Thai equivalent would be no
-/// more compact or readable.
+/// `just now` / `5m` / `3h` / `2d` (or the Thai equivalents) / `Nov 14` —
+/// compact relative time for feeds.
 String timeAgo(AppLocalizations l10n, DateTime? d, {DateTime? now}) {
   if (d == null) return '';
   final delta = (now ?? DateTime.now()).difference(d);
   if (delta.inSeconds < 45) return l10n.timeJustNow;
-  if (delta.inMinutes < 60) return '${delta.inMinutes}m';
-  if (delta.inHours < 24) return '${delta.inHours}h';
-  if (delta.inDays < 7) return '${delta.inDays}d';
-  return _dayMonth.format(d);
+  if (delta.inMinutes < 60) return l10n.timeMinutesShort(delta.inMinutes);
+  if (delta.inHours < 24) return l10n.timeHoursShort(delta.inHours);
+  if (delta.inDays < 7) return l10n.timeDaysShort(delta.inDays);
+  return _dayMonth(l10n.localeName).format(d);
 }
 
 /// `42m left` / `1h 5m left` / `Expired` — countdown to a future deadline

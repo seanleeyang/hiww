@@ -48,6 +48,13 @@ class ThaiAddressPicker extends StatefulWidget {
   State<ThaiAddressPicker> createState() => _ThaiAddressPickerState();
 }
 
+/// The English name is always what's stored/passed to [ThaiAddressPicker.onChanged]
+/// (matches what the backend already has in `address_city`/etc.) — this
+/// only picks which one is *displayed*, so it follows the language toggle
+/// without changing any stored data.
+String _displayName(AppLocalizations l10n, {required String nameEn, required String nameTh}) =>
+    l10n.localeName == 'th' ? nameTh : nameEn;
+
 class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
   final Future<ThaiGeography> _future = ThaiGeography.load();
 
@@ -75,15 +82,17 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
           children: [
             _PickerRow(
               label: widget.provinceLabel ?? l10n.fieldProvince,
-              value: province?.nameEn,
+              value: province == null
+                  ? null
+                  : _displayName(l10n, nameEn: province.nameEn, nameTh: province.nameTh),
               onTap: () async {
                 final picked = await showDialog<ThaiProvince>(
                   context: context,
                   builder: (_) => _SearchDialog<ThaiProvince>(
                     items: geo.provinces,
                     selected: province,
-                    labelOf: (p) => p.nameEn,
-                    subLabelOf: (p) => p.nameTh,
+                    labelOf: (p) => _displayName(l10n, nameEn: p.nameEn, nameTh: p.nameTh),
+                    subLabelOf: (p) => _displayName(l10n, nameEn: p.nameTh, nameTh: p.nameEn),
                   ),
                 );
                 if (picked == null) return;
@@ -98,7 +107,9 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
             const SizedBox(height: 12),
             _PickerRow(
               label: widget.districtLabel ?? l10n.fieldDistrict,
-              value: district?.nameEn,
+              value: district == null
+                  ? null
+                  : _displayName(l10n, nameEn: district.nameEn, nameTh: district.nameTh),
               enabled: province != null,
               onTap: province == null
                   ? null
@@ -108,8 +119,8 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                         builder: (_) => _SearchDialog<ThaiDistrict>(
                           items: geo.districtsFor(province.code),
                           selected: district,
-                          labelOf: (d) => d.nameEn,
-                          subLabelOf: (d) => d.nameTh,
+                          labelOf: (d) => _displayName(l10n, nameEn: d.nameEn, nameTh: d.nameTh),
+                          subLabelOf: (d) => _displayName(l10n, nameEn: d.nameTh, nameTh: d.nameEn),
                         ),
                       );
                       if (picked == null) return;
@@ -124,7 +135,9 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
             const SizedBox(height: 12),
             _PickerRow(
               label: widget.subdistrictLabel ?? l10n.fieldSubdistrict,
-              value: subdistrict?.nameEn,
+              value: subdistrict == null
+                  ? null
+                  : _displayName(l10n, nameEn: subdistrict.nameEn, nameTh: subdistrict.nameTh),
               enabled: district != null,
               onTap: district == null
                   ? null
@@ -134,8 +147,8 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                         builder: (_) => _SearchDialog<ThaiSubdistrict>(
                           items: geo.subdistrictsFor(district.code),
                           selected: subdistrict,
-                          labelOf: (s) => s.nameEn,
-                          subLabelOf: (s) => s.nameTh,
+                          labelOf: (s) => _displayName(l10n, nameEn: s.nameEn, nameTh: s.nameTh),
+                          subLabelOf: (s) => _displayName(l10n, nameEn: s.nameTh, nameTh: s.nameEn),
                         ),
                       );
                       if (picked == null) return;

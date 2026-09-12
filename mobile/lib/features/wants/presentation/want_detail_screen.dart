@@ -120,9 +120,9 @@ class WantDetailScreen extends ConsumerWidget {
                             l10n.wantDeliverToLine(want.destinationLabel!),
                           ),
                         ],
-                        if (want.needByLabel != null) ...[
+                        if (want.needByLabel(l10n) != null) ...[
                           const SizedBox(height: 6),
-                          IconLine(Icons.event_outlined, want.needByLabel!),
+                          IconLine(Icons.event_outlined, want.needByLabel(l10n)!),
                         ],
                         if (want.productUrl != null) ...[
                           const SizedBox(height: 6),
@@ -335,10 +335,10 @@ class _MyOfferCardState extends ConsumerState<_MyOfferCard> {
                 o.priceLabel,
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
               ),
-              if (o.deliveryLabel != null) ...[
+              if (o.deliveryLabel(l10n) != null) ...[
                 const SizedBox(width: 12),
                 Text(
-                  o.deliveryLabel!,
+                  o.deliveryLabel(l10n)!,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -536,10 +536,10 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
                   fontSize: 16,
                 ),
               ),
-              if (o.deliveryLabel != null) ...[
+              if (o.deliveryLabel(l10n) != null) ...[
                 const SizedBox(width: 12),
                 Text(
-                  o.deliveryLabel!,
+                  o.deliveryLabel(l10n)!,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,

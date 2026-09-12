@@ -3289,6 +3289,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Need by {date}'**
   String needByDate(String date);
+
+  /// No description provided for @deliverByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver by {date}'**
+  String deliverByDate(String date);
+
+  /// No description provided for @timeMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String timeMinutesShort(int minutes);
+
+  /// No description provided for @timeHoursShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h'**
+  String timeHoursShort(int hours);
+
+  /// No description provided for @timeDaysShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String timeDaysShort(int days);
+
+  /// No description provided for @reviewsSectionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews ({count})'**
+  String reviewsSectionCount(int count);
 }
 
 class _AppLocalizationsDelegate

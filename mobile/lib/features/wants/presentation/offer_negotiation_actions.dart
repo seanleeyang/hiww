@@ -242,6 +242,7 @@ class _HistoryBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -265,7 +266,7 @@ class _HistoryBubble extends StatelessWidget {
             if (entry.at != null) ...[
               const SizedBox(height: 3),
               Text(
-                chatTimestamp(entry.at),
+                chatTimestamp(l10n, entry.at),
                 style: TextStyle(
                   fontSize: 10,
                   color: (mine ? scheme.onPrimary : scheme.onSurfaceVariant).withValues(alpha: 0.7),

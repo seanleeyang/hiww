@@ -61,7 +61,7 @@ class TripDetailScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        RouteChip(route: trip.route(l10n.localeName), dates: trip.dates),
+                        RouteChip(route: trip.route(l10n.localeName), dates: trip.dates(l10n)),
                         const SizedBox(height: 12),
                         IconLine(
                           Icons.public,

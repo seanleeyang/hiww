@@ -1,4 +1,5 @@
 import '../../../core/format.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// One price proposed during a negotiation — `by` is 'traveler' or 'shopper'.
 class PriceHistoryEntry {
@@ -73,8 +74,8 @@ class Offer {
   final String? requestCategory;
 
   String get priceLabel => money(quotedPrice);
-  String? get deliveryLabel =>
-      deliveryDate == null ? null : 'Deliver by ${shortDate(deliveryDate)}';
+  String? deliveryLabel(AppLocalizations l10n) =>
+      deliveryDate == null ? null : l10n.deliverByDate(shortDate(l10n, deliveryDate));
   bool get isNegotiating => status == 'pending' && round > 0;
 
   factory Offer.fromJson(Map<String, dynamic> j) => Offer(

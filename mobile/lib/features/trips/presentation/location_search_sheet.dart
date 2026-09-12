@@ -118,7 +118,7 @@ class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
                   for (final c in recentCities)
                     ListTile(
                       leading: const Icon(Icons.history),
-                      title: Text(c.city),
+                      title: Text(c.cityLabel(l10n.localeName)),
                       subtitle: Text(c.countryLabel(l10n.localeName)),
                       onTap: () => _pick(c),
                     ),
@@ -127,7 +127,7 @@ class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
                 for (final c in _results)
                   ListTile(
                     leading: const Icon(Icons.location_city_outlined),
-                    title: Text(c.city),
+                    title: Text(c.cityLabel(l10n.localeName)),
                     subtitle: Text(c.countryLabel(l10n.localeName)),
                     onTap: () => _pick(c),
                   ),
