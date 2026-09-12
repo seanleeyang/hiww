@@ -77,8 +77,20 @@ describe('profile contact details + completeness gate', () => {
     expect(patch.json().data.bank_name).toBe('Kasikornbank (KBank)');
     expect(patch.json().data.bank_account_number).toBe('1234567890');
 
+    // Encrypted at rest (src/utils/encryption.ts) — never the plain digits,
+    // even though every API response decrypts it back for the account's
+    // own owner.
+    const row = await ctx.db
+      .selectFrom('users')
+      .select('bank_account_number')
+      .where('id', '=', user.userId)
+      .executeTakeFirst();
+    expect(row?.bank_account_number).not.toBe('1234567890');
+    expect(row?.bank_account_number).toMatch(/^enc:v1:/);
+
     const me = await ctx.app.inject({ method: 'GET', url: '/api/me', headers: authHeader(user) });
     expect(me.json().data.bank_name).toBe('Kasikornbank (KBank)');
+    expect(me.json().data.bank_account_number).toBe('1234567890');
 
     const cleared = await ctx.app.inject({
       method: 'PATCH',

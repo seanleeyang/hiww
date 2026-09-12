@@ -49,6 +49,35 @@ function resolveJwtSecret(): string {
   );
 }
 
+/**
+ * Resolve the key that encrypts sensitive fields at rest (bank account
+ * numbers — see src/utils/encryption.ts). Deliberately a separate secret
+ * from JWT_SECRET: rotating the login secret (e.g. after an incident) must
+ * never also make every stored bank account unreadable. Same fail-fast
+ * posture as the JWT secret — a missing/weak key here is worse than a
+ * crash, since it would mean either booting with no encryption or silently
+ * encrypting with a guessable key.
+ */
+function resolveDataEncryptionKey(): string {
+  const key = process.env.DATA_ENCRYPTION_KEY;
+  const isStrong = typeof key === 'string' && key.length >= 24 && !WEAK_SECRETS.has(key);
+
+  if (isStrong) {
+    return key as string;
+  }
+
+  if (nodeEnv === 'test') {
+    return 'test-only-encryption-key-not-valid-for-any-real-environment';
+  }
+
+  throw new Error(
+    'DATA_ENCRYPTION_KEY is missing or too weak. Generate a strong random value ' +
+      "(e.g. `node -e \"console.log(require('crypto').randomBytes(48).toString('base64url'))\"`) " +
+      'and set it as DATA_ENCRYPTION_KEY. Back this up somewhere safe — losing it makes every ' +
+      'already-encrypted value (e.g. stored bank account numbers) permanently unreadable.'
+  );
+}
+
 if (nodeEnv === 'production') {
   requireEnv('DATABASE_URL');
 }
@@ -59,6 +88,7 @@ export const config = {
   host: process.env.HOST || '0.0.0.0',
   databaseUrl: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/hiww',
   jwtSecret: resolveJwtSecret(),
+  dataEncryptionKey: resolveDataEncryptionKey(),
   paymentProvider: process.env.PAYMENT_PROVIDER || 'mock',
   identityProvider: process.env.IDENTITY_PROVIDER || 'mock',
   logLevel: process.env.LOG_LEVEL || 'info',

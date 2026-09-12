@@ -6,6 +6,7 @@ import { config } from '@/config/env';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
 import { expireOverduePayments } from '@/services/order-expiry';
+import { decryptSecret } from '@/utils/encryption';
 
 // Tight per-IP ceiling on money movement (defaults to 30/min).
 const moneyRoute = {
@@ -288,11 +289,16 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         throw error;
       }
 
+      // Decrypted only for this human-readable audit trail — the DB write
+      // above already stored the same ciphertext straight from `users`, so
+      // the payout snapshot stays encrypted at rest too.
+      const decryptedAccountNumber = decryptSecret(traveler.bank_account_number);
+
       await recordAudit(request.db, actorFromRequest(request), {
         action: 'order.payout',
         targetType: 'order',
         targetId: order.id,
-        summary: `Payout of ${payoutAmount} to traveler for order ${order.id} via ${parsed.data.method} (${parsed.data.reference}) to ${traveler.bank_name} · ${traveler.bank_account_number}`,
+        summary: `Payout of ${payoutAmount} to traveler for order ${order.id} via ${parsed.data.method} (${parsed.data.reference}) to ${traveler.bank_name} · ${decryptedAccountNumber}`,
         metadata: {
           payout_id: payoutId,
           amount: payoutAmount,
@@ -301,7 +307,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
           order_total_price: order.total_price,
           traveler_id: order.traveler_id,
           bank_name: traveler.bank_name,
-          bank_account_number: traveler.bank_account_number,
+          bank_account_number: decryptedAccountNumber,
         },
       });
 

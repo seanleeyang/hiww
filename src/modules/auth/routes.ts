@@ -7,6 +7,7 @@ import { config } from '@/config/env';
 import { profileUpdateSchema, phoneSchema, passwordSchema } from '@/types/schemas';
 import { toUserSummary } from '@/utils/user-summary';
 import { membershipId } from '@/utils/membership';
+import { encryptSecret, decryptSecret } from '@/utils/encryption';
 import { issueOtp, verifyOtp, isMockOtp } from '@/services/otp';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 
@@ -623,6 +624,9 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     const { member_seq, ...rest } = me;
     return {
       ...rest,
+      // Encrypted at rest (src/utils/encryption.ts) — only decrypted back
+      // out here, for the account's own owner viewing their own profile.
+      bank_account_number: decryptSecret(me.bank_account_number),
       rating_avg: summary.rating_avg,
       membership_id: membershipId(member_seq),
       pilot: {
@@ -707,7 +711,9 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (parsed.data.address_country !== undefined) patch.address_country = parsed.data.address_country;
     if (parsed.data.bank_name !== undefined) patch.bank_name = parsed.data.bank_name;
     if (parsed.data.bank_account_number !== undefined) {
-      patch.bank_account_number = parsed.data.bank_account_number;
+      // Encrypted at rest — see src/utils/encryption.ts. Decrypted again
+      // only in meResponse below, for the account's own owner.
+      patch.bank_account_number = encryptSecret(parsed.data.bank_account_number);
     }
 
     // Re-issue an OTP immediately for whichever channel(s) changed, same as

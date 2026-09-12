@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import Decimal from 'decimal.js';
 import { AppError } from '@/utils/helpers';
+import { decryptSecret } from '@/utils/encryption';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sum(rows: any[], field: string): string {
@@ -118,7 +119,10 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
         .where('orders.status', '=', 'delivered')
         .where('payouts.id', 'is', null)
         .orderBy('orders.delivered_at', 'asc')
-        .execute();
+        .execute()
+        // Encrypted at rest (src/utils/encryption.ts) — decrypted here since
+        // an admin genuinely needs to read this to send the payout.
+        .then((rows) => rows.map((r) => ({ ...r, bank_account_number: decryptSecret(r.bank_account_number) })));
 
       // Cancelled orders that had confirmed payment and no refund row yet —
       // the operator still owes the shopper money back (see
@@ -158,7 +162,8 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
         ])
         .orderBy('payouts.created_at', 'desc')
         .limit(100)
-        .execute();
+        .execute()
+        .then((rows) => rows.map((r) => ({ ...r, bank_account_number: decryptSecret(r.bank_account_number) })));
 
       const refunded = await request.db
         .selectFrom('refunds')

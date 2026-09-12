@@ -174,6 +174,60 @@ describe('payouts + reconciliation', () => {
     expect(row.bank_account_number).toBe('1234567890');
   });
 
+  it('keeps the traveler\'s real bank account encrypted at rest end to end, while admin-facing views still show the real digits', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+    // Through the real encrypting endpoint this time, not completeProfile's
+    // direct (plaintext) DB write.
+    await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers: authHeader(order.traveler),
+      payload: { bank_name: 'Kasikornbank (KBank)', bank_account_number: '5551234567' },
+    });
+    await completeOrder(ctx, order);
+
+    const payout = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/payout',
+      headers: authHeader(admin),
+      payload: { order_id: order.orderId, method: 'bank_transfer', reference: 'BT-ENC-1' },
+    });
+    expect(payout.statusCode).toBe(201);
+
+    // Neither the source row nor the payout snapshot ever holds the plain digits.
+    const travelerRow = await ctx.db
+      .selectFrom('users')
+      .select('bank_account_number')
+      .where('id', '=', order.traveler.userId)
+      .executeTakeFirst();
+    expect(travelerRow?.bank_account_number).toMatch(/^enc:v1:/);
+
+    const payoutRow = await ctx.db
+      .selectFrom('payouts')
+      .select('bank_account_number')
+      .where('id', '=', payout.json().data.id)
+      .executeTakeFirst();
+    expect(payoutRow?.bank_account_number).toMatch(/^enc:v1:/);
+
+    // But the audit trail and the admin reconciliation view both show the
+    // real, human-readable account number — an admin still needs to
+    // actually read it to send the money and to review what happened.
+    const audit = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/admin/audit?action=order.payout&target_id=${order.orderId}`,
+      headers: authHeader(admin),
+    });
+    const entry = audit.json().data.items[0];
+    expect(entry.summary).toContain('5551234567');
+    expect(entry.metadata.bank_account_number).toBe('5551234567');
+
+    const r = await recon(admin);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const row = (r as any).paid_out.payouts.find((p: any) => p.order_id === order.orderId);
+    expect(row.bank_account_number).toBe('5551234567');
+  });
+
   it('rejects a payout when the traveler has not added a bank account yet', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);
