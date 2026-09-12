@@ -35,6 +35,7 @@ export type AuditAction =
   | 'user.reclaimed_via_social_link'
   | 'message.flag'
   | 'message.flag_cleared'
+  | 'message.hidden'
   | 'message.check_failed'
   | 'order.receipt_check_failed'
   | 'trip.update'

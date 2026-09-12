@@ -385,6 +385,63 @@ describe('AI chat moderation', () => {
     expect(asCounterparty.json().data.items[0].body).not.toMatch(/message was removed/i);
   });
 
+  it('a medium-risk message stays visible until an operator manually hides it', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+
+    // 'flagme' keys the mock analyzer to 'medium' — only 'high' auto-hides,
+    // so this message is still sitting there, readable, for anyone to see.
+    const sendRes = await send(order, 'flagme please, this should still be visible at first');
+    const messageId = sendRes.json().data.id;
+
+    const beforeHide = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+    });
+    expect(beforeHide.json().data.items[0].body).toContain('flagme');
+
+    const hide = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/messages/${messageId}/hide`,
+      headers: authHeader(admin),
+    });
+    expect(hide.statusCode).toBe(200);
+
+    // Hidden for both parties — same placeholder mechanism as an automatic
+    // high-risk hide (presentMessageBody), just triggered by an operator
+    // instead of the AI check.
+    const asSender = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.shopper),
+    });
+    const asCounterparty = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/orders/${order.orderId}/messages`,
+      headers: authHeader(order.traveler),
+    });
+    expect(asSender.json().data.items[0].body).toMatch(/message was removed|removed this message/i);
+    expect(asCounterparty.json().data.items[0].body).toMatch(/message was removed|removed this message/i);
+
+    // Also drops out of the review queue, same as clear-flag does.
+    const queue = await reviewQueue(admin);
+    expect(queue.some((q) => q.type === 'message' && q.id === messageId)).toBe(false);
+  });
+
+  it('rejects hiding a message for a non-admin', async () => {
+    const order = await createAcceptedOrder(ctx);
+    const sendRes = await send(order, 'flagme please');
+    const messageId = sendRes.json().data.id;
+
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/messages/${messageId}/hide`,
+      headers: authHeader(order.shopper),
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
   it('the operator can clear a flag out of the queue', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx);

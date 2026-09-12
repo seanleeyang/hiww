@@ -212,6 +212,41 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     reply.send({ success: true, data: { message_id: message.id }, code: 'MESSAGE_FLAG_CLEARED' });
   });
 
+  // The counterpart to clear-flag: a message the automatic checks let
+  // through at medium risk (only 'high' auto-hides — see
+  // runChatModerationCheck) or missed entirely can still be genuinely bad.
+  // This is the only way an operator can take one down themselves —
+  // `presentMessageBody` already replaces the body with a placeholder for
+  // both the sender and the recipient once hidden_at is set, same as an
+  // automatic high-risk hide.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  app.post<{ Params: { id: string } }>('/api/admin/messages/:id/hide', async (request, reply) => {
+    const message = await request.db
+      .selectFrom('messages')
+      .select(['id', 'flag_risk', 'hidden_at'])
+      .where('id', '=', request.params.id)
+      .executeTakeFirst();
+    if (!message) {
+      throw new AppError('NOT_FOUND', 404, 'admin.messageNotFound');
+    }
+
+    await request.db
+      .updateTable('messages')
+      .set({ flag_reviewed_at: new Date(), hidden_at: new Date() })
+      .where('id', '=', message.id)
+      .execute();
+
+    await recordAudit(request.db, actorFromRequest(request), {
+      action: 'message.hidden',
+      targetType: 'message',
+      targetId: message.id,
+      summary: `Operator hid message ${message.id} from both parties`,
+      metadata: { risk: message.flag_risk ?? null, was_already_hidden: Boolean(message.hidden_at) },
+    });
+
+    reply.send({ success: true, data: { message_id: message.id }, code: 'MESSAGE_HIDDEN' });
+  });
+
   // All trips, most recent first — lets an operator find and remove a
   // problematic post regardless of its current status.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

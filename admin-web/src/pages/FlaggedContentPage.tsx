@@ -37,6 +37,14 @@ export function FlaggedContentPage() {
     },
     onError,
   });
+  const hideMessage = useMutation({
+    mutationFn: (messageId: string) => api.post(`/admin/messages/${messageId}/hide`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-reviews'] });
+      toast('Message hidden from both parties');
+    },
+    onError,
+  });
 
   if (queue.isLoading) return <LoadingState />;
   if (queue.isError) return <ErrorState error={queue.error} onRetry={() => queue.refetch()} />;
@@ -99,9 +107,21 @@ export function FlaggedContentPage() {
                   <p>{m.body}</p>
                   {m.summary && <p className="muted">{m.summary}</p>}
                 </div>
-                <button type="button" className="btn" disabled={clearMessage.isPending} onClick={() => clearMessage.mutate(m.id)}>
-                  Clear flag
-                </button>
+                <div className="btn-row" style={{ flexShrink: 0 }}>
+                  {!m.hidden && (
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      disabled={hideMessage.isPending}
+                      onClick={() => hideMessage.mutate(m.id)}
+                    >
+                      Hide from both
+                    </button>
+                  )}
+                  <button type="button" className="btn" disabled={clearMessage.isPending} onClick={() => clearMessage.mutate(m.id)}>
+                    Clear flag
+                  </button>
+                </div>
               </div>
             </Card>
           ))

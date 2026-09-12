@@ -74,6 +74,7 @@ export const ADMIN_ROUTES = new Set<string>([
   '/api/admin/users/:userId/flag',
   '/api/admin/orders/:id/clear-receipt-flag',
   '/api/admin/messages/:id/clear-flag',
+  '/api/admin/messages/:id/hide',
   '/api/admin/trips',
   '/api/admin/trips/:id/remove',
   '/api/admin/trips/remove-all',

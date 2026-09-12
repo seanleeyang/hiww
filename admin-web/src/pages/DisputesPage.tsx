@@ -5,6 +5,7 @@ import { api } from '../api/client';
 import type { Dispute, QueueItem } from '../api/types';
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { DisputeCancelDialog } from '../components/DisputeCancelDialog';
 import { useToast } from '../components/Toast';
 import { dateTime } from '../lib/format';
 
@@ -81,17 +82,12 @@ export function DisputesPage() {
         }}
       />
 
-      <ConfirmDialog
+      <DisputeCancelDialog
         open={cancelling !== null}
-        title="Cancel order & resolve dispute"
-        description="Cancels the order (any status short of already paid out) and resolves this dispute with the same reason. Both parties are notified; if payment had been confirmed, every admin gets a refund-owed notice."
-        reason={{ label: 'Reason', minLength: 10, placeholder: 'Why the order is being cancelled…' }}
-        confirmLabel="Cancel order"
-        danger
         onClose={() => setCancelling(null)}
         onConfirm={async (reason) => {
           if (!cancelling) return;
-          await cancelOrder.mutateAsync({ orderId: cancelling.order_id, disputeId: cancelling.id, reason: reason! });
+          await cancelOrder.mutateAsync({ orderId: cancelling.order_id, disputeId: cancelling.id, reason });
         }}
       />
     </div>
