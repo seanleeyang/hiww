@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/thai_banks.dart';
 import '../../../core/thai_id_formatter.dart';
 import '../../../core/world_countries.dart';
 import '../../../l10n/app_localizations.dart';
@@ -29,6 +31,17 @@ void _showEditProfile(BuildContext context, WidgetRef ref, AuthUser user) {
     builder: (_) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: _EditProfileSheet(user: user),
+    ),
+  );
+}
+
+void _showBankAccountSheet(BuildContext context, WidgetRef ref, AuthUser user) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: _BankAccountSheet(user: user),
     ),
   );
 }
@@ -111,6 +124,11 @@ class AccountScreen extends ConsumerWidget {
                 _ContactDetailsCard(
                   user: user,
                   onEdit: () => _showEditProfile(context, ref, user),
+                ),
+                const SizedBox(height: 16),
+                _BankAccountCard(
+                  user: user,
+                  onEdit: () => _showBankAccountSheet(context, ref, user),
                 ),
                 const SizedBox(height: 16),
                 const _KycCard(),
@@ -254,6 +272,40 @@ class _ContactRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _BankAccountCard extends StatelessWidget {
+  const _BankAccountCard({required this.user, required this.onEdit});
+  final AuthUser user;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final bankName = (user.bankName ?? '').trim();
+    final accountNumber = (user.bankAccountNumber ?? '').trim();
+    final hasBank = bankName.isNotEmpty && accountNumber.isNotEmpty;
+
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            l10n.sectionBankAccount,
+            action: TextButton.icon(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(l10n.actionEdit),
+            ),
+          ),
+          _ContactRow(
+            icon: Icons.account_balance_outlined,
+            label: hasBank ? '$bankName · $accountNumber' : l10n.accountAddBankAccount,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -590,6 +642,113 @@ class _LockedContactRow extends StatelessWidget {
         const SizedBox(width: 8),
         TextButton(onPressed: onChange, child: Text(l10n.actionChange)),
       ],
+    );
+  }
+}
+
+class _BankAccountSheet extends ConsumerStatefulWidget {
+  const _BankAccountSheet({required this.user});
+  final AuthUser user;
+
+  @override
+  ConsumerState<_BankAccountSheet> createState() => _BankAccountSheetState();
+}
+
+class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
+  late String? _bankName = widget.user.bankName;
+  late final _accountNumber = TextEditingController(text: widget.user.bankAccountNumber ?? '');
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _accountNumber.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+    if ((_bankName ?? '').trim().isEmpty) {
+      setState(() => _error = l10n.errorSelectBank);
+      return;
+    }
+    if (_accountNumber.text.trim().isEmpty) {
+      setState(() => _error = l10n.errorEnterBankAccountNumber);
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(accountRepositoryProvider).updateProfile(
+            bankName: _bankName,
+            bankAccountNumber: _accountNumber.text.trim(),
+          );
+      await ref.read(authControllerProvider.notifier).refreshMe();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.bankAccountTitle, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 4),
+              Text(
+                l10n.bankAccountNote,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: kThaiBanks.contains(_bankName) ? _bankName : null,
+                decoration: InputDecoration(labelText: l10n.fieldBank),
+                items: kThaiBanks
+                    .map((bank) => DropdownMenuItem(value: bank, child: Text(bank)))
+                    .toList(),
+                onChanged: (v) => setState(() => _bankName = v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _accountNumber,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(labelText: l10n.fieldBankAccountNumber),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+              const SizedBox(height: 18),
+              BusyFilledButton(
+                busy: _busy,
+                label: l10n.actionSubmit,
+                onPressed: _submit,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -358,6 +358,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountAddAddress => 'Add a delivery address';
 
   @override
+  String get sectionBankAccount => 'Bank account';
+
+  @override
+  String get accountAddBankAccount => 'Add your bank account';
+
+  @override
+  String get bankAccountTitle => 'Bank account';
+
+  @override
+  String get bankAccountNote =>
+      'Used to pay out your earnings during the pilot. Only visible to Hiww.';
+
+  @override
+  String get fieldBank => 'Bank';
+
+  @override
+  String get fieldBankAccountNumber => 'Account number';
+
+  @override
+  String get errorSelectBank => 'Select a bank';
+
+  @override
+  String get errorEnterBankAccountNumber => 'Enter your account number';
+
+  @override
   String get editProfileTitle => 'Edit profile';
 
   @override

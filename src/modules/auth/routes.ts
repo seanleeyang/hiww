@@ -570,6 +570,8 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     'address_city',
     'address_postal_code',
     'address_country',
+    'bank_name',
+    'bank_account_number',
     'email_verified_at',
     'phone_verified_at',
     'created_at',
@@ -661,6 +663,10 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (parsed.data.address_city !== undefined) patch.address_city = parsed.data.address_city;
     if (parsed.data.address_postal_code !== undefined) patch.address_postal_code = parsed.data.address_postal_code;
     if (parsed.data.address_country !== undefined) patch.address_country = parsed.data.address_country;
+    if (parsed.data.bank_name !== undefined) patch.bank_name = parsed.data.bank_name;
+    if (parsed.data.bank_account_number !== undefined) {
+      patch.bank_account_number = parsed.data.bank_account_number;
+    }
 
     // Re-issue an OTP immediately for whichever channel(s) changed, same as
     // registration, rather than leaving the account unverified with no code

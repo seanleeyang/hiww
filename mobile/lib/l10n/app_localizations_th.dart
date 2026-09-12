@@ -355,6 +355,31 @@ class AppLocalizationsTh extends AppLocalizations {
   String get accountAddAddress => 'เพิ่มที่อยู่จัดส่ง';
 
   @override
+  String get sectionBankAccount => 'บัญชีธนาคาร';
+
+  @override
+  String get accountAddBankAccount => 'เพิ่มบัญชีธนาคารของคุณ';
+
+  @override
+  String get bankAccountTitle => 'บัญชีธนาคาร';
+
+  @override
+  String get bankAccountNote =>
+      'ใช้สำหรับโอนรายได้ของคุณในช่วงทดลองใช้งาน Hiww เท่านั้นที่เห็นข้อมูลนี้';
+
+  @override
+  String get fieldBank => 'ธนาคาร';
+
+  @override
+  String get fieldBankAccountNumber => 'เลขที่บัญชี';
+
+  @override
+  String get errorSelectBank => 'เลือกธนาคาร';
+
+  @override
+  String get errorEnterBankAccountNumber => 'กรอกเลขที่บัญชีของคุณ';
+
+  @override
   String get editProfileTitle => 'แก้ไขโปรไฟล์';
 
   @override

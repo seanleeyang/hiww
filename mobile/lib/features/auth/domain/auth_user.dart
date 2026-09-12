@@ -52,6 +52,8 @@ class AuthUser {
     this.addressCity,
     this.addressPostalCode,
     this.addressCountry,
+    this.bankName,
+    this.bankAccountNumber,
     this.emailVerified = false,
     this.phoneVerified = false,
   });
@@ -94,6 +96,11 @@ class AuthUser {
   final String? addressCity;
   final String? addressPostalCode;
   final String? addressCountry;
+
+  /// Bank Account box on the Account page — for payouts during the
+  /// manual-money pilot.
+  final String? bankName;
+  final String? bankAccountNumber;
 
   /// Set once the matching OTP is confirmed at registration.
   final bool emailVerified;
@@ -147,6 +154,8 @@ class AuthUser {
         addressCity: json['address_city'] as String?,
         addressPostalCode: json['address_postal_code'] as String?,
         addressCountry: json['address_country'] as String?,
+        bankName: json['bank_name'] as String?,
+        bankAccountNumber: json['bank_account_number'] as String?,
         emailVerified: json['email_verified_at'] != null,
         phoneVerified: json['phone_verified_at'] != null,
       );

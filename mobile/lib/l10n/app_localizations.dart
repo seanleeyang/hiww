@@ -740,6 +740,54 @@ abstract class AppLocalizations {
   /// **'Add a delivery address'**
   String get accountAddAddress;
 
+  /// No description provided for @sectionBankAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank account'**
+  String get sectionBankAccount;
+
+  /// No description provided for @accountAddBankAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your bank account'**
+  String get accountAddBankAccount;
+
+  /// No description provided for @bankAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank account'**
+  String get bankAccountTitle;
+
+  /// No description provided for @bankAccountNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to pay out your earnings during the pilot. Only visible to Hiww.'**
+  String get bankAccountNote;
+
+  /// No description provided for @fieldBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get fieldBank;
+
+  /// No description provided for @fieldBankAccountNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Account number'**
+  String get fieldBankAccountNumber;
+
+  /// No description provided for @errorSelectBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a bank'**
+  String get errorSelectBank;
+
+  /// No description provided for @errorEnterBankAccountNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your account number'**
+  String get errorEnterBankAccountNumber;
+
   /// No description provided for @editProfileTitle.
   ///
   /// In en, this message translates to:

@@ -187,6 +187,8 @@ export const profileUpdateSchema = z
     address_city: optionalContactText(120),
     address_postal_code: optionalContactText(20),
     address_country: optionalContactText(120),
+    bank_name: optionalContactText(120),
+    bank_account_number: optionalContactText(34),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'No fields to update',

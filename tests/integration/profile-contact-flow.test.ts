@@ -64,6 +64,32 @@ describe('profile contact details + completeness gate', () => {
     expect(me.json().data.date_of_birth).toBe('1990-05-20');
   });
 
+  it('lets a user set and clear their bank account details via PATCH /api/me', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+
+    const patch = await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers: authHeader(user),
+      payload: { bank_name: 'Kasikornbank (KBank)', bank_account_number: '1234567890' },
+    });
+    expect(patch.statusCode).toBe(200);
+    expect(patch.json().data.bank_name).toBe('Kasikornbank (KBank)');
+    expect(patch.json().data.bank_account_number).toBe('1234567890');
+
+    const me = await ctx.app.inject({ method: 'GET', url: '/api/me', headers: authHeader(user) });
+    expect(me.json().data.bank_name).toBe('Kasikornbank (KBank)');
+
+    const cleared = await ctx.app.inject({
+      method: 'PATCH',
+      url: '/api/me',
+      headers: authHeader(user),
+      payload: { bank_name: null, bank_account_number: null },
+    });
+    expect(cleared.statusCode).toBe(200);
+    expect(cleared.json().data.bank_name).toBeNull();
+  });
+
   it('rejects a date of birth under 18 years old', async () => {
     const user = await createUser(ctx, { user_type: 'shopper' });
     const underage = new Date();
@@ -223,5 +249,7 @@ describe('profile contact details + completeness gate', () => {
     expect(res.json().data.shopper.phone).toBeUndefined();
     expect(res.json().data.shopper.address_street).toBeUndefined();
     expect(res.json().data.shopper.address_city).toBeUndefined();
+    expect(res.json().data.shopper.bank_name).toBeUndefined();
+    expect(res.json().data.shopper.bank_account_number).toBeUndefined();
   });
 });

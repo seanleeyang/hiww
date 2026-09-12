@@ -43,6 +43,8 @@ class AccountRepository {
     String? addressCity,
     String? addressPostalCode,
     String? addressCountry,
+    String? bankName,
+    String? bankAccountNumber,
   }) async {
     final body = <String, dynamic>{};
     if (fullName != null) body['full_name'] = fullName;
@@ -67,6 +69,10 @@ class AccountRepository {
       body['address_postal_code'] = addressPostalCode.isEmpty ? null : addressPostalCode;
     }
     if (addressCountry != null) body['address_country'] = addressCountry.isEmpty ? null : addressCountry;
+    if (bankName != null) body['bank_name'] = bankName.isEmpty ? null : bankName;
+    if (bankAccountNumber != null) {
+      body['bank_account_number'] = bankAccountNumber.isEmpty ? null : bankAccountNumber;
+    }
     await _api.patch('/api/me', body: body);
   }
 }

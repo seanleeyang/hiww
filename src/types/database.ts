@@ -58,6 +58,9 @@ export interface UsersTable {
   gender?: 'male' | 'female' | 'prefer_not_to_say' | null;
   /** DATE column, read back as a plain 'YYYY-MM-DD' string — see src/db/connection.ts's type parser. */
   date_of_birth?: string | null;
+  /** Bank Account box on the mobile Account page (migration 042) — for payouts, not read by the payout flow itself yet. */
+  bank_name?: string | null;
+  bank_account_number?: string | null;
   /**
    * Set once the matching OTP is confirmed (migration 020). Null on a fresh
    * registration; existing rows were grandfathered to `created_at` when this
