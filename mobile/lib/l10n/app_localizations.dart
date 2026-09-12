@@ -962,11 +962,17 @@ abstract class AppLocalizations {
   /// **'Thai National ID Card'**
   String get docIdCard;
 
-  /// No description provided for @fieldDocumentNumber.
+  /// No description provided for @fieldIdCardNumber.
   ///
   /// In en, this message translates to:
-  /// **'Document number'**
-  String get fieldDocumentNumber;
+  /// **'ID card number'**
+  String get fieldIdCardNumber;
+
+  /// No description provided for @fieldPassportNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Passport number'**
+  String get fieldPassportNumber;
 
   /// No description provided for @errorEnterDocumentNumber.
   ///

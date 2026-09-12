@@ -470,7 +470,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get docIdCard => 'บัตรประจำตัวประชาชนไทย';
 
   @override
-  String get fieldDocumentNumber => 'หมายเลขเอกสาร';
+  String get fieldIdCardNumber => 'หมายเลขบัตรประชาชน';
+
+  @override
+  String get fieldPassportNumber => 'หมายเลขหนังสือเดินทาง';
 
   @override
   String get errorEnterDocumentNumber => 'กรอกหมายเลขเอกสารของคุณ';

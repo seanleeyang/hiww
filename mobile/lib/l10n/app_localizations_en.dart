@@ -475,7 +475,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get docIdCard => 'Thai National ID Card';
 
   @override
-  String get fieldDocumentNumber => 'Document number';
+  String get fieldIdCardNumber => 'ID card number';
+
+  @override
+  String get fieldPassportNumber => 'Passport number';
 
   @override
   String get errorEnterDocumentNumber => 'Enter your document number';

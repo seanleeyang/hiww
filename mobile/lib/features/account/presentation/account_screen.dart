@@ -1050,7 +1050,7 @@ class _KycCardState extends ConsumerState<_KycCard> {
               TextField(
                 controller: _docId,
                 decoration: InputDecoration(
-                  labelText: l10n.fieldDocumentNumber,
+                  labelText: _docType == 'id_card' ? l10n.fieldIdCardNumber : l10n.fieldPassportNumber,
                   hintText: _docType == 'id_card' ? '1-2345-67890-12-3' : null,
                 ),
                 keyboardType: _docType == 'id_card' ? TextInputType.number : TextInputType.text,
