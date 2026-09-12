@@ -20,10 +20,26 @@ const refundOrderSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
-const reviewKycSchema = z.object({
-  status: z.enum(['approved', 'rejected', 'pending']),
-  note: z.string().min(3),
-});
+// Fixed reasons an admin can reject an ID check for — each has a
+// standardized, localized phrase shown to the user (src/i18n/notifications.ts's
+// `kycRejectReasonText`), so the user gets a consistent, translated
+// explanation instead of an admin's free-typed English note. "other" is the
+// escape hatch for anything the fixed list doesn't cover, and is the only
+// case where `note` is shown to the user.
+const KYC_REJECT_REASONS = ['photo_unclear', 'info_mismatch', 'selfie_mismatch', 'other'] as const;
+
+const reviewKycSchema = z
+  .object({
+    status: z.enum(['approved', 'rejected', 'pending']),
+    reason_code: z.enum(KYC_REJECT_REASONS).optional(),
+    note: z.string().max(500).optional(),
+  })
+  .refine((d) => d.status !== 'rejected' || d.reason_code !== undefined, {
+    message: 'A reason is required when rejecting an ID check',
+  })
+  .refine((d) => d.status !== 'rejected' || d.reason_code !== 'other' || Boolean(d.note?.trim()), {
+    message: 'A note is required when the reason is "Other"',
+  });
 
 const flagUserSchema = z.object({
   risk_status: z.enum(['clear', 'flagged', 'restricted']),
@@ -332,11 +348,14 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       action: 'kyc.review',
       targetType: 'user',
       targetId: user.id,
-      summary: `KYC for ${user.email} set to ${parsed.data.status}`,
+      summary: `KYC for ${user.email} set to ${parsed.data.status}${
+        parsed.data.reason_code ? ` (${parsed.data.reason_code})` : ''
+      }`,
       metadata: {
         from_status: user.kyc_status,
         to_status: parsed.data.status,
-        note: parsed.data.note,
+        reason_code: parsed.data.reason_code ?? null,
+        note: parsed.data.note ?? null,
       },
     });
 
@@ -344,7 +363,11 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
       await recordNotification(request.db, {
         userId: user.id,
         type: 'kyc_reviewed',
-        params: { _variant: parsed.data.status, note: parsed.data.status === 'rejected' ? parsed.data.note : '' },
+        params: {
+          _variant: parsed.data.status,
+          reason_code: parsed.data.status === 'rejected' ? parsed.data.reason_code ?? '' : '',
+          note: parsed.data.status === 'rejected' ? parsed.data.note ?? '' : '',
+        },
       });
     }
 

@@ -688,6 +688,9 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (!mounted) return;
       Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.infoBankAccountUpdated)),
+      );
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {

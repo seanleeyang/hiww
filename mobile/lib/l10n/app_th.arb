@@ -122,6 +122,7 @@
   "fieldBankAccountNumber": "เลขที่บัญชี",
   "errorSelectBank": "เลือกธนาคาร",
   "errorEnterBankAccountNumber": "กรอกเลขที่บัญชีของคุณ",
+  "infoBankAccountUpdated": "อัปเดตบัญชีธนาคารของคุณเรียบร้อยแล้ว",
   "editProfileTitle": "แก้ไขโปรไฟล์",
   "fieldProfilePhoto": "รูปโปรไฟล์",
   "fieldHomeCity": "เมืองที่อยู่ (ไม่บังคับ)",

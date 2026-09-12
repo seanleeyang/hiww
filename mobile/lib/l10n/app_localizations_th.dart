@@ -380,6 +380,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorEnterBankAccountNumber => 'กรอกเลขที่บัญชีของคุณ';
 
   @override
+  String get infoBankAccountUpdated => 'อัปเดตบัญชีธนาคารของคุณเรียบร้อยแล้ว';
+
+  @override
   String get editProfileTitle => 'แก้ไขโปรไฟล์';
 
   @override

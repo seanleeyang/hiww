@@ -2,9 +2,11 @@ import type { Kysely } from 'kysely';
 import type { Database } from '@/types/database';
 import { getKycAnalyzer } from '@/services/ai';
 import { recordAudit } from '@/services/audit';
+import { recordNotifications } from '@/services/notify';
 
 interface UserForKycCheck {
   id: string;
+  full_name: string;
   kyc_document_type: 'passport' | 'id_card';
   kyc_document_photo_url: string;
   kyc_selfie_photo_url: string;
@@ -54,6 +56,24 @@ export async function runKycCheck(
         summary: `AI KYC check flagged submission for ${user.id} as ${analysis.risk} risk`,
         metadata: { risk: analysis.risk, flags: analysis.flags, model: analysis.model },
       });
+
+      // Push the same reasons straight to every admin so they know what to
+      // focus on before they even open the ID Checks page — mirrors the
+      // `payout_due` broadcast pattern (delivery-routes.ts).
+      const admins = await db.selectFrom('users').select(['id']).where('role', '=', 'admin').execute();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await recordNotifications(
+        db,
+        admins.map((a: any) => ({
+          userId: a.id,
+          type: 'kyc_ai_flagged' as const,
+          params: {
+            full_name: user.full_name,
+            risk: analysis.risk,
+            flags: analysis.flags.length > 0 ? analysis.flags.join(', ') : analysis.summary,
+          },
+        }))
+      );
     }
   } catch (err) {
     // eslint-disable-next-line no-console

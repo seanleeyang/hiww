@@ -140,6 +140,7 @@
   "fieldBankAccountNumber": "Account number",
   "errorSelectBank": "Select a bank",
   "errorEnterBankAccountNumber": "Enter your account number",
+  "infoBankAccountUpdated": "Your bank account was updated successfully",
   "editProfileTitle": "Edit profile",
   "fieldProfilePhoto": "Profile photo",
   "fieldHomeCity": "Home city (optional)",

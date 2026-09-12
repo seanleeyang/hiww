@@ -18,6 +18,34 @@ function disputeStatusLabel(locale: SupportedLocale, status: string | number | b
 type Rendered = { subject: string; body: string };
 type Template = (locale: SupportedLocale, p: Params) => Rendered;
 
+/** Fixed, localized phrases for each `reason_code` a rejected ID check can
+ * carry (see `KYC_REJECT_REASONS` in src/modules/admin/actions.ts) — the
+ * user always gets one of these standardized explanations rather than an
+ * admin's free-typed English note. `other` (or a missing/unrecognized code,
+ * e.g. from a notification recorded before this existed) falls back to
+ * whatever `note` the admin entered. */
+const KYC_REJECT_REASON_TEXT: Record<string, { en: string; th: string }> = {
+  photo_unclear: {
+    en: 'the photo of your document was not clear enough to read',
+    th: 'รูปถ่ายเอกสารของคุณไม่ชัดเจนพอที่จะอ่านได้',
+  },
+  info_mismatch: {
+    en: 'the details you entered did not match your ID document',
+    th: 'ข้อมูลที่คุณกรอกไม่ตรงกับเอกสารประจำตัวของคุณ',
+  },
+  selfie_mismatch: {
+    en: 'your selfie did not appear to match the photo on your ID document',
+    th: 'รูปเซลฟีของคุณดูไม่ตรงกับรูปในเอกสารประจำตัว',
+  },
+};
+
+function kycRejectReasonText(locale: SupportedLocale, p: Params): string {
+  const reasonCode = typeof p.reason_code === 'string' ? p.reason_code : undefined;
+  const known = reasonCode ? KYC_REJECT_REASON_TEXT[reasonCode] : undefined;
+  if (known) return locale === 'th' ? known.th : known.en;
+  return p.note ? String(p.note) : '';
+}
+
 /** One entry per distinct notification wording. Keyed by `type`, or
  * `type:variant` when the same event has different text for each recipient —
  * `variant` travels in `params._variant` (see `recordNotification`). */
@@ -178,15 +206,32 @@ const TEMPLATES: Record<string, Template> = {
     l === 'th'
       ? { subject: 'ยืนยันตัวตนสำเร็จ', body: 'บัญชีของคุณผ่านการยืนยันตัวตนแล้ว คุณสามารถทำคำสั่งซื้อได้ตามปกติ' }
       : { subject: 'ID check approved', body: "You're verified — you can now complete orders as usual." },
-  'kyc_reviewed:rejected': (l, p) =>
-    l === 'th'
+  'kyc_reviewed:rejected': (l, p) => {
+    const reason = kycRejectReasonText(l, p);
+    return l === 'th'
       ? {
           subject: 'การยืนยันตัวตนไม่ผ่าน',
-          body: `ทีมงานตรวจสอบเอกสารของคุณแล้วแต่ไม่สามารถยืนยันได้${p.note ? `: ${p.note}` : ''} กรุณาส่งเอกสารใหม่อีกครั้ง`,
+          body: `ทีมงานตรวจสอบเอกสารของคุณแล้วแต่ไม่สามารถยืนยันได้${reason ? `: ${reason}` : ''} กรุณาส่งเอกสารใหม่อีกครั้ง`,
         }
       : {
           subject: "ID check couldn't be verified",
-          body: `We reviewed your documents but couldn't verify them${p.note ? `: ${p.note}` : ''}. Please resubmit.`,
+          body: `We reviewed your documents but couldn't verify them${reason ? `: ${reason}` : ''}. Please resubmit.`,
+        };
+  },
+  // Admin-facing: fired the instant the AI KYC check flags a submission as
+  // medium/high risk (src/services/kyc-check.ts), so an admin doesn't have
+  // to notice it on the reconciliation/reviews dashboard on their own — the
+  // reasons are the same ones the admin console's ID Checks page shows, so
+  // the admin already knows what to look for before opening it.
+  kyc_ai_flagged: (l, p) =>
+    l === 'th'
+      ? {
+          subject: 'AI ตรวจพบข้อบ่งชี้ในคำขอยืนยันตัวตน',
+          body: `คำขอยืนยันตัวตนของ ${p.full_name} ถูกตั้งค่าความเสี่ยงเป็น "${p.risk}" โดยระบบ AI: ${p.flags}`,
+        }
+      : {
+          subject: 'AI check flagged an ID submission',
+          body: `${p.full_name}'s ID check was flagged "${p.risk}" risk by the AI check: ${p.flags}`,
         },
   purchase_proof: (l, p) =>
     l === 'th'

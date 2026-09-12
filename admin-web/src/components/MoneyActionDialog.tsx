@@ -14,6 +14,12 @@ interface MoneyActionDialogProps {
   /** What the amount is for — the order's item description, shown next to
    * the amount so two similarly-priced orders can't be confused. */
   context: string;
+  /** Read-only "where this is going" line — e.g. the traveller's own bank
+   * account for a payout. Never an editable field: the destination account
+   * always comes from the recipient's own profile server-side, not from
+   * anything typed into this dialog, so a rogue admin can't redirect a
+   * payout by editing a form. */
+  destination?: { label: string; value: string } | null;
   confirmLabel: string;
   onConfirm: (input: { method: string; reference: string; note?: string }) => Promise<void>;
   onClose: () => void;
@@ -29,6 +35,7 @@ export function MoneyActionDialog({
   description,
   amount,
   context,
+  destination,
   confirmLabel,
   onConfirm,
   onClose,
@@ -71,6 +78,11 @@ export function MoneyActionDialog({
           <span className="modal-amount-value">{amount}</span>
           <span className="modal-amount-context">{context}</span>
         </div>
+        {destination && (
+          <div className="modal-description" style={{ fontSize: '0.9em' }}>
+            <strong>{destination.label}:</strong> {destination.value}
+          </div>
+        )}
         <label>
           Method
           <select value={method} onChange={(e) => setMethod(e.target.value)}>

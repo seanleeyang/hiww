@@ -788,6 +788,12 @@ abstract class AppLocalizations {
   /// **'Enter your account number'**
   String get errorEnterBankAccountNumber;
 
+  /// No description provided for @infoBankAccountUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bank account was updated successfully'**
+  String get infoBankAccountUpdated;
+
   /// No description provided for @editProfileTitle.
   ///
   /// In en, this message translates to:

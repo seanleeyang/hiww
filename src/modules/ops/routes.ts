@@ -94,10 +94,15 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
         .orderBy('created_at', 'asc')
         .execute();
 
-      // Delivered orders with no payout row yet — the operator still owes the traveller.
+      // Delivered orders with no payout row yet — the operator still owes the
+      // traveller. Joins the traveller's own bank details (migration 042) so
+      // the admin console can show — read-only — exactly where the payout
+      // will go; the payout endpoint itself re-reads these server-side
+      // rather than trusting anything from the client.
       const awaitingPayout = await request.db
         .selectFrom('orders')
         .leftJoin('payouts', 'payouts.order_id', 'orders.id')
+        .innerJoin('users as traveler', 'traveler.id', 'orders.traveler_id')
         .select([
           'orders.id as id',
           'orders.item_description as item_description',
@@ -106,6 +111,9 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
           'orders.traveller_payout as traveller_payout',
           'orders.traveler_id as traveler_id',
           'orders.delivered_at as delivered_at',
+          'traveler.full_name as traveler_name',
+          'traveler.bank_name as bank_name',
+          'traveler.bank_account_number as bank_account_number',
         ])
         .where('orders.status', '=', 'delivered')
         .where('payouts.id', 'is', null)
@@ -144,6 +152,8 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
           'payouts.reference as reference',
           'payouts.recorded_by as recorded_by',
           'payouts.created_at as created_at',
+          'payouts.bank_name as bank_name',
+          'payouts.bank_account_number as bank_account_number',
           'orders.item_description as item_description',
         ])
         .orderBy('payouts.created_at', 'desc')

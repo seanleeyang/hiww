@@ -89,9 +89,12 @@ export function authHeader(user: TestUser): { authorization: string } {
 
 /**
  * Fill in the phone + address fields an offer/accept requires (see
- * `src/utils/profile-guard.ts`). Writes straight to the DB — tests that
- * specifically exercise the profile-completeness gate should go through
- * `PATCH /api/me` instead.
+ * `src/utils/profile-guard.ts`), plus a bank account (required by
+ * `POST /api/payments/payout` — see migration 042/043) so a traveler set up
+ * this way can be paid out without every payout-adjacent test having to add
+ * it separately. Writes straight to the DB — tests that specifically
+ * exercise the profile-completeness or payout-bank-account gate should go
+ * through `PATCH /api/me` / omit this instead.
  */
 export async function completeProfile(ctx: TestContext, user: TestUser): Promise<void> {
   await ctx.db
@@ -102,6 +105,8 @@ export async function completeProfile(ctx: TestContext, user: TestUser): Promise
       address_city: 'Springfield',
       address_postal_code: '12345',
       address_country: 'US',
+      bank_name: 'Kasikornbank (KBank)',
+      bank_account_number: '1234567890',
     })
     .where('id', '=', user.userId)
     .execute();

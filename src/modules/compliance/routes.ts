@@ -88,6 +88,7 @@ export async function registerComplianceRoutes(app: FastifyInstance): Promise<vo
     // directly, same pattern as the receipt/chat-moderation checks.
     const check = runKycCheck(request.db, {
       id: user.id,
+      full_name: user.full_name,
       kyc_document_type: parsed.data.document_type,
       kyc_document_photo_url: parsed.data.document_photo_url,
       kyc_selfie_photo_url: parsed.data.selfie_photo_url,

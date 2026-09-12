@@ -19,6 +19,7 @@ export type NotificationType =
   | 'payment_timeout'
   | 'kyc_submitted'
   | 'kyc_reviewed'
+  | 'kyc_ai_flagged'
   | 'purchase_proof'
   | 'upload_reminder'
   | 'shipped'

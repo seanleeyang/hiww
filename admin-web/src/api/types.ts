@@ -224,6 +224,11 @@ export interface MoneyOrderRow {
   delivered_at?: string | null;
   cancelled_at?: string | null;
   created_at?: string;
+  /** Traveller's own name + bank details (migration 042) — read-only context
+   * for "Record payout"; an admin never types a destination account. */
+  traveler_name?: string | null;
+  bank_name?: string | null;
+  bank_account_number?: string | null;
 }
 
 export interface PayoutRow {
@@ -235,6 +240,9 @@ export interface PayoutRow {
   recorded_by?: string | null;
   created_at: string;
   item_description: string;
+  /** Snapshot of the traveller's bank details at payout time (migration 043). */
+  bank_name?: string | null;
+  bank_account_number?: string | null;
 }
 
 export interface RefundRow {

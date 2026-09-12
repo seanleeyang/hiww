@@ -5,6 +5,7 @@ import type { AdminUser } from '../api/types';
 import { ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { KycRejectDialog, type KycRejectReason } from '../components/KycRejectDialog';
 import { useToast } from '../components/Toast';
 import { idCheckLabel, riskStatusLabel, riskStatusTone } from '../lib/status';
 
@@ -19,11 +20,20 @@ export function UsersPage() {
   const onError = (err: unknown) => toast(err instanceof ApiError ? err.message : 'Something went wrong', 'error');
 
   const review = useMutation({
-    mutationFn: ({ userId, status, note }: { userId: string; status: 'approved' | 'rejected'; note: string }) =>
-      api.post(`/admin/users/${userId}/kyc-review`, { status, note }),
+    mutationFn: ({
+      userId,
+      status,
+      reason_code,
+      note,
+    }: {
+      userId: string;
+      status: 'approved' | 'rejected';
+      reason_code?: KycRejectReason;
+      note?: string;
+    }) => api.post(`/admin/users/${userId}/kyc-review`, { status, reason_code, note }),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['admin-users'] });
-      toast(variables.status === 'approved' ? 'ID check approved' : 'ID check rejected');
+      toast(variables.status === 'approved' ? 'ID check approved' : 'ID check rejected — the user has been notified why');
     },
     onError,
   });
@@ -94,7 +104,7 @@ export function UsersPage() {
                       type="button"
                       className="btn btn-small"
                       disabled={review.isPending}
-                      onClick={() => review.mutate({ userId: u.id, status: 'approved', note: 'Approved from admin console' })}
+                      onClick={() => review.mutate({ userId: u.id, status: 'approved' })}
                     >
                       Approve ID
                     </button>
@@ -138,16 +148,12 @@ export function UsersPage() {
         }}
       />
 
-      <ConfirmDialog
+      <KycRejectDialog
         open={rejecting !== null}
-        title="Reject ID check"
-        reason={{ label: 'Reason (internal note)', minLength: 3, placeholder: 'Why this is being rejected…' }}
-        confirmLabel="Reject"
-        danger
         onClose={() => setRejecting(null)}
-        onConfirm={async (note) => {
+        onConfirm={async ({ reason_code, note }) => {
           if (!rejecting) return;
-          await review.mutateAsync({ userId: rejecting.id, status: 'rejected', note: note! });
+          await review.mutateAsync({ userId: rejecting.id, status: 'rejected', reason_code, note });
         }}
       />
     </div>

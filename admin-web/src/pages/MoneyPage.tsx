@@ -87,23 +87,40 @@ export function MoneyPage() {
               <tr>
                 <th>Item</th>
                 <th>Amount</th>
+                <th>Traveler's bank account</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {d.awaiting_payout.orders.map((o) => (
-                <tr key={o.id}>
-                  <td>
-                    <Link to={`/orders/${o.id}`}>{o.item_description}</Link>
-                  </td>
-                  <td>{money(o.traveller_payout ?? o.total_price)}</td>
-                  <td>
-                    <button type="button" className="btn btn-small" onClick={() => setPayingOut(o)}>
-                      Record payout
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {d.awaiting_payout.orders.map((o) => {
+                const hasBankAccount = Boolean(o.bank_name && o.bank_account_number);
+                return (
+                  <tr key={o.id}>
+                    <td>
+                      <Link to={`/orders/${o.id}`}>{o.item_description}</Link>
+                    </td>
+                    <td>{money(o.traveller_payout ?? o.total_price)}</td>
+                    <td>
+                      {hasBankAccount ? (
+                        `${o.bank_name} · ${o.bank_account_number}`
+                      ) : (
+                        <span className="muted">No bank account on file yet</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-small"
+                        disabled={!hasBankAccount}
+                        title={hasBankAccount ? undefined : "The traveler needs to add their bank account in the app first"}
+                        onClick={() => setPayingOut(o)}
+                      >
+                        Record payout
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -151,6 +168,7 @@ export function MoneyPage() {
                 <th>Amount</th>
                 <th>Method</th>
                 <th>Reference</th>
+                <th>Paid to</th>
               </tr>
             </thead>
             <tbody>
@@ -162,6 +180,13 @@ export function MoneyPage() {
                   <td>{money(p.amount)}</td>
                   <td>{p.method}</td>
                   <td>{p.reference}</td>
+                  <td>
+                    {p.bank_name && p.bank_account_number ? (
+                      `${p.bank_name} · ${p.bank_account_number}`
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -201,9 +226,14 @@ export function MoneyPage() {
       <MoneyActionDialog
         open={payingOut !== null}
         title="Record payout"
-        description="Record that you've sent the traveler their payout out of band."
+        description="Record that you've sent the traveler their payout out of band. The destination account is the traveler's own — from their Account page — and can't be changed here."
         amount={money(payingOut?.traveller_payout ?? payingOut?.total_price)}
         context={payingOut?.item_description ?? ''}
+        destination={
+          payingOut?.bank_name && payingOut?.bank_account_number
+            ? { label: 'Paying to', value: `${payingOut.bank_name} · ${payingOut.bank_account_number}` }
+            : null
+        }
         confirmLabel="Record payout"
         onClose={() => setPayingOut(null)}
         onConfirm={async (input) => {

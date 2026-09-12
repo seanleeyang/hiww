@@ -101,6 +101,65 @@ describe('payouts + reconciliation', () => {
     expect(second.statusCode).toBe(409);
   });
 
+  it("snapshots the traveler's own bank account onto the payout row, never accepting one from the request", async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx); // completeProfile gave the traveler a bank account
+    await completeOrder(ctx, order);
+
+    const payout = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/payout',
+      headers: authHeader(admin),
+      // Even if a client tried to sneak a destination account in, it must
+      // be ignored — the server always reads the traveler's own profile.
+      payload: {
+        order_id: order.orderId,
+        method: 'bank_transfer',
+        reference: 'BT-1',
+        bank_name: 'Some Other Bank',
+        bank_account_number: '999999',
+      },
+    });
+    expect(payout.statusCode).toBe(201);
+
+    const stored = await ctx.db
+      .selectFrom('payouts')
+      .selectAll()
+      .where('id', '=', payout.json().data.id)
+      .executeTakeFirst();
+    expect(stored?.bank_name).toBe('Kasikornbank (KBank)');
+    expect(stored?.bank_account_number).toBe('1234567890');
+
+    const r = await recon(admin);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const row = (r as any).paid_out.payouts.find((p: any) => p.order_id === order.orderId);
+    expect(row.bank_name).toBe('Kasikornbank (KBank)');
+    expect(row.bank_account_number).toBe('1234567890');
+  });
+
+  it('rejects a payout when the traveler has not added a bank account yet', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+    await completeOrder(ctx, order);
+
+    await ctx.db
+      .updateTable('users')
+      .set({ bank_name: null, bank_account_number: null })
+      .where('id', '=', order.traveler.userId)
+      .execute();
+
+    const payout = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/payout',
+      headers: authHeader(admin),
+      payload: { order_id: order.orderId, method: 'wise', reference: 'W-NOPE' },
+    });
+    expect(payout.statusCode).toBe(400);
+
+    const stored = await ctx.db.selectFrom('payouts').select(['id']).where('order_id', '=', order.orderId).executeTakeFirst();
+    expect(stored).toBeUndefined();
+  });
+
   it('rejects a payout for an order that is not delivered', async () => {
     const admin = await createUser(ctx, { admin: true });
     const order = await createAcceptedOrder(ctx); // still pending_payment

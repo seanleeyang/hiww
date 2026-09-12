@@ -161,6 +161,10 @@ const MESSAGES: Record<string, Entry> = {
     th: 'จ่ายเงินได้เฉพาะคำสั่งซื้อที่จัดส่งสำเร็จแล้วเท่านั้น',
   },
   'money.alreadyPaidOut': { en: 'This order has already been paid out', th: 'คำสั่งซื้อนี้จ่ายเงินไปแล้ว' },
+  'money.travelerBankAccountMissing': {
+    en: 'This traveler has not added their bank account yet — ask them to add it in the app before recording this payout',
+    th: 'นักเดินทางคนนี้ยังไม่ได้เพิ่มบัญชีธนาคาร กรุณาแจ้งให้เพิ่มในแอปก่อนบันทึกการจ่ายเงินนี้',
+  },
   'money.onlyCancelledCanRefund': {
     en: 'Only a cancelled order with confirmed payment can be refunded',
     th: 'คืนเงินได้เฉพาะคำสั่งซื้อที่ถูกยกเลิกและยืนยันการชำระเงินแล้วเท่านั้น',

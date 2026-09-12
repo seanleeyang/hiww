@@ -236,6 +236,22 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         throw new AppError('ALREADY_DONE', 409, 'money.alreadyPaidOut');
       }
 
+      // The destination account is never taken from the request body — an
+      // admin can't type (or silently substitute) a bank account here. It's
+      // read straight from the traveller's own profile (see migration 042,
+      // the mobile Account page's Bank Account box) and snapshotted onto the
+      // payout row, so the record of where money went is both
+      // fraud-resistant (no admin input in the loop) and stable even if the
+      // traveller edits their bank details afterwards.
+      const traveler = await request.db
+        .selectFrom('users')
+        .select(['bank_name', 'bank_account_number'])
+        .where('id', '=', order.traveler_id)
+        .executeTakeFirst();
+      if (!traveler?.bank_name || !traveler?.bank_account_number) {
+        throw new AppError('VALIDATION_ERROR', 400, 'money.travelerBankAccountMissing');
+      }
+
       // Server-authoritative: never trust a client-sent amount. Orders
       // created before the pricing-breakdown migration have no
       // traveller_payout snapshot, so fall back to the legacy convention
@@ -253,6 +269,8 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
           method: parsed.data.method,
           reference: parsed.data.reference,
           note: parsed.data.note ?? null,
+          bank_name: traveler.bank_name,
+          bank_account_number: traveler.bank_account_number,
           created_at: new Date(),
         })
         .execute();
@@ -261,7 +279,7 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
         action: 'order.payout',
         targetType: 'order',
         targetId: order.id,
-        summary: `Payout of ${payoutAmount} to traveler for order ${order.id} via ${parsed.data.method} (${parsed.data.reference})`,
+        summary: `Payout of ${payoutAmount} to traveler for order ${order.id} via ${parsed.data.method} (${parsed.data.reference}) to ${traveler.bank_name} · ${traveler.bank_account_number}`,
         metadata: {
           payout_id: payoutId,
           amount: payoutAmount,
@@ -269,6 +287,8 @@ export async function registerMoneyRoutes(app: FastifyInstance): Promise<void> {
           reference: parsed.data.reference,
           order_total_price: order.total_price,
           traveler_id: order.traveler_id,
+          bank_name: traveler.bank_name,
+          bank_account_number: traveler.bank_account_number,
         },
       });
 

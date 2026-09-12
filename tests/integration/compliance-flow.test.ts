@@ -197,7 +197,7 @@ describe('compliance / KYC flow', () => {
     expect(approve.statusCode).toBe(403);
   });
 
-  it('the admin console review action notifies the user of the outcome', async () => {
+  it('the admin console review action notifies the user with the custom note for "other"', async () => {
     const user = await createUser(ctx, { user_type: 'traveler' });
     const admin = await createUser(ctx, { admin: true });
 
@@ -212,7 +212,7 @@ describe('compliance / KYC flow', () => {
       method: 'POST',
       url: `/api/admin/users/${user.userId}/kyc-review`,
       headers: authHeader(admin),
-      payload: { status: 'rejected', note: 'Photo is too blurry to read' },
+      payload: { status: 'rejected', reason_code: 'other', note: 'Photo is too blurry to read' },
     });
     expect(reject.statusCode).toBe(200);
 
@@ -225,5 +225,89 @@ describe('compliance / KYC flow', () => {
     const entry = items.find((n) => n.type === 'kyc_reviewed');
     expect(entry).toBeDefined();
     expect(entry?.body).toContain('Photo is too blurry to read');
+  });
+
+  it('rejecting with a fixed reason code notifies the user with the standard phrase, not raw text', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
+
+    await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/submit',
+      headers: authHeader(user),
+      payload: submitPayload,
+    });
+
+    const reject = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${user.userId}/kyc-review`,
+      headers: authHeader(admin),
+      payload: { status: 'rejected', reason_code: 'selfie_mismatch' },
+    });
+    expect(reject.statusCode).toBe(200);
+
+    const notifications = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/notifications',
+      headers: authHeader(user),
+    });
+    const items = notifications.json().data.items as Array<{ type: string; body: string }>;
+    const entry = items.find((n) => n.type === 'kyc_reviewed');
+    expect(entry?.body).toContain('selfie did not appear to match');
+  });
+
+  it('rejecting without a reason code is rejected as invalid', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
+
+    const reject = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${user.userId}/kyc-review`,
+      headers: authHeader(admin),
+      payload: { status: 'rejected' },
+    });
+    expect(reject.statusCode).toBe(400);
+  });
+
+  it('rejecting with reason "other" but no note is rejected as invalid', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
+
+    const reject = await ctx.app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${user.userId}/kyc-review`,
+      headers: authHeader(admin),
+      payload: { status: 'rejected', reason_code: 'other' },
+    });
+    expect(reject.statusCode).toBe(400);
+  });
+
+  it('notifies every admin, with the AI-found reasons, when a submission is flagged medium/high risk', async () => {
+    const user = await createUser(ctx, { user_type: 'traveler' });
+    const admin = await createUser(ctx, { admin: true });
+
+    const submit = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/compliance/kyc/submit',
+      headers: authHeader(user),
+      payload: {
+        ...submitPayload,
+        document_photo_url: 'https://example.com/uploads/id-mismatch.jpg',
+        selfie_photo_url: 'https://example.com/uploads/selfie-faceMismatch.jpg',
+      },
+    });
+    expect(submit.statusCode).toBe(201);
+
+    const notifications = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/notifications',
+      headers: authHeader(admin),
+    });
+    const items = notifications.json().data.items as Array<{ type: string; body: string }>;
+    const entry = items.find((n) => n.type === 'kyc_ai_flagged');
+    expect(entry).toBeDefined();
+    // The account's own name (not the name printed on the document, which
+    // can legitimately differ — see kyc_first_name/kyc_last_name).
+    expect(entry?.body).toContain('Test User');
   });
 });

@@ -39,25 +39,48 @@ function renderUsersPage(users: AdminUser[]) {
 }
 
 describe('UsersPage', () => {
-  it('requires a typed reason before rejecting an ID check — same friction as the ID Checks page', async () => {
+  it('rejects an ID check with a fixed reason — no free text required', async () => {
     const testUser = userEvent.setup();
     renderUsersPage([user()]);
 
     await testUser.click(await screen.findByRole('button', { name: 'Reject ID' }));
 
-    // A confirm dialog opens instead of the request firing immediately.
+    // A dialog opens instead of the request firing immediately, defaulting
+    // to the first fixed reason — no typing needed to submit.
     const dialog = await screen.findByRole('dialog', { name: 'Reject ID check' });
     const confirmButton = screen.getByRole('button', { name: 'Reject' });
-    expect(confirmButton).toBeDisabled();
+    expect(confirmButton).toBeEnabled();
     expect(api.post).not.toHaveBeenCalled();
 
-    await testUser.type(within(dialog).getByRole('textbox'), 'Document photo unreadable');
+    await testUser.click(confirmButton);
+
+    expect(api.post).toHaveBeenCalledWith('/admin/users/user-1/kyc-review', {
+      status: 'rejected',
+      reason_code: 'photo_unclear',
+      note: undefined,
+    });
+    expect(dialog).not.toBeInTheDocument();
+  });
+
+  it('requires a typed explanation when the reason is "Other"', async () => {
+    const testUser = userEvent.setup();
+    renderUsersPage([user()]);
+
+    await testUser.click(await screen.findByRole('button', { name: 'Reject ID' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Reject ID check' });
+    const confirmButton = screen.getByRole('button', { name: 'Reject' });
+
+    await testUser.selectOptions(within(dialog).getByRole('combobox'), 'other');
+    expect(confirmButton).toBeDisabled();
+
+    await testUser.type(within(dialog).getByRole('textbox'), 'Something else entirely');
     expect(confirmButton).toBeEnabled();
     await testUser.click(confirmButton);
 
     expect(api.post).toHaveBeenCalledWith('/admin/users/user-1/kyc-review', {
       status: 'rejected',
-      note: 'Document photo unreadable',
+      reason_code: 'other',
+      note: 'Something else entirely',
     });
     expect(dialog).not.toBeInTheDocument();
   });

@@ -359,6 +359,9 @@ export interface PayoutsTable {
   method: string;
   reference: string;
   note?: string | null;
+  /** Snapshot of the traveller's own `users.bank_name`/`bank_account_number` at payout time (migration 043) — server-derived, never admin-entered. */
+  bank_name?: string | null;
+  bank_account_number?: string | null;
   created_at: Generated<Date>;
 }
 

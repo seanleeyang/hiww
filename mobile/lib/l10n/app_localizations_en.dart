@@ -383,6 +383,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorEnterBankAccountNumber => 'Enter your account number';
 
   @override
+  String get infoBankAccountUpdated =>
+      'Your bank account was updated successfully';
+
+  @override
   String get editProfileTitle => 'Edit profile';
 
   @override
