@@ -159,8 +159,7 @@ class AppLocalizationsTh extends AppLocalizations {
       'ต้องเป็นตัวอักษรและตัวเลขผสมกัน';
 
   @override
-  String get passwordRequirementSpecialAllowed =>
-      'อนุญาตให้ใช้อักขระพิเศษ (ไม่บังคับ)';
+  String get passwordRequirementSpecialAllowed => 'อนุญาตให้ใช้อักขระพิเศษ';
 
   @override
   String get actionLogIn => 'เข้าสู่ระบบ';
@@ -396,7 +395,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get fieldStreetAddress => 'ที่อยู่ บรรทัดที่ 1';
 
   @override
-  String get fieldStreetAddress2 => 'ที่อยู่ บรรทัดที่ 2 (ไม่บังคับ)';
+  String get fieldStreetAddress2 => 'ที่อยู่ บรรทัดที่ 2';
 
   @override
   String get fieldCity => 'เมือง';
@@ -501,13 +500,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get fieldHouseNumber => 'บ้านเลขที่';
 
   @override
-  String get fieldVillageNumber => 'หมู่ที่ (ไม่บังคับ)';
+  String get fieldVillageNumber => 'หมู่';
 
   @override
-  String get fieldAlley => 'ซอย (ไม่บังคับ)';
+  String get fieldAlley => 'ซอย';
 
   @override
-  String get fieldRoad => 'ถนน (ไม่บังคับ)';
+  String get fieldRoad => 'ถนน';
 
   @override
   String get fieldDocumentPhoto => 'แนบรูปถ่ายเอกสาร';
@@ -751,13 +750,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get fieldMaxItems => 'จำนวนสินค้าสูงสุด';
 
   @override
-  String get fieldNoteOptional => 'หมายเหตุ (ไม่บังคับ)';
+  String get fieldNoteOptional => 'หมายเหตุ';
 
   @override
   String get hintNoteTrip => 'สิ่งที่คุณรับฝากได้ ความชอบส่วนตัว…';
 
   @override
-  String get fieldCoverPhotoOptional => 'เพิ่มรูปปก (ไม่บังคับ)';
+  String get fieldCoverPhotoOptional => 'เพิ่มรูปปก';
 
   @override
   String get actionSaveChanges => 'บันทึกการเปลี่ยนแปลง';
@@ -766,7 +765,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionPostTrip => 'เพิ่มทริป';
 
   @override
-  String get fieldCityOptional => 'เมือง (ไม่บังคับ)';
+  String get fieldCityOptional => 'เมือง';
 
   @override
   String get heroTravelFormHeading => 'กรอกรายละเอียดทริปเพื่อเริ่มสร้างรายได้';
@@ -863,7 +862,7 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
-  String get fieldProductUrlOptional => 'ลิงก์สินค้า (ไม่บังคับ)';
+  String get fieldProductUrlOptional => 'ลิงก์สินค้า';
 
   @override
   String get hintProductUrl => 'วางลิงก์ไปยังสินค้าที่ต้องการ';
@@ -885,7 +884,7 @@ class AppLocalizationsTh extends AppLocalizations {
       'ระบุรายละเอียดสินค้าให้ครบถ้วนที่สุด เพื่อให้นักเดินทางซื้อสินค้าได้ถูกต้อง';
 
   @override
-  String get fieldPhotoOptional => 'เพิ่มรูปภาพ (ไม่บังคับ)';
+  String get fieldPhotoOptional => 'เพิ่มรูปภาพ';
 
   @override
   String get fieldPhoto => 'เพิ่มรูปภาพ';
@@ -1314,7 +1313,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get actionSubmitPurchaseProof => 'ส่ง';
 
   @override
-  String get actionUploadShippingProof => 'แนบหลักฐานการจัดส่ง (ไม่บังคับ)';
+  String get actionUploadShippingProof => 'แนบหลักฐานการจัดส่ง';
 
   @override
   String get actionUploadDeliveryPhoto => 'อัปโหลดรูปสินค้าที่ได้รับ';
@@ -1450,7 +1449,7 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
-  String get hintShareHandover => 'เล่าว่าการส่งมอบเป็นอย่างไร (ไม่บังคับ)';
+  String get hintShareHandover => 'เล่าว่าการส่งมอบเป็นอย่างไร';
 
   @override
   String get actionClose => 'ปิด';
