@@ -173,7 +173,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await registerOpsRoutes(app);
   await registerAdminRoutes(app);
   await registerAdminActionRoutes(app);
-  await registerAdminDevToolsRoutes(app);
+  // Dev-only tooling (spins up fake users/orders with real DB writes) — an
+  // admin allowlist entry is not enough on its own, since any real admin
+  // account could otherwise call it in production. Never registered at all
+  // outside development/test, so there's no route for it to hit.
+  if (config.nodeEnv !== 'production') {
+    await registerAdminDevToolsRoutes(app);
+  }
   await registerMoneyRoutes(app);
   await registerPricingRoutes(app);
   await registerExternalRoutes(app);
