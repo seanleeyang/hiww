@@ -16,6 +16,11 @@ const _cityImages = <String, String>{
   'taipei': 'assets/images/taipei.jpg',
   'hong kong': 'assets/images/hongkong.jpg',
   'singapore': 'assets/images/singapore.jpg',
+  'milan': 'assets/images/milan.jpg',
+  'munich': 'assets/images/munich.jpg',
+  'copenhagen': 'assets/images/copenhagen.jpg',
+  'brussels': 'assets/images/brussels.jpg',
+  'zurich': 'assets/images/zurich.jpg',
 };
 
 /// Fallback when the trip has no city, or a city we don't have a photo for —
@@ -30,6 +35,11 @@ const _countryImages = <String, String>{
   'HK': 'assets/images/hongkong.jpg',
   'CN': 'assets/images/shanghai.jpg',
   'SG': 'assets/images/singapore.jpg',
+  'IT': 'assets/images/milan.jpg',
+  'DE': 'assets/images/munich.jpg',
+  'CH': 'assets/images/zurich.jpg',
+  'DK': 'assets/images/copenhagen.jpg',
+  'BE': 'assets/images/brussels.jpg',
 };
 
 const _categories = <String, String>{
