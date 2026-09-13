@@ -21,12 +21,15 @@ const _cityImages = <String, String>{
   'copenhagen': 'assets/images/copenhagen.jpg',
   'brussels': 'assets/images/brussels.jpg',
   'zurich': 'assets/images/zurich.jpg',
+  'vienna': 'assets/images/vienna.jpg',
+  'barcelona': 'assets/images/barcelona.jpg',
+  'paris': 'assets/images/paris.jpg',
+  'amsterdam': 'assets/images/amsterdam.jpg',
+  'london': 'assets/images/london.jpg',
 };
 
 /// Fallback when the trip has no city, or a city we don't have a photo for —
-/// one representative photo per country. No entry for GB/UK yet: the only
-/// photo we had for London didn't actually depict London, so it's better to
-/// fall through to the neutral placeholder than show the wrong city.
+/// one representative photo per country.
 const _countryImages = <String, String>{
   'TH': 'assets/images/bangkok.jpg',
   'JP': 'assets/images/tokyo.jpg',
@@ -40,6 +43,11 @@ const _countryImages = <String, String>{
   'CH': 'assets/images/zurich.jpg',
   'DK': 'assets/images/copenhagen.jpg',
   'BE': 'assets/images/brussels.jpg',
+  'AT': 'assets/images/vienna.jpg',
+  'ES': 'assets/images/barcelona.jpg',
+  'FR': 'assets/images/paris.jpg',
+  'NL': 'assets/images/amsterdam.jpg',
+  'GB': 'assets/images/london.jpg',
 };
 
 const _categories = <String, String>{
