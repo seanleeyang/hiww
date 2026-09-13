@@ -7,6 +7,7 @@ import '../../../core/cities.dart';
 import '../../../core/city_choice.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
+import '../../../core/thai_geography.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/breakdown_row.dart';
 import '../../../ui/budget_stepper.dart';
@@ -81,6 +82,13 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   String _destCountry = unselected;
   String _destCityChoice = unselected;
   final _destCityCustom = TextEditingController();
+
+  /// All 77 Thai provinces, for the Deliver-to city dropdown when Thailand
+  /// is the destination — the curated `kCities` list only has 3 Thai
+  /// entries (Bangkok/Chiang Mai/Phuket), too few for a delivery address.
+  /// Loaded once (cached by [ThaiGeography.load]) and applied via setState;
+  /// the dropdown falls back to the curated list until this resolves.
+  List<ThaiProvince> _thaiProvinces = [];
   bool _deliverySameAsRegistered = true;
   final _deliveryStreet = TextEditingController();
   final _deliveryStreet2 = TextEditingController();
@@ -133,6 +141,14 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   String _initialCountry() {
     final source = widget.sourceCountry;
     return (source != null && isLiveCountry(source)) ? source : unselected;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    ThaiGeography.load().then((geo) {
+      if (mounted) setState(() => _thaiProvinces = geo.provinces);
+    });
   }
 
   @override
@@ -632,8 +648,10 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   decoration: InputDecoration(labelText: l10n.fieldCity),
                   items: [
                     DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
-                    for (final c in kCities.where((c) => c.countryCode == _destCountry))
-                      DropdownMenuItem(value: c.city, child: Text(c.city)),
+                    for (final city in _destCountry == 'TH'
+                        ? _thaiProvinces.map((p) => p.nameEn)
+                        : kCities.where((c) => c.countryCode == _destCountry).map((c) => c.city))
+                      DropdownMenuItem(value: city, child: Text(city)),
                     DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
                   ],
                   onChanged: _destCountry.isEmpty
