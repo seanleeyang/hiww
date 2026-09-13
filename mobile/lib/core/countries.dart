@@ -15,18 +15,30 @@ const kCountries = <({String code, String name})>[
   (code: 'FR', name: 'France'),
   (code: 'IT', name: 'Italy'),
   (code: 'DE', name: 'Germany'),
+  (code: 'ES', name: 'Spain'),
+  (code: 'CH', name: 'Switzerland'),
+  (code: 'AT', name: 'Austria'),
+  (code: 'DK', name: 'Denmark'),
+  (code: 'NO', name: 'Norway'),
+  (code: 'SE', name: 'Sweden'),
+  (code: 'NL', name: 'Netherlands'),
+  (code: 'BE', name: 'Belgium'),
   (code: 'AU', name: 'Australia'),
+  (code: 'NZ', name: 'New Zealand'),
   (code: 'MY', name: 'Malaysia'),
   (code: 'AE', name: 'United Arab Emirates'),
 ];
 
 /// Phase 1 focused on Asian routes we had real destination photos and local
-/// knowledge for; USA and Europe (UK/France/Italy/Germany) routes opened up
-/// in Phase 2. The rest are still shown (as "coming soon") so the roadmap is
-/// visible, but can't be selected for a new trip or want yet.
+/// knowledge for; USA, wider Europe, and Oceania (Australia/NZ) opened up in
+/// Phase 2, alongside Malaysia. The rest are still shown (as "coming soon")
+/// so the roadmap is visible, but can't be selected for a new trip or want
+/// yet.
 const _liveCodes = <String>{
   'JP', 'KR', 'TH', 'SG', 'TW', 'HK', 'CN', // Phase 1 — Asia
-  'US', 'GB', 'FR', 'IT', 'DE', // Phase 2 — USA + Europe
+  'US', // Phase 2 — USA
+  'GB', 'FR', 'IT', 'DE', 'ES', 'CH', 'AT', 'DK', 'NO', 'SE', 'NL', 'BE', // Phase 2 — Europe
+  'MY', 'AU', 'NZ', // Phase 2 — Malaysia + Oceania
 };
 
 bool isLiveCountry(String code) => _liveCodes.contains(code.toUpperCase());
@@ -60,6 +72,15 @@ const _defaultCities = <String, String>{
   'TW': 'Taipei',
   'MY': 'Kuala Lumpur',
   'AE': 'Dubai',
+  'ES': 'Barcelona',
+  'CH': 'Zurich',
+  'AT': 'Vienna',
+  'DK': 'Copenhagen',
+  'NO': 'Oslo',
+  'SE': 'Stockholm',
+  'NL': 'Amsterdam',
+  'BE': 'Brussels',
+  'NZ': 'Auckland',
 };
 
 String? defaultCityFor(String code) => _defaultCities[code.toUpperCase()];
