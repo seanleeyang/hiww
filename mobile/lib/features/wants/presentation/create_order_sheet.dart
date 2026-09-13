@@ -83,11 +83,11 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
   String _destCityChoice = unselected;
   final _destCityCustom = TextEditingController();
 
-  /// All 77 Thai provinces, for the Deliver-to city dropdown when Thailand
-  /// is the destination — the curated `kCities` list only has 3 Thai
-  /// entries (Bangkok/Chiang Mai/Phuket), too few for a delivery address.
-  /// Loaded once (cached by [ThaiGeography.load]) and applied via setState;
-  /// the dropdown falls back to the curated list until this resolves.
+  /// All 77 Thai provinces, for the Buy-in/Deliver-to city dropdowns when
+  /// Thailand is chosen as the country — the curated `kCities` list only has
+  /// 3 Thai entries (Bangkok/Chiang Mai/Phuket), too few for either. Loaded
+  /// once (cached by [ThaiGeography.load]) and applied via setState; the
+  /// dropdown falls back to the curated list until this resolves.
   List<ThaiProvince> _thaiProvinces = [];
   bool _deliverySameAsRegistered = true;
   final _deliveryStreet = TextEditingController();
@@ -555,8 +555,8 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   items: [
                     DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
                     DropdownMenuItem(value: anyCity, child: Text(l10n.cityOptionAny)),
-                    for (final c in kCities.where((c) => c.countryCode == _country))
-                      DropdownMenuItem(value: c.city, child: Text(c.city)),
+                    for (final city in cityNamesForDropdown(_country, _thaiProvinces))
+                      DropdownMenuItem(value: city, child: Text(city)),
                     DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
                   ],
                   onChanged: _country.isEmpty
@@ -648,9 +648,7 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   decoration: InputDecoration(labelText: l10n.fieldCity),
                   items: [
                     DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
-                    for (final city in _destCountry == 'TH'
-                        ? _thaiProvinces.map((p) => p.nameEn)
-                        : kCities.where((c) => c.countryCode == _destCountry).map((c) => c.city))
+                    for (final city in cityNamesForDropdown(_destCountry, _thaiProvinces))
                       DropdownMenuItem(value: city, child: Text(city)),
                     DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
                   ],

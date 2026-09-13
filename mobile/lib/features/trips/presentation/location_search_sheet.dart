@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/cities.dart';
 import '../../../core/storage/recent_locations_storage.dart';
+import '../../../core/thai_geography.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// A near-full-height bottom sheet: search field + recent/matching cities.
@@ -25,6 +26,11 @@ class _LocationSearchSheet extends ConsumerStatefulWidget {
 
 class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
   final _query = TextEditingController();
+
+  /// All 77 Thai provinces merged into the searchable list in place of the
+  /// 3 curated Thai entries — see `create_order_sheet.dart`'s matching field
+  /// for detail. Falls back to the plain curated list until loaded.
+  List<CityOption> _cities = kCities;
   List<CityOption> _results = kCities;
   List<String> _recents = const [];
 
@@ -34,7 +40,14 @@ class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
     ref.read(recentLocationsStorageProvider).read().then((r) {
       if (mounted) setState(() => _recents = r);
     });
-    _query.addListener(() => setState(() => _results = searchCities(_query.text)));
+    ThaiGeography.load().then((geo) {
+      if (!mounted) return;
+      setState(() {
+        _cities = citiesWithThaiProvinces(geo.provinces);
+        _results = searchCities(_query.text, _cities);
+      });
+    });
+    _query.addListener(() => setState(() => _results = searchCities(_query.text, _cities)));
   }
 
   @override
@@ -54,7 +67,7 @@ class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
     final scheme = Theme.of(context).colorScheme;
     final showingRecents = _query.text.isEmpty && _recents.isNotEmpty;
     final recentCities = _recents
-        .map((name) => kCities.where((c) => c.city == name).firstOrNull)
+        .map((name) => _cities.where((c) => c.city == name).firstOrNull)
         .whereType<CityOption>()
         .toList();
 

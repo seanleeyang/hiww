@@ -1,4 +1,5 @@
 import 'countries.dart' as countries;
+import 'thai_geography.dart';
 
 /// A small curated set of real cities for the countries this pilot
 /// currently supports (`kLiveCountries` in `countries.dart`) — enough for
@@ -48,13 +49,42 @@ const kCities = <CityOption>[
   CityOption(city: 'Chengdu', cityTh: 'เฉิงตู', countryCode: 'CN', countryName: 'China'),
 ];
 
-List<CityOption> searchCities(String query) {
+/// Search [cities] (defaults to the curated [kCities]) by city/country name
+/// in either language. Pass [citiesWithThaiProvinces]'s result once loaded
+/// so a Thailand-wide search actually finds a given province.
+List<CityOption> searchCities(String query, [List<CityOption> cities = kCities]) {
   final q = query.trim().toLowerCase();
-  if (q.isEmpty) return kCities;
-  return kCities
+  if (q.isEmpty) return cities;
+  return cities
       .where((c) =>
           c.city.toLowerCase().contains(q) ||
           c.cityTh.contains(q) ||
           c.countryName.toLowerCase().contains(q))
       .toList();
+}
+
+/// [kCities] with its 3 token Thai entries swapped out for every real Thai
+/// province (from [ThaiGeography], the same dataset the KYC address picker
+/// uses) — for a flat city-search list that should offer full Thailand
+/// coverage. Falls back to the plain curated list before [thaiProvinces]
+/// has loaded.
+List<CityOption> citiesWithThaiProvinces(List<ThaiProvince> thaiProvinces) {
+  if (thaiProvinces.isEmpty) return kCities;
+  return [
+    for (final c in kCities)
+      if (c.countryCode != 'TH') c,
+    for (final p in thaiProvinces)
+      CityOption(city: p.nameEn, cityTh: p.nameTh, countryCode: 'TH', countryName: 'Thailand'),
+  ];
+}
+
+/// City names to list in a Country → City dropdown pair: every real Thai
+/// province (see [citiesWithThaiProvinces]'s doc) once [thaiProvinces] has
+/// loaded when [countryCode] is Thailand, else the curated [kCities] entries
+/// for that country.
+List<String> cityNamesForDropdown(String countryCode, List<ThaiProvince> thaiProvinces) {
+  if (countryCode == 'TH' && thaiProvinces.isNotEmpty) {
+    return thaiProvinces.map((p) => p.nameEn).toList();
+  }
+  return kCities.where((c) => c.countryCode == countryCode).map((c) => c.city).toList();
 }

@@ -7,6 +7,7 @@ import '../../../core/cities.dart';
 import '../../../core/city_choice.dart';
 import '../../../core/countries.dart';
 import '../../../core/format.dart';
+import '../../../core/thai_geography.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/busy_filled_button.dart';
 import '../../../ui/image_picker_field.dart';
@@ -93,6 +94,18 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
   final _weightItemsKey = GlobalKey();
   String? _datesError;
   String? _weightItemsError;
+
+  /// All 77 Thai provinces, for the From/To city dropdowns when Thailand is
+  /// chosen — see the matching field in `create_order_sheet.dart` for detail.
+  List<ThaiProvince> _thaiProvinces = [];
+
+  @override
+  void initState() {
+    super.initState();
+    ThaiGeography.load().then((geo) {
+      if (mounted) setState(() => _thaiProvinces = geo.provinces);
+    });
+  }
 
   String _cityValueFor(String choice, TextEditingController custom) {
     if (choice == othersCity) return custom.text.trim();
@@ -557,10 +570,8 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                     value: anyCity,
                     child: Text(l10n.cityOptionAny),
                   ),
-                  for (final c in kCities.where(
-                    (c) => c.countryCode == country,
-                  ))
-                    DropdownMenuItem(value: c.city, child: Text(c.city)),
+                  for (final city in cityNamesForDropdown(country, _thaiProvinces))
+                    DropdownMenuItem(value: city, child: Text(city)),
                   DropdownMenuItem(
                     value: othersCity,
                     child: Text(l10n.cityOptionOthers),
