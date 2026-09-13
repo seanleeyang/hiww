@@ -130,13 +130,16 @@ Full steps in `docs/DEPLOY.md`.
       alert contact on down/up (see `docs/DEPLOY.md`, "Uptime monitoring &
       alerting"). `/health` is now DB-aware (`select 1`, 503 on failure), not
       just a liveness check.
-- [ ] Structured logs go to stdout as JSON in production and are captured by
-      Render's own log viewer, but there is no dedicated log-shipping sink
-      (e.g. Datadog/Logtail) or error-rate alerting beyond the uptime pinger —
-      acceptable at pilot scale, worth revisiting if volume grows.
+- [x] **Log shipping.** Structured logs go to stdout as JSON in production
+      (captured by Render's own log viewer as before) and, once
+      `LOGTAIL_SOURCE_TOKEN`/`LOGTAIL_ENDPOINT` are set, are also shipped to
+      **Better Stack (Logtail)** via a second `pino.transport()` target
+      (`src/config/logger.ts`) — searchable history + alerting instead of
+      only whatever recently scrolled by. Optional/safe-fallback: with no
+      token, behaves exactly as before. See `docs/DEPLOY.md` "Log shipping &
+      alerting".
 
-**Stage 3 is complete** except the log-shipping/error-alerting item above,
-which is a nice-to-have, not a pilot blocker.
+**Stage 3 is now fully complete.**
 
 ## Since Stage 3: real vendor integrations and feature work
 

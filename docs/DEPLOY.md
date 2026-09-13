@@ -177,6 +177,30 @@ to add a real `db.selectFrom(...).executeTakeFirst()` probe (and switch
 `/health` to return 503 when it fails, so UptimeRobot treats a DB outage as
 downtime too).
 
+## Log shipping & alerting
+
+Render's own log viewer only shows recent activity and isn't searchable or
+alertable. **Better Stack (Logtail)** (free) fixes that: every production log
+line gets copied there too, giving you weeks of searchable history and the
+ability to set up an alert (e.g. an email when errors spike) instead of only
+finding out when a user complains. This is optional — without it, logging
+behaves exactly as it always has (plain JSON to stdout, captured by Render).
+
+1. Sign up at <https://betterstack.com/logs> (free plan is enough, no card
+   needed).
+2. Create a new **Source** — pick **Node.js** (or **Pino**) as the platform.
+3. Its "Connect source" screen shows two values: a **Source Token** and an
+   **Ingesting host** (a URL like `https://xxxxxxx.betterstackdata.com`).
+4. In Render (`hiww-api` → Environment), set:
+   - `LOGTAIL_SOURCE_TOKEN` = the source token
+   - `LOGTAIL_ENDPOINT` = `https://` + the ingesting host shown on that screen
+5. Redeploy (or wait for the next auto-deploy). Every log line the backend
+   writes now also shows up in Better Stack within a few seconds.
+
+Once logs are flowing, Better Stack's dashboard lets you save a search (e.g.
+`level:error`) and turn it into an alert under its Alerting/Uptime section —
+no code change needed for that part.
+
 ## Rolling back
 
 Render dashboard → **Deploys** → pick a previous successful deploy → **Redeploy**.
@@ -199,3 +223,4 @@ Migrations are forward-only; a rollback that needs a schema change is a manual j
 | `ANTHROPIC_API_KEY` | you | from console.anthropic.com; without it both the receipt check and the chat moderation check fall back to their mocks |
 | `UPLOADS_BACKEND` | blueprint | `r2` — see "Uploads on R2" |
 | `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_PUBLIC_BASE_URL` | you | all five required; any missing → falls back to local disk |
+| `LOGTAIL_SOURCE_TOKEN` / `LOGTAIL_ENDPOINT` | you | from betterstack.com/logs — see "Log shipping & alerting"; without it, logs just go to stdout as before |

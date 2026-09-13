@@ -110,3 +110,11 @@ services:
         value: fcm
       - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
+
+      # Ships production logs to Better Stack (Logtail) in addition to
+      # stdout, for searchable history + alerting. Without a token, logging
+      # behaves exactly as before (plain stdout JSON only). See docs/DEPLOY.md.
+      - key: LOGTAIL_SOURCE_TOKEN
+        sync: false
+      - key: LOGTAIL_ENDPOINT
+        sync: false

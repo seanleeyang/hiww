@@ -28,6 +28,7 @@
     "@fastify/multipart": "^8.3.1",
     "@fastify/rate-limit": "^9.1.0",
     "@fastify/static": "^6.12.0",
+    "@logtail/pino": "^0.5.8",
     "aws4fetch": "^1.0.20",
     "date-fns": "^2.30.0",
     "decimal.js": "^10.4.3",
@@ -39,6 +40,7 @@
     "jsqr": "^1.4.0",
     "kysely": "^0.26.3",
     "pg": "^8.11.3",
+    "pino": "^10.3.1",
     "tsx": "^4.7.0",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"

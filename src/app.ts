@@ -10,6 +10,7 @@ import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import type { Kysely } from 'kysely';
 import { config } from '@/config/env';
+import { buildProductionLogger } from '@/config/logger';
 import { createDatabase } from '@/db/connection';
 import type { Database } from '@/types/database';
 import { registerErrorHandler } from '@/middleware/error-handler';
@@ -70,7 +71,7 @@ export interface BuildAppOptions {
  */
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: config.nodeEnv === 'production',
+    logger: config.nodeEnv === 'production' ? buildProductionLogger() : false,
     // Correlate every log line and error with one id. Honour an upstream
     // `x-request-id` (from a proxy) when present, otherwise mint one.
     requestIdHeader: 'x-request-id',

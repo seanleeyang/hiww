@@ -92,6 +92,16 @@ export const config = {
   paymentProvider: process.env.PAYMENT_PROVIDER || 'mock',
   identityProvider: process.env.IDENTITY_PROVIDER || 'mock',
   logLevel: process.env.LOG_LEVEL || 'info',
+  /**
+   * Ships every production log line to Better Stack (Logtail) in addition to
+   * stdout (which Render's own log viewer already captures), for searchable
+   * history and alerting beyond "whatever recently scrolled by". Both values
+   * come from the same "Connect source" screen when creating a Node.js/Pino
+   * source in Better Stack. Optional — with no token set, logging behaves
+   * exactly as before (plain stdout JSON, no shipping).
+   */
+  logtailSourceToken: process.env.LOGTAIL_SOURCE_TOKEN || '',
+  logtailEndpoint: process.env.LOGTAIL_ENDPOINT || 'https://in.logs.betterstack.com',
   // Abuse protection. Counts are per client IP per window.
   rateLimitMax: Number(process.env.RATE_LIMIT_MAX || '200'),
   rateLimitWindow: process.env.RATE_LIMIT_WINDOW || '1 minute',
