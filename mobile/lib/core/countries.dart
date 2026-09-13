@@ -20,10 +20,14 @@ const kCountries = <({String code, String name})>[
   (code: 'AE', name: 'United Arab Emirates'),
 ];
 
-/// Phase 1 focuses on Asian routes we have real destination photos and
-/// local knowledge for. The rest are still shown (as "coming soon") so the
-/// roadmap is visible, but can't be selected for a new trip or want yet.
-const _liveCodes = <String>{'JP', 'KR', 'TH', 'SG', 'TW', 'HK', 'CN'};
+/// Phase 1 focused on Asian routes we had real destination photos and local
+/// knowledge for; USA and Europe (UK/France/Italy/Germany) routes opened up
+/// in Phase 2. The rest are still shown (as "coming soon") so the roadmap is
+/// visible, but can't be selected for a new trip or want yet.
+const _liveCodes = <String>{
+  'JP', 'KR', 'TH', 'SG', 'TW', 'HK', 'CN', // Phase 1 — Asia
+  'US', 'GB', 'FR', 'IT', 'DE', // Phase 2 — USA + Europe
+};
 
 bool isLiveCountry(String code) => _liveCodes.contains(code.toUpperCase());
 

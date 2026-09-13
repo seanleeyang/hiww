@@ -47,6 +47,19 @@ const kCities = <CityOption>[
   CityOption(city: 'Shenzhen', cityTh: 'เสิ่นเจิ้น', countryCode: 'CN', countryName: 'China'),
   CityOption(city: 'Chongqing', cityTh: 'ฉงชิ่ง', countryCode: 'CN', countryName: 'China'),
   CityOption(city: 'Chengdu', cityTh: 'เฉิงตู', countryCode: 'CN', countryName: 'China'),
+  CityOption(city: 'New York', cityTh: 'นิวยอร์ก', countryCode: 'US', countryName: 'United States'),
+  CityOption(city: 'Los Angeles', cityTh: 'ลอสแอนเจลิส', countryCode: 'US', countryName: 'United States'),
+  CityOption(city: 'San Francisco', cityTh: 'ซานฟรานซิสโก', countryCode: 'US', countryName: 'United States'),
+  CityOption(city: 'Chicago', cityTh: 'ชิคาโก', countryCode: 'US', countryName: 'United States'),
+  CityOption(city: 'London', cityTh: 'ลอนดอน', countryCode: 'GB', countryName: 'United Kingdom'),
+  CityOption(city: 'Manchester', cityTh: 'แมนเชสเตอร์', countryCode: 'GB', countryName: 'United Kingdom'),
+  CityOption(city: 'Paris', cityTh: 'ปารีส', countryCode: 'FR', countryName: 'France'),
+  CityOption(city: 'Nice', cityTh: 'นีซ', countryCode: 'FR', countryName: 'France'),
+  CityOption(city: 'Milan', cityTh: 'มิลาน', countryCode: 'IT', countryName: 'Italy'),
+  CityOption(city: 'Rome', cityTh: 'โรม', countryCode: 'IT', countryName: 'Italy'),
+  CityOption(city: 'Frankfurt', cityTh: 'แฟรงก์เฟิร์ต', countryCode: 'DE', countryName: 'Germany'),
+  CityOption(city: 'Berlin', cityTh: 'เบอร์ลิน', countryCode: 'DE', countryName: 'Germany'),
+  CityOption(city: 'Munich', cityTh: 'มิวนิก', countryCode: 'DE', countryName: 'Germany'),
 ];
 
 /// Search [cities] (defaults to the curated [kCities]) by city/country name
