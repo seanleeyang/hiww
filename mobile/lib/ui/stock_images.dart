@@ -26,6 +26,8 @@ const _cityImages = <String, String>{
   'paris': 'assets/images/paris.jpg',
   'amsterdam': 'assets/images/amsterdam.jpg',
   'london': 'assets/images/london.jpg',
+  'stockholm': 'assets/images/stockholm.jpg',
+  'oslo': 'assets/images/oslo.jpg',
 };
 
 /// Fallback when the trip has no city, or a city we don't have a photo for —
@@ -48,6 +50,8 @@ const _countryImages = <String, String>{
   'FR': 'assets/images/paris.jpg',
   'NL': 'assets/images/amsterdam.jpg',
   'GB': 'assets/images/london.jpg',
+  'SE': 'assets/images/stockholm.jpg',
+  'NO': 'assets/images/oslo.jpg',
 };
 
 const _categories = <String, String>{
