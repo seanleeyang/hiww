@@ -28,6 +28,10 @@ const _cityImages = <String, String>{
   'london': 'assets/images/london.jpg',
   'stockholm': 'assets/images/stockholm.jpg',
   'oslo': 'assets/images/oslo.jpg',
+  'chicago': 'assets/images/chicago.jpg',
+  'new york': 'assets/images/newyork.jpg',
+  'los angeles': 'assets/images/losangeles.jpg',
+  'san francisco': 'assets/images/sanfrancisco.jpg',
 };
 
 /// Fallback when the trip has no city, or a city we don't have a photo for —
