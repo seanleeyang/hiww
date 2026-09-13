@@ -70,7 +70,6 @@ const kCities = <CityOption>[
   CityOption(city: 'Sydney', cityTh: 'ซิดนีย์', countryCode: 'AU', countryName: 'Australia'),
   CityOption(city: 'Melbourne', cityTh: 'เมลเบิร์น', countryCode: 'AU', countryName: 'Australia'),
   CityOption(city: 'Auckland', cityTh: 'โอ๊คแลนด์', countryCode: 'NZ', countryName: 'New Zealand'),
-  CityOption(city: 'Wellington', cityTh: 'เวลลิงตัน', countryCode: 'NZ', countryName: 'New Zealand'),
 ];
 
 /// Search [cities] (defaults to the curated [kCities]) by city/country name
