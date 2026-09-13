@@ -12,7 +12,6 @@ const _cityImages = <String, String>{
   'beijing': 'assets/images/beijing.jpg',
   'chengdu': 'assets/images/chengdu.jpg',
   'bangkok': 'assets/images/bangkok.jpg',
-  'phuket': 'assets/images/phuket.jpg',
   'seoul': 'assets/images/seoul.jpg',
   'taipei': 'assets/images/taipei.jpg',
   'hong kong': 'assets/images/hongkong.jpg',
@@ -35,6 +34,7 @@ const _cityImages = <String, String>{
   'san francisco': 'assets/images/sanfrancisco.jpg',
   'melbourne': 'assets/images/melbourne.jpg',
   'kuala lumpur': 'assets/images/kualalumpur.jpg',
+  'penang': 'assets/images/penang.jpg',
   'sydney': 'assets/images/sydney.jpg',
 };
 
