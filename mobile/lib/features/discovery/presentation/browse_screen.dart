@@ -10,6 +10,7 @@ import '../../../ui/badged_fab.dart';
 import '../../../ui/category_chips.dart';
 import '../../../ui/country_chips.dart';
 import '../../../ui/empty_state.dart';
+import '../../../ui/segmented_tabs.dart';
 import '../../../ui/skeleton.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../trips/presentation/add_trip_sheet.dart';
@@ -101,60 +102,6 @@ class _SortButton<T> extends StatelessWidget {
   }
 }
 
-/// A pill-shaped segmented control standing in for the default underlined
-/// [TabBar] — same [TabController] mechanism (still drives [TabBarView]),
-/// just the warmer, rounder look explored on the design canvas.
-class _SegmentedTabs extends StatelessWidget {
-  const _SegmentedTabs({required this.controller, required this.labels});
-  final TabController controller;
-  final List<String> labels;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        return Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Row(
-            children: [
-              for (var i = 0; i < labels.length; i++)
-                Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => controller.animateTo(i),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                      decoration: BoxDecoration(
-                        color: controller.index == i ? scheme.primary : Colors.transparent,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        labels[i],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: controller.index == i ? scheme.onPrimary : scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
 /// Two tabs, each pairing its content with the matching action: **Order**
 /// browses wants (what shoppers are asking for) with a category filter, and
 /// its action posts a want (start your own order); **Travel** browses trips
@@ -201,7 +148,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: _SegmentedTabs(
+            child: SegmentedTabs(
               controller: _tabController,
               labels: [l10n.browseTabTravel, l10n.browseTabOrder],
             ),

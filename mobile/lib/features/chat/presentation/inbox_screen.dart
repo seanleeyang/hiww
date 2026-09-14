@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../ui/async_value_view.dart';
 import '../../../ui/empty_state.dart';
 import '../../../ui/initials_avatar.dart';
+import '../../../ui/segmented_tabs.dart';
 import '../../notifications/data/notifications_repository.dart';
 import '../../notifications/presentation/notifications_screen.dart';
 import '../data/chat_repository.dart';
@@ -42,12 +43,12 @@ class _InboxScreenState extends ConsumerState<InboxScreen> with SingleTickerProv
     final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
-        TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: l10n.inboxTabMessages),
-            Tab(text: l10n.inboxTabNotifications),
-          ],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: SegmentedTabs(
+            controller: _tabController,
+            labels: [l10n.inboxTabMessages, l10n.inboxTabNotifications],
+          ),
         ),
         Expanded(
           child: TabBarView(
