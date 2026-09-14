@@ -26,6 +26,13 @@ services:
       - key: JWT_SECRET
         generateValue: true
 
+      # Encrypts sensitive fields at rest (e.g. stored bank account numbers —
+      # see src/utils/encryption.ts). Deliberately separate from JWT_SECRET so
+      # rotating the login secret never also makes stored data unreadable.
+      # Render generates a strong value once and keeps it, same as above.
+      - key: DATA_ENCRYPTION_KEY
+        generateValue: true
+
       # The public https origin. Set after the first deploy to
       # https://<your-service>.onrender.com (or a custom domain). If left unset
       # the app derives it per-request, which also works behind Render's proxy.
