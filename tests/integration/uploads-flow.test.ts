@@ -195,14 +195,18 @@ describe('uploads flow', () => {
     });
 
     expect(res.statusCode).toBe(201);
+    const url = res.json().data.url as string;
 
     const audit = await ctx.db
       .selectFrom('audit_log')
       .selectAll()
       .where('action', '=', 'upload.flag')
-      .where('target_id', '=', new URL(res.json().data.url as string).pathname.split('/uploads/')[1])
+      .where('target_id', '=', new URL(url).pathname.split('/uploads/')[1])
       .executeTakeFirst();
     expect(audit).toBeTruthy();
+    // Logged after storing specifically so an operator has a real, openable
+    // link — not just a summary they have to take on faith.
+    expect((audit?.metadata as { image_url?: string } | null)?.image_url).toBe(url);
   });
 
   it('refuses to serve a KYC photo with no signature, an expired one, or a tampered one — but accepts a real one', async () => {

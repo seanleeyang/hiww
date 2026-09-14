@@ -6,6 +6,45 @@ import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/
 import { dateTime } from '../lib/format';
 import { AUDIT_ACTIONS } from '../lib/status';
 
+/** A tappable thumbnail rather than a bare link — same pattern as
+ * IdChecksPage's PhotoThumb, so an operator can actually SEE the flagged
+ * photo on this page, not just trust a URL will open. */
+function PhotoThumb({ url }: { url: string }) {
+  return (
+    <a href={url} target="_blank" rel="noreferrer" title="Open full-size">
+      <img
+        src={url}
+        alt="Flagged upload"
+        style={{
+          width: 48,
+          height: 48,
+          objectFit: 'cover',
+          borderRadius: 6,
+          border: '1px solid var(--border, #ddd)',
+          display: 'block',
+        }}
+      />
+    </a>
+  );
+}
+
+/** Everything else in `metadata` besides the image (already shown as a
+ * thumbnail) — compact enough to sit in a table cell without derailing it. */
+function MetadataDetails({ metadata }: { metadata: Record<string, unknown> }) {
+  const { image_url: _imageUrl, ...rest } = metadata;
+  if (Object.keys(rest).length === 0) return null;
+  return (
+    <details>
+      <summary className="muted" style={{ cursor: 'pointer', fontSize: '0.85em' }}>
+        Details
+      </summary>
+      <pre style={{ fontSize: '0.8em', margin: 0, whiteSpace: 'pre-wrap' }}>
+        {JSON.stringify(rest, null, 2)}
+      </pre>
+    </details>
+  );
+}
+
 export function AuditPage() {
   const [action, setAction] = useState('');
   const [targetType, setTargetType] = useState('');
@@ -92,21 +131,30 @@ export function AuditPage() {
               <th>Action</th>
               <th>Target</th>
               <th>Summary</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {audit.data!.items.map((entry) => (
-              <tr key={entry.id}>
-                <td>{dateTime(entry.created_at)}</td>
-                <td>
-                  <code>{entry.action}</code>
-                </td>
-                <td>
-                  {entry.target_type} · {entry.target_id.slice(0, 8)}
-                </td>
-                <td>{entry.summary}</td>
-              </tr>
-            ))}
+            {audit.data!.items.map((entry) => {
+              const imageUrl =
+                typeof entry.metadata?.image_url === 'string' ? entry.metadata.image_url : null;
+              return (
+                <tr key={entry.id}>
+                  <td>{dateTime(entry.created_at)}</td>
+                  <td>
+                    <code>{entry.action}</code>
+                  </td>
+                  <td>
+                    {entry.target_type} · {entry.target_id.slice(0, 8)}
+                  </td>
+                  <td>
+                    {entry.summary}
+                    <MetadataDetails metadata={entry.metadata} />
+                  </td>
+                  <td>{imageUrl ? <PhotoThumb url={imageUrl} /> : null}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}

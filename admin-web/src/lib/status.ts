@@ -164,4 +164,6 @@ export const AUDIT_ACTIONS = [
   'order.refund',
   'review.hide',
   'review.unhide',
+  'upload.reject',
+  'upload.flag',
 ] as const;

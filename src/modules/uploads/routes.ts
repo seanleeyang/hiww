@@ -159,6 +159,8 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
       });
 
       if (moderation.risk === 'high') {
+        // Never stored, so there's no URL an operator could open to double-
+        // check the call — the summary/reasons are all that survives.
         await recordAudit(request.db, actorFromRequest(request), {
           action: 'upload.reject',
           targetType: 'upload',
@@ -167,16 +169,6 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
           metadata: { risk: moderation.risk, reasons: moderation.reasons, model: moderation.model },
         });
         throw new AppError('CONTENT_REJECTED', 422, 'uploads.explicitContent');
-      }
-
-      if (moderation.risk === 'medium') {
-        await recordAudit(request.db, actorFromRequest(request), {
-          action: 'upload.flag',
-          targetType: 'upload',
-          targetId: name,
-          summary: `Upload flagged for review — ${moderation.summary}`,
-          metadata: { risk: moderation.risk, reasons: moderation.reasons, model: moderation.model },
-        });
       }
 
       try {
@@ -188,6 +180,20 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
 
       const stored = store.url(name);
       const url = store.urlIsRelative ? `${originFor(request)}${stored}` : stored;
+
+      if (moderation.risk === 'medium') {
+        // Logged after storing, specifically so metadata.image_url is a real,
+        // openable link — a flag an operator can't actually look at isn't
+        // useful (see admin-web's AuditPage, which renders this as a thumbnail).
+        await recordAudit(request.db, actorFromRequest(request), {
+          action: 'upload.flag',
+          targetType: 'upload',
+          targetId: name,
+          summary: `Upload flagged for review — ${moderation.summary}`,
+          metadata: { risk: moderation.risk, reasons: moderation.reasons, model: moderation.model, image_url: url },
+        });
+      }
+
       reply.status(201).send({ success: true, data: { url }, code: 'UPLOAD_CREATED' });
     }
   );
