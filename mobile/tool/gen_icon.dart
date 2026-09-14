@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:image/image.dart' as img;
 
 const size = 1024;
-final coral = img.ColorRgb8(0xE1, 0x52, 0x3A);
+final coral = img.ColorRgb8(0xFB, 0x4D, 0x00); // Tangelo
 final white = img.ColorRgb8(0xFF, 0xFF, 0xFF);
 
 /// Draws the "H." mark centred on [canvas] in [color].

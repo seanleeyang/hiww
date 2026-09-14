@@ -27,8 +27,8 @@ class HiwwColors extends ThemeExtension<HiwwColors> {
     onSuccess: Color(0xFFFFFFFF),
     successSurface: Color(0xFFE4F3EB),
     star: Color(0xFFF4A62A),
-    infoSurface: Color(0xFFF6EEE6),
-    hairline: Color(0xFFECE4DD),
+    infoSurface: Color(0xFFFAE3D5),
+    hairline: Color(0xFFECD9D0),
     shadow: Color(0x14000000),
   );
 
@@ -37,8 +37,8 @@ class HiwwColors extends ThemeExtension<HiwwColors> {
     onSuccess: Color(0xFF06281A),
     successSurface: Color(0xFF1B3329),
     star: Color(0xFFF6B44A),
-    infoSurface: Color(0xFF262019),
-    hairline: Color(0xFF332D25),
+    infoSurface: Color(0xFF261A12),
+    hairline: Color(0xFF3D2E22),
     shadow: Color(0x33000000),
   );
 

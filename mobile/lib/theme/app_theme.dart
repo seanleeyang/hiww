@@ -12,12 +12,16 @@ class HiwwRadii {
   static const button = 16.0;
 }
 
+// Brand refresh (2026-09-14): Tangelo / Linen / Chocolate Brown / Botticelli,
+// adopted from a reference palette the founder liked. Only the primary/
+// neutral families shift — secondary (success green), tertiary (gold) and
+// error keep their prior hues, which were never part of this swap.
 const _lightScheme = ColorScheme(
   brightness: Brightness.light,
-  primary: Color(0xFFE1523A),
+  primary: Color(0xFFFB4D00), // Tangelo
   onPrimary: Color(0xFFFFFFFF),
-  primaryContainer: Color(0xFFFBE3DC),
-  onPrimaryContainer: Color(0xFF7C2C1C),
+  primaryContainer: Color(0xFFFFEDE3), // Linen
+  onPrimaryContainer: Color(0xFF49261D), // Chocolate Brown
   secondary: Color(0xFF2E9E6B),
   onSecondary: Color(0xFFFFFFFF),
   secondaryContainer: Color(0xFFE4F3EB),
@@ -31,27 +35,31 @@ const _lightScheme = ColorScheme(
   errorContainer: Color(0xFFF9E0DB),
   onErrorContainer: Color(0xFF5F1B10),
   surface: Color(0xFFFFFFFF),
-  onSurface: Color(0xFF1E2422),
-  onSurfaceVariant: Color(0xFF6C7671),
+  onSurface: Color(0xFF49261D), // Chocolate Brown
+  // Darkened slightly past a literal Chocolate-Brown tint so muted text
+  // clears 4.5:1 against Linen (~5.15:1) rather than landing at ~4.06:1 —
+  // the prior palette had this same near-miss; worth fixing while this
+  // exact value is already being touched for the swap.
+  onSurfaceVariant: Color(0xFF7A5F53),
   surfaceContainerLowest: Color(0xFFFFFFFF),
-  surfaceContainerLow: Color(0xFFFBF7F3),
-  surfaceContainer: Color(0xFFF6EEE6),
-  surfaceContainerHigh: Color(0xFFF1E8DE),
-  surfaceContainerHighest: Color(0xFFECE4DD),
-  outline: Color(0xFFDDD3C8),
-  outlineVariant: Color(0xFFECE4DD),
-  inverseSurface: Color(0xFF2F2A26),
-  onInverseSurface: Color(0xFFF6EEE6),
+  surfaceContainerLow: Color(0xFFFFEDE3), // Linen
+  surfaceContainer: Color(0xFFFAE3D5),
+  surfaceContainerHigh: Color(0xFFF5D6C3),
+  surfaceContainerHighest: Color(0xFFECD9D0),
+  outline: Color(0xFFD9BCAC),
+  outlineVariant: Color(0xFFECD9D0),
+  inverseSurface: Color(0xFF3A2015),
+  onInverseSurface: Color(0xFFFFEDE3),
   shadow: Color(0xFF000000),
   scrim: Color(0xFF000000),
 );
 
 const _darkScheme = ColorScheme(
   brightness: Brightness.dark,
-  primary: Color(0xFFF07555),
-  onPrimary: Color(0xFF3A0F04),
-  primaryContainer: Color(0xFF5B2417),
-  onPrimaryContainer: Color(0xFFFBE3DC),
+  primary: Color(0xFFFF8659), // lightened Tangelo, for text/fills on dark
+  onPrimary: Color(0xFF3A1C0D),
+  primaryContainer: Color(0xFF6B3016),
+  onPrimaryContainer: Color(0xFFFFDFC9),
   secondary: Color(0xFF4CC08C),
   onSecondary: Color(0xFF06281A),
   secondaryContainer: Color(0xFF184433),
@@ -64,18 +72,18 @@ const _darkScheme = ColorScheme(
   onError: Color(0xFF4A150C),
   errorContainer: Color(0xFF6B2318),
   onErrorContainer: Color(0xFFF9E0DB),
-  surface: Color(0xFF201B17),
-  onSurface: Color(0xFFF2EDE7),
-  onSurfaceVariant: Color(0xFFB4ABA1),
-  surfaceContainerLowest: Color(0xFF17130F),
-  surfaceContainerLow: Color(0xFF201B17),
-  surfaceContainer: Color(0xFF262019),
-  surfaceContainerHigh: Color(0xFF302921),
-  surfaceContainerHighest: Color(0xFF3B332A),
-  outline: Color(0xFF52493E),
-  outlineVariant: Color(0xFF332D25),
-  inverseSurface: Color(0xFFF2EDE7),
-  onInverseSurface: Color(0xFF201B17),
+  surface: Color(0xFF1F130D), // Chocolate-Brown-derived dark, not neutral gray
+  onSurface: Color(0xFFF7ECE4),
+  onSurfaceVariant: Color(0xFFBFA99C),
+  surfaceContainerLowest: Color(0xFF150D08),
+  surfaceContainerLow: Color(0xFF1F130D),
+  surfaceContainer: Color(0xFF261A12),
+  surfaceContainerHigh: Color(0xFF2E2016),
+  surfaceContainerHighest: Color(0xFF382819),
+  outline: Color(0xFF5C4634),
+  outlineVariant: Color(0xFF3D2E22),
+  inverseSurface: Color(0xFFF7ECE4),
+  onInverseSurface: Color(0xFF1F130D),
   shadow: Color(0xFF000000),
   scrim: Color(0xFF000000),
 );

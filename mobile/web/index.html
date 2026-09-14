@@ -7,7 +7,7 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Hiww — buy what you want from travelers heading your way.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#FBF7F3">
+  <meta name="theme-color" content="#FFEDE3">
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -32,18 +32,18 @@
       font-weight: 200 800;
       font-display: swap;
     }
-    html, body { margin: 0; padding: 0; height: 100%; background: #FBF7F3; }
-    @media (prefers-color-scheme: dark) { html, body { background: #201B17; } }
+    html, body { margin: 0; padding: 0; height: 100%; background: #FFEDE3; }
+    @media (prefers-color-scheme: dark) { html, body { background: #1F130D; } }
 
     #loading {
       position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
       font-family: 'Plus Jakarta Sans', -apple-system, "Segoe UI", Roboto, sans-serif;
-      color: #1E2422;
+      color: #49261D;
       overflow: hidden;
     }
-    @media (prefers-color-scheme: dark) { #loading { color: #F2EDE7; } }
+    @media (prefers-color-scheme: dark) { #loading { color: #F7ECE4; } }
 
-    /* A soft, slowly-drifting coral glow behind the mark — subtle motion in
+    /* A soft, slowly-drifting glow behind the mark — subtle motion in
        the background so the screen feels alive even before the wordmark
        finishes revealing itself. */
     #loading::before {
@@ -51,11 +51,11 @@
       position: absolute;
       width: 480px; height: 480px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(225,82,58,0.16), transparent 70%);
+      background: radial-gradient(circle, rgba(251,77,0,0.16), transparent 70%);
       animation: drift 7s ease-in-out infinite;
     }
     @media (prefers-color-scheme: dark) {
-      #loading::before { background: radial-gradient(circle, rgba(225,82,58,0.22), transparent 70%); }
+      #loading::before { background: radial-gradient(circle, rgba(251,77,0,0.22), transparent 70%); }
     }
     @keyframes drift {
       0%, 100% { transform: translate(0, 0) scale(1); }
@@ -86,7 +86,7 @@
     @keyframes letterIn { to { opacity: 1; transform: translateY(0) scale(1); } }
 
     #loading .mark .dot {
-      color: #E1523A;
+      color: #FB4D00;
       transform-origin: center;
       animation:
         dotIn .5s cubic-bezier(.34,1.56,.64,1) .34s both,
@@ -94,8 +94,8 @@
     }
     @keyframes dotIn { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
     @keyframes dotPulse {
-      0%, 100% { transform: scale(1); text-shadow: 0 0 0 rgba(225,82,58,0); }
-      50% { transform: scale(1.3); text-shadow: 0 0 14px rgba(225,82,58,0.65); }
+      0%, 100% { transform: scale(1); text-shadow: 0 0 0 rgba(251,77,0,0); }
+      50% { transform: scale(1.3); text-shadow: 0 0 14px rgba(251,77,0,0.65); }
     }
 
     #loading .track {
@@ -107,7 +107,7 @@
     }
     #loading .track .bar {
       width: 45%; height: 100%; border-radius: 999px;
-      background: linear-gradient(90deg, transparent, #E1523A, transparent);
+      background: linear-gradient(90deg, transparent, #FB4D00, transparent);
       animation: scan 1.3s ease-in-out infinite;
     }
     @keyframes fadeIn { to { opacity: 1; } }

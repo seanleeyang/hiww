@@ -101,22 +101,22 @@ flutter_launcher_icons:
   ios: true
   remove_alpha_ios: true
   min_sdk_android: 21
-  adaptive_icon_background: "#E1523A"
+  adaptive_icon_background: "#FB4D00"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   web:
     generate: true
     image_path: "assets/icon/icon.png"
-    background_color: "#FBF7F3"
-    theme_color: "#FBF7F3"
+    background_color: "#FFEDE3"
+    theme_color: "#FFEDE3"
 
 # Native splash — regenerate with: dart run flutter_native_splash:create
 # Web keeps its own hand-written loader in web/index.html (web: false).
 flutter_native_splash:
-  color: "#FBF7F3"
-  color_dark: "#201B17"
+  color: "#FFEDE3"
+  color_dark: "#1F130D"
   image: "assets/icon/splash.png"
   web: false
   android_12:
     image: "assets/icon/splash.png"
-    color: "#FBF7F3"
-    color_dark: "#201B17"
+    color: "#FFEDE3"
+    color_dark: "#1F130D"
