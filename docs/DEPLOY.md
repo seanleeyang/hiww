@@ -169,13 +169,9 @@ enough to keep the service awake, and emails you if it stops responding.
    and response time, and you'll get an email the moment a check fails plus
    another when it recovers.
 
-This monitor call is a real HTTP request but not a deep health check — it
-confirms the process is up and responding, not that the database connection
-is healthy. That's an acceptable tradeoff for a pilot; if you want DB-aware
-alerting later, `getHealthSummary()` in `src/config/health.ts` is the place
-to add a real `db.selectFrom(...).executeTakeFirst()` probe (and switch
-`/health` to return 503 when it fails, so UptimeRobot treats a DB outage as
-downtime too).
+`/health` already probes the database on every call (`select 1`, see `src/app.ts`)
+and returns 503 if it fails, so this monitor catches a Neon outage too, not
+just "the process crashed."
 
 ## Log shipping & alerting
 
@@ -197,9 +193,36 @@ behaves exactly as it always has (plain JSON to stdout, captured by Render).
 5. Redeploy (or wait for the next auto-deploy). Every log line the backend
    writes now also shows up in Better Stack within a few seconds.
 
-Once logs are flowing, Better Stack's dashboard lets you save a search (e.g.
-`level:error`) and turn it into an alert under its Alerting/Uptime section —
-no code change needed for that part.
+### Turning that into an actual alert
+
+Logs flowing into Better Stack don't do anything by themselves — nobody's
+watching a dashboard. This sets up an email the moment something breaks,
+instead of finding out when a user complains.
+
+`level:error` is the right thing to alert on here, not a noisy guess: the
+backend's error handler (`src/middleware/error-handler.ts`) only logs at
+`error` level for a genuine unhandled exception or a 5xx — every expected
+"user got something wrong" response (bad password, failed validation, a
+423/404 from normal business logic) uses `AppError` and is never logged at
+all. So `level:error` firing means something the code didn't expect to
+happen actually happened.
+
+1. Better Stack → **Logs** → your source → run the search `level:error` to
+   confirm it returns something sensible (empty is fine if nothing's broken
+   lately).
+2. Save that search, then from it (or via **Alerting** in the left nav)
+   create a new **Alert** on it.
+3. Trigger condition: fire when the search matches **1 or more** results in
+   a **5 minute** window — for a pilot at this scale, a single real error is
+   worth knowing about immediately, not waiting for a spike.
+4. Set the notification channel to your email (added at signup by default);
+   add Slack/SMS too if you want it somewhere more immediate.
+5. Save. Better Stack evaluates the search on the interval you set and
+   emails you the moment it matches.
+
+Better Stack also has its own **Uptime** product (separate from Logs) that
+overlaps with the UptimeRobot setup above — one or the other is enough,
+no need to run both.
 
 ## Cloudflare CDN / flood protection
 
