@@ -60,9 +60,6 @@ class LandingScreen extends StatelessWidget {
                             Expanded(
                               child: FilledButton(
                                 onPressed: () => context.push(withReturnTo('/register')),
-                                // Pill-shaped, matching the design canvas —
-                                // local override, same as the onboarding CTA.
-                                style: FilledButton.styleFrom(shape: const StadiumBorder()),
                                 child: Text(l10n.actionCreateAccountButton),
                               ),
                             ),
@@ -70,7 +67,6 @@ class LandingScreen extends StatelessWidget {
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: () => context.push(withReturnTo('/login')),
-                                style: OutlinedButton.styleFrom(shape: const StadiumBorder()),
                                 child: Text(l10n.actionLogIn),
                               ),
                             ),

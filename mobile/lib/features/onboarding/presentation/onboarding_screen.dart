@@ -100,10 +100,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           duration: const Duration(milliseconds: 250),
                           curve: Curves.easeOut,
                         ),
-                // Pill-shaped, matching the warmer look explored on the design
-                // canvas — a local override rather than a theme-wide change,
-                // since the rest of the app keeps HiwwRadii.button.
-                style: FilledButton.styleFrom(shape: const StadiumBorder()),
                 child: Text(lastPage ? l10n.actionGetStarted : l10n.actionNext),
               ),
             ),

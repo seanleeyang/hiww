@@ -9,7 +9,11 @@ class HiwwRadii {
   static const card = 20.0;
   static const sheet = 28.0;
   static const input = 14.0;
-  static const button = 16.0;
+  // A full stadium/pill on any real button height — matches the design
+  // canvas direction (previously 16, applied piecemeal via local
+  // StadiumBorder overrides on individual buttons; promoted here so every
+  // screen gets it for free instead of repeating the override).
+  static const button = 999.0;
 }
 
 // Brand refresh (2026-09-14): Tangelo / Linen / Chocolate Brown / Botticelli,
