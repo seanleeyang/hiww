@@ -177,6 +177,9 @@
   "languageEnglish": "English",
   "languageThai": "ไทย",
   "deliveredCount": "ส่งแล้ว {count} รายการ",
+  "statDeliveries": "การจัดส่ง",
+  "statRating": "คะแนน",
+  "statReviews": "รีวิว",
 
   "browseTabOrder": "สั่งของ",
   "browseTabTravel": "เดินทาง",

@@ -555,6 +555,15 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String get statDeliveries => 'การจัดส่ง';
+
+  @override
+  String get statRating => 'คะแนน';
+
+  @override
+  String get statReviews => 'รีวิว';
+
+  @override
   String get browseTabOrder => 'สั่งของ';
 
   @override

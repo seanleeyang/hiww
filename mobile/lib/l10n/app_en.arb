@@ -198,6 +198,9 @@
   "@deliveredCount": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "statDeliveries": "Deliveries",
+  "statRating": "Rating",
+  "statReviews": "Reviews",
 
   "browseTabOrder": "Order",
   "browseTabTravel": "Travel",

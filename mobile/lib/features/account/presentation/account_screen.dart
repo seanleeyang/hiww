@@ -103,17 +103,16 @@ class AccountScreen extends ConsumerWidget {
                             _MembershipIdRow(membershipId: user.membershipId),
                           ],
                           const SizedBox(height: 6),
-                          StarRatingDisplay(
-                            rating: user.ratingAvg,
-                            trailing: user.deliveredCount > 0
-                                ? l10n.deliveredCount(user.deliveredCount)
-                                : null,
-                          ),
+                          StarRatingDisplay(rating: user.ratingAvg),
                         ],
                       ),
                     ),
                   ],
                 ),
+                if (user.deliveredCount > 0 || user.ratingCount > 0) ...[
+                  const SizedBox(height: 16),
+                  _StatTileRow(user: user),
+                ],
                 if (!user.hasCompleteProfile) ...[
                   const SizedBox(height: 16),
                   _IncompleteProfileCard(
@@ -146,6 +145,63 @@ class AccountScreen extends ConsumerWidget {
               ],
             );
         },
+      ),
+    );
+  }
+}
+
+/// Deliveries / Rating / Reviews as a row of stat tiles — matching the
+/// design canvas's profile stats, built entirely from fields [AuthUser]
+/// already carries (nothing fabricated). Only rendered when there's at
+/// least one real number to show (see the call site).
+class _StatTileRow extends StatelessWidget {
+  const _StatTileRow({required this.user});
+  final AuthUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Row(
+      children: [
+        Expanded(
+          child: _StatTile(value: '${user.deliveredCount}', label: l10n.statDeliveries),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatTile(
+            value: user.ratingAvg > 0 ? user.ratingAvg.toStringAsFixed(1) : '—',
+            label: l10n.statRating,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatTile(value: '${user.ratingCount}', label: l10n.statReviews),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({required this.value, required this.label});
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+        ],
       ),
     );
   }

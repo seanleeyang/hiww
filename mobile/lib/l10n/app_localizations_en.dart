@@ -560,6 +560,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get statDeliveries => 'Deliveries';
+
+  @override
+  String get statRating => 'Rating';
+
+  @override
+  String get statReviews => 'Reviews';
+
+  @override
   String get browseTabOrder => 'Order';
 
   @override

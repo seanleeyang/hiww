@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import '../core/format.dart';
 
 const _palette = <Color>[
-  Color(0xFFE1523A),
+  Color(0xFFFB4D00), // Tangelo — brand primary
   Color(0xFF2E9E6B),
-  Color(0xFF2B6CB0),
+  Color(0xFF2B6CB0), // a usable "ink" blue — Botticelli itself is too pale
   Color(0xFF6B46C1),
   Color(0xFFB7791F),
   Color(0xFF0D7D7D),

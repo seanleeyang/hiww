@@ -1118,6 +1118,24 @@ abstract class AppLocalizations {
   /// **'{count} delivered'**
   String deliveredCount(int count);
 
+  /// No description provided for @statDeliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliveries'**
+  String get statDeliveries;
+
+  /// No description provided for @statRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get statRating;
+
+  /// No description provided for @statReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get statReviews;
+
   /// No description provided for @browseTabOrder.
   ///
   /// In en, this message translates to:
