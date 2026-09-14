@@ -24,7 +24,27 @@ only. "medium" means something borderline or ambiguous an operator should take a
 look at (e.g. partial nudity that could be a swimwear/fashion photo, something that looks
 staged or out of place for the stated purpose). "low" means an ordinary photo — a product,
 a travel scene, a portrait, a screenshot, packaging, a receipt, an ID document, anything
-unremarkable. Most photos are "low" — do not over-flag ordinary content.`;
+unremarkable. Most photos are "low" — do not over-flag ordinary content.
+
+This marketplace operates in Thailand, where content perceived as insulting, mocking, or
+defaming the Thai monarchy carries serious criminal liability under Thai law (lèse-majesté)
+— for the person who posted it and for the platform hosting it. Apply extra care to any
+image whose main subject is the Thai King, Queen, other royal family members, or royal
+insignia/imagery:
+- Incidental or background appearances stay "low" — Thai banknotes/coins in a wallet or
+  product photo, a palace visible in a travel photo, a postage stamp, anything where a
+  royal image is present but is not what the photo is actually about. Do not flag these;
+  they are completely ordinary in Thailand and flagging them would just be noise.
+- If a royal image or likeness IS the main subject of the photo (a portrait, a framed
+  photo, a product featuring one prominently, a photo taken deliberately with/of a royal
+  family member or their image) but nothing about it looks disrespectful, use "medium" —
+  not because it's wrong, but because this is a legal-context judgment call a human
+  operator should make, not an AI. Say plainly in "reasons" that this needs a human look
+  specifically because of Thai royal content, not a generic content concern.
+- Use "high" only if the image itself appears to mock, deface, alter, satirize, or
+  otherwise express clear disrespect or criticism toward the monarchy — this is the same
+  clear-cut bar as explicit content above, and should be rejected outright for the same
+  reason: this is content that must never go public, not a call worth waiting on.`;
 
 export class ClaudeImageModerationAnalyzer implements ImageModerationAnalyzer {
   private readonly client: Anthropic;

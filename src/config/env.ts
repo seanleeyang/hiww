@@ -223,10 +223,14 @@ export const config = {
    * rather than merely flagged — this is content that must never go public,
    * not a judgment call worth leaving to a human review queue. "medium"
    * (borderline/ambiguous) still uploads normally but is logged to the audit
-   * trail for an operator to spot-check. `mock` (default) is deterministic
-   * for tests and local dev; `claude` calls the Anthropic API and needs
-   * ANTHROPIC_API_KEY. Uses the higher-capability model tier, same reasoning
-   * as the KYC check above.
+   * trail for an operator to spot-check. Also screens for content related to
+   * the Thai monarchy — this app operates in Thailand, where disrespectful
+   * content about the royal family carries real criminal liability
+   * (lèse-majesté) for both the poster and the platform; see the prompt in
+   * claude-image-moderation-analyzer.ts for exactly where that line is
+   * drawn. `mock` (default) is deterministic for tests and local dev;
+   * `claude` calls the Anthropic API and needs ANTHROPIC_API_KEY. Uses the
+   * higher-capability model tier, same reasoning as the KYC check above.
    */
   aiImageModeration: process.env.AI_IMAGE_MODERATION || 'mock',
   aiImageModerationModel: process.env.AI_IMAGE_MODERATION_MODEL || 'claude-opus-5',

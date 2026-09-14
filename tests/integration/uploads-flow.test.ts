@@ -164,6 +164,47 @@ describe('uploads flow', () => {
     expect(audit).toBeTruthy();
   });
 
+  it('rejects an upload the image-moderation check flags as disrespectful of the Thai monarchy', async () => {
+    const user = await createUser(ctx);
+    const { body, contentType } = multipart([
+      { name: 'file', filename: 'royal-disrespect-test.png', contentType: 'image/png', data: PNG_1PX },
+    ]);
+
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/uploads',
+      headers: { ...authHeader(user), 'content-type': contentType },
+      payload: body,
+    });
+
+    expect(res.statusCode).toBe(422);
+    expect(res.json().code).toBe('CONTENT_REJECTED');
+  });
+
+  it('still stores an upload where Thai royal imagery is the main subject, but flags it for a human legal-context look', async () => {
+    const user = await createUser(ctx);
+    const { body, contentType } = multipart([
+      { name: 'file', filename: 'royal-test.png', contentType: 'image/png', data: PNG_1PX },
+    ]);
+
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/uploads',
+      headers: { ...authHeader(user), 'content-type': contentType },
+      payload: body,
+    });
+
+    expect(res.statusCode).toBe(201);
+
+    const audit = await ctx.db
+      .selectFrom('audit_log')
+      .selectAll()
+      .where('action', '=', 'upload.flag')
+      .where('target_id', '=', new URL(res.json().data.url as string).pathname.split('/uploads/')[1])
+      .executeTakeFirst();
+    expect(audit).toBeTruthy();
+  });
+
   it('refuses to serve a KYC photo with no signature, an expired one, or a tampered one — but accepts a real one', async () => {
     const traveler = await createUser(ctx, { user_type: 'traveler' });
     const admin = await createUser(ctx, { admin: true });
