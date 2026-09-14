@@ -93,8 +93,9 @@ final inboxProvider = StreamProvider<List<InboxThread>>((ref) async* {
   Future<void> fetch() async {
     try {
       last = await repo.inbox();
-    } catch (_) {
-      // keep showing the previous value; the next poll tries again
+    } catch (e) {
+      if (last == null) rethrow; // nothing to fall back to — surface it
+      // otherwise keep showing the previous value; the next poll tries again
     }
   }
 
@@ -126,8 +127,9 @@ final orderMessagesProvider = StreamProvider.family<ChatFeed, String>((
   Future<void> fetch() async {
     try {
       last = await repo.feed(orderId);
-    } catch (_) {
-      // keep showing the previous value; the next poll tries again
+    } catch (e) {
+      if (last == null) rethrow; // nothing to fall back to — surface it
+      // otherwise keep showing the previous value; the next poll tries again
     }
   }
 

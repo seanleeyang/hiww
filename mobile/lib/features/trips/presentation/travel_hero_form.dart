@@ -106,20 +106,23 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
             label: l10n.labelTravelingFrom,
             value: _from?.label(l10n.localeName),
             onTap: _pickFrom,
+            foreground: widget.foreground,
           ),
-          const Divider(height: 1, color: Colors.white24),
+          Divider(height: 1, color: widget.foreground.withValues(alpha: 0.24)),
           _FormRow(
             label: l10n.labelTravelingTo,
             value: _to?.label(l10n.localeName),
             onTap: _pickTo,
+            foreground: widget.foreground,
           ),
-          const Divider(height: 1, color: Colors.white24),
+          Divider(height: 1, color: widget.foreground.withValues(alpha: 0.24)),
           _FormRow(
             label: l10n.labelTravelDates,
             value: (_depart != null && _ret != null)
                 ? '${shortDate(l10n, _depart)} – ${shortDate(l10n, _ret)}'
                 : null,
             onTap: _pickDates,
+            foreground: widget.foreground,
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -129,8 +132,10 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 disabledBackgroundColor: Colors.white,
-                foregroundColor: widget.background,
-                disabledForegroundColor: widget.background.withValues(alpha: 0.5),
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                disabledForegroundColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: const StadiumBorder(),
               ),
@@ -144,10 +149,16 @@ class _TravelHeroFormState extends ConsumerState<TravelHeroForm> {
 }
 
 class _FormRow extends StatelessWidget {
-  const _FormRow({required this.label, required this.value, required this.onTap});
+  const _FormRow({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    required this.foreground,
+  });
   final String label;
   final String? value;
   final VoidCallback onTap;
+  final Color foreground;
 
   @override
   Widget build(BuildContext context) {
@@ -161,13 +172,13 @@ class _FormRow extends StatelessWidget {
               child: Text(
                 value ?? label,
                 style: TextStyle(
-                  color: value != null ? Colors.white : Colors.white70,
+                  color: value != null ? foreground : foreground.withValues(alpha: 0.7),
                   fontSize: 15,
                   fontWeight: value != null ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white70),
+            Icon(Icons.chevron_right, color: foreground.withValues(alpha: 0.7)),
           ],
         ),
       ),

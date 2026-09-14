@@ -47,8 +47,9 @@ final notificationsProvider = StreamProvider<NotificationsFeed>((ref) async* {
   Future<void> fetch() async {
     try {
       last = await repo.feed();
-    } catch (_) {
-      // keep showing the previous value; the next poll tries again
+    } catch (e) {
+      if (last == null) rethrow; // nothing to fall back to — surface it
+      // otherwise keep showing the previous value; the next poll tries again
     }
   }
 

@@ -56,7 +56,7 @@ class BrowseHero extends StatelessWidget {
               onPressed: onCta,
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
-                foregroundColor: background,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: const StadiumBorder(),
               ),
