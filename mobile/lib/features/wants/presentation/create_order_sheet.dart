@@ -535,7 +535,8 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   decoration: InputDecoration(labelText: l10n.labelCountry),
                   items: [
                     DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
-                    for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
+                    for (final c in kLiveCountries)
+                      DropdownMenuItem(value: c.code, child: Text(countryName(c.code, l10n.localeName))),
                   ],
                   onChanged: (v) => setState(() {
                     _country = v ?? unselected;
@@ -555,8 +556,8 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   items: [
                     DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
                     DropdownMenuItem(value: anyCity, child: Text(l10n.cityOptionAny)),
-                    for (final city in cityNamesForDropdown(_country, _thaiProvinces))
-                      DropdownMenuItem(value: city, child: Text(city)),
+                    for (final city in cityChoicesForDropdown(_country, _thaiProvinces, l10n.localeName))
+                      DropdownMenuItem(value: city.value, child: Text(city.label)),
                     DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
                   ],
                   onChanged: _country.isEmpty
@@ -629,7 +630,8 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   decoration: InputDecoration(labelText: l10n.labelCountry),
                   items: [
                     DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
-                    for (final c in kLiveCountries) DropdownMenuItem(value: c.code, child: Text(c.name)),
+                    for (final c in kLiveCountries)
+                      DropdownMenuItem(value: c.code, child: Text(countryName(c.code, l10n.localeName))),
                   ],
                   onChanged: (v) => setState(() {
                     _destCountry = v ?? unselected;
@@ -648,8 +650,8 @@ class _CreateOrderSheetState extends ConsumerState<_CreateOrderSheet> {
                   decoration: InputDecoration(labelText: l10n.fieldCity),
                   items: [
                     DropdownMenuItem(value: unselected, child: Text(l10n.selectOption)),
-                    for (final city in cityNamesForDropdown(_destCountry, _thaiProvinces))
-                      DropdownMenuItem(value: city, child: Text(city)),
+                    for (final city in cityChoicesForDropdown(_destCountry, _thaiProvinces, l10n.localeName))
+                      DropdownMenuItem(value: city.value, child: Text(city.label)),
                     DropdownMenuItem(value: othersCity, child: Text(l10n.cityOptionOthers)),
                   ],
                   onChanged: _destCountry.isEmpty

@@ -549,7 +549,7 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                 decoration: InputDecoration(labelText: l10n.labelCountry),
                 items: [
                   for (final c in kLiveCountries)
-                    DropdownMenuItem(value: c.code, child: Text(c.name)),
+                    DropdownMenuItem(value: c.code, child: Text(countryName(c.code, l10n.localeName))),
                 ],
                 onChanged: (v) => onCountryChanged(v ?? country),
               ),
@@ -570,8 +570,8 @@ class _AddTripSheetState extends ConsumerState<_AddTripSheet> {
                     value: anyCity,
                     child: Text(l10n.cityOptionAny),
                   ),
-                  for (final city in cityNamesForDropdown(country, _thaiProvinces))
-                    DropdownMenuItem(value: city, child: Text(city)),
+                  for (final city in cityChoicesForDropdown(country, _thaiProvinces, l10n.localeName))
+                    DropdownMenuItem(value: city.value, child: Text(city.label)),
                   DropdownMenuItem(
                     value: othersCity,
                     child: Text(l10n.cityOptionOthers),

@@ -101,13 +101,25 @@ List<CityOption> citiesWithThaiProvinces(List<ThaiProvince> thaiProvinces) {
   ];
 }
 
-/// City names to list in a Country → City dropdown pair: every real Thai
+/// Choices to list in a Country → City dropdown pair: every real Thai
 /// province (see [citiesWithThaiProvinces]'s doc) once [thaiProvinces] has
 /// loaded when [countryCode] is Thailand, else the curated [kCities] entries
-/// for that country.
-List<String> cityNamesForDropdown(String countryCode, List<ThaiProvince> thaiProvinces) {
+/// for that country. [value] is always the English name — the stable
+/// identifier used as the dropdown's value and what's submitted to the
+/// backend — while [label] follows [locale], so the menu itself displays in
+/// Thai when the app is.
+List<({String value, String label})> cityChoicesForDropdown(
+  String countryCode,
+  List<ThaiProvince> thaiProvinces, [
+  String locale = 'en',
+]) {
   if (countryCode == 'TH' && thaiProvinces.isNotEmpty) {
-    return thaiProvinces.map((p) => p.nameEn).toList();
+    return thaiProvinces
+        .map((p) => (value: p.nameEn, label: locale == 'th' ? p.nameTh : p.nameEn))
+        .toList();
   }
-  return kCities.where((c) => c.countryCode == countryCode).map((c) => c.city).toList();
+  return kCities
+      .where((c) => c.countryCode == countryCode)
+      .map((c) => (value: c.city, label: c.cityLabel(locale)))
+      .toList();
 }
