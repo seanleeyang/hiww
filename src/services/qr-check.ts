@@ -67,7 +67,10 @@ export async function detectQrCode(imageUrl: string): Promise<QrCheckResult> {
   if (override) return override(imageUrl);
 
   try {
-    const res = await fetch(imageUrl);
+    // Without a bound, a stalled origin would hang this fetch (and the
+    // message-send request awaiting it) for however long Node's default
+    // socket timeout is.
+    const res = await fetch(imageUrl, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) return { found: false };
     const buffer = Buffer.from(await res.arrayBuffer());
 

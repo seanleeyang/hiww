@@ -8,6 +8,9 @@ import { ClaudeChatModerationAnalyzer } from './claude-chat-moderation-analyzer'
 import type { KycAnalyzer } from './kyc-types';
 import { MockKycAnalyzer } from './mock-kyc-analyzer';
 import { ClaudeKycAnalyzer } from './claude-kyc-analyzer';
+import type { ImageModerationAnalyzer } from './image-moderation-types';
+import { MockImageModerationAnalyzer } from './mock-image-moderation-analyzer';
+import { ClaudeImageModerationAnalyzer } from './claude-image-moderation-analyzer';
 
 export type { ReceiptAnalyzer, ReceiptAnalysis, ReceiptRisk, ReceiptAnalysisInput } from './types';
 export type {
@@ -17,6 +20,12 @@ export type {
   ChatModerationInput,
 } from './chat-moderation-types';
 export type { KycAnalyzer, KycAnalysis, KycRisk, KycAnalysisInput, FieldMatch } from './kyc-types';
+export type {
+  ImageModerationAnalyzer,
+  ImageModerationResult,
+  ImageModerationRisk,
+  ImageModerationInput,
+} from './image-moderation-types';
 
 let cached: ReceiptAnalyzer | undefined;
 
@@ -77,4 +86,26 @@ export function getKycAnalyzer(): KycAnalyzer {
 /** Test seam. */
 export function __setKycAnalyzer(analyzer: KycAnalyzer | undefined): void {
   cachedKyc = analyzer;
+}
+
+let cachedImageModeration: ImageModerationAnalyzer | undefined;
+
+/**
+ * The configured image moderation analyzer, run on every `POST /api/uploads`
+ * (want/trip/avatar photos — anything with no other review). `claude` needs
+ * both AI_IMAGE_MODERATION=claude and an ANTHROPIC_API_KEY; anything else
+ * (and the test run) gets the mock.
+ */
+export function getImageModerationAnalyzer(): ImageModerationAnalyzer {
+  if (cachedImageModeration) return cachedImageModeration;
+  cachedImageModeration =
+    config.aiImageModeration === 'claude' && config.anthropicApiKey
+      ? new ClaudeImageModerationAnalyzer(config.anthropicApiKey, config.aiImageModerationModel)
+      : new MockImageModerationAnalyzer();
+  return cachedImageModeration;
+}
+
+/** Test seam. */
+export function __setImageModerationAnalyzer(analyzer: ImageModerationAnalyzer | undefined): void {
+  cachedImageModeration = analyzer;
 }

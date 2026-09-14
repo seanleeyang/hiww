@@ -51,7 +51,9 @@ export type AuditAction =
   | 'order.admin_cancel'
   | 'order.refund'
   | 'review.hide'
-  | 'review.unhide';
+  | 'review.unhide'
+  | 'upload.reject'
+  | 'upload.flag';
 
 export interface AuditActor {
   id?: string | null;
@@ -60,7 +62,7 @@ export interface AuditActor {
 
 export interface AuditInput {
   action: AuditAction;
-  targetType: 'order' | 'user' | 'dispute' | 'message' | 'trip' | 'request' | 'offer' | 'review';
+  targetType: 'order' | 'user' | 'dispute' | 'message' | 'trip' | 'request' | 'offer' | 'review' | 'upload';
   targetId: string;
   summary: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

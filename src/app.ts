@@ -83,6 +83,27 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     trustProxy: config.nodeEnv === 'production',
   });
 
+  // Once a CDN/WAF (Cloudflare) sits in front of the public domain, the raw
+  // Render origin (hiww-api.onrender.com) stays reachable too — anyone who
+  // finds it can hit the app directly and skip Cloudflare's protection
+  // entirely, making the whole CDN setup pointless. When configured (see
+  // docs/DEPLOY.md's Cloudflare section), this rejects any request that
+  // doesn't carry the shared secret a Cloudflare Transform Rule stamps onto
+  // every request it proxies — a 404, not a 403, so a direct probe learns
+  // nothing. Registered first, before any other work (CORS, rate limiting,
+  // the database), so a bypass attempt costs the server as little as
+  // possible. Off entirely (every request passes through) until
+  // CLOUDFLARE_ORIGIN_SECRET is set — safe to deploy before the Cloudflare
+  // side is ready.
+  if (config.cloudflareOriginSecret) {
+    app.addHook('onRequest', async (request, reply) => {
+      if (request.url === '/health' || request.url.startsWith('/health?')) return;
+      if (request.headers['x-origin-secret'] !== config.cloudflareOriginSecret) {
+        return reply.code(404).send();
+      }
+    });
+  }
+
   // Echo the request id back so clients and proxies can line up their logs.
   app.addHook('onSend', async (request, reply) => {
     void reply.header('x-request-id', request.id);

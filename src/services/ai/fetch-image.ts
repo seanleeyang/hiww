@@ -3,7 +3,9 @@ export type ImageMedia = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif'
 
 /** Fetches an image URL and returns it base64-encoded, ready for a vision request. */
 export async function fetchImage(url: string): Promise<{ data: string; mediaType: ImageMedia }> {
-  const res = await fetch(url);
+  // Without a bound, a stalled origin would hang this fetch (and whatever
+  // called it) for however long Node's default socket timeout is.
+  const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
   if (!res.ok) {
     throw new Error(`Could not fetch image (${res.status})`);
   }

@@ -102,6 +102,15 @@ export const config = {
    */
   logtailSourceToken: process.env.LOGTAIL_SOURCE_TOKEN || '',
   logtailEndpoint: process.env.LOGTAIL_ENDPOINT || 'https://in.logs.betterstack.com',
+  /**
+   * Shared secret a Cloudflare Transform Rule stamps onto every request it
+   * proxies (header `X-Origin-Secret`) — lets the app reject any request
+   * that reached it directly, bypassing Cloudflare (see docs/DEPLOY.md).
+   * Empty (default) disables the check entirely; only set this once the
+   * Cloudflare side is actually configured with the matching rule, or every
+   * request — including your own — will be rejected.
+   */
+  cloudflareOriginSecret: process.env.CLOUDFLARE_ORIGIN_SECRET || '',
   // Abuse protection. Counts are per client IP per window.
   rateLimitMax: Number(process.env.RATE_LIMIT_MAX || '200'),
   rateLimitWindow: process.env.RATE_LIMIT_WINDOW || '1 minute',
@@ -203,6 +212,24 @@ export const config = {
    */
   aiKycCheck: process.env.AI_KYC_CHECK || 'mock',
   aiKycModel: process.env.AI_KYC_MODEL || 'claude-opus-5',
+  /**
+   * AI image moderation. Runs on every `POST /api/uploads` — want/item
+   * photos, trip cover photos, avatars — the only image types with no other
+   * automated review (receipts, KYC documents, and chat photos each already
+   * get their own dedicated check elsewhere). Unlike those, this one is NOT
+   * advisory: an upload scored "high" risk (unambiguous explicit/graphic
+   * content) is rejected outright before it's ever stored, the same way a
+   * QR code in a chat photo is rejected outright (see src/services/qr-check.ts)
+   * rather than merely flagged — this is content that must never go public,
+   * not a judgment call worth leaving to a human review queue. "medium"
+   * (borderline/ambiguous) still uploads normally but is logged to the audit
+   * trail for an operator to spot-check. `mock` (default) is deterministic
+   * for tests and local dev; `claude` calls the Anthropic API and needs
+   * ANTHROPIC_API_KEY. Uses the higher-capability model tier, same reasoning
+   * as the KYC check above.
+   */
+  aiImageModeration: process.env.AI_IMAGE_MODERATION || 'mock',
+  aiImageModerationModel: process.env.AI_IMAGE_MODERATION_MODEL || 'claude-opus-5',
   /**
    * Push notifications ("hard" alerts a user gets even with the app fully
    * closed), for the two things that can't wait for the next in-app poll:

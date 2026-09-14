@@ -6,6 +6,8 @@ import { config } from '@/config/env';
 import { AppError, generateId } from '@/utils/helpers';
 import { getFileStore } from '@/services/storage';
 import { verifySignedUploadKey } from '@/utils/signed-url';
+import { getImageModerationAnalyzer } from '@/services/ai';
+import { recordAudit, actorFromRequest } from '@/services/audit';
 
 const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -140,6 +142,43 @@ export async function registerUploadRoutes(app: FastifyInstance): Promise<void> 
       }
 
       const name = `${generateId()}.${ext}`;
+
+      // Screens every upload for explicit/graphic content — the only image
+      // types with no other review (receipts, KYC documents, and chat
+      // photos each already get their own dedicated check elsewhere).
+      // "high" risk is rejected outright, the same way a QR code in a chat
+      // photo is (see src/services/qr-check.ts) — this is content that must
+      // never go public, not a judgment call for a review queue. "medium"
+      // still uploads but is logged for an operator to spot-check. A mock
+      // analyzer (always "low") runs in tests/local dev; only
+      // AI_IMAGE_MODERATION=claude talks to a real model.
+      const moderation = await getImageModerationAnalyzer().analyze({
+        data: buffer,
+        mimeType: file.mimetype as 'image/jpeg' | 'image/png' | 'image/webp',
+        filename: file.filename,
+      });
+
+      if (moderation.risk === 'high') {
+        await recordAudit(request.db, actorFromRequest(request), {
+          action: 'upload.reject',
+          targetType: 'upload',
+          targetId: name,
+          summary: `Upload rejected — ${moderation.summary}`,
+          metadata: { risk: moderation.risk, reasons: moderation.reasons, model: moderation.model },
+        });
+        throw new AppError('CONTENT_REJECTED', 422, 'uploads.explicitContent');
+      }
+
+      if (moderation.risk === 'medium') {
+        await recordAudit(request.db, actorFromRequest(request), {
+          action: 'upload.flag',
+          targetType: 'upload',
+          targetId: name,
+          summary: `Upload flagged for review — ${moderation.summary}`,
+          metadata: { risk: moderation.risk, reasons: moderation.reasons, model: moderation.model },
+        });
+      }
+
       try {
         await store.put(name, buffer, file.mimetype);
       } catch (err) {

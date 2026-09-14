@@ -62,7 +62,9 @@ export class ClaudeReceiptAnalyzer implements ReceiptAnalyzer {
     apiKey: string,
     private readonly model: string
   ) {
-    this.client = new Anthropic({ apiKey });
+    // See claude-chat-moderation-analyzer.ts — bound a stuck upstream call
+    // rather than inherit the SDK's multi-minute default.
+    this.client = new Anthropic({ apiKey, timeout: 20_000 });
   }
 
   async analyze(input: ReceiptAnalysisInput): Promise<ReceiptAnalysis> {

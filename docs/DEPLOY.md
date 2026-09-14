@@ -201,6 +201,72 @@ Once logs are flowing, Better Stack's dashboard lets you save a search (e.g.
 `level:error`) and turn it into an alert under its Alerting/Uptime section —
 no code change needed for that part.
 
+## Cloudflare CDN / flood protection
+
+Today `hiww-api.onrender.com` is directly reachable from the internet —
+the only thing standing between it and a large flood of traffic is the
+app's own per-IP rate limiter (`@fastify/rate-limit`). That's real
+protection against one abusive client, but a large *distributed* flood
+(many IPs at once) would need to reach the app before those limits could
+even start rejecting it. Putting Cloudflare's free CDN/WAF in front of a
+custom domain absorbs that kind of flood at Cloudflare's edge, before it
+ever reaches Render.
+
+Cloudflare can only protect a domain **you own and add to Cloudflare** —
+it can't proxy someone else's `onrender.com` subdomain, so this needs a
+domain first.
+
+1. **Get a domain**, if you don't have one — registering it directly
+   through Cloudflare Registrar (<https://www.cloudflare.com/products/registrar/>)
+   is the simplest path here: no markup on the price, and the domain lands
+   in your Cloudflare account already set up, skipping the separate
+   "add a site / change nameservers" step a domain bought elsewhere needs.
+2. **Add a DNS record** for the API: in Cloudflare → your domain → **DNS**,
+   add a **CNAME** record — Name: `api` (so it resolves as
+   `api.yourdomain.com`), Target: `hiww-api.onrender.com`, **Proxy status:
+   Proxied** (orange cloud — this is what actually routes traffic through
+   Cloudflare instead of straight to Render).
+3. **Add the custom domain in Render**: `hiww-api` service → **Settings** →
+   **Custom Domains** → add `api.yourdomain.com`. Render issues its own TLS
+   certificate for it automatically (can take a few minutes).
+4. **Set Cloudflare's SSL/TLS mode to Full (strict)**: Cloudflare → your
+   domain → **SSL/TLS** → **Overview**. Render already terminates real TLS,
+   so this verifies Cloudflare's connection to it properly — leave
+   "Flexible" unselected, it's the wrong mode here and can cause redirect
+   loops.
+5. **Verify**: `https://api.yourdomain.com/health` should return the same
+   JSON `hiww-api.onrender.com/health` does, once DNS has propagated
+   (usually minutes, occasionally longer).
+6. **Point the apps at the new domain**: set `PUBLIC_BASE_URL` (Render →
+   Environment) to `https://api.yourdomain.com`, and rebuild/redeploy the
+   mobile app and web app with `HIWW_API_BASE_URL=https://api.yourdomain.com`
+   (see step 6 above) instead of the `onrender.com` address.
+7. **Turn on Cloudflare's free flood/bot protections**: Cloudflare → your
+   domain → **Security** → **Bots** → enable **Bot Fight Mode**; **Security**
+   → **WAF** → add a rate-limiting rule if you want a second, edge-level
+   cap in addition to the app's own (Cloudflare's free plan includes a
+   handful of these).
+8. **Close the direct-origin bypass** — the one step that actually matters
+   for this to be real protection, not just decoration: right now
+   `hiww-api.onrender.com` is *still* reachable directly, so anyone who
+   finds that address skips Cloudflare entirely. Close it:
+   - Generate a long random secret, e.g. `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+   - Cloudflare → your domain → **Rules** → **Transform Rules** → **Modify
+     Request Header** → create a rule matching all traffic to
+     `api.yourdomain.com` that **sets** a header `X-Origin-Secret` to that
+     value.
+   - Render → `hiww-api` → Environment → set `CLOUDFLARE_ORIGIN_SECRET` to
+     the same value, and redeploy.
+   - Verify: `api.yourdomain.com/...` still works (Cloudflare stamps the
+     header on its way through); `hiww-api.onrender.com/...` now 404s on
+     everything except `/health` (left open for Render's own platform
+     health check, which doesn't go through Cloudflare — see `src/app.ts`).
+
+This is entirely optional infrastructure hardening, not required for the
+app to work — skip it, or come back to it later, without anything else
+here changing behavior. `CLOUDFLARE_ORIGIN_SECRET` defaults to unset, which
+disables the check in step 8 completely.
+
 ## Rolling back
 
 Render dashboard → **Deploys** → pick a previous successful deploy → **Redeploy**.
@@ -220,7 +286,10 @@ Migrations are forward-only; a rollback that needs a schema change is a manual j
 | `PAYMENT_PROVIDER` / `IDENTITY_PROVIDER` | blueprint | `mock` until a real vendor is wired |
 | `AI_RECEIPT_ANALYZER` / `AI_MODEL` | blueprint | `claude` / `claude-opus-5` — the AI receipt check |
 | `AI_CHAT_MODERATION` / `AI_CHAT_MODEL` | blueprint | `claude` / `claude-haiku-4-5` — flags leakage/abuse in order chat; same `ANTHROPIC_API_KEY` |
-| `ANTHROPIC_API_KEY` | you | from console.anthropic.com; without it both the receipt check and the chat moderation check fall back to their mocks |
+| `AI_KYC_CHECK` / `AI_KYC_MODEL` | blueprint | `claude` / `claude-opus-5` — cross-checks a submitted KYC form against the document photo |
+| `AI_IMAGE_MODERATION` / `AI_IMAGE_MODERATION_MODEL` | blueprint | `claude` / `claude-opus-5` — screens want/trip/avatar photo uploads for explicit content; rejects outright, unlike the advisory checks above |
+| `ANTHROPIC_API_KEY` | you | from console.anthropic.com; without it, every AI check above falls back to its mock |
 | `UPLOADS_BACKEND` | blueprint | `r2` — see "Uploads on R2" |
 | `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_PUBLIC_BASE_URL` | you | all five required; any missing → falls back to local disk |
 | `LOGTAIL_SOURCE_TOKEN` / `LOGTAIL_ENDPOINT` | you | from betterstack.com/logs — see "Log shipping & alerting"; without it, logs just go to stdout as before |
+| `CLOUDFLARE_ORIGIN_SECRET` | you | see "Cloudflare CDN / flood protection" — leave unset until that Cloudflare rule exists, or you'll lock yourself out |

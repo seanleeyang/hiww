@@ -116,6 +116,54 @@ describe('uploads flow', () => {
     expect(res.statusCode).toBe(400);
   });
 
+  it('rejects an upload the image-moderation check flags as explicit content, and never stores it', async () => {
+    const user = await createUser(ctx);
+    const { body, contentType } = multipart([
+      { name: 'file', filename: 'explicit-test.png', contentType: 'image/png', data: PNG_1PX },
+    ]);
+
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/uploads',
+      headers: { ...authHeader(user), 'content-type': contentType },
+      payload: body,
+    });
+
+    expect(res.statusCode).toBe(422);
+    expect(res.json().code).toBe('CONTENT_REJECTED');
+
+    const audit = await ctx.db
+      .selectFrom('audit_log')
+      .selectAll()
+      .where('action', '=', 'upload.reject')
+      .executeTakeFirst();
+    expect(audit).toBeTruthy();
+    expect(audit?.actor_id).toBe(user.userId);
+  });
+
+  it('still stores an upload the image-moderation check only flags as borderline, but logs it for review', async () => {
+    const user = await createUser(ctx);
+    const { body, contentType } = multipart([
+      { name: 'file', filename: 'flagme-test.png', contentType: 'image/png', data: PNG_1PX },
+    ]);
+
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/uploads',
+      headers: { ...authHeader(user), 'content-type': contentType },
+      payload: body,
+    });
+
+    expect(res.statusCode).toBe(201);
+
+    const audit = await ctx.db
+      .selectFrom('audit_log')
+      .selectAll()
+      .where('action', '=', 'upload.flag')
+      .executeTakeFirst();
+    expect(audit).toBeTruthy();
+  });
+
   it('refuses to serve a KYC photo with no signature, an expired one, or a tampered one — but accepts a real one', async () => {
     const traveler = await createUser(ctx, { user_type: 'traveler' });
     const admin = await createUser(ctx, { admin: true });

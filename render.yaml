@@ -80,6 +80,17 @@ services:
       - key: AI_KYC_MODEL
         value: claude-opus-5
 
+      # AI image moderation: screens every want/trip/avatar photo upload for
+      # explicit/graphic content before it's stored — the only image types
+      # with no other review (receipts/KYC/chat photos each have their own
+      # check above). Unlike those, a "high" risk result is rejected outright
+      # rather than merely flagged. Same ANTHROPIC_API_KEY, same
+      # higher-capability model tier as the KYC check.
+      - key: AI_IMAGE_MODERATION
+        value: claude
+      - key: AI_IMAGE_MODERATION_MODEL
+        value: claude-opus-5
+
       # Uploaded images -> Cloudflare R2 (Render's free disk is ephemeral).
       # Until all five R2_* values are set the app logs a warning and falls
       # back to local disk. See docs/DEPLOY.md.

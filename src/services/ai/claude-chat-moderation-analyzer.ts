@@ -36,7 +36,11 @@ export class ClaudeChatModerationAnalyzer implements ChatModerationAnalyzer {
     apiKey: string,
     private readonly model: string
   ) {
-    this.client = new Anthropic({ apiKey });
+    // A stuck upstream call shouldn't be able to hold this open indefinitely
+    // (the SDK's own default is several minutes) — these calls are already
+    // fire-and-forget/best-effort, so failing fast on a timeout is strictly
+    // better than a slowly-accumulating dangling promise.
+    this.client = new Anthropic({ apiKey, timeout: 20_000 });
   }
 
   async analyze(input: ChatModerationInput): Promise<ChatModerationResult> {

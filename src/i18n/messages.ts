@@ -390,6 +390,10 @@ const MESSAGES: Record<string, Entry> = {
     en: 'This link has expired or is not valid for this file',
     th: 'ลิงก์นี้หมดอายุแล้วหรือไม่ถูกต้องสำหรับไฟล์นี้',
   },
+  'uploads.explicitContent': {
+    en: 'This image cannot be uploaded — it appears to contain explicit or graphic content',
+    th: 'ไม่สามารถอัปโหลดรูปภาพนี้ได้ เนื่องจากอาจมีเนื้อหาที่ไม่เหมาะสมหรือรุนแรง',
+  },
 
   // modules/ops/routes.ts
   'ops.dbErrorOverview': { en: 'Failed to load ops overview', th: 'โหลดภาพรวมระบบไม่สำเร็จ' },
