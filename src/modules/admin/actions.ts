@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import Decimal from 'decimal.js';
 import { AppError, generateId, isUniqueViolation } from '@/utils/helpers';
 import { recordAudit, actorFromRequest } from '@/services/audit';
 import { recordNotification, recordNotifications } from '@/services/notify';
@@ -274,7 +275,7 @@ export async function registerAdminActionRoutes(app: FastifyInstance): Promise<v
     // shopper actually paid in under the pricing-breakdown snapshot, falling
     // back to goods price + fee for orders created before that snapshot existed.
     const refundAmount =
-      order.shopper_total ?? String(Number(order.total_price) + Number(order.fees));
+      order.shopper_total ?? new Decimal(order.total_price).plus(order.fees).toFixed(2);
 
     const refundId = generateId();
     try {

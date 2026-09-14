@@ -250,6 +250,10 @@ export interface MoneyOrderRow {
   traveler_name?: string | null;
   bank_name?: string | null;
   bank_account_number?: string | null;
+  /** Days since delivered_at (payout rows) or cancelled_at (refund rows) —
+   * only present on awaiting_payout/awaiting_refund entries. */
+  days_outstanding?: number;
+  overdue?: boolean;
 }
 
 export interface PayoutRow {
@@ -279,10 +283,14 @@ export interface RefundRow {
 
 export interface Reconciliation {
   awaiting_payment: { count: number; total: string; claimed: number; orders: MoneyOrderRow[] };
-  awaiting_payout: { count: number; total: string; orders: MoneyOrderRow[] };
+  awaiting_payout: { count: number; total: string; overdue_count: number; orders: MoneyOrderRow[] };
   paid_out: { count: number; total: string; payouts: PayoutRow[] };
-  awaiting_refund: { count: number; total: string; orders: MoneyOrderRow[] };
+  awaiting_refund: { count: number; total: string; overdue_count: number; orders: MoneyOrderRow[] };
   refunded: { count: number; total: string; refunds: RefundRow[] };
+  /** Platform fee revenue on confirmed, non-cancelled orders — collected the
+   * moment payment is confirmed, since the fee is part of what the shopper
+   * pays up front (see src/services/pricing.ts). */
+  platform_revenue: { fees_collected: string; overdue_days_threshold: number };
 }
 
 export interface OpsOverview {

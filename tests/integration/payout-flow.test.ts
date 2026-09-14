@@ -16,8 +16,14 @@ describe('payouts + reconciliation', () => {
 
   interface Recon {
     awaiting_payment: { count: number; total: string; claimed: number };
-    awaiting_payout: { count: number; total: string; orders: Array<{ id: string; total_price: string }> };
+    awaiting_payout: {
+      count: number;
+      total: string;
+      overdue_count: number;
+      orders: Array<{ id: string; total_price: string; days_outstanding: number; overdue: boolean }>;
+    };
     paid_out: { count: number; total: string; payouts: Array<{ order_id: string }> };
+    platform_revenue: { fees_collected: string; overdue_days_threshold: number };
   }
 
   const recon = async (admin: Parameters<typeof authHeader>[0]): Promise<Recon> => {
@@ -317,5 +323,46 @@ describe('payouts + reconciliation', () => {
 
     const delta = Number(after.awaiting_payment.total) - Number(before.awaiting_payment.total);
     expect(delta).toBeCloseTo(182, 2);
+  });
+
+  it('counts a confirmed order\'s fee toward platform_revenue.fees_collected as soon as payment is confirmed', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const before = await recon(admin);
+
+    const order = await createAcceptedOrder(ctx); // fee 12 (10% of item price 120)
+    await ctx.app.inject({
+      method: 'POST',
+      url: '/api/payments/confirm',
+      headers: authHeader(admin),
+      payload: { order_id: order.orderId },
+    });
+
+    const after = await recon(admin);
+    const delta = Number(after.platform_revenue.fees_collected) - Number(before.platform_revenue.fees_collected);
+    expect(delta).toBeCloseTo(12, 2);
+  });
+
+  it('flags a delivered order with no payout as overdue once it has sat past the threshold', async () => {
+    const admin = await createUser(ctx, { admin: true });
+    const order = await createAcceptedOrder(ctx);
+    await completeOrder(ctx, order); // → delivered
+
+    const fresh = await recon(admin);
+    const freshRow = fresh.awaiting_payout.orders.find((o) => o.id === order.orderId)!;
+    expect(freshRow.overdue).toBe(false);
+    expect(freshRow.days_outstanding).toBe(0);
+
+    // Backdate delivered_at past the default 3-day threshold.
+    await ctx.db
+      .updateTable('orders')
+      .set({ delivered_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000) })
+      .where('id', '=', order.orderId)
+      .execute();
+
+    const stale = await recon(admin);
+    const staleRow = stale.awaiting_payout.orders.find((o) => o.id === order.orderId)!;
+    expect(staleRow.overdue).toBe(true);
+    expect(staleRow.days_outstanding).toBeGreaterThanOrEqual(4);
+    expect(stale.awaiting_payout.overdue_count).toBeGreaterThanOrEqual(1);
   });
 });

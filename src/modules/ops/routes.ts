@@ -2,6 +2,13 @@ import { FastifyInstance } from 'fastify';
 import Decimal from 'decimal.js';
 import { AppError } from '@/utils/helpers';
 import { decryptSecret } from '@/utils/encryption';
+import { config } from '@/config/env';
+
+/** Whole days between [since] and now — 0 for anything under 24h old. */
+function daysSince(since: Date | string): number {
+  const ms = Date.now() - new Date(since).getTime();
+  return Math.max(0, Math.floor(ms / (24 * 60 * 60 * 1000)));
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sum(rows: any[], field: string): string {
@@ -122,7 +129,14 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
         .execute()
         // Encrypted at rest (src/utils/encryption.ts) — decrypted here since
         // an admin genuinely needs to read this to send the payout.
-        .then((rows) => rows.map((r) => ({ ...r, bank_account_number: decryptSecret(r.bank_account_number) })));
+        .then((rows) =>
+          rows.map((r) => ({
+            ...r,
+            bank_account_number: decryptSecret(r.bank_account_number),
+            days_outstanding: daysSince(r.delivered_at!),
+            overdue: daysSince(r.delivered_at!) > config.payoutOverdueDays,
+          }))
+        );
 
       // Cancelled orders that had confirmed payment and no refund row yet —
       // the operator still owes the shopper money back (see
@@ -143,7 +157,28 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
         .where('orders.confirmed_at', 'is not', null)
         .where('refunds.id', 'is', null)
         .orderBy('orders.cancelled_at', 'asc')
+        .execute()
+        .then((rows) =>
+          rows.map((r) => ({
+            ...r,
+            days_outstanding: daysSince(r.cancelled_at!),
+            overdue: daysSince(r.cancelled_at!) > config.payoutOverdueDays,
+          }))
+        );
+
+      // Platform fee revenue: the shopper pays it up front as part of
+      // `shopper_total` (see src/services/pricing.ts), so it's collected the
+      // moment payment is confirmed — collected here means "not (yet)
+      // cancelled", not "payout to the traveller has happened", since a
+      // cancelled-and-refunded order gives the whole shopper_total back,
+      // fee included.
+      const confirmedNotCancelled = await request.db
+        .selectFrom('orders')
+        .select(['fees', 'total_price'])
+        .where('confirmed_at', 'is not', null)
+        .where('status', '!=', 'cancelled')
         .execute();
+      const feesCollected = sum(confirmedNotCancelled, 'fees');
 
       const paidOut = await request.db
         .selectFrom('payouts')
@@ -208,6 +243,7 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
             total: awaitingPayout
               .reduce((a: Decimal, r: any) => a.add(new Decimal(r.traveller_payout ?? r.total_price)), new Decimal(0))
               .toFixed(2),
+            overdue_count: awaitingPayout.filter((r: any) => r.overdue).length,
             orders: awaitingPayout,
           },
           paid_out: {
@@ -224,12 +260,20 @@ export async function registerOpsRoutes(app: FastifyInstance): Promise<void> {
                 new Decimal(0)
               )
               .toFixed(2),
+            overdue_count: awaitingRefund.filter((r: any) => r.overdue).length,
             orders: awaitingRefund,
           },
           refunded: {
             count: refunded.length,
             total: sum(refunded, 'amount'),
             refunds: refunded,
+          },
+          // Platform-wide rollup — previously nothing anywhere summed this;
+          // see docs/MONEY-TRACKER.md, which pushed this to a manual
+          // offline spreadsheet.
+          platform_revenue: {
+            fees_collected: feesCollected,
+            overdue_days_threshold: config.payoutOverdueDays,
           },
         },
         code: 'OPS_RECONCILIATION',

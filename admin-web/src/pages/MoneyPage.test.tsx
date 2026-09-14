@@ -30,7 +30,7 @@ function reconciliation(overrides: Partial<Reconciliation> = {}): Reconciliation
         },
       ],
     },
-    awaiting_payout: { count: 0, total: '0', orders: [] },
+    awaiting_payout: { count: 0, total: '0', overdue_count: 0, orders: [] },
     paid_out: {
       count: 1,
       total: '100',
@@ -46,8 +46,9 @@ function reconciliation(overrides: Partial<Reconciliation> = {}): Reconciliation
         },
       ],
     },
-    awaiting_refund: { count: 0, total: '0', orders: [] },
+    awaiting_refund: { count: 0, total: '0', overdue_count: 0, orders: [] },
     refunded: { count: 0, total: '0', refunds: [] },
+    platform_revenue: { fees_collected: '10', overdue_days_threshold: 3 },
     ...overrides,
   };
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
-import type { AdminUser, Order, QueueItem } from '../api/types';
+import type { AdminUser, AuditEntry, Order, QueueItem } from '../api/types';
 import { Card, ErrorState, LoadingState, PageHeader } from '../components/ui';
 import { StatusPill } from '../components/StatusPill';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -34,12 +34,21 @@ export function OrderDetailPage() {
   const order = useQuery({ queryKey: ['order', id], queryFn: () => api.get<Order>(`/orders/${id}`), enabled: Boolean(id) });
   const users = useQuery({ queryKey: ['admin-users'], queryFn: () => api.get<{ users: AdminUser[] }>('/admin/users') });
   const queue = useQuery({ queryKey: ['admin-reviews'], queryFn: () => api.get<{ queue: QueueItem[] }>('/admin/reviews') });
+  // Every payment/payout/refund/status-change event ever logged against this
+  // order — a full "what actually happened, when, recorded by whom" trail
+  // without having to cross-reference the generic Audit page separately.
+  const audit = useQuery({
+    queryKey: ['order-audit', id],
+    queryFn: () => api.get<{ items: AuditEntry[] }>(`/admin/audit?target_id=${id}&limit=100`),
+    enabled: Boolean(id),
+  });
 
   const invalidateAll = () => {
     qc.invalidateQueries({ queryKey: ['order', id] });
     qc.invalidateQueries({ queryKey: ['orders'] });
     qc.invalidateQueries({ queryKey: ['reconciliation'] });
     qc.invalidateQueries({ queryKey: ['admin-reviews'] });
+    qc.invalidateQueries({ queryKey: ['order-audit', id] });
   };
 
   const confirmPayment = useMutation({
@@ -208,6 +217,30 @@ export function OrderDetailPage() {
               </div>
             )}
           </div>
+        </Card>
+
+        <Card title="Audit trail">
+          {audit.isLoading ? (
+            <p className="muted">Loading…</p>
+          ) : audit.isError ? (
+            <p className="muted">Couldn't load the audit trail.</p>
+          ) : (audit.data?.items.length ?? 0) === 0 ? (
+            <p className="muted">No logged events yet.</p>
+          ) : (
+            <ol className="timeline">
+              {audit.data!.items
+                .slice()
+                .reverse()
+                .map((entry) => (
+                  <li key={entry.id}>
+                    <span className="timeline-label">
+                      {entry.summary} <code style={{ fontSize: '0.85em' }}>{entry.action}</code>
+                    </span>
+                    <span className="timeline-time">{dateTime(entry.created_at)}</span>
+                  </li>
+                ))}
+            </ol>
+          )}
         </Card>
 
         {(o.purchase_proof_url || o.item_photo_url || o.shipping_proof_url || o.delivery_proof_url) && (

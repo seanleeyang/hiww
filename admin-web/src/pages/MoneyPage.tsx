@@ -80,7 +80,21 @@ export function MoneyPage() {
         <Stat label="Paid out" value={money(d.paid_out.total)} />
         <Stat label="Awaiting refund" value={money(d.awaiting_refund.total)} />
         <Stat label="Refunded" value={money(d.refunded.total)} />
+        <Stat label="Platform fee revenue" value={money(d.platform_revenue.fees_collected)} />
       </StatGrid>
+
+      {(d.awaiting_payout.overdue_count > 0 || d.awaiting_refund.overdue_count > 0) && (
+        <div className="card" style={{ borderColor: 'var(--danger, #c0392b)', marginBottom: 16 }}>
+          <strong style={{ color: 'var(--danger, #c0392b)' }}>
+            {d.awaiting_payout.overdue_count + d.awaiting_refund.overdue_count} item
+            {d.awaiting_payout.overdue_count + d.awaiting_refund.overdue_count === 1 ? '' : 's'} overdue
+          </strong>{' '}
+          <span className="muted">
+            — outstanding more than {d.platform_revenue.overdue_days_threshold} day
+            {d.platform_revenue.overdue_days_threshold === 1 ? '' : 's'} (rows marked below).
+          </span>
+        </div>
+      )}
 
       <Card title={`Awaiting payment (${d.awaiting_payment.count})`}>
         {awaitingPayment.length === 0 ? (
@@ -120,6 +134,7 @@ export function MoneyPage() {
               <tr>
                 <th>Item</th>
                 <th>Amount</th>
+                <th>Days outstanding</th>
                 <th>Traveler's bank account</th>
                 <th></th>
               </tr>
@@ -133,6 +148,9 @@ export function MoneyPage() {
                       <Link to={`/orders/${o.id}`}>{o.item_description}</Link>
                     </td>
                     <td>{money(o.traveller_payout ?? o.total_price)}</td>
+                    <td style={o.overdue ? { color: 'var(--danger, #c0392b)', fontWeight: 600 } : undefined}>
+                      {o.days_outstanding} {o.overdue ? '(overdue)' : ''}
+                    </td>
                     <td>
                       {hasBankAccount ? (
                         `${o.bank_name} · ${o.bank_account_number}`
@@ -168,6 +186,7 @@ export function MoneyPage() {
               <tr>
                 <th>Item</th>
                 <th>Amount</th>
+                <th>Days outstanding</th>
                 <th></th>
               </tr>
             </thead>
@@ -178,6 +197,9 @@ export function MoneyPage() {
                     <Link to={`/orders/${o.id}`}>{o.item_description}</Link>
                   </td>
                   <td>{money(o.shopper_total ?? o.total_price)}</td>
+                  <td style={o.overdue ? { color: 'var(--danger, #c0392b)', fontWeight: 600 } : undefined}>
+                    {o.days_outstanding} {o.overdue ? '(overdue)' : ''}
+                  </td>
                   <td>
                     <button type="button" className="btn btn-small" onClick={() => setRefunding(o)}>
                       Record refund

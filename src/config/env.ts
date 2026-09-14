@@ -152,6 +152,13 @@ export const config = {
    * (accept or decline) — see `POST /api/offers/:id/counter`. */
   maxOfferCounters: Number(process.env.MAX_OFFER_COUNTERS || '2'),
   /**
+   * During the manual-money pilot, how many days a delivered order can sit
+   * with no payout recorded (or a cancelled-and-confirmed order with no
+   * refund recorded) before `GET /api/ops/reconciliation` marks it overdue
+   * — a nudge for the operator to prioritize, not an enforced deadline.
+   */
+  payoutOverdueDays: Number(process.env.PAYOUT_OVERDUE_DAYS || '3'),
+  /**
    * User-uploaded images (want photos, trip covers, avatars). Local disk during
    * the pilot; swap for object storage (S3/GCS) before production. `uploadDir`
    * is resolved from the process working directory (the project root).

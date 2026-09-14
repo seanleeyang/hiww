@@ -83,15 +83,23 @@ Status: **8/8 green.**
       before/after metadata. `GET /api/admin/audit` (admin-only, filter by
       `action` / `target_id` / `actor_id`, paginate with `before`). Shown in the
       operator console's **Audit** tab. `tests/integration/audit-flow.test.ts`.
-- [x] **Payouts + reconciliation** (`payouts` table, migration 011).
-      `POST /api/payments/payout` (admin-only) records a traveller payout —
-      amount / method / reference — for a `delivered` order, once, with an
-      `order.payout` audit entry. `GET /api/ops/reconciliation` (admin-only)
-      returns three buckets with running totals: **owed in** (pending_payment,
-      goods + fee), **owed out** (delivered with no payout, goods only),
-      **paid out** (recent payouts). New "Money" tab in the operator console
-      shows all three and has the Record-payout button.
-      `tests/integration/payout-flow.test.ts`.
+- [x] **Payouts + refunds + reconciliation** (`payouts` / `refunds` tables,
+      migrations 011 / 036). `POST /api/payments/payout` and
+      `POST /api/admin/orders/:id/refund` (both admin-only) record a
+      traveller payout or shopper refund — amount is always server-derived
+      from the order's own pricing snapshot, never client-supplied — once
+      per order (DB-unique on `order_id`), each with its own audit entry.
+      `GET /api/ops/reconciliation` (admin-only) returns five buckets with
+      running totals — awaiting payment, awaiting payout, paid out, awaiting
+      refund, refunded — plus a platform-wide `platform_revenue.fees_collected`
+      rollup (fee revenue on confirmed, non-cancelled orders — previously
+      nowhere in the app, pushed to a manual spreadsheet per
+      `docs/MONEY-TRACKER.md`) and an `overdue`/`days_outstanding` flag on
+      anything sitting past `PAYOUT_OVERDUE_DAYS` (default 3). The "Money"
+      tab in the operator console shows all of this, with overdue rows
+      highlighted; each order's detail page now also pulls its full
+      `audit_log` history into an on-page timeline instead of requiring a
+      separate trip to the generic Audit tab. `tests/integration/payout-flow.test.ts`.
 - [x] **Rate limits + request-id.** `/api/payments/*` and `/api/offers/*/accept`
       capped at `MONEY_RATE_LIMIT_MAX` (30/min), `/api/uploads` at
       `UPLOAD_RATE_LIMIT_MAX` (20/min), `/api/auth/*` already at 20/min — all
