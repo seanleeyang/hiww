@@ -42,7 +42,9 @@ class LandingScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 8),
-                        const Center(child: BrandMark(fontSize: 36)),
+                        const Center(child: _BrandBadge()),
+                        const SizedBox(height: 18),
+                        const Center(child: BrandMark(fontSize: 30)),
                         const SizedBox(height: 10),
                         Text(
                           l10n.landingTagline,
@@ -58,6 +60,9 @@ class LandingScreen extends StatelessWidget {
                             Expanded(
                               child: FilledButton(
                                 onPressed: () => context.push(withReturnTo('/register')),
+                                // Pill-shaped, matching the design canvas —
+                                // local override, same as the onboarding CTA.
+                                style: FilledButton.styleFrom(shape: const StadiumBorder()),
                                 child: Text(l10n.actionCreateAccountButton),
                               ),
                             ),
@@ -65,6 +70,7 @@ class LandingScreen extends StatelessWidget {
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: () => context.push(withReturnTo('/login')),
+                                style: OutlinedButton.styleFrom(shape: const StadiumBorder()),
                                 child: Text(l10n.actionLogIn),
                               ),
                             ),
@@ -85,6 +91,51 @@ class LandingScreen extends StatelessWidget {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A bigger, warmer stand-in for the plain wordmark row — a gradient circle
+/// echoing the app icon, same shape language explored on the design canvas.
+/// Purely decorative; the real wordmark text still follows below it.
+class _BrandBadge extends StatelessWidget {
+  const _BrandBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 96,
+      height: 96,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(scheme.primary, Colors.white, 0.2)!,
+            scheme.primary,
+            scheme.onSurface,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text.rich(
+        TextSpan(
+          style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: Colors.white),
+          children: [
+            const TextSpan(text: 'H'),
+            TextSpan(text: '.', style: TextStyle(color: scheme.primaryContainer)),
           ],
         ),
       ),

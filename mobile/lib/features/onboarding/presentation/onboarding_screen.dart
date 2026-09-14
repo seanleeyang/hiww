@@ -100,6 +100,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           duration: const Duration(milliseconds: 250),
                           curve: Curves.easeOut,
                         ),
+                // Pill-shaped, matching the warmer look explored on the design
+                // canvas — a local override rather than a theme-wide change,
+                // since the rest of the app keeps HiwwRadii.button.
+                style: FilledButton.styleFrom(shape: const StadiumBorder()),
                 child: Text(lastPage ? l10n.actionGetStarted : l10n.actionNext),
               ),
             ),
@@ -117,35 +121,92 @@ class _SlideView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              shape: BoxShape.circle,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            children: [
+              Text(
+                slide.title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                slide.body,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Expanded(child: _SlideIllustration(icon: slide.icon)),
+      ],
+    );
+  }
+}
+
+/// The warm gradient "hill" behind each slide's icon — replaces the old
+/// flat circle. Bottom-anchored and fills whatever vertical space the
+/// slide has left, same shape language as the design canvas exploration.
+class _SlideIllustration extends StatelessWidget {
+  const _SlideIllustration({required this.icon});
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(120)),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.lerp(scheme.primary, Colors.white, 0.2)!,
+              scheme.primary,
+              scheme.onSurface,
+            ],
+          ),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned(
+              top: 40,
+              left: 48,
+              child: _softDot(size: 10, opacity: 0.35),
             ),
-            child: Icon(slide.icon, size: 80, color: scheme.onPrimaryContainer),
-          ),
-          const SizedBox(height: 40),
-          Text(
-            slide.title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            slide.body,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-          ),
-        ],
+            Positioned(
+              top: 70,
+              right: 56,
+              child: _softDot(size: 6, opacity: 0.4),
+            ),
+            Positioned(
+              bottom: 60,
+              left: 36,
+              child: _softDot(size: 14, opacity: 0.18),
+            ),
+            Icon(icon, size: 88, color: scheme.primaryContainer),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _softDot({required double size, required double opacity}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: opacity),
+        shape: BoxShape.circle,
       ),
     );
   }
