@@ -87,11 +87,11 @@ flutter:
     - assets/data/
 
   fonts:
-    - family: PlusJakartaSans
+    - family: Manrope
       fonts:
         # Variable font (weight axis ExtraLight–ExtraBold); Flutter maps
         # TextStyle.fontWeight onto the wght axis.
-        - asset: assets/fonts/PlusJakartaSans.ttf
+        - asset: assets/fonts/Manrope.ttf
 
 # App icon — regenerate with: dart run flutter_launcher_icons
 # (source art: dart run tool/gen_icon.dart)

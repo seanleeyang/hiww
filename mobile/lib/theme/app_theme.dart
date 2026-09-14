@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-const _fontFamily = 'PlusJakartaSans';
+const _fontFamily = 'Manrope';
 
 /// Radii used across the app.
 class HiwwRadii {

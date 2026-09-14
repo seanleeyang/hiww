@@ -20,15 +20,15 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Same font the app itself renders the wordmark in (see BrandMark /
-       app_theme.dart's PlusJakartaSans). Preloaded + declared here too so
+       app_theme.dart's Manrope). Preloaded + declared here too so
        the loading screen's "Hiww." doesn't visibly swap typeface the
        moment flutter-first-frame fires and replaces this DOM with the
        canvas/DOM-rendered app, which already has this font loaded. -->
-  <link rel="preload" href="assets/assets/fonts/PlusJakartaSans.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/Manrope.ttf" as="font" type="font/ttf" crossorigin>
   <style>
     @font-face {
-      font-family: 'Plus Jakarta Sans';
-      src: url('assets/assets/fonts/PlusJakartaSans.ttf') format('truetype');
+      font-family: 'Manrope';
+      src: url('assets/assets/fonts/Manrope.ttf') format('truetype');
       font-weight: 200 800;
       font-display: swap;
     }
@@ -37,7 +37,7 @@
 
     #loading {
       position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-      font-family: 'Plus Jakarta Sans', -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Manrope', -apple-system, "Segoe UI", Roboto, sans-serif;
       color: #49261D;
       overflow: hidden;
     }
