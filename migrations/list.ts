@@ -48,6 +48,7 @@ import * as m045 from './045_request_delivery_address';
 import * as m046 from './046_token_version';
 import * as m047 from './047_encrypt_bank_account_numbers';
 import * as m048 from './048_user_violations';
+import * as m049 from './049_otp_destination_throttle';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }> = [
@@ -99,4 +100,5 @@ export const migrations: Array<{ name: string; up: (db: any) => Promise<void> }>
   { name: '046_token_version', up: m046.up },
   { name: '047_encrypt_bank_account_numbers', up: m047.up },
   { name: '048_user_violations', up: m048.up },
+  { name: '049_otp_destination_throttle', up: m049.up },
 ];

@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 import { makeTestApp, closeTestApp, type TestContext } from '../helpers/test-app';
 import { signToken } from '@/utils/auth';
 
@@ -13,7 +13,7 @@ describe('OTP verification at registration', () => {
     await closeTestApp(ctx);
   });
 
-  async function register(phone = '+1 555 0100') {
+  async function register(phone = `+1555${String(randomInt(0, 10_000_000)).padStart(7, '0')}`) {
     const email = `otp-${randomUUID()}@example.com`;
     const res = await ctx.app.inject({
       method: 'POST',

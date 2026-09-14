@@ -44,7 +44,12 @@ async function main(): Promise<void> {
     if (existing) {
       await db
         .updateTable('users')
-        .set({ role: 'admin', kyc_status: 'approved', password_hash: hashPassword(password), updated_at: new Date() })
+        .set({
+          role: 'admin',
+          kyc_status: 'approved',
+          password_hash: await hashPassword(password),
+          updated_at: new Date(),
+        })
         .where('id', '=', existing.id)
         .execute();
       console.log(`\n✅ ${email} promoted to admin (password updated).`);
@@ -58,7 +63,7 @@ async function main(): Promise<void> {
           user_type: 'both',
           role: 'admin',
           kyc_status: 'approved',
-          password_hash: hashPassword(password),
+          password_hash: await hashPassword(password),
           // Bypasses the register route's OTP flow — grandfather this
           // account in as already-verified, same as every pre-existing user.
           email_verified_at: new Date(),

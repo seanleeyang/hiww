@@ -1,5 +1,9 @@
-import { randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 import { makeTestApp, closeTestApp, createUser, authHeader, type TestContext } from '../helpers/test-app';
+
+function uniquePhone(): string {
+  return `+1555${String(randomInt(0, 10_000_000)).padStart(7, '0')}`;
+}
 
 describe('auth and protected route flow', () => {
   let ctx: TestContext;
@@ -21,7 +25,7 @@ describe('auth and protected route flow', () => {
         email,
         full_name: 'Alice Traveler',
         user_type: 'traveler',
-        phone: '+1 555 0100',
+        phone: uniquePhone(),
         password: 'SecurePass123!',
       },
     });
@@ -130,7 +134,7 @@ describe('auth and protected route flow', () => {
           email: `weak-${randomUUID()}@example.com`,
           full_name: 'Weak Password',
           user_type: 'shopper',
-          phone: '+1 555 0100',
+          phone: uniquePhone(),
           password,
         },
       });
@@ -146,7 +150,7 @@ describe('auth and protected route flow', () => {
         email: `strongenough-${randomUUID()}@example.com`,
         full_name: 'Strong Enough',
         user_type: 'shopper',
-        phone: '+1 555 0100',
+        phone: uniquePhone(),
         password: 'letters123', // no special character — must still pass
       },
     });

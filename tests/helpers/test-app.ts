@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 import type { FastifyInstance } from 'fastify';
 import type { Kysely } from 'kysely';
 import { buildApp } from '@/app';
@@ -30,6 +30,7 @@ export async function closeTestApp(ctx: TestContext): Promise<void> {
 export interface TestUser {
   userId: string;
   email: string;
+  phone: string;
   token: string;
 }
 
@@ -47,6 +48,10 @@ export async function createUser(
   } = {}
 ): Promise<TestUser> {
   const email = opts.email ?? `user-${randomUUID()}@example.com`;
+  // Registration now rejects a phone already on another account (closes an
+  // OTP-bombing vector — see src/modules/auth/routes.ts), so each synthetic
+  // test user needs its own, same as email above.
+  const phone = opts.phone ?? `+1555${String(randomInt(0, 10_000_000)).padStart(7, '0')}`;
 
   const res = await ctx.app.inject({
     method: 'POST',
@@ -55,7 +60,7 @@ export async function createUser(
       email,
       full_name: 'Test User',
       user_type: opts.user_type ?? 'both',
-      phone: opts.phone ?? '+1 555 0100',
+      phone,
       password: 'SecurePass123!',
     },
   });
@@ -80,7 +85,7 @@ export async function createUser(
     await ctx.db.updateTable('users').set({ role: 'admin' }).where('id', '=', userId).execute();
   }
 
-  return { userId, email, token };
+  return { userId, email, phone, token };
 }
 
 export function authHeader(user: TestUser): { authorization: string } {

@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import { makeTestApp, closeTestApp, createUser, type TestContext } from '../helpers/test-app';
 import { __setSocialTokenVerifier } from '@/modules/auth/routes';
 
@@ -57,7 +58,7 @@ describe('POST /api/auth/social', () => {
         email,
         full_name: 'Squatter',
         user_type: 'both',
-        phone: '+1 555 0100',
+        phone: `+1555${String(randomInt(0, 10_000_000)).padStart(7, '0')}`,
         password: 'SquatterPassword1',
       },
     });

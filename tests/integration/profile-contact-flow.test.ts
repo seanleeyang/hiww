@@ -151,12 +151,16 @@ describe('profile contact details + completeness gate', () => {
     // address is missing, so that's the only thing the message should name.
     expect(blocked.json().error).toBe('Add your delivery address before your first order');
 
+    // Same phone the traveler already registered with (createUser's own,
+    // now random per-user) — this test is about the address being missing,
+    // not a phone *change*, which now re-triggers verification and would
+    // 403 the create-offer call below (see profile-flow.test.ts).
     await ctx.app.inject({
       method: 'PATCH',
       url: '/api/me',
       headers: authHeader(traveler),
       payload: {
-        phone: '+1 555 0100',
+        phone: traveler.phone,
         address_street: '1 Market St',
         address_city: 'Springfield',
         address_postal_code: '12345',
@@ -231,7 +235,7 @@ describe('profile contact details + completeness gate', () => {
       url: '/api/me',
       headers: authHeader(traveler),
       payload: {
-        phone: '+1 555 0100',
+        phone: traveler.phone,
         address_street: '1 Market St',
         address_city: 'Springfield',
         address_postal_code: '12345',
@@ -268,15 +272,16 @@ describe('profile contact details + completeness gate', () => {
     expect(blocked.json().error).toBe('Add your delivery address before your first order');
 
     // Same phone number the shopper already registered with (createUser's
-    // default) — this test is about the address fields being missing, not
-    // about a phone *change*, which now re-triggers verification (see
-    // profile-flow.test.ts) and would 403 this accept-offer call below.
+    // own, now random per-user) — this test is about the address fields
+    // being missing, not about a phone *change*, which now re-triggers
+    // verification (see profile-flow.test.ts) and would 403 this
+    // accept-offer call below.
     await ctx.app.inject({
       method: 'PATCH',
       url: '/api/me',
       headers: authHeader(shopper),
       payload: {
-        phone: '+1 555 0100',
+        phone: shopper.phone,
         address_street: '2 Elm St',
         address_city: 'Shelbyville',
         address_postal_code: '54321',
@@ -299,7 +304,7 @@ describe('profile contact details + completeness gate', () => {
       method: 'PATCH',
       url: '/api/me',
       headers: authHeader(shopper),
-      payload: { phone: '+1 555 0100', address_city: 'Springfield' },
+      payload: { phone: shopper.phone, address_city: 'Springfield' },
     });
     const requestId = await createRequest(ctx, shopper);
     const viewer = await createUser(ctx, { user_type: 'traveler' });

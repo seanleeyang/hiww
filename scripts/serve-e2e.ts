@@ -81,7 +81,7 @@ async function seedAdmin(): Promise<void> {
         user_type: 'both',
         role: 'admin',
         kyc_status: 'approved',
-        password_hash: hashPassword(ADMIN_PASSWORD),
+        password_hash: await hashPassword(ADMIN_PASSWORD),
         email_verified_at: new Date(),
         phone_verified_at: new Date(),
         created_at: new Date(),

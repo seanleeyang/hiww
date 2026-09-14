@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 import { makeTestApp, closeTestApp, type TestContext } from '../helpers/test-app';
 
 describe('Forgot password', () => {
@@ -20,7 +20,7 @@ describe('Forgot password', () => {
         email,
         full_name: 'Forgetful Tester',
         user_type: 'shopper',
-        phone: '+1 555 0100',
+        phone: `+1555${String(randomInt(0, 10_000_000)).padStart(7, '0')}`,
         password: 'OriginalPass123!',
       },
     });

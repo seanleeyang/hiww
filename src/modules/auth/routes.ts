@@ -244,6 +244,21 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       throw new AppError('USER_EXISTS', 409, 'auth.userExists');
     }
 
+    // Without this, registration would send a phone-verification OTP to
+    // whatever number is supplied with no check that it isn't already
+    // someone else's — letting an attacker spam an arbitrary victim's phone
+    // by creating many accounts (free via disposable emails) that all name
+    // the same target number.
+    const existingPhone = await request.db
+      .selectFrom('users')
+      .select('id')
+      .where('phone', '=', parsed.data.phone)
+      .executeTakeFirst();
+
+    if (existingPhone) {
+      throw new AppError('USER_EXISTS', 409, 'auth.phoneExists');
+    }
+
     const userId = generateId();
     await request.db
       .insertInto('users')
@@ -254,7 +269,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         user_type: parsed.data.user_type,
         phone: parsed.data.phone,
         kyc_status: 'pending',
-        password_hash: hashPassword(parsed.data.password),
+        password_hash: await hashPassword(parsed.data.password),
         // Explicitly unverified — every route but /api/me and the OTP
         // endpoints is blocked until both codes below are confirmed.
         email_verified_at: null,
@@ -305,7 +320,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       .where('email', '=', parsed.data.email)
       .executeTakeFirst();
 
-    if (!user || !verifyPassword(parsed.data.password, user.password_hash)) {
+    if (!user || !(await verifyPassword(parsed.data.password, user.password_hash))) {
       throw new AppError('AUTH_ERROR', 401, 'auth.invalidCredentials');
     }
     assertNotRestricted(user);
@@ -502,7 +517,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       await request.db
         .updateTable('users')
         .set({
-          password_hash: hashPassword(parsed.data.new_password),
+          password_hash: await hashPassword(parsed.data.new_password),
           token_version: newTokenVersion,
           updated_at: new Date(),
         })
@@ -551,7 +566,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         .where('id', '=', request.userId!)
         .executeTakeFirst();
 
-      if (!user || !verifyPassword(parsed.data.current_password, user.password_hash)) {
+      if (!user || !(await verifyPassword(parsed.data.current_password, user.password_hash))) {
         throw new AppError('AUTH_ERROR', 401, 'auth.currentPasswordIncorrect');
       }
 
@@ -563,7 +578,11 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const newTokenVersion = user.token_version + 1;
       await request.db
         .updateTable('users')
-        .set({ password_hash: hashPassword(parsed.data.new_password), token_version: newTokenVersion, updated_at: new Date() })
+        .set({
+          password_hash: await hashPassword(parsed.data.new_password),
+          token_version: newTokenVersion,
+          updated_at: new Date(),
+        })
         .where('id', '=', user.id)
         .execute();
 

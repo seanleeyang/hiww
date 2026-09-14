@@ -34,6 +34,11 @@ export function createDatabase(): Kysely<Database> {
       ssl: sslFor(config.databaseUrl),
       max: parseInt(process.env.DB_POOL_SIZE || '20'),
       idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),
+      // Without a ceiling, one slow/stuck query holds its connection forever;
+      // with a bounded pool (`max` above) enough of those exhaust every
+      // connection and the whole single-process app stops serving anyone.
+      connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '5000'),
+      statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT || '10000'),
     }),
   });
 

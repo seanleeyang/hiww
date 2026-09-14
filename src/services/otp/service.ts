@@ -1,11 +1,20 @@
 import crypto from 'crypto';
 import type { Kysely } from 'kysely';
 import type { Database } from '@/types/database';
-import { generateId } from '@/utils/helpers';
+import { AppError, generateId } from '@/utils/helpers';
 import { getOtpSender } from './provider';
 import type { OtpChannel } from './types';
 
 const OTP_TTL_MINUTES = 10;
+
+// Per-DESTINATION throttle, independent of `user_id` — without this, an
+// attacker who only needs a free email address to create a new account (no
+// verification required to sign up) can create unlimited accounts that all
+// name the same real victim's phone/email, and every one sends that victim
+// a fresh OTP. The per-IP rate limit on the route (see authRouteConfig)
+// doesn't stop this: it's the request source that's capped, not the target.
+const OTP_DESTINATION_LIMIT = 3;
+const OTP_DESTINATION_WINDOW_MINUTES = 60;
 
 function generateCode(): string {
   return crypto.randomInt(0, 1_000_000).toString().padStart(6, '0');
@@ -16,6 +25,10 @@ function generateCode(): string {
  * one for the same user+channel, and sends it (mock or real, see
  * `getOtpSender`). Returns the plaintext code — callers only echo it back to
  * the client (`debug_otp`) while `isMockOtp()` is true.
+ *
+ * Throws `AppError('RATE_LIMITED', 429, ...)` if this destination (not just
+ * this user) has already received several codes recently, regardless of
+ * which account requested them.
  */
 export async function issueOtp(
   db: Kysely<Database>,
@@ -23,8 +36,22 @@ export async function issueOtp(
   channel: OtpChannel,
   destination: string
 ): Promise<string> {
-  const code = generateCode();
   const now = new Date();
+  const windowStart = new Date(now.getTime() - OTP_DESTINATION_WINDOW_MINUTES * 60_000);
+
+  const { count } = await db
+    .selectFrom('otp_codes')
+    .select((eb) => eb.fn.countAll<string>().as('count'))
+    .where('channel', '=', channel)
+    .where('destination', '=', destination)
+    .where('created_at', '>=', windowStart)
+    .executeTakeFirstOrThrow();
+
+  if (Number(count) >= OTP_DESTINATION_LIMIT) {
+    throw new AppError('RATE_LIMITED', 429, 'otp.tooManyRequests');
+  }
+
+  const code = generateCode();
 
   await db.deleteFrom('otp_codes').where('user_id', '=', userId).where('channel', '=', channel).execute();
   await db
@@ -34,6 +61,7 @@ export async function issueOtp(
       user_id: userId,
       channel,
       code,
+      destination,
       expires_at: new Date(now.getTime() + OTP_TTL_MINUTES * 60_000),
       created_at: now,
     })

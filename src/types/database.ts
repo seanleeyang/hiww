@@ -382,12 +382,15 @@ export interface AuditLogTable {
   created_at: Generated<Date>;
 }
 
-/** One-time codes for email/phone verification (migration 020). */
+/** One-time codes for email/phone verification (migration 020, 049). */
 export interface OtpCodesTable {
   id: string;
   user_id: string;
   channel: 'email' | 'phone';
   code: string;
+  /** The email/phone this code was actually sent to — lets `issueOtp` throttle
+   * per-destination across every user, not just per-account (migration 049). */
+  destination: string | null;
   expires_at: Date;
   consumed_at?: Date | null;
   created_at: Generated<Date>;

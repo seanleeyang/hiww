@@ -82,6 +82,10 @@ const MESSAGES: Record<string, Entry> = {
   // modules/auth/routes.ts
   'auth.invalidRegistration': { en: 'Invalid registration data', th: 'ข้อมูลการสมัครไม่ถูกต้อง' },
   'auth.userExists': { en: 'User already exists', th: 'มีผู้ใช้นี้อยู่แล้ว' },
+  'auth.phoneExists': {
+    en: 'That phone number is already registered to another account',
+    th: 'หมายเลขโทรศัพท์นี้ถูกใช้ลงทะเบียนกับบัญชีอื่นแล้ว',
+  },
   'auth.invalidLogin': { en: 'Invalid login data', th: 'ข้อมูลเข้าสู่ระบบไม่ถูกต้อง' },
   'auth.invalidCredentials': { en: 'Invalid email or password', th: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' },
   'auth.invalidEmail': { en: 'Invalid email', th: 'อีเมลไม่ถูกต้อง' },
@@ -188,6 +192,12 @@ const MESSAGES: Record<string, Entry> = {
     th: 'คืนเงินได้เฉพาะคำสั่งซื้อที่ถูกยกเลิกและยืนยันการชำระเงินแล้วเท่านั้น',
   },
   'money.alreadyRefunded': { en: 'This order has already been refunded', th: 'คำสั่งซื้อนี้คืนเงินไปแล้ว' },
+
+  // services/otp/service.ts
+  'otp.tooManyRequests': {
+    en: 'Too many verification codes have been requested for this destination. Please try again later.',
+    th: 'มีการขอรหัสยืนยันสำหรับปลายทางนี้บ่อยเกินไป กรุณาลองใหม่อีกครั้งภายหลัง',
+  },
 
   // services/pricing.ts
   'pricing.invalidItemPrice': {
