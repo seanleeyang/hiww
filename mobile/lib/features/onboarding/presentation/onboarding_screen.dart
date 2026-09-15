@@ -119,16 +119,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 /// The bold display style used for onboarding/landing headlines only —
-/// Neighbor Bold (the heaviest weight in its free, personal-use-only
-/// release; the commercial family's actual Black weight will replace this
-/// file once licensed — see pubspec.yaml). The rest of the app keeps its
-/// Manrope body font.
+/// Futura Extra Bold (see pubspec.yaml for the licensing note). The rest of
+/// the app keeps its Manrope body font.
 TextStyle onboardingHeadlineStyle(BuildContext context) => Theme.of(context)
     .textTheme
     .headlineMedium!
     .copyWith(
-      fontFamily: 'Neighbor',
-      fontWeight: FontWeight.w700,
+      fontFamily: 'FuturaExtraBold',
+      fontWeight: FontWeight.w800,
       height: 1.05,
       letterSpacing: -0.5,
     );
