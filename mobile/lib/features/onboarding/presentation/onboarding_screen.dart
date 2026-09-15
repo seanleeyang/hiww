@@ -66,7 +66,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
       _Slide(
         Icons.savings_outlined,
-        const [Icons.card_giftcard, Icons.flight_outlined],
+        const [],
         l10n.onboardingSlide3Title,
         l10n.onboardingSlide3Body,
         videoAsset: 'assets/video/piggy_bank.mp4',

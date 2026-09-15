@@ -1,27 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-import '../theme/app_theme.dart';
-
 /// A muted, looping video used as [FloatingOrbitIllustration]'s central
 /// object in place of the Lottie/icon placeholders, for slides whose
 /// illustration was delivered as a rendered clip rather than vector data.
 ///
-/// Rendered inside a rounded card with a border and shadow, rather than
-/// edge-to-edge: source videos here are plain .mp4 (no alpha channel), so
-/// there's no way to make an arbitrary background transparent — every
-/// export attempt just changes *which* solid rectangle shows up behind the
-/// subject (white, black, gray, even a literal checkerboard once, baked in
-/// as real pixels by an export tool's "transparent" preview indicator).
-/// A chroma-key shader (cutting a flat green background out per-frame) was
-/// tried too — the fix in theory, but video_player's web backend renders
-/// through a real browser <video> element that lives outside Flutter's
-/// rendering pipeline entirely, so its frames can't be captured for a
-/// custom shader to process (confirmed: rendered solid black instead).
-/// Framing it as a deliberate photo card sidesteps all of this: the
-/// rectangle becomes the point instead of a bug, and it uses the theme's
-/// own surface/outline/shadow tokens, so it's correct in dark mode too
-/// (an edge-to-edge video never could be, without real alpha).
+/// Rendered edge-to-edge, directly on the screen background — the source
+/// video's own background is a close match to the app's Linen
+/// (assets/video/piggy_bank.mp4, ~RGB(250,232,221) vs Linen's
+/// RGB(255,237,227)), close enough that it reads as the subject floating
+/// rather than a visible box, without needing a card frame around it. (A
+/// card frame was used briefly when the render didn't match; see git
+/// history if a future video needs it again — chroma-key transparency was
+/// also tried and ruled out, see the removed doc comment in that commit.)
 class CentralVideo extends StatefulWidget {
   const CentralVideo({super.key, required this.asset, required this.size});
 
@@ -58,35 +49,20 @@ class _CentralVideoState extends State<CentralVideo> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
+    if (!_controller.value.isInitialized) {
+      return SizedBox(width: widget.size, height: widget.size);
+    }
+    return SizedBox(
       width: widget.size,
       height: widget.size,
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(HiwwRadii.card),
-        border: Border.all(color: scheme.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withValues(alpha: 0.16),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: _controller.value.size.width,
+          height: _controller.value.size.height,
+          child: VideoPlayer(_controller),
+        ),
       ),
-      child: _controller.value.isInitialized
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(HiwwRadii.card),
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _controller.value.size.width,
-                  height: _controller.value.size.height,
-                  child: VideoPlayer(_controller),
-                ),
-              ),
-            )
-          : null,
     );
   }
 }
