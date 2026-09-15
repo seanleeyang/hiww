@@ -92,6 +92,20 @@ flutter:
         # Variable font (weight axis ExtraLight–ExtraBold); Flutter maps
         # TextStyle.fontWeight onto the wght axis.
         - asset: assets/fonts/Manrope.ttf
+    - family: Neighbor
+      fonts:
+        # Bold (700) only — the free personal-use release of Neighbor tops
+        # out at Bold, it has no Black weight (that's commercial-family
+        # only, via Creative Fabrica). Used for the onboarding/landing
+        # headline style, always requested at w700. Not the app's general
+        # font (that's still Manrope, above).
+        #
+        # LICENSE: free for personal use only — commercial use needs a
+        # paid license from Creative Fabrica. Swap this .ttf for the real
+        # Black weight once that's purchased; see the "Wise-style
+        # onboarding redesign" memory note.
+        - asset: assets/fonts/Neighbor-Bold.ttf
+          weight: 700
 
 # App icon — regenerate with: dart run flutter_launcher_icons
 # (source art: dart run tool/gen_icon.dart)

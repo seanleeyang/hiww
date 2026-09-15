@@ -3,12 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/entrance_fade.dart';
+import '../../../ui/floating_orbit_illustration.dart';
 import '../../../ui/language_toggle.dart';
+import '../../../ui/onboarding_progress_bar.dart';
 import '../application/onboarding_controller.dart';
 
+/// Total steps the top progress bar spans: the 3 onboarding slides plus the
+/// landing screen right after — see `landing_screen.dart`'s own
+/// `OnboardingProgressBar(step: 3, totalSteps: onboardingTotalSteps)`.
+const onboardingTotalSteps = 4;
+
 class _Slide {
-  const _Slide(this.icon, this.title, this.body);
+  const _Slide(this.icon, this.satelliteIcons, this.title, this.body);
   final IconData icon;
+  final List<IconData> satelliteIcons;
   final String title;
   final String body;
 }
@@ -40,11 +49,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
     final slides = [
-      _Slide(Icons.travel_explore_outlined, l10n.onboardingSlide1Title, l10n.onboardingSlide1Body),
-      _Slide(Icons.flight_takeoff_outlined, l10n.onboardingSlide2Title, l10n.onboardingSlide2Body),
-      _Slide(Icons.savings_outlined, l10n.onboardingSlide3Title, l10n.onboardingSlide3Body),
+      _Slide(
+        Icons.travel_explore_outlined,
+        const [Icons.shopping_bag_outlined, Icons.public],
+        l10n.onboardingSlide1Title,
+        l10n.onboardingSlide1Body,
+      ),
+      _Slide(
+        Icons.flight_takeoff_outlined,
+        const [Icons.luggage_outlined, Icons.person_outline],
+        l10n.onboardingSlide2Title,
+        l10n.onboardingSlide2Body,
+      ),
+      _Slide(
+        Icons.savings_outlined,
+        const [Icons.card_giftcard, Icons.flight_outlined],
+        l10n.onboardingSlide3Title,
+        l10n.onboardingSlide3Body,
+      ),
     ];
     final lastPage = _page == slides.length - 1;
 
@@ -68,28 +91,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ],
               ),
             ),
+            OnboardingProgressBar(step: _page, totalSteps: onboardingTotalSteps),
             Expanded(
               child: PageView(
                 controller: _controller,
                 onPageChanged: (i) => setState(() => _page = i),
                 children: [for (final s in slides) _SlideView(slide: s)],
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (var i = 0; i < slides.length; i++)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: i == _page ? 22 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: i == _page ? scheme.primary : scheme.outlineVariant,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-              ],
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
@@ -110,6 +118,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
+/// The bold display style used for onboarding/landing headlines only —
+/// Neighbor Bold (the heaviest weight in its free, personal-use-only
+/// release; the commercial family's actual Black weight will replace this
+/// file once licensed — see pubspec.yaml). The rest of the app keeps its
+/// Manrope body font.
+TextStyle onboardingHeadlineStyle(BuildContext context) => Theme.of(context)
+    .textTheme
+    .headlineMedium!
+    .copyWith(
+      fontFamily: 'Neighbor',
+      fontWeight: FontWeight.w700,
+      height: 1.05,
+      letterSpacing: -0.5,
+    );
+
 class _SlideView extends StatelessWidget {
   const _SlideView({required this.slide});
   final _Slide slide;
@@ -117,92 +140,34 @@ class _SlideView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            children: [
-              Text(
-                slide.title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                slide.body,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
+    return EntranceFade(
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          FloatingOrbitIllustration(icon: slide.icon, satelliteIcons: slide.satelliteIcons),
+          const Spacer(flex: 3),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              children: [
+                Text(
+                  slide.title.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: onboardingHeadlineStyle(context),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  slide.body,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        Expanded(child: _SlideIllustration(icon: slide.icon)),
-      ],
-    );
-  }
-}
-
-/// The warm gradient "hill" behind each slide's icon — replaces the old
-/// flat circle. Bottom-anchored and fills whatever vertical space the
-/// slide has left, same shape language as the design canvas exploration.
-class _SlideIllustration extends StatelessWidget {
-  const _SlideIllustration({required this.icon});
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(120)),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.lerp(scheme.primary, Colors.white, 0.2)!,
-              scheme.primary,
-              scheme.onSurface,
-            ],
-          ),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned(
-              top: 40,
-              left: 48,
-              child: _softDot(size: 10, opacity: 0.35),
-            ),
-            Positioned(
-              top: 70,
-              right: 56,
-              child: _softDot(size: 6, opacity: 0.4),
-            ),
-            Positioned(
-              bottom: 60,
-              left: 36,
-              child: _softDot(size: 14, opacity: 0.18),
-            ),
-            Icon(icon, size: 88, color: scheme.primaryContainer),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _softDot({required double size, required double opacity}) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: opacity),
-        shape: BoxShape.circle,
+          const Spacer(),
+        ],
       ),
     );
   }

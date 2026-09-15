@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../../ui/brand_mark.dart';
 import '../../../ui/language_toggle.dart';
+import '../../../ui/onboarding_progress_bar.dart';
+import '../../onboarding/presentation/onboarding_screen.dart' show onboardingHeadlineStyle, onboardingTotalSteps;
 import 'social_auth_buttons.dart';
 
 /// First screen a signed-out person sees (after the one-time onboarding
@@ -32,6 +33,7 @@ class LandingScreen extends StatelessWidget {
                 child: LanguageToggle(),
               ),
             ),
+            const OnboardingProgressBar(step: 3, totalSteps: onboardingTotalSteps),
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
@@ -41,16 +43,11 @@ class LandingScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: 8),
-                        const Center(child: _BrandBadge()),
-                        const SizedBox(height: 18),
-                        const Center(child: BrandMark(fontSize: 30)),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 24),
                         Text(
-                          l10n.landingTagline,
+                          l10n.landingTagline.toUpperCase(),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: scheme.onSurfaceVariant),
+                          style: onboardingHeadlineStyle(context),
                         ),
                         const SizedBox(height: 40),
                         const SocialAuthButtons(),
@@ -58,16 +55,16 @@ class LandingScreen extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: FilledButton(
-                                onPressed: () => context.push(withReturnTo('/register')),
-                                child: Text(l10n.actionCreateAccountButton),
+                              child: FilledButton.tonal(
+                                onPressed: () => context.push(withReturnTo('/login')),
+                                child: Text(l10n.actionLogIn),
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => context.push(withReturnTo('/login')),
-                                child: Text(l10n.actionLogIn),
+                              child: FilledButton.tonal(
+                                onPressed: () => context.push(withReturnTo('/register')),
+                                child: Text(l10n.actionCreateAccountButton),
                               ),
                             ),
                           ],
@@ -87,51 +84,6 @@ class LandingScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A bigger, warmer stand-in for the plain wordmark row — a gradient circle
-/// echoing the app icon, same shape language explored on the design canvas.
-/// Purely decorative; the real wordmark text still follows below it.
-class _BrandBadge extends StatelessWidget {
-  const _BrandBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 96,
-      height: 96,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(scheme.primary, Colors.white, 0.2)!,
-            scheme.primary,
-            scheme.onSurface,
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.28),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: Text.rich(
-        TextSpan(
-          style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: Colors.white),
-          children: [
-            const TextSpan(text: 'H'),
-            TextSpan(text: '.', style: TextStyle(color: scheme.primaryContainer)),
           ],
         ),
       ),
