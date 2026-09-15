@@ -13,13 +13,20 @@ import 'package:google_sign_in_web/web_only.dart' as web;
 /// matching `StadiumBorder` instead of trying to make Google's cross-origin
 /// iframe match this app's own 16px-radius theme, which GIS has no way to
 /// express exactly.
+///
+/// `logoAlignment: center` (not GIS's default `left`) — `left` pins the logo
+/// to the button's edge and centers the text in the *remaining* space, which
+/// leaves a wide gap between them once the button stretches to the 400px
+/// desktop width; `center` treats the logo+text as one centered group,
+/// matching the LINE/Facebook buttons next to it. Barely visible on a phone,
+/// where the button is already narrow, but real on desktop.
 Widget renderGoogleButton({required double width, required String locale}) => web.renderButton(
   configuration: web.GSIButtonConfiguration(
     theme: web.GSIButtonTheme.outline,
     size: web.GSIButtonSize.large,
     shape: web.GSIButtonShape.pill,
     text: web.GSIButtonText.signinWith,
-    logoAlignment: web.GSIButtonLogoAlignment.left,
+    logoAlignment: web.GSIButtonLogoAlignment.center,
     minimumWidth: width,
     locale: locale,
   ),
