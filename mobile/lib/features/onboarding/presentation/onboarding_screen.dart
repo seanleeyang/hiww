@@ -145,26 +145,21 @@ class _SlideView extends StatelessWidget {
     return EntranceFade(
       child: Column(
         children: [
+          const SizedBox(height: 12),
           if (slide.videoAsset != null)
-            // Fills the whole gap between the progress bar above and the
-            // headline below, and centers the video in it — edge-to-edge
-            // horizontally (no side padding, unlike the icon slides), with
-            // the aspect ratio still locked to the source video's own
-            // shape (square, 1440x1440) so it scales proportionally rather
-            // than stretching.
-            Expanded(
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: CentralVideo(asset: slide.videoAsset!),
-                ),
-              ),
+            // Edge-to-edge horizontally (no side padding, unlike the icon
+            // slides) — the aspect ratio is still locked to the source
+            // video's own shape (square, 1440x1440) so it scales
+            // proportionally rather than stretching. Same Spacer(flex: 3)
+            // below as the icon slides use, so the headline's position
+            // doesn't move — only the illustration above it changes.
+            AspectRatio(
+              aspectRatio: 1,
+              child: CentralVideo(asset: slide.videoAsset!),
             )
-          else ...[
-            const SizedBox(height: 12),
+          else
             FloatingOrbitIllustration(icon: slide.icon, satelliteIcons: slide.satelliteIcons),
-            const Spacer(flex: 3),
-          ],
+          const Spacer(flex: 3),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
