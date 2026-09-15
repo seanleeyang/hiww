@@ -3,8 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/language_toggle.dart';
-import '../../../ui/onboarding_progress_bar.dart';
-import '../../onboarding/presentation/onboarding_screen.dart' show onboardingHeadlineStyle, onboardingTotalSteps;
+import '../../onboarding/presentation/onboarding_screen.dart' show onboardingHeadlineStyle;
 import 'social_auth_buttons.dart';
 
 /// First screen a signed-out person sees (after the one-time onboarding
@@ -33,7 +32,6 @@ class LandingScreen extends StatelessWidget {
                 child: LanguageToggle(),
               ),
             ),
-            const OnboardingProgressBar(step: 3, totalSteps: onboardingTotalSteps),
             Expanded(
               child: Center(
                 child: SingleChildScrollView(

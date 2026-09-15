@@ -9,10 +9,11 @@ import '../../../ui/language_toggle.dart';
 import '../../../ui/onboarding_progress_bar.dart';
 import '../application/onboarding_controller.dart';
 
-/// Total steps the top progress bar spans: the 3 onboarding slides plus the
-/// landing screen right after — see `landing_screen.dart`'s own
-/// `OnboardingProgressBar(step: 3, totalSteps: onboardingTotalSteps)`.
-const onboardingTotalSteps = 4;
+/// Total steps the top progress bar spans — just the 3 onboarding slides,
+/// so it fills on the last one ("Earn on trips you already take"), matching
+/// Wise's app. The landing/sign-up screen after it has no progress bar of
+/// its own.
+const onboardingTotalSteps = 3;
 
 class _Slide {
   const _Slide(this.icon, this.satelliteIcons, this.title, this.body);
