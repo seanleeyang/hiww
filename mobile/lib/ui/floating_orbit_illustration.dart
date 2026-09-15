@@ -1,25 +1,20 @@
 import 'package:flutter/material.dart';
 
-import 'central_video.dart';
-
 /// A central gradient blob holding [icon], with small satellite badges
 /// gently bobbing above it — Hiww's flat-shape stand-in for the reference
 /// design's bespoke floating 3D objects until real illustration assets are
-/// ready (see the paused "Wise-style onboarding redesign" memory note).
-/// Pass [videoAsset] once a real animation exists for a given slide — it
-/// replaces the flat icon as the central object; [icon] stays required as
-/// the fallback for slides that don't have one yet.
+/// ready (see the paused "Wise-style onboarding redesign" memory note). A
+/// slide with a real video illustration doesn't use this — see
+/// onboarding_screen.dart's full-width `CentralVideo` treatment instead.
 class FloatingOrbitIllustration extends StatefulWidget {
   const FloatingOrbitIllustration({
     super.key,
     required this.icon,
     this.satelliteIcons = const [],
-    this.videoAsset,
   });
 
   final IconData icon;
   final List<IconData> satelliteIcons;
-  final String? videoAsset;
 
   @override
   State<FloatingOrbitIllustration> createState() => _FloatingOrbitIllustrationState();
@@ -76,10 +71,7 @@ class _FloatingOrbitIllustrationState extends State<FloatingOrbitIllustration>
                 child: _Satellite(icon: widget.satelliteIcons[i]),
               ),
             ),
-          if (widget.videoAsset != null)
-            CentralVideo(asset: widget.videoAsset!, size: 220)
-          else
-            _CentralBlob(icon: widget.icon),
+          _CentralBlob(icon: widget.icon),
         ],
       ),
     );

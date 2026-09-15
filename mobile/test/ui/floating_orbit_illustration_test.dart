@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
-import 'package:hiww_mobile/ui/central_video.dart';
 import 'package:hiww_mobile/ui/floating_orbit_illustration.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
@@ -46,20 +45,5 @@ void main() {
       const FloatingOrbitIllustration(icon: Icons.savings_outlined),
     ));
     expect(find.byIcon(Icons.savings_outlined), findsOneWidget);
-  });
-
-  testWidgets('renders the central video instead of the icon when one is given', (tester) async {
-    await tester.pumpWidget(_wrap(const FloatingOrbitIllustration(
-      icon: Icons.savings_outlined,
-      videoAsset: 'assets/video/piggy_bank.mp4',
-    )));
-    // video_player has no platform implementation in the plain widget-test
-    // VM, so initialize() never actually completes here — this only checks
-    // that CentralVideo is wired in ahead of the icon, not that a frame of
-    // real video renders (that needs a device/integration test).
-    await tester.pump();
-
-    expect(find.byType(CentralVideo), findsOneWidget);
-    expect(find.byIcon(Icons.savings_outlined), findsNothing);
   });
 }
