@@ -119,17 +119,17 @@ flutter_launcher_icons:
   web:
     generate: true
     image_path: "assets/icon/icon.png"
-    background_color: "#FFEDE3"
-    theme_color: "#FFEDE3"
+    background_color: "#FAE8DD"
+    theme_color: "#FAE8DD"
 
 # Native splash — regenerate with: dart run flutter_native_splash:create
 # Web keeps its own hand-written loader in web/index.html (web: false).
 flutter_native_splash:
-  color: "#FFEDE3"
+  color: "#FAE8DD"
   color_dark: "#1F130D"
   image: "assets/icon/splash.png"
   web: false
   android_12:
     image: "assets/icon/splash.png"
-    color: "#FFEDE3"
+    color: "#FAE8DD"
     color_dark: "#1F130D"

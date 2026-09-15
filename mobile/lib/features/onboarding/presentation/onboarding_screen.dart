@@ -10,12 +10,6 @@ import '../../../ui/language_toggle.dart';
 import '../../../ui/onboarding_progress_bar.dart';
 import '../application/onboarding_controller.dart';
 
-/// Horizontal inset [OnboardingProgressBar] uses — the video illustration
-/// is padded to match, so its left/right edges line up with the bar's
-/// ends exactly, per the design ask to span "top left corner just below
-/// the progress bar to the other end of the progress bar".
-const _progressBarInset = 20.0;
-
 /// Total steps the top progress bar spans — just the 3 onboarding slides,
 /// so it fills on the last one ("Earn on trips you already take"), matching
 /// Wise's app. The landing/sign-up screen after it has no progress bar of
@@ -151,21 +145,26 @@ class _SlideView extends StatelessWidget {
     return EntranceFade(
       child: Column(
         children: [
-          const SizedBox(height: 12),
           if (slide.videoAsset != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: _progressBarInset),
-              child: AspectRatio(
-                // Locked to the source video's own shape (square, 1440x1440)
-                // so it scales proportionally with screen width instead of
-                // stretching.
-                aspectRatio: 1,
-                child: CentralVideo(asset: slide.videoAsset!),
+            // Fills the whole gap between the progress bar above and the
+            // headline below, and centers the video in it — edge-to-edge
+            // horizontally (no side padding, unlike the icon slides), with
+            // the aspect ratio still locked to the source video's own
+            // shape (square, 1440x1440) so it scales proportionally rather
+            // than stretching.
+            Expanded(
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: CentralVideo(asset: slide.videoAsset!),
+                ),
               ),
             )
-          else
+          else ...[
+            const SizedBox(height: 12),
             FloatingOrbitIllustration(icon: slide.icon, satelliteIcons: slide.satelliteIcons),
-          const Spacer(flex: 3),
+            const Spacer(flex: 3),
+          ],
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(

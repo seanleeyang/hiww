@@ -20,11 +20,17 @@ class HiwwRadii {
 // adopted from a reference palette the founder liked. Only the primary/
 // neutral families shift — secondary (success green), tertiary (gold) and
 // error keep their prior hues, which were never part of this swap.
+//
+// Linen adjusted 2026-09-16 from #FFEDE3 to #FAE8DD to match the onboarding
+// piggy bank video's rendered background exactly, so it sits on the page
+// with no visible edge — see central_video.dart. Everywhere else this hex
+// is used (web/index.html, web/manifest.json, pubspec.yaml's launcher-icon/
+// native-splash config, android styles.xml) was updated alongside this.
 const _lightScheme = ColorScheme(
   brightness: Brightness.light,
   primary: Color(0xFFFB4D00), // Tangelo
   onPrimary: Color(0xFFFFFFFF),
-  primaryContainer: Color(0xFFFFEDE3), // Linen
+  primaryContainer: Color(0xFFFAE8DD), // Linen
   onPrimaryContainer: Color(0xFF49261D), // Chocolate Brown
   secondary: Color(0xFF2E9E6B),
   onSecondary: Color(0xFFFFFFFF),
@@ -46,14 +52,14 @@ const _lightScheme = ColorScheme(
   // exact value is already being touched for the swap.
   onSurfaceVariant: Color(0xFF7A5F53),
   surfaceContainerLowest: Color(0xFFFFFFFF),
-  surfaceContainerLow: Color(0xFFFFEDE3), // Linen
+  surfaceContainerLow: Color(0xFFFAE8DD), // Linen
   surfaceContainer: Color(0xFFFAE3D5),
   surfaceContainerHigh: Color(0xFFF5D6C3),
   surfaceContainerHighest: Color(0xFFECD9D0),
   outline: Color(0xFFD9BCAC),
   outlineVariant: Color(0xFFECD9D0),
   inverseSurface: Color(0xFF3A2015),
-  onInverseSurface: Color(0xFFFFEDE3),
+  onInverseSurface: Color(0xFFFAE8DD),
   shadow: Color(0xFF000000),
   scrim: Color(0xFF000000),
 );
