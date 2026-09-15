@@ -13,7 +13,12 @@ import '../theme/app_theme.dart';
 /// export attempt just changes *which* solid rectangle shows up behind the
 /// subject (white, black, gray, even a literal checkerboard once, baked in
 /// as real pixels by an export tool's "transparent" preview indicator).
-/// Framing it as a deliberate photo card sidesteps that entirely: the
+/// A chroma-key shader (cutting a flat green background out per-frame) was
+/// tried too — the fix in theory, but video_player's web backend renders
+/// through a real browser <video> element that lives outside Flutter's
+/// rendering pipeline entirely, so its frames can't be captured for a
+/// custom shader to process (confirmed: rendered solid black instead).
+/// Framing it as a deliberate photo card sidesteps all of this: the
 /// rectangle becomes the point instead of a bug, and it uses the theme's
 /// own surface/outline/shadow tokens, so it's correct in dark mode too
 /// (an edge-to-edge video never could be, without real alpha).
