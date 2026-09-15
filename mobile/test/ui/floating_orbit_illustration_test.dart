@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
 import 'package:hiww_mobile/ui/floating_orbit_illustration.dart';
+import 'package:lottie/lottie.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
       theme: hiwwTheme(Brightness.light),
@@ -45,5 +46,19 @@ void main() {
       const FloatingOrbitIllustration(icon: Icons.savings_outlined),
     ));
     expect(find.byIcon(Icons.savings_outlined), findsOneWidget);
+  });
+
+  testWidgets('renders the Lottie animation instead of the icon when one is given', (tester) async {
+    await tester.pumpWidget(_wrap(const FloatingOrbitIllustration(
+      icon: Icons.savings_outlined,
+      lottieAsset: 'assets/lottie/piggy_bank.json',
+    )));
+    // LottieBuilder decodes the asset asynchronously before it builds the
+    // actual Lottie widget underneath — give it a beat to finish. Not
+    // pumpAndSettle: the animation loops forever, so it never "settles".
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.byType(LottieBuilder), findsOneWidget);
+    expect(find.byIcon(Icons.savings_outlined), findsNothing);
   });
 }
