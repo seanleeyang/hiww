@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
+import '../theme/app_theme.dart';
+
 /// A muted, looping video used as [FloatingOrbitIllustration]'s central
 /// object in place of the Lottie/icon placeholders, for slides whose
 /// illustration was delivered as a rendered clip rather than vector data.
-/// No alpha channel — the source video's own background must already match
-/// the screen background it's placed on (see the onboarding/landing Linen
-/// background, #FFEDE3) for it to read as a floating object rather than a
-/// visible rectangle; it will show that rectangle in dark mode, where the
-/// background is different.
+///
+/// Rendered inside a rounded card with a border and shadow, rather than
+/// edge-to-edge: source videos here are plain .mp4 (no alpha channel), so
+/// there's no way to make an arbitrary background transparent — every
+/// export attempt just changes *which* solid rectangle shows up behind the
+/// subject (white, black, gray, even a literal checkerboard once, baked in
+/// as real pixels by an export tool's "transparent" preview indicator).
+/// Framing it as a deliberate photo card sidesteps that entirely: the
+/// rectangle becomes the point instead of a bug, and it uses the theme's
+/// own surface/outline/shadow tokens, so it's correct in dark mode too
+/// (an edge-to-edge video never could be, without real alpha).
 class CentralVideo extends StatefulWidget {
   const CentralVideo({super.key, required this.asset, required this.size});
 
@@ -45,22 +53,35 @@ class _CentralVideoState extends State<CentralVideo> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_controller.value.isInitialized) {
-      return SizedBox(width: widget.size, height: widget.size);
-    }
-    return SizedBox(
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
       width: widget.size,
       height: widget.size,
-      child: ClipRect(
-        child: FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: _controller.value.size.width,
-            height: _controller.value.size.height,
-            child: VideoPlayer(_controller),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(HiwwRadii.card),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: 0.16),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
-        ),
+        ],
       ),
+      child: _controller.value.isInitialized
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(HiwwRadii.card),
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _controller.value.size.width,
+                  height: _controller.value.size.height,
+                  child: VideoPlayer(_controller),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }
