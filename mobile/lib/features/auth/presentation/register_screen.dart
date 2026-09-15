@@ -6,7 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/password_policy.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/busy_filled_button.dart';
-import '../../../ui/password_requirements_info.dart';
+import '../../../ui/password_requirements_checklist.dart';
 import '../../../ui/password_strength_bar.dart';
 import '../../../ui/phone_field.dart';
 import '../application/auth_controller.dart';
@@ -141,17 +141,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               label: l10n.fieldPassword,
               obscureText: true,
               autofillHints: const [AutofillHints.newPassword],
-              suffixIcon: const PasswordRequirementsInfo(),
               onChanged: (_) => setState(() {}),
               validator: (v) => validateNewPassword(v, l10n),
             ),
             PasswordStrengthBar(password: _password.text),
+            PasswordRequirementsChecklist(password: _password.text),
             const SizedBox(height: 14),
             AuthFormField(
               controller: _confirmPassword,
               label: l10n.fieldConfirmPassword,
               obscureText: true,
               autofillHints: const [AutofillHints.newPassword],
+              onChanged: (_) => setState(() {}),
               validator: (v) =>
                   v != _password.text ? l10n.errorPasswordsDontMatch : null,
             ),
@@ -178,7 +179,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             BusyFilledButton(
               busy: _submitting,
               label: l10n.actionCreateAccountButton,
-              onPressed: _submit,
+              onPressed: PasswordPolicy.meetsAllRequirements(_password.text) &&
+                      _confirmPassword.text == _password.text
+                  ? _submit
+                  : null,
             ),
           ],
         ),

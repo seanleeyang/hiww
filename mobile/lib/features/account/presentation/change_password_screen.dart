@@ -6,7 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/password_policy.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/busy_filled_button.dart';
-import '../../../ui/password_requirements_info.dart';
+import '../../../ui/password_requirements_checklist.dart';
 import '../../../ui/password_strength_bar.dart';
 import '../../auth/application/auth_controller.dart';
 
@@ -96,16 +96,15 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 controller: _newPassword,
                 obscureText: true,
                 onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: l10n.fieldNewPassword,
-                  suffixIcon: const PasswordRequirementsInfo(),
-                ),
+                decoration: InputDecoration(labelText: l10n.fieldNewPassword),
               ),
               PasswordStrengthBar(password: _newPassword.text),
+              PasswordRequirementsChecklist(password: _newPassword.text),
               const SizedBox(height: 12),
               TextField(
                 controller: _confirmPassword,
                 obscureText: true,
+                onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(labelText: l10n.fieldConfirmPassword),
               ),
               if (_error != null) ...[
@@ -119,7 +118,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               BusyFilledButton(
                 busy: _submitting,
                 label: l10n.actionSave,
-                onPressed: _submit,
+                onPressed: PasswordPolicy.meetsAllRequirements(_newPassword.text) &&
+                        _confirmPassword.text == _newPassword.text
+                    ? _submit
+                    : null,
               ),
             ],
           ),

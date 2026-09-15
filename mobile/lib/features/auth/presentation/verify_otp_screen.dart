@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,8 +9,8 @@ import '../../../core/navigation.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/busy_filled_button.dart';
 import '../application/auth_controller.dart';
-import 'auth_form_field.dart';
 import 'auth_scaffold.dart';
+import 'otp_code_input.dart';
 
 /// True for as long as [VerifyOtpScreen] is on screen — checked by
 /// `showVerificationRequiredDialog` so background polling (the unread chat/
@@ -87,11 +89,14 @@ class _ChannelSection extends ConsumerStatefulWidget {
 
 class _ChannelSectionState extends ConsumerState<_ChannelSection> {
   final _code = TextEditingController();
+  final _otpKey = GlobalKey<OtpCodeInputState>();
   bool _busy = false;
   bool _resending = false;
   String? _error;
   String? _info;
   String? _devCode;
+  Timer? _resendTimer;
+  int _secondsLeft = 0;
 
   @override
   void initState() {
@@ -106,7 +111,27 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
   @override
   void dispose() {
     _code.dispose();
+    _resendTimer?.cancel();
     super.dispose();
+  }
+
+  void _startResendCountdown() {
+    _resendTimer?.cancel();
+    setState(() => _secondsLeft = 30);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _secondsLeft = _secondsLeft > 0 ? _secondsLeft - 1 : 0);
+      if (_secondsLeft == 0) timer.cancel();
+    });
+  }
+
+  String _formatCountdown(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = (seconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$secs';
   }
 
   Future<void> _verify() async {
@@ -156,9 +181,10 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
       if (!mounted) return;
       setState(() {
         _devCode = devCode;
-        if (devCode != null) _code.text = devCode;
         if (showSentMessage && devCode == null) _info = AppLocalizations.of(context)!.infoNewCodeSent;
       });
+      if (devCode != null) _otpKey.currentState?.setCode(devCode);
+      _startResendCountdown();
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _error = e.message);
@@ -210,10 +236,10 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
             ),
           ],
           const SizedBox(height: 8),
-          AuthFormField(
-            controller: _code,
-            label: l10n.fieldOtpCode,
-            keyboardType: TextInputType.number,
+          OtpCodeInput(
+            key: _otpKey,
+            enabled: !_busy,
+            onChanged: (value) => setState(() => _code.text = value),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -221,16 +247,26 @@ class _ChannelSectionState extends ConsumerState<_ChannelSection> {
             child: BusyFilledButton(
               busy: _busy,
               label: l10n.actionVerify,
-              onPressed: _verify,
+              onPressed: _code.text.trim().length == 6 ? _verify : null,
               spinnerSize: 18,
             ),
           ),
           Align(
             alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: _resending ? null : _resend,
-              child: Text(_resending ? l10n.actionSending : l10n.actionResendCode),
-            ),
+            child: _secondsLeft > 0
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      l10n.actionResendCodeIn(_formatCountdown(_secondsLeft)),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  )
+                : TextButton(
+                    onPressed: _resending ? null : _resend,
+                    child: Text(_resending ? l10n.actionSending : l10n.actionResendCode),
+                  ),
           ),
           if (_error != null)
             Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),

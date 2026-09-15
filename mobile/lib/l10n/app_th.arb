@@ -45,10 +45,10 @@
   "passwordStrengthFair": "พอใช้",
   "passwordStrengthGood": "ดี",
   "passwordStrengthStrong": "แข็งแรง",
-  "passwordRequirementsTitle": "ข้อกำหนดรหัสผ่าน",
-  "passwordRequirementLength": "ต้องมีอย่างน้อย 8 ตัวอักษร",
-  "passwordRequirementAlphanumeric": "ต้องเป็นตัวอักษรและตัวเลขผสมกัน",
-  "passwordRequirementSpecialAllowed": "อนุญาตให้ใช้อักขระพิเศษ",
+  "passwordRuleLength": "อย่างน้อย 8 ตัวอักษร",
+  "passwordRuleNumber": "ตัวเลข",
+  "passwordRuleSymbol": "สัญลักษณ์",
+  "passwordRuleMixedCase": "ตัวพิมพ์ใหญ่และเล็ก",
   "actionLogIn": "เข้าสู่ระบบ",
 
   "loginTitle": "ยินดีต้อนรับกลับ",
@@ -96,6 +96,7 @@
   "errorEnterOtpCode": "กรอกรหัส 6 หลัก",
   "actionVerify": "ยืนยัน",
   "actionResendCode": "ส่งรหัสอีกครั้ง",
+  "actionResendCodeIn": "ส่งรหัสอีกครั้งใน {time}",
   "actionSending": "กำลังส่ง…",
   "infoNewCodeSent": "ส่งรหัสใหม่แล้ว",
 

@@ -356,29 +356,29 @@ abstract class AppLocalizations {
   /// **'Strong'**
   String get passwordStrengthStrong;
 
-  /// No description provided for @passwordRequirementsTitle.
+  /// No description provided for @passwordRuleLength.
   ///
   /// In en, this message translates to:
-  /// **'Password requirements'**
-  String get passwordRequirementsTitle;
+  /// **'At least 8 characters'**
+  String get passwordRuleLength;
 
-  /// No description provided for @passwordRequirementLength.
+  /// No description provided for @passwordRuleNumber.
   ///
   /// In en, this message translates to:
-  /// **'Must contain at least 8 characters'**
-  String get passwordRequirementLength;
+  /// **'A number'**
+  String get passwordRuleNumber;
 
-  /// No description provided for @passwordRequirementAlphanumeric.
+  /// No description provided for @passwordRuleSymbol.
   ///
   /// In en, this message translates to:
-  /// **'Must be alphanumerical (letters and numbers)'**
-  String get passwordRequirementAlphanumeric;
+  /// **'A symbol'**
+  String get passwordRuleSymbol;
 
-  /// No description provided for @passwordRequirementSpecialAllowed.
+  /// No description provided for @passwordRuleMixedCase.
   ///
   /// In en, this message translates to:
-  /// **'Special characters allowed (not required)'**
-  String get passwordRequirementSpecialAllowed;
+  /// **'Upper and lower case'**
+  String get passwordRuleMixedCase;
 
   /// No description provided for @actionLogIn.
   ///
@@ -637,6 +637,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resend code'**
   String get actionResendCode;
+
+  /// No description provided for @actionResendCodeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {time}'**
+  String actionResendCodeIn(String time);
 
   /// No description provided for @actionSending.
   ///

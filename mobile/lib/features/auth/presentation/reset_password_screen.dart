@@ -6,7 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/password_policy.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/busy_filled_button.dart';
-import '../../../ui/password_requirements_info.dart';
+import '../../../ui/password_requirements_checklist.dart';
 import '../../../ui/password_strength_bar.dart';
 import '../application/auth_controller.dart';
 import 'auth_form_field.dart';
@@ -108,17 +108,18 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               label: l10n.fieldNewPassword,
               obscureText: true,
               autofillHints: const [AutofillHints.newPassword],
-              suffixIcon: const PasswordRequirementsInfo(),
               onChanged: (_) => setState(() {}),
               validator: (v) => validateNewPassword(v, l10n),
             ),
             PasswordStrengthBar(password: _password.text),
+            PasswordRequirementsChecklist(password: _password.text),
             const SizedBox(height: 14),
             AuthFormField(
               controller: _confirmPassword,
               label: l10n.fieldConfirmPassword,
               obscureText: true,
               autofillHints: const [AutofillHints.newPassword],
+              onChanged: (_) => setState(() {}),
               onFieldSubmitted: (_) => _submit(),
               validator: (v) =>
                   v != _password.text ? l10n.errorPasswordsDontMatch : null,
@@ -132,7 +133,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             BusyFilledButton(
               busy: _submitting,
               label: l10n.actionResetPassword,
-              onPressed: _submit,
+              onPressed: PasswordPolicy.meetsAllRequirements(_password.text) &&
+                      _confirmPassword.text == _password.text
+                  ? _submit
+                  : null,
             ),
           ],
         ),

@@ -149,17 +149,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get passwordStrengthStrong => 'แข็งแรง';
 
   @override
-  String get passwordRequirementsTitle => 'ข้อกำหนดรหัสผ่าน';
+  String get passwordRuleLength => 'อย่างน้อย 8 ตัวอักษร';
 
   @override
-  String get passwordRequirementLength => 'ต้องมีอย่างน้อย 8 ตัวอักษร';
+  String get passwordRuleNumber => 'ตัวเลข';
 
   @override
-  String get passwordRequirementAlphanumeric =>
-      'ต้องเป็นตัวอักษรและตัวเลขผสมกัน';
+  String get passwordRuleSymbol => 'สัญลักษณ์';
 
   @override
-  String get passwordRequirementSpecialAllowed => 'อนุญาตให้ใช้อักขระพิเศษ';
+  String get passwordRuleMixedCase => 'ตัวพิมพ์ใหญ่และเล็ก';
 
   @override
   String get actionLogIn => 'เข้าสู่ระบบ';
@@ -299,6 +298,11 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get actionResendCode => 'ส่งรหัสอีกครั้ง';
+
+  @override
+  String actionResendCodeIn(String time) {
+    return 'ส่งรหัสอีกครั้งใน $time';
+  }
 
   @override
   String get actionSending => 'กำลังส่ง…';

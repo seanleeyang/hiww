@@ -57,10 +57,10 @@
   "passwordStrengthFair": "Fair",
   "passwordStrengthGood": "Good",
   "passwordStrengthStrong": "Strong",
-  "passwordRequirementsTitle": "Password requirements",
-  "passwordRequirementLength": "Must contain at least 8 characters",
-  "passwordRequirementAlphanumeric": "Must be alphanumerical (letters and numbers)",
-  "passwordRequirementSpecialAllowed": "Special characters allowed (not required)",
+  "passwordRuleLength": "At least 8 characters",
+  "passwordRuleNumber": "A number",
+  "passwordRuleSymbol": "A symbol",
+  "passwordRuleMixedCase": "Upper and lower case",
   "actionLogIn": "Log in",
 
   "loginTitle": "Welcome back",
@@ -114,6 +114,10 @@
   "errorEnterOtpCode": "Enter the 6-digit code",
   "actionVerify": "Verify",
   "actionResendCode": "Resend code",
+  "actionResendCodeIn": "Resend in {time}",
+  "@actionResendCodeIn": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "actionSending": "Sending…",
   "infoNewCodeSent": "A new code was sent.",
 

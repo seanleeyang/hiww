@@ -10,13 +10,24 @@ class PasswordPolicy {
   static const maxLength = 128;
 
   static bool _hasLetter(String v) => RegExp(r'[a-zA-Z]').hasMatch(v);
-  static bool _hasDigit(String v) => RegExp(r'[0-9]').hasMatch(v);
-  static bool _hasUpperAndLower(String v) =>
+
+  /// Individually-named rules — public because [PasswordRequirementsChecklist]
+  /// evaluates each one live, per keystroke, to flip its own row.
+  static bool hasMinLength(String v) => v.length >= minLength && v.length <= maxLength;
+  static bool hasDigit(String v) => RegExp(r'[0-9]').hasMatch(v);
+  static bool hasMixedCase(String v) =>
       RegExp(r'[a-z]').hasMatch(v) && RegExp(r'[A-Z]').hasMatch(v);
-  static bool _hasSymbol(String v) => RegExp(r'[^a-zA-Z0-9]').hasMatch(v);
+  static bool hasSymbol(String v) => RegExp(r'[^a-zA-Z0-9]').hasMatch(v);
 
   static bool meetsMinimum(String v) =>
-      v.length >= minLength && v.length <= maxLength && _hasLetter(v) && _hasDigit(v);
+      v.length >= minLength && v.length <= maxLength && _hasLetter(v) && hasDigit(v);
+
+  /// Stricter than [meetsMinimum] (which mirrors the backend's actual floor)
+  /// — this is the client-side bar the checklist and its submit-button gate
+  /// enforce. Always a superset of [meetsMinimum], so nothing that clears
+  /// this can ever be rejected by the backend.
+  static bool meetsAllRequirements(String v) =>
+      hasMinLength(v) && hasDigit(v) && hasSymbol(v) && hasMixedCase(v);
 
   static PasswordStrength strengthOf(String v) {
     if (v.isEmpty) return PasswordStrength.empty;
@@ -24,9 +35,9 @@ class PasswordPolicy {
     if (v.length >= minLength) score++;
     if (v.length >= 12) score++;
     if (v.length >= 16) score++;
-    if (_hasUpperAndLower(v)) score++;
-    if (_hasDigit(v)) score++;
-    if (_hasSymbol(v)) score++;
+    if (hasMixedCase(v)) score++;
+    if (hasDigit(v)) score++;
+    if (hasSymbol(v)) score++;
 
     if (score <= 1) return PasswordStrength.weak;
     if (score <= 3) return PasswordStrength.fair;

@@ -51,4 +51,38 @@ void main() {
       expect(longerScore, greaterThanOrEqualTo(shortScore));
     });
   });
+
+  group('PasswordPolicy.meetsAllRequirements', () {
+    test('rejects a password that meets only the backend minimum', () {
+      // Passes meetsMinimum (length, a letter, a digit) but has neither a
+      // symbol nor mixed case — the checklist's stricter, client-side bar.
+      expect(PasswordPolicy.meetsMinimum('letters123'), isTrue);
+      expect(PasswordPolicy.meetsAllRequirements('letters123'), isFalse);
+    });
+
+    test('rejects missing a symbol', () {
+      expect(PasswordPolicy.meetsAllRequirements('Letters123'), isFalse);
+    });
+
+    test('rejects missing mixed case', () {
+      expect(PasswordPolicy.meetsAllRequirements('letters123!'), isFalse);
+    });
+
+    test('rejects under 8 characters even with every other rule met', () {
+      expect(PasswordPolicy.meetsAllRequirements('Ab1!'), isFalse);
+    });
+
+    test('accepts length + digit + symbol + mixed case', () {
+      expect(PasswordPolicy.meetsAllRequirements('Letters123!'), isTrue);
+    });
+
+    test('is always a superset of meetsMinimum', () {
+      const candidates = ['Letters123!', 'letters123', '12345678', 'ALLUPPER1!', ''];
+      for (final v in candidates) {
+        if (PasswordPolicy.meetsAllRequirements(v)) {
+          expect(PasswordPolicy.meetsMinimum(v), isTrue, reason: 'failed for "$v"');
+        }
+      }
+    });
+  });
 }

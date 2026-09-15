@@ -151,18 +151,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordStrengthStrong => 'Strong';
 
   @override
-  String get passwordRequirementsTitle => 'Password requirements';
+  String get passwordRuleLength => 'At least 8 characters';
 
   @override
-  String get passwordRequirementLength => 'Must contain at least 8 characters';
+  String get passwordRuleNumber => 'A number';
 
   @override
-  String get passwordRequirementAlphanumeric =>
-      'Must be alphanumerical (letters and numbers)';
+  String get passwordRuleSymbol => 'A symbol';
 
   @override
-  String get passwordRequirementSpecialAllowed =>
-      'Special characters allowed (not required)';
+  String get passwordRuleMixedCase => 'Upper and lower case';
 
   @override
   String get actionLogIn => 'Log in';
@@ -303,6 +301,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionResendCode => 'Resend code';
+
+  @override
+  String actionResendCodeIn(String time) {
+    return 'Resend in $time';
+  }
 
   @override
   String get actionSending => 'Sending…';
