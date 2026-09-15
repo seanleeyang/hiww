@@ -119,13 +119,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 /// The bold display style used for onboarding/landing headlines only —
-/// Futura Extra Bold (see pubspec.yaml for the licensing note). The rest of
-/// the app keeps its Manrope body font.
+/// Futura Condensed Extra Bold (see pubspec.yaml for the licensing note).
+/// The rest of the app keeps its Manrope body font.
 TextStyle onboardingHeadlineStyle(BuildContext context) => Theme.of(context)
     .textTheme
     .headlineMedium!
     .copyWith(
-      fontFamily: 'FuturaExtraBold',
+      fontFamily: 'FuturaCondensedExtraBold',
       fontWeight: FontWeight.w800,
       height: 1.05,
       letterSpacing: -0.5,

@@ -92,15 +92,16 @@ flutter:
         # Variable font (weight axis ExtraLight–ExtraBold); Flutter maps
         # TextStyle.fontWeight onto the wght axis.
         - asset: assets/fonts/Manrope.ttf
-    # Onboarding/landing headline face, replacing Neighbor as of 2026-09-15.
+    # Onboarding/landing headline face, replacing Neighbor as of 2026-09-15
+    # (switched from the non-condensed weight to Condensed same day).
     # LICENSE NOTE: sourced via an Adobe Fonts subscription, which licenses
     # desktop/web sync use, not embedding the raw file in a shipped app
     # binary — a real licensing gap, accepted knowingly by the user (same
     # situation as Neighbor before it). Swap for a proper app-embedding
     # license (Monotype/MyFonts) if that gets sorted out later.
-    - family: FuturaExtraBold
+    - family: FuturaCondensedExtraBold
       fonts:
-        - asset: assets/fonts/Futura-ExtraBold.otf
+        - asset: assets/fonts/Futura-CondensedExtraBold.otf
           weight: 800
 
 # App icon — regenerate with: dart run flutter_launcher_icons
