@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/theme/app_theme.dart';
+import 'package:hiww_mobile/ui/central_video.dart';
 import 'package:hiww_mobile/ui/floating_orbit_illustration.dart';
-import 'package:lottie/lottie.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
       theme: hiwwTheme(Brightness.light),
@@ -48,17 +48,18 @@ void main() {
     expect(find.byIcon(Icons.savings_outlined), findsOneWidget);
   });
 
-  testWidgets('renders the Lottie animation instead of the icon when one is given', (tester) async {
+  testWidgets('renders the central video instead of the icon when one is given', (tester) async {
     await tester.pumpWidget(_wrap(const FloatingOrbitIllustration(
       icon: Icons.savings_outlined,
-      lottieAsset: 'assets/lottie/piggy_bank.json',
+      videoAsset: 'assets/video/piggy_bank.mp4',
     )));
-    // LottieBuilder decodes the asset asynchronously before it builds the
-    // actual Lottie widget underneath — give it a beat to finish. Not
-    // pumpAndSettle: the animation loops forever, so it never "settles".
-    await tester.pump(const Duration(milliseconds: 500));
+    // video_player has no platform implementation in the plain widget-test
+    // VM, so initialize() never actually completes here — this only checks
+    // that CentralVideo is wired in ahead of the icon, not that a frame of
+    // real video renders (that needs a device/integration test).
+    await tester.pump();
 
-    expect(find.byType(LottieBuilder), findsOneWidget);
+    expect(find.byType(CentralVideo), findsOneWidget);
     expect(find.byIcon(Icons.savings_outlined), findsNothing);
   });
 }

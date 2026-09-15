@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+
+import 'central_video.dart';
 
 /// A central gradient blob holding [icon], with small satellite badges
 /// gently bobbing above it — Hiww's flat-shape stand-in for the reference
 /// design's bespoke floating 3D objects until real illustration assets are
 /// ready (see the paused "Wise-style onboarding redesign" memory note).
-/// Pass [lottieAsset] once a real animation exists for a given slide — it
+/// Pass [videoAsset] once a real animation exists for a given slide — it
 /// replaces the flat icon as the central object; [icon] stays required as
 /// the fallback for slides that don't have one yet.
 class FloatingOrbitIllustration extends StatefulWidget {
@@ -13,12 +14,12 @@ class FloatingOrbitIllustration extends StatefulWidget {
     super.key,
     required this.icon,
     this.satelliteIcons = const [],
-    this.lottieAsset,
+    this.videoAsset,
   });
 
   final IconData icon;
   final List<IconData> satelliteIcons;
-  final String? lottieAsset;
+  final String? videoAsset;
 
   @override
   State<FloatingOrbitIllustration> createState() => _FloatingOrbitIllustrationState();
@@ -75,9 +76,10 @@ class _FloatingOrbitIllustrationState extends State<FloatingOrbitIllustration>
                 child: _Satellite(icon: widget.satelliteIcons[i]),
               ),
             ),
-          widget.lottieAsset != null
-              ? Lottie.asset(widget.lottieAsset!, width: 220, height: 220)
-              : _CentralBlob(icon: widget.icon),
+          if (widget.videoAsset != null)
+            CentralVideo(asset: widget.videoAsset!, size: 220)
+          else
+            _CentralBlob(icon: widget.icon),
         ],
       ),
     );

@@ -16,12 +16,12 @@ import '../application/onboarding_controller.dart';
 const onboardingTotalSteps = 3;
 
 class _Slide {
-  const _Slide(this.icon, this.satelliteIcons, this.title, this.body, {this.lottieAsset});
+  const _Slide(this.icon, this.satelliteIcons, this.title, this.body, {this.videoAsset});
   final IconData icon;
   final List<IconData> satelliteIcons;
   final String title;
   final String body;
-  final String? lottieAsset;
+  final String? videoAsset;
 }
 
 /// Signed-out welcome carousel, shown once per device before the landing
@@ -69,7 +69,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const [Icons.card_giftcard, Icons.flight_outlined],
         l10n.onboardingSlide3Title,
         l10n.onboardingSlide3Body,
-        lottieAsset: 'assets/lottie/piggy_bank.json',
+        videoAsset: 'assets/video/piggy_bank.mp4',
       ),
     ];
     final lastPage = _page == slides.length - 1;
@@ -148,7 +148,7 @@ class _SlideView extends StatelessWidget {
           FloatingOrbitIllustration(
             icon: slide.icon,
             satelliteIcons: slide.satelliteIcons,
-            lottieAsset: slide.lottieAsset,
+            videoAsset: slide.videoAsset,
           ),
           const Spacer(flex: 3),
           Padding(
