@@ -55,15 +55,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final slides = [
       _Slide(
         Icons.travel_explore_outlined,
-        const [Icons.shopping_bag_outlined, Icons.public],
+        const [],
         l10n.onboardingSlide1Title,
         l10n.onboardingSlide1Body,
       ),
       _Slide(
         Icons.flight_takeoff_outlined,
-        const [Icons.luggage_outlined, Icons.person_outline],
+        const [],
         l10n.onboardingSlide2Title,
         l10n.onboardingSlide2Body,
+        videoAsset: 'assets/video/delivered_by_travelers.mp4',
       ),
       _Slide(
         Icons.savings_outlined,
