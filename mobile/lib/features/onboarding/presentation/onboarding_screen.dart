@@ -58,7 +58,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const [],
         l10n.onboardingSlide1Title,
         l10n.onboardingSlide1Body,
-        videoAsset: 'assets/video/shop_from_anywhere.mov',
+        videoAsset: 'assets/video/shop_from_anywhere.mp4',
       ),
       _Slide(
         Icons.flight_takeoff_outlined,
