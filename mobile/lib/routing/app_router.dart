@@ -204,12 +204,12 @@ class _ReplicatedSplashVisual extends StatelessWidget {
 
 /// Wraps [child] in a page that enters with a four-beat effect: the single
 /// splash mark first multiplies outward two-at-a-time into a tightly
-/// packed chain spanning past both screen edges, that chain then tears
-/// apart along a jagged vertical seam (left half sliding off to the left,
-/// right half to the right, each mark caught mid-seam splitting cleanly in
-/// two), and finally [child] pops into view during the settle beat.
+/// packed chain spanning past both screen edges, that chain then splits
+/// apart along a straight vertical seam (left half sliding off to the
+/// left, right half to the right, each mark caught mid-seam cut cleanly
+/// in two), and finally [child] pops into view during the settle beat.
 ///
-/// Each half is clipped to its jagged shape *first*, then moved as one
+/// Each half is clipped to its final shape *first*, then moved as one
 /// rigid piece — not the reverse (translating a full-size copy and only
 /// then clipping a fixed window), which is what let mark fragments leak
 /// into the wrong strips in an earlier version of this effect.
@@ -270,7 +270,7 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
                     offset: Offset(-travel, 0),
                     child: Transform.rotate(
                       angle: -rotation,
-                      child: ClipPath(
+                      child: ClipRect(
                         clipper: _TornHalfClipper(left: true),
                         child: const _ReplicatedSplashVisual(progress: 1),
                       ),
@@ -280,7 +280,7 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
                     offset: Offset(travel, 0),
                     child: Transform.rotate(
                       angle: rotation,
-                      child: ClipPath(
+                      child: ClipRect(
                         clipper: _TornHalfClipper(left: false),
                         child: const _ReplicatedSplashVisual(progress: 1),
                       ),
@@ -296,36 +296,17 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
   );
 }
 
-/// Clips to the left or right half of [Size], with a jagged, torn-paper
-/// edge along the vertical center seam instead of a clean cut.
-class _TornHalfClipper extends CustomClipper<Path> {
+/// Clips to the left or right half of [Size] along a straight vertical
+/// line down the center — cuts every mark in the chain cleanly in half,
+/// not a jagged/torn edge.
+class _TornHalfClipper extends CustomClipper<Rect> {
   _TornHalfClipper({required this.left});
   final bool left;
 
-  static const _teeth = 12;
-  static const _jag = 14.0;
-
   @override
-  Path getClip(Size size) {
+  Rect getClip(Size size) {
     final midX = size.width / 2;
-    final toothHeight = size.height / _teeth;
-    final path = Path();
-    if (left) {
-      path.moveTo(0, 0);
-      path.lineTo(0, size.height);
-      path.lineTo(midX, size.height);
-    } else {
-      path.moveTo(size.width, size.height);
-      path.lineTo(size.width, 0);
-      path.lineTo(midX, 0);
-    }
-    for (var i = 0; i <= _teeth; i++) {
-      final y = left ? size.height - i * toothHeight : i * toothHeight;
-      final x = midX + (i.isEven ? _jag : -_jag);
-      path.lineTo(x.clamp(0, size.width), y.clamp(0, size.height));
-    }
-    path.close();
-    return path;
+    return left ? Rect.fromLTRB(0, 0, midX, size.height) : Rect.fromLTRB(midX, 0, size.width, size.height);
   }
 
   @override
