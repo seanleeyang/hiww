@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import hiwwMark from '../assets/hiww-mark.png';
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -22,7 +23,10 @@ export function Layout() {
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div className="sidebar-brand">Hiww Admin</div>
+        <div className="sidebar-brand">
+          <img src={hiwwMark} alt="" className="sidebar-brand-mark" />
+          Hiww Admin
+        </div>
         <nav className="sidebar-nav">
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>

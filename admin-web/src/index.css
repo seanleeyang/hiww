@@ -67,9 +67,18 @@ a {
 }
 
 .sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
   font-size: 16px;
   padding: 8px 10px 16px;
+}
+
+.sidebar-brand-mark {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 
 .sidebar-nav {
@@ -594,6 +603,18 @@ select {
   border-radius: var(--radius);
   padding: 32px;
   width: 340px;
+}
+
+.auth-card h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-card-mark {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
 .auth-note {

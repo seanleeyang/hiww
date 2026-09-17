@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from './AuthContext';
+import hiwwMark from '../assets/hiww-mark.png';
 
 export function LoginPage() {
   const { login, error, status } = useAuth();
@@ -22,7 +23,10 @@ export function LoginPage() {
   return (
     <div className="auth-screen">
       <form className="auth-card" onSubmit={onSubmit}>
-        <h1>Hiww Admin</h1>
+        <h1>
+          <img src={hiwwMark} alt="" className="auth-card-mark" />
+          Hiww Admin
+        </h1>
         {status === 'forbidden' && (
           <p className="auth-note">
             That account isn't an admin. Promote it with{' '}
