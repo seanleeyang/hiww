@@ -124,12 +124,16 @@ flutter_launcher_icons:
 
 # Native splash — regenerate with: dart run flutter_native_splash:create
 # Web keeps its own hand-written loader in web/index.html (web: false).
+# Solid Tangelo regardless of system theme (not Linen/dark-brown per-theme
+# like before) — this is a fixed brand-color launch screen, matching
+# splash_screen.dart's own background so there's no flash between the
+# native launch image and the first Flutter frame it hands off to.
 flutter_native_splash:
-  color: "#FAE8DD"
-  color_dark: "#1F130D"
+  color: "#FB4D00"
+  color_dark: "#FB4D00"
   image: "assets/icon/splash.png"
   web: false
   android_12:
     image: "assets/icon/splash.png"
-    color: "#FAE8DD"
-    color_dark: "#1F130D"
+    color: "#FB4D00"
+    color_dark: "#FB4D00"

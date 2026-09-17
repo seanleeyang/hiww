@@ -1,3 +1,5 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -92,6 +94,70 @@ bool _isGuestViewableRoute(String loc) {
   return false;
 }
 
+/// Wraps [child] in a page that enters via a Wise-style "reveal": a Linen
+/// pill rises from the bottom edge and expands to fill the screen, fading
+/// the real content in only once mostly expanded. Used for the routes
+/// splash hands off to (`/onboarding`, `/landing`) — Flutter keeps the
+/// outgoing page (SplashScreen, solid Tangelo) mounted and visible below
+/// this one for the transition's duration, so it's what shows through
+/// outside the growing area; no coordination with the router's redirect
+/// logic needed; other routes' entrances are unaffected.
+Page<void> _revealPage(LocalKey key, Widget child) {
+  return CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 700),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return AnimatedBuilder(
+        animation: animation,
+        child: child,
+        builder: (context, child) {
+          if (animation.value == 0) return const SizedBox.shrink();
+          final size = MediaQuery.sizeOf(context);
+          final t = Curves.easeInOutCubic.transform(animation.value);
+          const pillSize = 64.0;
+          final startRect = Rect.fromCenter(
+            center: Offset(size.width / 2, size.height - 96),
+            width: pillSize,
+            height: pillSize,
+          );
+          final rect = Rect.lerp(startRect, Offset.zero & size, t)!;
+          final radius = lerpDouble(pillSize / 2, 0, t)!;
+          // Content fades in only over the last third, once the panel is
+          // mostly expanded — matches the reference: a plain rising card,
+          // not the destination's text/art growing out of a tiny pill.
+          final contentOpacity = ((animation.value - 0.7) / 0.3).clamp(0.0, 1.0);
+          return ClipPath(
+            clipper: _RevealClipper(rect, radius),
+            child: ColoredBox(
+              color: const Color(0xFFFAE8DD),
+              child: t < 0.2
+                  ? const Center(
+                      child: Icon(Icons.arrow_upward_rounded, color: Color(0xFFFB4D00)),
+                    )
+                  : Opacity(opacity: contentOpacity, child: child),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+class _RevealClipper extends CustomClipper<Path> {
+  _RevealClipper(this.rect, this.radius);
+  final Rect rect;
+  final double radius;
+
+  @override
+  Path getClip(Size size) =>
+      Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
+
+  @override
+  bool shouldReclip(covariant _RevealClipper oldClipper) =>
+      oldClipper.rect != rect || oldClipper.radius != radius;
+}
+
 const _preAuthRoutes = {
   '/landing',
   '/login',
@@ -161,8 +227,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
-      GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
-      GoRoute(path: '/landing', builder: (_, _) => const LandingScreen()),
+      GoRoute(
+        path: '/onboarding',
+        pageBuilder: (_, state) => _revealPage(state.pageKey, const OnboardingScreen()),
+      ),
+      GoRoute(
+        path: '/landing',
+        pageBuilder: (_, state) => _revealPage(state.pageKey, const LandingScreen()),
+      ),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(

@@ -13,6 +13,7 @@ final tangelo = img.ColorRgba8(0xFB, 0x4D, 0x00, 255); // light-theme orange
 final chocolate = img.ColorRgba8(0x49, 0x26, 0x1D, 255); // light-theme dark shape
 final tangeloDark = img.ColorRgba8(0xFF, 0x86, 0x59, 255); // dark-theme orange
 final onSurfaceDark = img.ColorRgba8(0xF7, 0xEC, 0xE4, 255); // dark-theme dark shape
+final white = img.ColorRgba8(0xFF, 0xFF, 0xFF, 255);
 
 double _dist2(num r, num g, num b, img.Color c) {
   final dr = r - c.r, dg = g - c.g, db = b - c.b;
@@ -101,11 +102,12 @@ void main() {
   _placeScaled(fg, lightMark, 0.5);
   _write('assets/icon/icon_foreground.png', fg);
 
-  // Splash mark: single-tone Tangelo, not the two-tone mark — the dark
-  // shape would nearly vanish against the near-black dark-mode splash
-  // background (#1F130D), same reasoning as the old "H." mark being one
-  // flat color so it reads on both the light and dark splash backgrounds.
-  final splashMask = _tightCrop(_extractMark(source, bg, tangelo, tangelo));
+  // Splash mark: single-tone white, not the two-tone mark — the splash
+  // background is now solid Tangelo (see pubspec.yaml/splash_screen.dart,
+  // the Wise-style launch screen), and a white mark is what reads against
+  // a saturated brand-color field, the same way Wise's launch screen uses
+  // one flat dark mark on their flat brand-green background.
+  final splashMask = _tightCrop(_extractMark(source, bg, white, white));
   final splash = img.Image(width: canvasSize, height: canvasSize, numChannels: 4);
   _placeScaled(splash, splashMask, 0.6);
   _write('assets/icon/splash.png', splash);
@@ -115,4 +117,9 @@ void main() {
   // colors rather than a fixed icon/splash background.
   _write('assets/images/hiww_mark.png', lightMark);
   _write('assets/images/hiww_mark_dark.png', darkMark);
+
+  // Same white mark as assets/icon/splash.png, but as a tight, unscaled
+  // crop for the in-app splash screen widget to size explicitly (see
+  // features/shell/splash_screen.dart) rather than pre-placed on a canvas.
+  _write('assets/images/hiww_mark_white.png', splashMask);
 }

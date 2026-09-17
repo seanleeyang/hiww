@@ -1,25 +1,22 @@
 import 'package:flutter/material.dart';
 
-import '../../ui/brand_mark.dart';
-
+/// The app's launch screen — a solid Tangelo field with the mark centered,
+/// shown while auth resolves. See app_router.dart's `_revealTransition` for
+/// the Wise-style "rising panel" effect used when leaving this screen for
+/// onboarding/landing: it clips the *incoming* page to a growing shape, so
+/// this screen (staying mounted underneath, unanimated, during that
+/// transition) is what shows through outside the growing area.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
+      backgroundColor: Color(0xFFFB4D00),
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            BrandMark(fontSize: 34),
-            SizedBox(height: 24),
-            SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            ),
-          ],
+        child: Image(
+          image: AssetImage('assets/images/hiww_mark_white.png'),
+          width: 56,
         ),
       ),
     );
