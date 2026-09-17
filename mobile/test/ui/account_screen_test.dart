@@ -93,7 +93,11 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    // Long enough to clear /splash's minimum display time plus its
+    // tear-open + settle transition into Browse (see app_router.dart's
+    // _minSplashDuration/_launchTransitionDuration), which together now
+    // take about 2s.
+    await tester.pump(const Duration(milliseconds: 2200));
 
     await tester.tap(find.byTooltip('Account'));
     await tester.pump();

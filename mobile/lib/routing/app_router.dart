@@ -111,15 +111,17 @@ bool _isGuestViewableRoute(String loc) {
   return false;
 }
 
-/// How long the tear-open effect takes to fully separate.
-const _tearDuration = Duration(milliseconds: 550);
-
-/// The minimum time /splash stays up before the router is allowed to leave
-/// it, regardless of how fast auth resolves. Without this, a fast/cold
-/// boot can resolve auth before Flutter's first frame even paints, so
-/// /splash never actually renders as its own visible moment before the
-/// tear below plays.
-const _minSplashDuration = Duration(milliseconds: 400);
+/// Matches the ~2s Loading/Reveal/Complete breakdown measured from Wise's
+/// own launch recording: ~0.6s static splash, ~0.8s tear, ~0.6s settle
+/// (the destination's content fading/scaling in only once the tear is
+/// fully done, not simultaneously with it — see _tornOpenPage).
+const _minSplashDuration = Duration(milliseconds: 600);
+const _tearMs = 800;
+const _settleMs = 600;
+const _launchTransitionDuration = Duration(milliseconds: _tearMs + _settleMs);
+// The tear's own share of the combined tear+settle timeline that
+// _launchTransitionDuration drives — see _tornOpenPage.
+const _tearShare = _tearMs / (_tearMs + _settleMs);
 
 /// The exact visual /splash shows (solid Tangelo, mark centered) — shared
 /// with _tornOpenPage's overlay below so the tear reads as "this same
@@ -151,7 +153,12 @@ const _tearStripSpan = 0.45;
 /// Wraps [child] in a page that enters by tearing a copy of the splash
 /// visual open along a vertical seam that rips upward from the bottom-
 /// middle to the top-middle — like Wise's launch animation — revealing
-/// [child], which is already fully drawn underneath from frame one.
+/// [child] beneath it. [child] itself only fades and scales in *after* the
+/// tear finishes (the "settle" beat — see _launchTransitionDuration),
+/// rather than sitting fully visible under the tear from frame one: what
+/// the tear reveals as it opens is the bare Linen background, matching how
+/// Wise's own reveal shows its background art first and its text/buttons
+/// only once that finishes expanding.
 ///
 /// Built from horizontal strips rather than one rigid left/right pair so
 /// the split visibly *travels* up the screen instead of the whole seam
@@ -170,15 +177,28 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
   return CustomTransitionPage<void>(
     key: key,
     child: child,
-    transitionDuration: _tearDuration,
+    transitionDuration: _launchTransitionDuration,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       return Stack(
         children: [
-          child,
+          const ColoredBox(color: Color(0xFFFAE8DD)),
+          AnimatedBuilder(
+            animation: animation,
+            child: child,
+            builder: (context, child) {
+              final settleT =
+                  ((animation.value - _tearShare) / (1 - _tearShare)).clamp(0.0, 1.0);
+              final eased = Curves.easeOut.transform(settleT);
+              return Opacity(
+                opacity: eased,
+                child: Transform.scale(scale: 0.97 + 0.03 * eased, child: child),
+              );
+            },
+          ),
           AnimatedBuilder(
             animation: animation,
             builder: (context, _) {
-              final t = animation.value;
+              final t = (animation.value / _tearShare).clamp(0.0, 1.0);
               if (t >= 1) return const SizedBox.shrink();
               final size = MediaQuery.sizeOf(context);
               final stripHeight = size.height / _tearStripCount;
