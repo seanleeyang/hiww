@@ -123,9 +123,7 @@ const _launchTransitionDuration = Duration(milliseconds: _tearMs + _settleMs);
 // _launchTransitionDuration drives — see _tornOpenPage.
 const _tearShare = _tearMs / (_tearMs + _settleMs);
 
-/// The exact visual /splash shows (solid Tangelo, mark centered) — shared
-/// with _tornOpenPage's overlay below so the tear reads as "this same
-/// screen ripping apart," not a different graphic.
+/// The exact visual /splash shows (solid Tangelo, one mark centered).
 class _SplashVisual extends StatelessWidget {
   const _SplashVisual();
 
@@ -140,32 +138,44 @@ class _SplashVisual extends StatelessWidget {
   }
 }
 
-/// How many horizontal slices the tear is built from. Each slice's left
-/// and right halves separate on their own staggered schedule (see
-/// _tornOpenPage) — more slices makes the diagonal rip line smoother.
-const _tearStripCount = 16;
+/// The replicated form the single splash mark multiplies into before the
+/// tear: a column of copies spanning edge to edge, centered on the seam
+/// the tear will split along — see _tornOpenPage.
+class _ReplicatedSplashVisual extends StatelessWidget {
+  const _ReplicatedSplashVisual();
 
-/// How much of the total animation each individual strip's own separation
-/// takes, as a fraction — the remainder is how staggered strip start times
-/// are across the full bottom-to-top sweep.
-const _tearStripSpan = 0.45;
+  static const _copies = 7;
 
-/// Wraps [child] in a page that enters by tearing a copy of the splash
-/// visual open along a vertical seam that rips upward from the bottom-
-/// middle to the top-middle — like Wise's launch animation — revealing
-/// [child] beneath it. [child] itself only fades and scales in *after* the
-/// tear finishes (the "settle" beat — see _launchTransitionDuration),
-/// rather than sitting fully visible under the tear from frame one: what
-/// the tear reveals as it opens is the bare Linen background, matching how
-/// Wise's own reveal shows its background art first and its text/buttons
-/// only once that finishes expanding.
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color(0xFFFB4D00),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(
+          _copies,
+          (_) => const Image(image: AssetImage('assets/images/hiww_mark_white.png'), width: 56),
+        ),
+      ),
+    );
+  }
+}
+
+/// How much of the tear phase is spent morphing the single mark into the
+/// replicated column, before the actual left/right split begins.
+const _replicateShare = 0.3;
+
+/// Wraps [child] in a page that enters with a three-beat effect: the single
+/// splash mark first multiplies into a column of copies spanning the full
+/// height, that column then tears apart along a jagged vertical seam
+/// (left half sliding off to the left, right half to the right, each
+/// mark caught mid-seam splitting cleanly in two), and finally [child]
+/// pops into view during the settle beat (see _launchTransitionDuration).
 ///
-/// Built from horizontal strips rather than one rigid left/right pair so
-/// the split visibly *travels* up the screen instead of the whole seam
-/// opening at once: each strip separates on its own schedule, staggered by
-/// height (bottom strips first) via [_tearStripSpan]. The varying
-/// per-strip separation amount also gives the seam a naturally irregular,
-/// torn-paper silhouette without needing an explicit jagged path.
+/// Each half is clipped to its jagged shape *first*, then moved as one
+/// rigid piece — not the reverse (translating a full-size copy and only
+/// then clipping a fixed window), which is what let mark fragments leak
+/// into the wrong strips in an earlier version of this effect.
 ///
 /// This bakes the "fake splash" overlay into the *incoming* page rather
 /// than animating the real outgoing SplashScreen's exit: Flutter always
@@ -188,10 +198,12 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
             builder: (context, child) {
               final settleT =
                   ((animation.value - _tearShare) / (1 - _tearShare)).clamp(0.0, 1.0);
-              final eased = Curves.easeOut.transform(settleT);
+              // easeOutBack: a snappy pop with a slight overshoot, so the
+              // destination reads as "jumping" into place, not fading in.
+              final eased = Curves.easeOutBack.transform(settleT);
               return Opacity(
-                opacity: eased,
-                child: Transform.scale(scale: 0.97 + 0.03 * eased, child: child),
+                opacity: settleT == 0 ? 0 : eased.clamp(0.0, 1.0),
+                child: Transform.scale(scale: 0.9 + 0.1 * eased, child: child),
               );
             },
           ),
@@ -200,38 +212,49 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
             builder: (context, _) {
               final t = (animation.value / _tearShare).clamp(0.0, 1.0);
               if (t >= 1) return const SizedBox.shrink();
-              final size = MediaQuery.sizeOf(context);
-              final stripHeight = size.height / _tearStripCount;
-              final halfWidth = size.width / 2;
-              final strips = <Widget>[];
-              for (var i = 0; i < _tearStripCount; i++) {
-                // f: 0 at the top strip, 1 at the bottom strip — the bottom
-                // starts separating at t=0, the top only in the final
-                // _tearStripSpan share of the animation.
-                final f = (i + 0.5) / _tearStripCount;
-                final start = (1 - f) * (1 - _tearStripSpan);
-                final localT =
-                    ((t - start) / _tearStripSpan).clamp(0.0, 1.0);
-                final dx = halfWidth * 1.15 * Curves.easeIn.transform(localT);
-                final top = i * stripHeight;
-                strips.add(_tearStrip(
-                  size: size,
-                  top: top,
-                  height: stripHeight,
-                  left: 0,
-                  width: halfWidth,
-                  contentOffset: Offset(-dx, -top),
-                ));
-                strips.add(_tearStrip(
-                  size: size,
-                  top: top,
-                  height: stripHeight,
-                  left: halfWidth,
-                  width: halfWidth,
-                  contentOffset: Offset(-halfWidth + dx, -top),
-                ));
+              if (t < _replicateShare) {
+                // Cross-fade the single mark into the replicated column —
+                // both share the same solid background, so only the mark
+                // pattern itself needs to fade between the two.
+                final morphT = Curves.easeInOut.transform(t / _replicateShare);
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    const _SplashVisual(),
+                    Opacity(opacity: morphT, child: const _ReplicatedSplashVisual()),
+                  ],
+                );
               }
-              return Stack(children: strips);
+              final splitT = Curves.easeIn
+                  .transform((t - _replicateShare) / (1 - _replicateShare));
+              final size = MediaQuery.sizeOf(context);
+              final travel = size.width * 0.7 * splitT;
+              final rotation = 0.04 * splitT;
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  Transform.translate(
+                    offset: Offset(-travel, 0),
+                    child: Transform.rotate(
+                      angle: -rotation,
+                      child: ClipPath(
+                        clipper: _TornHalfClipper(left: true),
+                        child: const _ReplicatedSplashVisual(),
+                      ),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: Offset(travel, 0),
+                    child: Transform.rotate(
+                      angle: rotation,
+                      child: ClipPath(
+                        clipper: _TornHalfClipper(left: false),
+                        child: const _ReplicatedSplashVisual(),
+                      ),
+                    ),
+                  ),
+                ],
+              );
             },
           ),
         ],
@@ -240,31 +263,40 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
   );
 }
 
-/// One slice of the tearing splash visual: a [width]x[height] window at
-/// ([left], [top]) showing the full [size]d _SplashVisual shifted by
-/// [contentOffset] — the shift both selects which slice of the visual
-/// shows through this window (aligning it to (0,0)) and carries the
-/// tear's own separation distance.
-Widget _tearStrip({
-  required Size size,
-  required double top,
-  required double height,
-  required double left,
-  required double width,
-  required Offset contentOffset,
-}) {
-  return Positioned(
-    left: left,
-    top: top,
-    width: width,
-    height: height,
-    child: ClipRect(
-      child: Transform.translate(
-        offset: contentOffset,
-        child: SizedBox(width: size.width, height: size.height, child: const _SplashVisual()),
-      ),
-    ),
-  );
+/// Clips to the left or right half of [Size], with a jagged, torn-paper
+/// edge along the vertical center seam instead of a clean cut.
+class _TornHalfClipper extends CustomClipper<Path> {
+  _TornHalfClipper({required this.left});
+  final bool left;
+
+  static const _teeth = 12;
+  static const _jag = 14.0;
+
+  @override
+  Path getClip(Size size) {
+    final midX = size.width / 2;
+    final toothHeight = size.height / _teeth;
+    final path = Path();
+    if (left) {
+      path.moveTo(0, 0);
+      path.lineTo(0, size.height);
+      path.lineTo(midX, size.height);
+    } else {
+      path.moveTo(size.width, size.height);
+      path.lineTo(size.width, 0);
+      path.lineTo(midX, 0);
+    }
+    for (var i = 0; i <= _teeth; i++) {
+      final y = left ? size.height - i * toothHeight : i * toothHeight;
+      final x = midX + (i.isEven ? _jag : -_jag);
+      path.lineTo(x.clamp(0, size.width), y.clamp(0, size.height));
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant _TornHalfClipper oldClipper) => oldClipper.left != left;
 }
 
 const _preAuthRoutes = {
