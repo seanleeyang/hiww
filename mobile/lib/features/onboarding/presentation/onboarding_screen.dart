@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../ui/central_video.dart';
 import '../../../ui/entrance_fade.dart';
-import '../../../ui/floating_orbit_illustration.dart';
 import '../../../ui/language_toggle.dart';
 import '../../../ui/onboarding_progress_bar.dart';
 import '../application/onboarding_controller.dart';
@@ -17,12 +16,10 @@ import '../application/onboarding_controller.dart';
 const onboardingTotalSteps = 3;
 
 class _Slide {
-  const _Slide(this.icon, this.satelliteIcons, this.title, this.body, {this.videoAsset});
-  final IconData icon;
-  final List<IconData> satelliteIcons;
+  const _Slide(this.title, this.body, this.videoAsset);
   final String title;
   final String body;
-  final String? videoAsset;
+  final String videoAsset;
 }
 
 /// Signed-out welcome carousel, shown once per device before the landing
@@ -54,25 +51,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final l10n = AppLocalizations.of(context)!;
     final slides = [
       _Slide(
-        Icons.travel_explore_outlined,
-        const [],
         l10n.onboardingSlide1Title,
         l10n.onboardingSlide1Body,
-        videoAsset: 'assets/video/shop_from_anywhere.mp4',
+        'assets/video/shop_from_anywhere.mp4',
       ),
       _Slide(
-        Icons.flight_takeoff_outlined,
-        const [],
         l10n.onboardingSlide2Title,
         l10n.onboardingSlide2Body,
-        videoAsset: 'assets/video/delivered_by_travelers.mp4',
+        'assets/video/delivered_by_travelers.mp4',
       ),
       _Slide(
-        Icons.savings_outlined,
-        const [],
         l10n.onboardingSlide3Title,
         l10n.onboardingSlide3Body,
-        videoAsset: 'assets/video/piggy_bank.mp4',
+        'assets/video/piggy_bank.mp4',
       ),
     ];
     final lastPage = _page == slides.length - 1;
@@ -148,19 +139,13 @@ class _SlideView extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 12),
-          if (slide.videoAsset != null)
-            // Edge-to-edge horizontally (no side padding, unlike the icon
-            // slides) — the aspect ratio is still locked to the source
-            // video's own shape (square, 1440x1440) so it scales
-            // proportionally rather than stretching. Same Spacer(flex: 3)
-            // below as the icon slides use, so the headline's position
-            // doesn't move — only the illustration above it changes.
-            AspectRatio(
-              aspectRatio: 1,
-              child: CentralVideo(asset: slide.videoAsset!),
-            )
-          else
-            FloatingOrbitIllustration(icon: slide.icon, satelliteIcons: slide.satelliteIcons),
+          // Edge-to-edge horizontally (no side padding) — the aspect ratio
+          // is locked to the source video's own shape (square, 1440x1440)
+          // so it scales proportionally rather than stretching.
+          AspectRatio(
+            aspectRatio: 1,
+            child: CentralVideo(asset: slide.videoAsset),
+          ),
           const Spacer(flex: 3),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
