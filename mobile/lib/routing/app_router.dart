@@ -139,8 +139,15 @@ const _replicatePairs = 12;
 /// down "just a bit."
 const _replicateStepMs = 50;
 const _replicateMs = _replicateStepMs * _replicatePairs;
-const _splitMs = 800;
-const _settleMs = 600;
+// easeIn back-loads the motion, so the fragments are already fully off-
+// screen well before splitT reaches 1 — trimmed from 800 to remove that
+// dead tail (screen sitting blank, split "done" but not yet handed off
+// to settle) rather than let the whole phase run needlessly long.
+const _splitMs = 650;
+// Purely a scale-bounce now (content itself is visible immediately —
+// see the settle logic in _tornOpenPage), so this only needs to be long
+// enough to read as a snappy pop, not to mask a fade-in.
+const _settleMs = 350;
 const _launchTransitionDuration =
     Duration(milliseconds: _replicateMs + _splitMs + _settleMs);
 const _totalMs = _replicateMs + _splitMs + _settleMs;
@@ -229,12 +236,17 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
             builder: (context, child) {
               final settleT =
                   ((animation.value - _splitEnd) / (1 - _splitEnd)).clamp(0.0, 1.0);
-              // easeOutBack: a snappy pop with a slight overshoot, so the
-              // destination reads as "jumping" into place, not fading in.
+              // Content appears the instant the split ends — opacity is
+              // *not* eased or faded, since gating visibility on a slow
+              // curve produced a very noticeable blank-screen pause before
+              // easeOutBack's own opacity ramp got going. easeOutBack
+              // instead only drives the scale, as a bounce/pop applied to
+              // already-visible content — that's what actually reads as
+              // "jumping into place" rather than fading in.
               final eased = Curves.easeOutBack.transform(settleT);
               return Opacity(
-                opacity: settleT == 0 ? 0 : eased.clamp(0.0, 1.0),
-                child: Transform.scale(scale: 0.9 + 0.1 * eased, child: child),
+                opacity: settleT > 0 ? 1 : 0,
+                child: Transform.scale(scale: 0.88 + 0.12 * eased, child: child),
               );
             },
           ),
