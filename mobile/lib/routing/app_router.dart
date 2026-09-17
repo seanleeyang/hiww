@@ -1,6 +1,5 @@
-import 'dart:ui' show lerpDouble;
-
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,7 +47,25 @@ import '../features/wants/presentation/want_detail_screen.dart';
 /// previous account fetched (e.g. account B's "My wants" showing account A's
 /// wants after switching accounts in the same tab/session).
 class _AuthRefresh extends ChangeNotifier {
+  bool minSplashElapsed = false;
+  late final Ticker _minSplashTicker;
+
   _AuthRefresh(Ref ref) {
+    // Re-run the redirect once _minSplashDuration has elapsed, in case auth
+    // already resolved before then — see that constant's doc comment. A
+    // Ticker (not a plain Timer) so this correctly advances under widget
+    // tests' simulated frame clock too — pumpAndSettle() only keeps
+    // advancing time while frames are being scheduled, which a bare Timer
+    // doesn't do, but a Ticker (the same primitive AnimationController
+    // itself uses) does.
+    _minSplashTicker = Ticker((elapsed) {
+      if (elapsed < _minSplashDuration) return;
+      minSplashElapsed = true;
+      _minSplashTicker.stop();
+      notifyListeners();
+    })
+      ..start();
+    ref.onDispose(_minSplashTicker.dispose);
     ref.listen(onboardingSeenProvider, (_, _) => notifyListeners());
     ref.listen(authControllerProvider, (previous, next) {
       final previousId = _userId(previous);
@@ -94,68 +111,127 @@ bool _isGuestViewableRoute(String loc) {
   return false;
 }
 
-/// Wraps [child] in a page that enters via a Wise-style "reveal": a Linen
-/// pill rises from the bottom edge and expands to fill the screen, fading
-/// the real content in only once mostly expanded. Used for the routes
-/// splash hands off to (`/onboarding`, `/landing`) — Flutter keeps the
-/// outgoing page (SplashScreen, solid Tangelo) mounted and visible below
-/// this one for the transition's duration, so it's what shows through
-/// outside the growing area; no coordination with the router's redirect
-/// logic needed; other routes' entrances are unaffected.
-Page<void> _revealPage(LocalKey key, Widget child) {
+/// How long the tear-open effect takes to fully separate.
+const _tearDuration = Duration(milliseconds: 550);
+
+/// The minimum time /splash stays up before the router is allowed to leave
+/// it, regardless of how fast auth resolves. Without this, a fast/cold
+/// boot can resolve auth before Flutter's first frame even paints, so
+/// /splash never actually renders as its own visible moment before the
+/// tear below plays.
+const _minSplashDuration = Duration(milliseconds: 400);
+
+/// The exact visual /splash shows (solid Tangelo, mark centered) — shared
+/// with _tornOpenPage's overlay below so the tear reads as "this same
+/// screen ripping apart," not a different graphic.
+class _SplashVisual extends StatelessWidget {
+  const _SplashVisual();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: Color(0xFFFB4D00),
+      child: Center(
+        child: Image(image: AssetImage('assets/images/hiww_mark_white.png'), width: 56),
+      ),
+    );
+  }
+}
+
+/// Wraps [child] in a page that enters by tearing a copy of the splash
+/// visual into two jagged halves — top flying up, bottom flying down, each
+/// with a slight counter-rotation — off the top of [child], which is
+/// already fully drawn underneath from frame one.
+///
+/// This bakes the "fake splash" overlay into the *incoming* page rather
+/// than animating the real outgoing SplashScreen's exit: Flutter always
+/// paints the incoming page on top of the outgoing one during a route
+/// transition, so an effect on the outgoing page's own exit would be
+/// layered *underneath* the new page and never actually visible — the
+/// tear has to live here to be seen at all.
+Page<void> _tornOpenPage(LocalKey key, Widget child) {
   return CustomTransitionPage<void>(
     key: key,
     child: child,
-    transitionDuration: const Duration(milliseconds: 700),
+    transitionDuration: _tearDuration,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return AnimatedBuilder(
-        animation: animation,
-        child: child,
-        builder: (context, child) {
-          if (animation.value == 0) return const SizedBox.shrink();
-          final size = MediaQuery.sizeOf(context);
-          final t = Curves.easeInOutCubic.transform(animation.value);
-          const pillSize = 64.0;
-          final startRect = Rect.fromCenter(
-            center: Offset(size.width / 2, size.height - 96),
-            width: pillSize,
-            height: pillSize,
-          );
-          final rect = Rect.lerp(startRect, Offset.zero & size, t)!;
-          final radius = lerpDouble(pillSize / 2, 0, t)!;
-          // Content fades in only over the last third, once the panel is
-          // mostly expanded — matches the reference: a plain rising card,
-          // not the destination's text/art growing out of a tiny pill.
-          final contentOpacity = ((animation.value - 0.7) / 0.3).clamp(0.0, 1.0);
-          return ClipPath(
-            clipper: _RevealClipper(rect, radius),
-            child: ColoredBox(
-              color: const Color(0xFFFAE8DD),
-              child: t < 0.2
-                  ? const Center(
-                      child: Icon(Icons.arrow_upward_rounded, color: Color(0xFFFB4D00)),
-                    )
-                  : Opacity(opacity: contentOpacity, child: child),
-            ),
-          );
-        },
+      return Stack(
+        children: [
+          child,
+          AnimatedBuilder(
+            animation: animation,
+            builder: (context, _) {
+              final t = Curves.easeIn.transform(animation.value);
+              if (t >= 1) return const SizedBox.shrink();
+              final size = MediaQuery.sizeOf(context);
+              final travel = size.height * 0.75 * t;
+              final rotation = 0.05 * t;
+              return Stack(
+                children: [
+                  Transform.translate(
+                    offset: Offset(0, -travel),
+                    child: Transform.rotate(
+                      angle: -rotation,
+                      child: ClipPath(
+                        clipper: _TornHalfClipper(top: true),
+                        child: const _SplashVisual(),
+                      ),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: Offset(0, travel),
+                    child: Transform.rotate(
+                      angle: rotation,
+                      child: ClipPath(
+                        clipper: _TornHalfClipper(top: false),
+                        child: const _SplashVisual(),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
       );
     },
   );
 }
 
-class _RevealClipper extends CustomClipper<Path> {
-  _RevealClipper(this.rect, this.radius);
-  final Rect rect;
-  final double radius;
+/// Clips to the top or bottom half of [Size], with a jagged, torn-paper
+/// edge along the middle instead of a clean cut.
+class _TornHalfClipper extends CustomClipper<Path> {
+  _TornHalfClipper({required this.top});
+  final bool top;
+
+  static const _teeth = 12;
+  static const _jag = 14.0;
 
   @override
-  Path getClip(Size size) =>
-      Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
+  Path getClip(Size size) {
+    final midY = size.height / 2;
+    final toothWidth = size.width / _teeth;
+    final path = Path();
+    if (top) {
+      path.moveTo(0, 0);
+      path.lineTo(size.width, 0);
+      path.lineTo(size.width, midY);
+    } else {
+      path.moveTo(size.width, size.height);
+      path.lineTo(0, size.height);
+      path.lineTo(0, midY);
+    }
+    for (var i = 0; i <= _teeth; i++) {
+      final x = top ? size.width - i * toothWidth : i * toothWidth;
+      final y = midY + (i.isEven ? _jag : -_jag);
+      path.lineTo(x.clamp(0, size.width), y);
+    }
+    path.close();
+    return path;
+  }
 
   @override
-  bool shouldReclip(covariant _RevealClipper oldClipper) =>
-      oldClipper.rect != rect || oldClipper.radius != radius;
+  bool shouldReclip(covariant _TornHalfClipper oldClipper) => oldClipper.top != top;
 }
 
 const _preAuthRoutes = {
@@ -180,7 +256,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final auth = ref.read(authControllerProvider);
       final loc = state.matchedLocation;
 
-      if (auth.isLoading && auth.valueOrNull == null) {
+      final authLoading = auth.isLoading && auth.valueOrNull == null;
+      if (authLoading || !refresh.minSplashElapsed) {
         return loc == '/splash' ? null : '/splash';
       }
 
@@ -229,11 +306,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(
         path: '/onboarding',
-        pageBuilder: (_, state) => _revealPage(state.pageKey, const OnboardingScreen()),
+        pageBuilder: (_, state) => _tornOpenPage(state.pageKey, const OnboardingScreen()),
       ),
       GoRoute(
         path: '/landing',
-        pageBuilder: (_, state) => _revealPage(state.pageKey, const LandingScreen()),
+        pageBuilder: (_, state) => _tornOpenPage(state.pageKey, const LandingScreen()),
       ),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),

@@ -4,6 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hiww_mobile/app.dart';
 import 'package:hiww_mobile/features/auth/data/auth_repository.dart';
 import 'package:hiww_mobile/features/auth/domain/auth_user.dart';
+import 'package:hiww_mobile/features/chat/data/chat_repository.dart';
+import 'package:hiww_mobile/features/chat/domain/message.dart';
+import 'package:hiww_mobile/features/discovery/data/discovery_repository.dart';
+import 'package:hiww_mobile/features/notifications/data/notifications_repository.dart';
 
 const _me = AuthUser(
   id: 'me',
@@ -83,22 +87,27 @@ class _SignedInRepository implements AuthRepository {
 void main() {
   testWidgets('app bar shows the language toggle directly and the account avatar',
       (tester) async {
-    // The browse screen's feed/notification streams hit a real (unreachable)
-    // network in this test, so their AsyncValueView stays in a spinning
-    // loading state — an indeterminate CircularProgressIndicator schedules
-    // frames forever, so pumpAndSettle would never return. Bounded pumps
-    // instead: enough for the router redirect + auth resolution, not for
-    // every child provider to settle.
+    // Browse's body would otherwise hit a real (unreachable) network for
+    // its feed/notifications/inbox streams, leaving Dio's connect-timeout
+    // Timer (10s — see api_client.dart) pending well past any reasonable
+    // test duration, which flutter_test's teardown treats as a failure.
+    // Faked here so pumpAndSettle can be used instead of guessing a bounded
+    // pump long enough to clear /splash's minimum display time plus its
+    // tear-open transition (see app_router.dart's
+    // _minSplashDuration/_tearDuration) but short enough to not trip that
+    // same Dio-timer check itself.
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(_SignedInRepository()),
+          feedProvider.overrideWith((ref, query) async => const []),
+          notificationsProvider.overrideWith((ref) => Stream.value(NotificationsFeed.empty)),
+          inboxProvider.overrideWith((ref) => Stream.value(const <InboxThread>[])),
         ],
         child: const HiwwApp(),
       ),
     );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
 
     // Signed-in launch lands on Browse, inside the shell app bar. The bell
     // is gone — notifications now live inside the Inbox tab instead. The
