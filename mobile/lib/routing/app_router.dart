@@ -111,66 +111,94 @@ bool _isGuestViewableRoute(String loc) {
   return false;
 }
 
-/// Matches the ~2s Loading/Reveal/Complete breakdown measured from Wise's
-/// own launch recording: ~0.6s static splash, ~0.8s tear, ~0.6s settle
-/// (the destination's content fading/scaling in only once the tear is
-/// fully done, not simultaneously with it — see _tornOpenPage).
+/// The minimum time /splash stays up before the router is allowed to leave
+/// it, regardless of how fast auth resolves. Without this, a fast/cold
+/// boot can resolve auth before Flutter's first frame even paints, so
+/// /splash never actually renders as its own visible moment before the
+/// tear below plays.
 const _minSplashDuration = Duration(milliseconds: 600);
-const _tearMs = 800;
+
+/// The mark's own aspect ratio (from the generated source — see
+/// tool/gen_icon.dart) — needed to pack copies edge-to-edge with no gap in
+/// _ReplicatedSplashVisual, since that requires the mark's *true* rendered
+/// height at a given width, not an assumed square.
+const _markAspect = 729 / 601;
+const _markWidth = 56.0;
+const _markHeight = _markWidth / _markAspect;
+
+/// How many copies radiate out from the center on *each* side — the chain
+/// runs from -_replicatePairs to +_replicatePairs, so its total length is
+/// (2*_replicatePairs + 1) * _markHeight. Sized generously so the chain
+/// overflows past both edges on any real phone screen; if it doesn't reach
+/// the very edge on an unusually tall viewport, that's fine, but it should
+/// never fall visibly short.
+const _replicatePairs = 12;
+
+/// Each pair's own reveal step, and the phase's total length.
+const _replicateStepMs = 45;
+const _replicateMs = _replicateStepMs * _replicatePairs;
+const _splitMs = 800;
 const _settleMs = 600;
-const _launchTransitionDuration = Duration(milliseconds: _tearMs + _settleMs);
-// The tear's own share of the combined tear+settle timeline that
-// _launchTransitionDuration drives — see _tornOpenPage.
-const _tearShare = _tearMs / (_tearMs + _settleMs);
-
-/// The exact visual /splash shows (solid Tangelo, one mark centered).
-class _SplashVisual extends StatelessWidget {
-  const _SplashVisual();
-
-  @override
-  Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: Color(0xFFFB4D00),
-      child: Center(
-        child: Image(image: AssetImage('assets/images/hiww_mark_white.png'), width: 56),
-      ),
-    );
-  }
-}
+const _launchTransitionDuration =
+    Duration(milliseconds: _replicateMs + _splitMs + _settleMs);
+const _totalMs = _replicateMs + _splitMs + _settleMs;
+// Cumulative points in the overall 0..1 timeline where each phase ends —
+// see _tornOpenPage.
+const _replicateEnd = _replicateMs / _totalMs;
+const _splitEnd = (_replicateMs + _splitMs) / _totalMs;
 
 /// The replicated form the single splash mark multiplies into before the
-/// tear: a column of copies spanning edge to edge, centered on the seam
-/// the tear will split along — see _tornOpenPage.
+/// tear: copies packed edge-to-edge (no gap) in a vertical chain centered
+/// on the seam the tear will split along, appearing two at a time —
+/// center first (always shown), then the pair immediately above/below,
+/// then the next pair out, and so on — rather than all at once.
 class _ReplicatedSplashVisual extends StatelessWidget {
-  const _ReplicatedSplashVisual();
+  const _ReplicatedSplashVisual({required this.progress});
 
-  static const _copies = 7;
+  /// 0..1 across the whole replicate phase.
+  final double progress;
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: const Color(0xFFFB4D00),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(
-          _copies,
-          (_) => const Image(image: AssetImage('assets/images/hiww_mark_white.png'), width: 56),
-        ),
-      ),
+    final stepProgress = (progress * _replicatePairs).clamp(0.0, _replicatePairs.toDouble());
+    final revealedPairs = stepProgress.floor();
+    final fadeInT = Curves.easeOut.transform(stepProgress - revealedPairs);
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const ColoredBox(color: Color(0xFFFB4D00)),
+        for (var n = -_replicatePairs; n <= _replicatePairs; n++)
+          if (_opacityFor(n.abs(), revealedPairs, fadeInT) > 0)
+            Opacity(
+              opacity: _opacityFor(n.abs(), revealedPairs, fadeInT),
+              child: Center(
+                child: Transform.translate(
+                  offset: Offset(0, n * _markHeight),
+                  child: const Image(
+                    image: AssetImage('assets/images/hiww_mark_white.png'),
+                    width: _markWidth,
+                  ),
+                ),
+              ),
+            ),
+      ],
     );
+  }
+
+  static double _opacityFor(int pairIndex, int revealedPairs, double fadeInT) {
+    if (pairIndex == 0 || pairIndex <= revealedPairs) return 1;
+    if (pairIndex == revealedPairs + 1) return fadeInT;
+    return 0;
   }
 }
 
-/// How much of the tear phase is spent morphing the single mark into the
-/// replicated column, before the actual left/right split begins.
-const _replicateShare = 0.3;
-
-/// Wraps [child] in a page that enters with a three-beat effect: the single
-/// splash mark first multiplies into a column of copies spanning the full
-/// height, that column then tears apart along a jagged vertical seam
-/// (left half sliding off to the left, right half to the right, each
-/// mark caught mid-seam splitting cleanly in two), and finally [child]
-/// pops into view during the settle beat (see _launchTransitionDuration).
+/// Wraps [child] in a page that enters with a four-beat effect: the single
+/// splash mark first multiplies outward two-at-a-time into a tightly
+/// packed chain spanning past both screen edges, that chain then tears
+/// apart along a jagged vertical seam (left half sliding off to the left,
+/// right half to the right, each mark caught mid-seam splitting cleanly in
+/// two), and finally [child] pops into view during the settle beat.
 ///
 /// Each half is clipped to its jagged shape *first*, then moved as one
 /// rigid piece — not the reverse (translating a full-size copy and only
@@ -197,7 +225,7 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
             child: child,
             builder: (context, child) {
               final settleT =
-                  ((animation.value - _tearShare) / (1 - _tearShare)).clamp(0.0, 1.0);
+                  ((animation.value - _splitEnd) / (1 - _splitEnd)).clamp(0.0, 1.0);
               // easeOutBack: a snappy pop with a slight overshoot, so the
               // destination reads as "jumping" into place, not fading in.
               final eased = Curves.easeOutBack.transform(settleT);
@@ -210,23 +238,13 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
           AnimatedBuilder(
             animation: animation,
             builder: (context, _) {
-              final t = (animation.value / _tearShare).clamp(0.0, 1.0);
-              if (t >= 1) return const SizedBox.shrink();
-              if (t < _replicateShare) {
-                // Cross-fade the single mark into the replicated column —
-                // both share the same solid background, so only the mark
-                // pattern itself needs to fade between the two.
-                final morphT = Curves.easeInOut.transform(t / _replicateShare);
-                return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    const _SplashVisual(),
-                    Opacity(opacity: morphT, child: const _ReplicatedSplashVisual()),
-                  ],
-                );
+              final v = animation.value;
+              if (v >= _splitEnd) return const SizedBox.shrink();
+              if (v < _replicateEnd) {
+                return _ReplicatedSplashVisual(progress: v / _replicateEnd);
               }
               final splitT = Curves.easeIn
-                  .transform((t - _replicateShare) / (1 - _replicateShare));
+                  .transform((v - _replicateEnd) / (_splitEnd - _replicateEnd));
               final size = MediaQuery.sizeOf(context);
               final travel = size.width * 0.7 * splitT;
               final rotation = 0.04 * splitT;
@@ -239,7 +257,7 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
                       angle: -rotation,
                       child: ClipPath(
                         clipper: _TornHalfClipper(left: true),
-                        child: const _ReplicatedSplashVisual(),
+                        child: const _ReplicatedSplashVisual(progress: 1),
                       ),
                     ),
                   ),
@@ -249,7 +267,7 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
                       angle: rotation,
                       child: ClipPath(
                         clipper: _TornHalfClipper(left: false),
-                        child: const _ReplicatedSplashVisual(),
+                        child: const _ReplicatedSplashVisual(progress: 1),
                       ),
                     ),
                   ),
