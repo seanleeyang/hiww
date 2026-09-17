@@ -138,10 +138,27 @@ class _SplashVisual extends StatelessWidget {
   }
 }
 
+/// How many horizontal slices the tear is built from. Each slice's left
+/// and right halves separate on their own staggered schedule (see
+/// _tornOpenPage) — more slices makes the diagonal rip line smoother.
+const _tearStripCount = 16;
+
+/// How much of the total animation each individual strip's own separation
+/// takes, as a fraction — the remainder is how staggered strip start times
+/// are across the full bottom-to-top sweep.
+const _tearStripSpan = 0.45;
+
 /// Wraps [child] in a page that enters by tearing a copy of the splash
-/// visual into two jagged halves — top flying up, bottom flying down, each
-/// with a slight counter-rotation — off the top of [child], which is
-/// already fully drawn underneath from frame one.
+/// visual open along a vertical seam that rips upward from the bottom-
+/// middle to the top-middle — like Wise's launch animation — revealing
+/// [child], which is already fully drawn underneath from frame one.
+///
+/// Built from horizontal strips rather than one rigid left/right pair so
+/// the split visibly *travels* up the screen instead of the whole seam
+/// opening at once: each strip separates on its own schedule, staggered by
+/// height (bottom strips first) via [_tearStripSpan]. The varying
+/// per-strip separation amount also gives the seam a naturally irregular,
+/// torn-paper silhouette without needing an explicit jagged path.
 ///
 /// This bakes the "fake splash" overlay into the *incoming* page rather
 /// than animating the real outgoing SplashScreen's exit: Flutter always
@@ -161,35 +178,40 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
           AnimatedBuilder(
             animation: animation,
             builder: (context, _) {
-              final t = Curves.easeIn.transform(animation.value);
+              final t = animation.value;
               if (t >= 1) return const SizedBox.shrink();
               final size = MediaQuery.sizeOf(context);
-              final travel = size.height * 0.75 * t;
-              final rotation = 0.05 * t;
-              return Stack(
-                children: [
-                  Transform.translate(
-                    offset: Offset(0, -travel),
-                    child: Transform.rotate(
-                      angle: -rotation,
-                      child: ClipPath(
-                        clipper: _TornHalfClipper(top: true),
-                        child: const _SplashVisual(),
-                      ),
-                    ),
-                  ),
-                  Transform.translate(
-                    offset: Offset(0, travel),
-                    child: Transform.rotate(
-                      angle: rotation,
-                      child: ClipPath(
-                        clipper: _TornHalfClipper(top: false),
-                        child: const _SplashVisual(),
-                      ),
-                    ),
-                  ),
-                ],
-              );
+              final stripHeight = size.height / _tearStripCount;
+              final halfWidth = size.width / 2;
+              final strips = <Widget>[];
+              for (var i = 0; i < _tearStripCount; i++) {
+                // f: 0 at the top strip, 1 at the bottom strip — the bottom
+                // starts separating at t=0, the top only in the final
+                // _tearStripSpan share of the animation.
+                final f = (i + 0.5) / _tearStripCount;
+                final start = (1 - f) * (1 - _tearStripSpan);
+                final localT =
+                    ((t - start) / _tearStripSpan).clamp(0.0, 1.0);
+                final dx = halfWidth * 1.15 * Curves.easeIn.transform(localT);
+                final top = i * stripHeight;
+                strips.add(_tearStrip(
+                  size: size,
+                  top: top,
+                  height: stripHeight,
+                  left: 0,
+                  width: halfWidth,
+                  contentOffset: Offset(-dx, -top),
+                ));
+                strips.add(_tearStrip(
+                  size: size,
+                  top: top,
+                  height: stripHeight,
+                  left: halfWidth,
+                  width: halfWidth,
+                  contentOffset: Offset(-halfWidth + dx, -top),
+                ));
+              }
+              return Stack(children: strips);
             },
           ),
         ],
@@ -198,40 +220,31 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
   );
 }
 
-/// Clips to the top or bottom half of [Size], with a jagged, torn-paper
-/// edge along the middle instead of a clean cut.
-class _TornHalfClipper extends CustomClipper<Path> {
-  _TornHalfClipper({required this.top});
-  final bool top;
-
-  static const _teeth = 12;
-  static const _jag = 14.0;
-
-  @override
-  Path getClip(Size size) {
-    final midY = size.height / 2;
-    final toothWidth = size.width / _teeth;
-    final path = Path();
-    if (top) {
-      path.moveTo(0, 0);
-      path.lineTo(size.width, 0);
-      path.lineTo(size.width, midY);
-    } else {
-      path.moveTo(size.width, size.height);
-      path.lineTo(0, size.height);
-      path.lineTo(0, midY);
-    }
-    for (var i = 0; i <= _teeth; i++) {
-      final x = top ? size.width - i * toothWidth : i * toothWidth;
-      final y = midY + (i.isEven ? _jag : -_jag);
-      path.lineTo(x.clamp(0, size.width), y);
-    }
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant _TornHalfClipper oldClipper) => oldClipper.top != top;
+/// One slice of the tearing splash visual: a [width]x[height] window at
+/// ([left], [top]) showing the full [size]d _SplashVisual shifted by
+/// [contentOffset] — the shift both selects which slice of the visual
+/// shows through this window (aligning it to (0,0)) and carries the
+/// tear's own separation distance.
+Widget _tearStrip({
+  required Size size,
+  required double top,
+  required double height,
+  required double left,
+  required double width,
+  required Offset contentOffset,
+}) {
+  return Positioned(
+    left: left,
+    top: top,
+    width: width,
+    height: height,
+    child: ClipRect(
+      child: Transform.translate(
+        offset: contentOffset,
+        child: SizedBox(width: size.width, height: size.height, child: const _SplashVisual()),
+      ),
+    ),
+  );
 }
 
 const _preAuthRoutes = {
