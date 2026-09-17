@@ -134,8 +134,10 @@ const _markHeight = _markWidth / _markAspect;
 /// never fall visibly short.
 const _replicatePairs = 12;
 
-/// Each pair's own reveal step, and the phase's total length.
-const _replicateStepMs = 45;
+/// Each pair's own reveal step, and the phase's total length. 50ms is
+/// ~1.1x the original 45ms — user feedback: slow the chain's formation
+/// down "just a bit."
+const _replicateStepMs = 50;
 const _replicateMs = _replicateStepMs * _replicatePairs;
 const _splitMs = 800;
 const _settleMs = 600;
@@ -218,6 +220,7 @@ Page<void> _tornOpenPage(LocalKey key, Widget child) {
     transitionDuration: _launchTransitionDuration,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       return Stack(
+        fit: StackFit.expand,
         children: [
           const ColoredBox(color: Color(0xFFFAE8DD)),
           AnimatedBuilder(
